@@ -1,0 +1,48 @@
+﻿@using NuGet.Gallery.Staging.Web.Code
+@model NuGet.Gallery.Staging.Web.ViewModels.CreateStageViewModel
+@{
+    ViewBag.SiteNavigation = "Stage";
+    ViewBag.StageNavigation = "Create";
+    Page.Title = "Create stage";
+}
+
+@section subnav {
+    <div class="subnav">
+        <nav class="sub">
+            @Html.Partial("StageNavigation")
+        </nav>
+    </div>
+}
+
+<div class="row withboxes">
+    <article class="col-md-12">
+        <div class="box">
+            <header>
+                <h1><span class="icon upload">Create stage</span></h1>
+            </header>
+
+            @using (Html.BeginForm("Create", "Stage", FormMethod.Post, new { role = "form" }))
+            {
+                @Html.AntiForgeryToken()
+
+                @Html.ValidationSummary(true)
+
+                <fieldset class="form">
+                    <div class="form-field">
+                        @Html.LabelFor(m => m.StageName)
+                        <code>@Configuration.BaseApiUrl@User.Identity.Name/</code> @Html.TextBoxFor(m => m.StageName, new { placeholder = "stage name", autofocus = true, style = "width: 150px;" })
+                        @Html.ValidationMessageFor(m => m.StageName)
+                    </div>
+                </fieldset>
+                
+                <footer>
+                    <input type="submit" value="Create" title="Create"/>
+                </footer>
+            }
+        </div>
+    </article>
+</div>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}

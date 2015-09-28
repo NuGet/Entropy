@@ -1,0 +1,36 @@
+﻿@using System.Collections.Specialized
+@using Microsoft.AspNet.Identity
+@{
+    var cssClasses = new StringDictionary();
+    if (ViewData.ContainsKey("SiteNavigation"))
+    {
+        cssClasses[ViewBag.SiteNavigation] = "current";
+    }
+}
+<ul>
+    <li class="@cssClasses["Home"]">@Html.ActionLink("Home", "Index", "Home")</li>
+    <li class="@cssClasses["Stage"]">@Html.ActionLink("Stage", "Index", "Stage")</li>
+    <li class="@cssClasses["Documentation"]"><a href="http://docs.nuget.org">Documentation</a></li>
+    <li><a href="http://blog.nuget.org">Blog</a></li>
+    <li class="@cssClasses["Contact"]">@Html.ActionLink("Contact", "Contact", "Pages")</li>
+</ul>
+<div class="nav-signin">
+    @if (Request.IsAuthenticated)
+    {
+        using (Html.BeginForm("LogOff", "Account", FormMethod.Post, new { id = "logoutForm", @class = "navbar-right" }))
+        {
+            @Html.AntiForgeryToken()
+
+            <ul class="nav navbar-nav navbar-right">
+                <li>@User.Identity.GetUserName()</li>
+                <li><a href="javascript:document.getElementById('logoutForm').submit()">Log off</a></li>
+            </ul>
+        }
+    }
+    else
+    {
+        <ul class="nav navbar-nav navbar-right">
+            <li>@Html.ActionLink("Log in", "Login", "Account", routeValues: null, htmlAttributes: new { id = "loginLink" })</li>
+        </ul>
+    }
+</div>

@@ -1,0 +1,46 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Display Test Page</title>
+	<meta charset="utf-8" />
+    <link rel="stylesheet" href="../../content/bootstrap.min.css">
+    <link rel="stylesheet" href="../../content/CollapsibleList.css">
+    <script src="../../Scripts/jquery-2.1.4.min.js"></script>
+    <script src="../../Scripts/bootstrap.min.js"></script>
+    <script src="../../Scripts/angular.min.js"></script>
+    <script src="../../Scripts/display.js"></script>
+</head>
+<body>
+    <div ng-app="myApp" ng-controller="myCtrl">
+        <ul class="collapsibleList">
+            <li ng-repeat="stage in owner.stages">
+                <label for="link-{{stage['@id']}}"><em>{{stage.name}}</em></label>
+                <button class="btn btn-success btn-xs" ng-click="stage.commit()">Commit</button>
+                <button class="btn btn-danger btn-xs" ng-click="stage.delete()">Delete</button>
+                <span><a href="{{stage.sources.v3}}">{{stage.sources.v3}}</a></span>
+                <input type="checkbox" id="link-{{stage['@id']}}" />
+                <ul>
+                    <li ng-repeat="package in stage.packages">
+                        <label for="link-{{package['@id']}}">{{package.id}}</label>
+                        <button class="btn btn-danger btn-xs" ng-click="package.delete()">Delete</button>
+                        <input type="checkbox" id="link-{{package['@id']}}" />
+                        <ul>
+                            <li ng-repeat="packageVersion in package.versions">
+                                <label for="link-{{packageVersion['@id']}}">{{packageVersion.version}}</label>
+                                <button class="btn btn-info btn-xs" ng-click="packageVersion.show()" ng-show="!packageVersion.showDetails">Show</button>
+                                <button class="btn btn-info btn-xs" ng-click="packageVersion.showDetails = false" ng-show="packageVersion.showDetails">Hide</button>
+                                <button class="btn btn-danger btn-xs" ng-click="packageVersion.delete()">Delete</button>
+                                <div ng-show="packageVersion.showDetails">
+                                    <div>{{packageVersion.description}}</div>
+                                    <div>{{packageVersion.author}}</div>
+                                    <div>{{packageVersion.tags}}</div>
+                                </div>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+</body>
+</html>

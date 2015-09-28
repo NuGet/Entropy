@@ -1,0 +1,21 @@
+﻿@using System.Collections.Specialized
+@{
+    var cssClasses = new StringDictionary();
+    if (ViewData.ContainsKey("StageNavigation"))
+    {
+        cssClasses[ViewBag.StageNavigation] = "current";
+    }
+}
+
+<ul>
+    <li class="@cssClasses["List"]">@Html.ActionLink("List", "Index", "Stage")</li>
+    <li class="@cssClasses["Create"]">@Html.ActionLink("Create", "Create", "Stage")</li>
+    @if (cssClasses["Details"] == "current")
+    {
+        var model = Model as NuGet.Gallery.Staging.Web.ViewModels.StageDetailsViewModel;
+        if (model != null)
+        {
+            <li class="@cssClasses["Details"]">@Html.ActionLink("Details", "Details", "Stage", new { id = model.Stage.Name }, null)</li>
+        }
+    }
+</ul>

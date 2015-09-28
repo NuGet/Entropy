@@ -1,0 +1,46 @@
+﻿@model NuGet.Gallery.Staging.Web.ViewModels.UploadPackageViewModel
+@{
+    ViewBag.SiteNavigation = "Stage";
+    ViewBag.StageNavigation = "Details";
+    Page.Title = "Upload package";
+}
+
+@section subnav {
+    <div class="subnav">
+        <nav class="sub">
+            @Html.Partial("StageNavigation")
+        </nav>
+    </div>
+}
+
+@Html.Partial("Add_Script")
+<div class="row withboxes">
+    <article class="col-md-12">
+        <div class="box">
+            <header>
+                <h1><span class="icon upload">Upload package</span></h1>
+            </header>
+            <p>Your package file will be uploaded and hosted on the <em>@Model.StageName</em> stage.</p>
+            @using (Html.BeginForm("Add", "Package", FormMethod.Post, new { id = "uploadForm", enctype = "multipart/form-data" }))
+            {
+                <fieldset class="form">
+                    @Html.AntiForgeryToken()
+                    @Html.ValidationSummary(true)
+
+                    <div class="form-field">
+                        <input type="file" required="" name="PackageFile" />
+                    </div>
+                </fieldset>
+                
+                <footer>
+                    <input type="submit" id="uploadButton" value="Upload" title="Upload the package"/>
+                </footer>
+            }
+            <div class="progress hide">
+                <div class="bar" style="width: 0;">
+                    <div class="percentage">0%</div>
+                </div>
+            </div>
+        </div>
+    </article>
+</div>
