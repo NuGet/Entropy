@@ -99,7 +99,10 @@ namespace StagingWebApi
                         string id = reader.GetString(0);
                         string version = reader.GetString(1);
 
-                        _packages.Add(new StagePackage { Id = id, Version = version });
+                        StagePackage package = new StagePackage();
+                        package.Load(id, version);
+
+                        _packages.Add(package);
                     }
                 }
 
@@ -136,10 +139,13 @@ namespace StagingWebApi
                         Uri nupkgLocation = new Uri(reader.GetString(2));
                         Uri nuspecLocation = new Uri(reader.GetString(3));
 
+                        StagePackage package = new StagePackage();
+                        package.Load(id, version);
+
                         Packages.Add(new PackageResource(
                             _ownerName,
                             _stageId,
-                            new StagePackage { Id = id, Version = version },
+                            package,
                             nupkgLocation,
                             nuspecLocation));
                     }

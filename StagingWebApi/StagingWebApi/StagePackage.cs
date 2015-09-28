@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NuGet.Versioning;
+using System;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -8,8 +9,8 @@ namespace StagingWebApi
 {
     public class StagePackage
     {
-        public string Id { get; set; }
-        public string Version { get; set; }
+        public string Id { get; private set; }
+        public string Version { get; private set; }
         public Stream NuspecStream { get; }
 
         public bool IsValid { get; private set; }
@@ -22,6 +23,23 @@ namespace StagingWebApi
             Reason = string.Empty;
         }
 
+        public StagePackage(string id, string version)
+        {
+            NuspecStream = new MemoryStream();
+            IsValid = true;
+            Reason = string.Empty;
+
+            if (!ValidateAndSetId(id))
+            {
+                return;
+            }
+
+            if (!ValidateAndSetVersion(version))
+            {
+                return;
+            }
+        }
+
         public string GetNupkgName(string path)
         {
             return string.Format("{0}{1}.{2}.nupkg", path, Id, Version).ToLowerInvariant();
@@ -29,6 +47,45 @@ namespace StagingWebApi
         public string GetNuspecName(string path)
         {
             return string.Format("{0}{1}.nuspec", path, Id).ToLowerInvariant();
+        }
+
+        public bool ValidateAndSetId(string id)
+        {
+            int indexOf = id.IndexOfAny(new char[] { '/' });
+            if (indexOf != -1)
+            {
+                IsValid = false;
+                Reason = "id must not contain '/' character";
+                return false;
+            }
+            else
+            {
+                Id = id;
+                return true;
+            }
+        }
+
+        public bool ValidateAndSetVersion(string version)
+        {
+            NuGetVersion nugetVersion;
+            if (!NuGetVersion.TryParse(version, out nugetVersion))
+            {
+                IsValid = false;
+                Reason = "version format was not acceptable";
+                return false;
+            }
+            else
+            {
+                Version = nugetVersion.ToNormalizedString();
+                return true;
+            }
+        }
+
+        public void Load(string id, string version)
+        {
+            // skips validation
+            Id = id;
+            Version = version;
         }
 
         public static StagePackage ReadFromStream(Stream stream)
@@ -95,9 +152,10 @@ namespace StagingWebApi
                 return;
             }
 
-            //TODO: validate id
-
-            package.Id = idElement.Value;
+            if (!package.ValidateAndSetId(idElement.Value))
+            {
+                return;
+            }
 
             XElement versionElement = document.Root.DescendantsAndSelf().Elements().Where(d => d.Name.LocalName == "version").FirstOrDefault();
             if (versionElement == null)
@@ -107,11 +165,10 @@ namespace StagingWebApi
                 return;
             }
 
-            //TODO: validate version
-
-            //TODO: normalize version
-
-            package.Version = versionElement.Value;
+            if (!package.ValidateAndSetVersion(versionElement.Value))
+            {
+                return;
+            }
 
             //  extraction of other fields and validation goes here
 

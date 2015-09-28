@@ -126,8 +126,9 @@ namespace StagingWebApi
 
                     _ownerName = reader.GetString(0);
                     _stageId = reader.GetString(1);
-                    _stagePackage.Id = reader.GetString(2);
-                    _stagePackage.Version = reader.GetString(3);
+                    string id = reader.GetString(2);
+                    string version = reader.GetString(3);
+                    _stagePackage.Load(id, version);
                     NupkgLocation = new Uri(reader.GetString(4));
                     NuspecLocation = new Uri(reader.GetString(5));
 

@@ -140,7 +140,15 @@ namespace StagingWebApi.Controllers
             }
             else
             {
-                PackageResource resource = new PackageResource(owner, name, new StagePackage { Id = id, Version = version });
+                StagePackage package = new StagePackage(id, version);
+                if (!package.IsValid)
+                {
+                    HttpResponseMessage errResponse = new HttpResponseMessage(HttpStatusCode.BadRequest);
+                    errResponse.Content = Utils.CreateErrorContent(package.Reason);
+                    return errResponse;
+                }
+
+                PackageResource resource = new PackageResource(owner, name, package);
                 HttpResponseMessage response = await resource.Load();
 
                 if (response.IsSuccessStatusCode)
@@ -160,7 +168,15 @@ namespace StagingWebApi.Controllers
         [HttpDelete]
         public async Task<HttpResponseMessage> DeletePackage(string owner, string name, string id, string version)
         {
-            PackageResource resource = new PackageResource(owner, name, new StagePackage { Id = id, Version = version });
+            StagePackage package = new StagePackage(id, version);
+            if (!package.IsValid)
+            {
+                HttpResponseMessage errResponse = new HttpResponseMessage(HttpStatusCode.BadRequest);
+                errResponse.Content = Utils.CreateErrorContent(package.Reason);
+                return errResponse;
+            }
+
+            PackageResource resource = new PackageResource(owner, name, package);
             HttpResponseMessage response = await resource.Delete();
 
             if (response.IsSuccessStatusCode)
