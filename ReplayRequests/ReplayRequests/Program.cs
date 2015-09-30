@@ -14,18 +14,24 @@ namespace ReplayRequests
     class Program
     {  
         public static void Main(string[] args)
-        {    
-            using (var requestsFile = File.CreateText("Rquests.txt"))
+        {
+            try
             {
-                var connectionString = CloudConfigurationManager.GetSetting("Microsoft.ServiceBus.ConnectionString");
-                var queueClient = QueueClient.CreateFromConnectionString(connectionString, CloudConfigurationManager.GetSetting("QueuePath"));
-                var cancellationTokenSource = new CancellationTokenSource();
-                var cancellationToken = cancellationTokenSource.Token;
-                var task = ContinouslyReadFromQueue(cancellationToken, queueClient, requestsFile);
-                Console.WriteLine("Press any key to exit...");
-                Console.ReadKey();
-                cancellationTokenSource.Cancel();
-                task.Wait();
+                using (var requestsFile = File.CreateText("Rquests.txt"))
+                {
+                    var connectionString = CloudConfigurationManager.GetSetting("Microsoft.ServiceBus.ConnectionString");
+                    var queueClient = QueueClient.CreateFromConnectionString(connectionString, CloudConfigurationManager.GetSetting("QueuePath"));
+                    var cancellationTokenSource = new CancellationTokenSource();
+                    var cancellationToken = cancellationTokenSource.Token;
+                    var task = ContinouslyReadFromQueue(cancellationToken, queueClient, requestsFile);
+                    Console.WriteLine("Press any key to exit...");
+                    Console.ReadKey();
+                    cancellationTokenSource.Cancel();
+                    task.Wait();
+                }
+            }catch(Exception e)
+            {
+                Console.WriteLine("Exception message : {0} {1} Stack trace : {2}", e.Message, Environment.NewLine, e.StackTrace);
             }
         }
 
@@ -34,39 +40,36 @@ namespace ReplayRequests
             //Read from the queue continously
             while (!cancellationToken.IsCancellationRequested)
             {
-                await ReceiveMessageAsync(cancellationToken,queueClient, requestsFile);               
+                await ReceiveMessageAsync(queueClient, requestsFile);               
             }
         }
 
-        private static async Task ReceiveMessageAsync(CancellationToken cancellationToken,QueueClient queueClient, TextWriter requestsFile)
+        private static async Task ReceiveMessageAsync(QueueClient queueClient, TextWriter requestsFile)
         {          
             var message = await queueClient.ReceiveAsync();
 
             if (message != null)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                await ProcessMessage(cancellationToken, message,requestsFile);
+            {             
+                await ProcessMessage(message,requestsFile);
             }
         }
 
-        private static async Task ProcessMessage(CancellationToken cancellationToken, BrokeredMessage message, TextWriter requestsFile)
+        private static async Task ProcessMessage(BrokeredMessage message, TextWriter requestsFile)
         {
             string messageBody = message.GetBody<string>();
             //Get the just the search query string
             if (messageBody.Contains("Search: ?q="))
             {
-                messageBody = messageBody.Substring(messageBody.IndexOf('=') + 1);
-                cancellationToken.ThrowIfCancellationRequested();
-                var responseMessage = await SendRequestToConsolidatedSearch(cancellationToken, messageBody);
+                messageBody = messageBody.Substring(messageBody.IndexOf('=') + 1);              
+                var responseMessage = await SendRequestToConsolidatedSearch(messageBody);
                 await requestsFile.WriteLineAsync(string.Format("{0} - {1}", messageBody, responseMessage.StatusCode));
                 await requestsFile.FlushAsync();           
             }              
         }
 
-        private static async Task<HttpResponseMessage> SendRequestToConsolidatedSearch(CancellationToken cancellationToken, string queryString)
+        private static async Task<HttpResponseMessage> SendRequestToConsolidatedSearch(string queryString)
         {
-            HttpClient httpClient = new HttpClient();
-            cancellationToken.ThrowIfCancellationRequested();  
+            HttpClient httpClient = new HttpClient();         
             return await httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Get, CloudConfigurationManager.GetSetting("ReplayEndpoint")+ queryString));
         }
     }
