@@ -128,14 +128,18 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
-    <Compile Include="PackageResource.cs" />
+    <Compile Include="Resources\PackageResource.cs" />
     <Compile Include="FilePackageStorage.cs" />
     <Compile Include="AzurePackageStorage.cs" />
     <Compile Include="PackageStorageBase.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ResourceBase.cs" />
+    <Compile Include="Resources\StageResourceBase.cs" />
+    <Compile Include="Resources\IResource.cs" />
+    <Compile Include="Resources\V3FlatResource.cs" />
+    <Compile Include="Resources\V3RegistrationResource.cs" />
+    <Compile Include="StageDefinition.cs" />
     <Compile Include="StagePackage.cs" />
-    <Compile Include="StageResource.cs" />
+    <Compile Include="Resources\StageResource.cs" />
     <Compile Include="Utils.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -10,18 +10,15 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using System.Web.Configuration;
 
-namespace StagingWebApi
+namespace StagingWebApi.Resources
 {
-    public class PackageResource : ResourceBase
+    public class PackageResource : StageResourceBase, IResource
     {
-        string _ownerName;
-        string _stageId;
         StagePackage _stagePackage;
 
-        public PackageResource(string ownerName, string stageId, StagePackage stagePackage, Uri nupkgLocation, Uri nuspecLocation)
+        public PackageResource(string ownerName, string stageName, StagePackage stagePackage, Uri nupkgLocation, Uri nuspecLocation)
+            : base(ownerName, stageName)
         {
-            _ownerName = ownerName;
-            _stageId = stageId;
             _stagePackage = stagePackage;
             NupkgLocation = nupkgLocation;
             NuspecLocation = nuspecLocation;
@@ -29,8 +26,8 @@ namespace StagingWebApi
             Configuration rootWebConfig = WebConfigurationManager.OpenWebConfiguration("/StagingWebApi");
             ConnectionString = rootWebConfig.ConnectionStrings.ConnectionStrings["PackageStaging"].ConnectionString;
         }
-        public PackageResource(string ownerName, string stageId, StagePackage stagePackage)
-            : this(ownerName, stageId, stagePackage, null, null)
+        public PackageResource(string ownerName, string stageName, StagePackage stagePackage)
+            : this(ownerName, stageName, stagePackage, null, null)
         {
         }
 
@@ -52,7 +49,7 @@ namespace StagingWebApi
             private set;
         }
 
-        public override async Task<HttpResponseMessage> Delete()
+        public async Task<HttpResponseMessage> Delete()
         {
             using (SqlConnection connection = new SqlConnection(ConnectionString))
             {
@@ -60,8 +57,8 @@ namespace StagingWebApi
 
                 SqlCommand command = new SqlCommand("DeletePackage", connection);
                 command.CommandType = CommandType.StoredProcedure;
-                command.Parameters.AddWithValue("OwnerName", _ownerName);
-                command.Parameters.AddWithValue("StageId", _stageId);
+                command.Parameters.AddWithValue("OwnerName", OwnerName);
+                command.Parameters.AddWithValue("StageName", StageName);
                 command.Parameters.AddWithValue("Id", _stagePackage.Id);
                 command.Parameters.AddWithValue("Version", _stagePackage.Version);
 
@@ -82,7 +79,7 @@ namespace StagingWebApi
             }
         }
 
-        public override async Task<HttpResponseMessage> Load()
+        public async Task<HttpResponseMessage> Load()
         {
             using (SqlConnection connection = new SqlConnection(ConnectionString))
             {
@@ -90,8 +87,6 @@ namespace StagingWebApi
 
                 SqlCommand command = new SqlCommand(@"
                     SELECT
-                        [Owner].[Name], 
-                        Stage.[Id],
                         StagePackage.[Id],
                         StagePackage.[Version],
                         StagePackage.NupkgLocation,
@@ -101,13 +96,13 @@ namespace StagingWebApi
                     INNER JOIN StageOwner ON Stage.[Key] = StageOwner.StageKey
                     INNER JOIN [Owner] ON [Owner].[Key] = StageOwner.OwnerKey
                     WHERE [Owner].[Name] = @OwnerName
-                      AND Stage.[Id] = @StageId
+                      AND Stage.[Name] = @StageName
                       AND StagePackage.[Id] = @Id
                       AND StagePackage.[Version] = @Version
                 ", connection);
 
-                command.Parameters.AddWithValue("OwnerName", _ownerName);
-                command.Parameters.AddWithValue("StageId", _stageId);
+                command.Parameters.AddWithValue("OwnerName", OwnerName);
+                command.Parameters.AddWithValue("StageName", StageName);
                 command.Parameters.AddWithValue("Id", _stagePackage.Id);
                 command.Parameters.AddWithValue("Version", _stagePackage.Version);
 
@@ -124,20 +119,18 @@ namespace StagingWebApi
                 {
                     _stagePackage = new StagePackage();
 
-                    _ownerName = reader.GetString(0);
-                    _stageId = reader.GetString(1);
-                    string id = reader.GetString(2);
-                    string version = reader.GetString(3);
+                    string id = reader.GetString(0);
+                    string version = reader.GetString(1);
                     _stagePackage.Load(id, version);
-                    NupkgLocation = new Uri(reader.GetString(4));
-                    NuspecLocation = new Uri(reader.GetString(5));
+                    NupkgLocation = new Uri(reader.GetString(2));
+                    NuspecLocation = new Uri(reader.GetString(3));
 
                     rowCount++;
                 }
 
                 if (rowCount > 1)
                 {
-                    Trace.TraceError("attempt to load {0} {1} {2} {3} returned multiple rows", _ownerName, _stageId, _stagePackage.Id, _stagePackage.Version);
+                    Trace.TraceError("attempt to load {0} {1} returned multiple rows", _stagePackage.Id, _stagePackage.Version);
                     HttpResponseMessage errResponse = new HttpResponseMessage(HttpStatusCode.InternalServerError);
                     errResponse.Content = Utils.CreateErrorContent("multiple rows in the package table conflicted");
                     return errResponse;
@@ -149,7 +142,7 @@ namespace StagingWebApi
             }
         }
 
-        public override async Task<HttpResponseMessage> Save()
+        public async Task<HttpResponseMessage> Save()
         {
             using (SqlConnection connection = new SqlConnection(ConnectionString))
             {
@@ -157,8 +150,8 @@ namespace StagingWebApi
 
                 SqlCommand command = new SqlCommand("CreatePackage", connection);
                 command.CommandType = CommandType.StoredProcedure;
-                command.Parameters.AddWithValue("OwnerName", _ownerName);
-                command.Parameters.AddWithValue("StageId", _stageId);
+                command.Parameters.AddWithValue("OwnerName", OwnerName);
+                command.Parameters.AddWithValue("StageName", StageName);
                 command.Parameters.AddWithValue("Id", _stagePackage.Id);
                 command.Parameters.AddWithValue("Version", _stagePackage.Version);
                 command.Parameters.AddWithValue("NupkgLocation", NupkgLocation.AbsoluteUri);

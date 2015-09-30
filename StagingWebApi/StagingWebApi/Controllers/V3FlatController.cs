@@ -1,7 +1,5 @@
 ﻿using Newtonsoft.Json.Linq;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using StagingWebApi.Resources;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -15,13 +13,24 @@ namespace StagingWebApi.Controllers
         [HttpGet]
         public async Task<HttpResponseMessage> GetIndex(string owner, string name, string id)
         {
-            HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
+            V3FlatResource resource = new V3FlatResource(owner, name);
+            return await resource.Get(id);
+        }
 
-            JObject obj = new JObject();
-            obj["message"] = "hello world";
-            response.Content = Utils.CreateJsonContent(obj.ToString());
+        [Route("v3/flat/{owner}/{name}/{id}/{version}/{file}.nupkg")]
+        [HttpGet]
+        public async Task<HttpResponseMessage> GetNupkg(string owner, string name, string id, string version)
+        {
+            V3FlatResource resource = new V3FlatResource(owner, name);
+            return await resource.GetNupkg(id, version);
+        }
 
-            return response;
+        [Route("v3/flat/{owner}/{name}/{id}/{version}/{file}.nuspec")]
+        [HttpGet]
+        public async Task<HttpResponseMessage> GetArtifact(string owner, string name, string id, string version)
+        {
+            V3FlatResource resource = new V3FlatResource(owner, name);
+            return await resource.GetNuspec(id, version);
         }
     }
 }

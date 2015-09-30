@@ -9,7 +9,7 @@ GO
 CREATE TABLE [Owner]
 (
 	[Key] INT IDENTITY,
-	[Name] VARCHAR(1024)
+	[Name] VARCHAR(256)
 )
 GO
 
@@ -37,7 +37,8 @@ GO
 CREATE TABLE [Stage]
 (
 	[Key] INT IDENTITY,
-	[Id] VARCHAR(64)
+	[Name] VARCHAR(256),
+	[BaseService] VARCHAR(1024)
 )
 GO
 

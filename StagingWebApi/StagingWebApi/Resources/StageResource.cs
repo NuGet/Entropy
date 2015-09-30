@@ -4,44 +4,42 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
+using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Web.Configuration;
 
-namespace StagingWebApi
+namespace StagingWebApi.Resources
 {
-    public class StageResource : ResourceBase
+    public class StageResource : StageResourceBase, IResource
     {
-        string _ownerName;
-        string _stageId;
         List<StagePackage> _packages;
 
-        public StageResource(string ownerName, string stageId)
+        public StageResource(string ownerName, string stageName)
+            : this(ownerName, stageName, null)
         {
-            _ownerName = ownerName;
-            _stageId = stageId;
-            _packages = new List<StagePackage>();
+        }
 
+        public StageResource(string ownerName, string stageName, string baseService)
+            : base(ownerName, stageName)
+        {
+            BaseService = baseService;
+
+            //TODO: this allocation can be lazy
+            _packages = new List<StagePackage>();
             Packages = new List<PackageResource>();
 
             Configuration rootWebConfig = WebConfigurationManager.OpenWebConfiguration("/StagingWebApi");
             ConnectionString = rootWebConfig.ConnectionStrings.ConnectionStrings["PackageStaging"].ConnectionString;
         }
 
-        public string ConnectionString
-        {
-            get;
-            set;
-        }
+        public string ConnectionString { get; set; }
+        public string BaseService { get; private set; }
+        public List<PackageResource> Packages { get; private set; }
 
-        public List<PackageResource> Packages
-        {
-            get; private set;
-        }
-
-        public override async Task<HttpResponseMessage> Save()
+        public async Task<HttpResponseMessage> Save()
         {
             using (SqlConnection connection = new SqlConnection(ConnectionString))
             {
@@ -49,8 +47,9 @@ namespace StagingWebApi
 
                 SqlCommand command = new SqlCommand("CreateStage", connection);
                 command.CommandType = CommandType.StoredProcedure;
-                command.Parameters.AddWithValue("OwnerName", _ownerName);
-                command.Parameters.AddWithValue("StageId", _stageId);
+                command.Parameters.AddWithValue("OwnerName", OwnerName);
+                command.Parameters.AddWithValue("StageName", StageName);
+                command.Parameters.AddWithValue("BaseService", BaseService);
 
                 int result = (int)await command.ExecuteScalarAsync();
 
@@ -58,15 +57,25 @@ namespace StagingWebApi
                 {
                     return new HttpResponseMessage(HttpStatusCode.Created);
                 }
+                else if (result == 2)
+                {
+                    HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.BadRequest);
+                    response.Content = Utils.CreateErrorContent("owner not found");
+                    return response;
+                }
+                else if (result == 0)
+                {
+                    return new HttpResponseMessage(HttpStatusCode.Conflict);
+                }
                 else
                 {
-                    //TODO: add other error scenarios
-                    return new HttpResponseMessage(HttpStatusCode.Conflict);
+                    Trace.TraceError("unexpected error from database executing CreateStage");
+                    return new HttpResponseMessage(HttpStatusCode.InternalServerError);
                 }
             }
         }
 
-        public override async Task<HttpResponseMessage> Load()
+        public async Task<HttpResponseMessage> Load()
         {
             using (SqlConnection connection = new SqlConnection(ConnectionString))
             {
@@ -79,11 +88,11 @@ namespace StagingWebApi
                     INNER JOIN [Owner] ON[Owner].[Key] = [StageOwner].[OwnerKey]
                     LEFT OUTER JOIN [StagePackage] ON[Stage].[Key] = [StagePackage].[StageKey]
                     WHERE [Owner].[Name] = @OwnerName
-                      AND [Stage].[Id] = @StageId
+                      AND [Stage].[Name] = @StageName
                 ", connection);
 
-                command.Parameters.AddWithValue("OwnerName", _ownerName);
-                command.Parameters.AddWithValue("StageId", _stageId);
+                command.Parameters.AddWithValue("OwnerName", OwnerName);
+                command.Parameters.AddWithValue("StageName", StageName);
 
                 SqlDataReader reader = await command.ExecuteReaderAsync();
 
@@ -112,7 +121,7 @@ namespace StagingWebApi
             }
         }
 
-        public override async Task<HttpResponseMessage> Delete()
+        public async Task<HttpResponseMessage> Delete()
         {
             using (SqlConnection connection = new SqlConnection(ConnectionString))
             {
@@ -120,8 +129,8 @@ namespace StagingWebApi
 
                 SqlCommand command = new SqlCommand("DeleteStage", connection);
                 command.CommandType = CommandType.StoredProcedure;
-                command.Parameters.AddWithValue("OwnerName", _ownerName);
-                command.Parameters.AddWithValue("StageId", _stageId);
+                command.Parameters.AddWithValue("OwnerName", OwnerName);
+                command.Parameters.AddWithValue("StageName", StageName);
 
                 SqlDataReader reader = await command.ExecuteReaderAsync();
 
@@ -143,8 +152,8 @@ namespace StagingWebApi
                         package.Load(id, version);
 
                         Packages.Add(new PackageResource(
-                            _ownerName,
-                            _stageId,
+                            OwnerName,
+                            StageName,
                             package,
                             nupkgLocation,
                             nuspecLocation));
@@ -161,6 +170,8 @@ namespace StagingWebApi
             {
                 using (JsonTextWriter jsonWriter = new JsonTextWriter(textWriter))
                 {
+                    jsonWriter.Formatting = Formatting.Indented;
+
                     jsonWriter.WriteStartArray();
                     foreach (StagePackage package in _packages)
                     {

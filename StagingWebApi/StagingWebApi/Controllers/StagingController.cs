@@ -1,4 +1,5 @@
-﻿using System;
+﻿using StagingWebApi.Resources;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
@@ -11,12 +12,36 @@ namespace StagingWebApi.Controllers
 {
     public class StagingController : ApiController
     {
-        [Route("stage/{owner}/{name}")]
-        [HttpPut]
-        public async Task<HttpResponseMessage> PutStage(string owner, string name)
+        [Route("create")]
+        [HttpPost]
+        public async Task<HttpResponseMessage> PostStage()
         {
-            ResourceBase resource = new StageResource(owner, name);
-            return await resource.Save();
+            HttpResponseMessage response;
+
+            try
+            {
+                Stream stream = await Request.Content.ReadAsStreamAsync();
+
+                StageDefinition definition = StageDefinition.ReadFromStream(stream);
+
+                if (definition.IsValid)
+                {
+                    IResource resource = new StageResource(definition.OwnerName, definition.StageName, definition.BaseService);
+                    response = await resource.Save();
+                }
+                else
+                {
+                    response = new HttpResponseMessage(HttpStatusCode.BadRequest);
+                    response.Content = Utils.CreateErrorContent(definition.Reason);
+                }
+            }
+            catch (Exception e)
+            {
+                Trace.TraceError(e.Message);
+                response = new HttpResponseMessage(HttpStatusCode.InternalServerError);
+            }
+
+            return response;
         }
 
         [Route("stage/{owner}/{name}")]
@@ -31,7 +56,7 @@ namespace StagingWebApi.Controllers
             }
             else
             {
-                ResourceBase resource = new StageResource(owner, name);
+                IResource resource = new StageResource(owner, name);
                 return await resource.Load();
             }
         }
@@ -91,7 +116,7 @@ namespace StagingWebApi.Controllers
 
                     storageSaveSuccess = true;
 
-                    ResourceBase resource = new PackageResource(owner, name, package, nupkgLocation, nuspecLocation);
+                    IResource resource = new PackageResource(owner, name, package, nupkgLocation, nuspecLocation);
                     response = await resource.Save();
 
                     if (response.StatusCode != HttpStatusCode.Created)

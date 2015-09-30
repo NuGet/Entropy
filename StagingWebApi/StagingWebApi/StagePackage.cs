@@ -12,7 +12,6 @@ namespace StagingWebApi
         public string Id { get; private set; }
         public string Version { get; private set; }
         public Stream NuspecStream { get; }
-
         public bool IsValid { get; private set; }
         public string Reason { get; private set; }
 
