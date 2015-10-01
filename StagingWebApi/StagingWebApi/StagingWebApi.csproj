@@ -122,12 +122,14 @@
   <ItemGroup>
     <Compile Include="App_Start\WebApiConfig.cs" />
     <Compile Include="Controllers\StagingController.cs" />
+    <Compile Include="Controllers\V2Controller.cs" />
     <Compile Include="Controllers\V3Controller.cs" />
     <Compile Include="Controllers\V3FlatController.cs" />
     <Compile Include="Controllers\V3RegistrationController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
+    <Compile Include="Index.cs" />
     <Compile Include="Resources\PackageResource.cs" />
     <Compile Include="FilePackageStorage.cs" />
     <Compile Include="AzurePackageStorage.cs" />

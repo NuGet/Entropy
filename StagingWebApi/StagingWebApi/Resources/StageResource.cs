@@ -39,6 +39,28 @@ namespace StagingWebApi.Resources
         public string BaseService { get; private set; }
         public List<PackageResource> Packages { get; private set; }
 
+        public async Task<bool> Exists()
+        {
+            using (SqlConnection connection = new SqlConnection(ConnectionString))
+            {
+                connection.Open();
+
+                SqlCommand command = new SqlCommand(@"
+                    SELECT 1
+                    FROM Stage
+                    INNER JOIN [StageOwner] ON[Stage].[Key] = [StageOwner].[StageKey]
+                    INNER JOIN [Owner] ON[Owner].[Key] = [StageOwner].[OwnerKey]
+                    WHERE [Owner].[Name] = @OwnerName
+                      AND [Stage].[Name] = @StageName
+                ", connection);
+
+                command.Parameters.AddWithValue("OwnerName", OwnerName);
+                command.Parameters.AddWithValue("StageName", StageName);
+
+                return await command.ExecuteScalarAsync() != null;
+            }
+        }
+
         public async Task<HttpResponseMessage> Save()
         {
             using (SqlConnection connection = new SqlConnection(ConnectionString))
