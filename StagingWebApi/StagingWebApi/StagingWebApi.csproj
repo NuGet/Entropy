@@ -126,6 +126,7 @@
     <Compile Include="Controllers\V3Controller.cs" />
     <Compile Include="Controllers\V3FlatController.cs" />
     <Compile Include="Controllers\V3RegistrationController.cs" />
+    <Compile Include="Controllers\V3SearchController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
@@ -139,6 +140,7 @@
     <Compile Include="Resources\IResource.cs" />
     <Compile Include="Resources\V3FlatResource.cs" />
     <Compile Include="Resources\V3RegistrationResource.cs" />
+    <Compile Include="Resources\V3Resource.cs" />
     <Compile Include="StageDefinition.cs" />
     <Compile Include="StagePackage.cs" />
     <Compile Include="Resources\StageResource.cs" />
