@@ -33,6 +33,14 @@ namespace StagingWebApi.Controllers
             index.Add(flatContainerResource, "@type", "PackageBaseAddress/3.0.0");
             index.Add(flatContainerResource, "comment", "Base URL of Azure storage where NuGet package registration info for DNX is stored");
 
+            string registrationsBaseUrlResource = string.Format("{0}/v3/registration/{1}/{2}/", authority, ownerName, stageName);
+            index.Add(registrationsBaseUrlResource, "@type", "RegistrationsBaseUrl/3.0.0-beta");
+            index.Add(registrationsBaseUrlResource, "comment", "Base URL of Azure storage where NuGet package registration info is stored used by Beta clients");
+
+            string reportAbuseResource = "https://www.nuget.org/packages/{id}/{version}/ReportAbuse";
+            index.Add(reportAbuseResource, "@type", "ReportAbuseUriTemplate/3.0.0-beta");
+            index.Add(reportAbuseResource, "comment", "URI template used by NuGet Client to construct Report Abuse URL for packages");
+
             HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
             response.Content = Utils.CreateJsonContent(index.ToJson());
             return response;
