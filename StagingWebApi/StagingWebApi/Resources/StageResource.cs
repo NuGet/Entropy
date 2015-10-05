@@ -13,6 +13,8 @@ using System.Web.Configuration;
 
 namespace StagingWebApi.Resources
 {
+    //TODO: addresses the potential duplication coming out across these "resource" classes.
+
     public class StageResource : StageResourceBase, IResource
     {
         List<StagePackage> _packages;
