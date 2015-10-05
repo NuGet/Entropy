@@ -1,7 +1,7 @@
 ﻿
 Example curl commands used for testing:
 
-curl -v -X PUT -d "[]" http://localhost:1500/stage/tom/test
+curl -v -X POST -d "{\"ownerName\":\"tom\",\"stageName\":\"test\",\"baseService\":\"http://api.nuget.org/v3/index.json\"}" http://localhost:1500/create
 
 curl -v -X GET http://localhost:1500/stage/tom/test
 
@@ -10,6 +10,10 @@ curl -v -X DELETE http://localhost:1500/stage/tom/test
 curl -v -X POST -T c:\data\nupkgs\entityframework.5.0.0.nupkg http://localhost:1500/upload/tom/test
 
 curl -v -X GET http://localhost:1500/stage/tom/test/entityframework/5.0.0
+
+and v3 feed...
+
+curl -v -X GET http://localhost:1500/stage/v3/tom/test/index.json
 
 and a batch...
 
@@ -23,3 +27,8 @@ curl -v -X POST -T c:\data\nupkgs\newtonsoft.json.5.0.2.nupkg http://localhost:1
 curl -v -X POST -T c:\data\nupkgs\newtonsoft.json.6.0.3.nupkg http://localhost:1500/upload/tom/test
 curl -v -X POST -T c:\data\nupkgs\newtonsoft.json.6.0.8.nupkg http://localhost:1500/upload/tom/test
 curl -v -X POST -T c:\data\nupkgs\newtonsoft.json.7.0.1.nupkg http://localhost:1500/upload/tom/test
+
+and no longer used...
+
+curl -v -X PUT -d "[]" http://localhost:1500/stage/tom/test
+

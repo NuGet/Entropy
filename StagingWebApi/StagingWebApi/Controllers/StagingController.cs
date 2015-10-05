@@ -153,7 +153,7 @@ namespace StagingWebApi.Controllers
             return response;
         }
 
-        [Route("stage/{owner}/{name}/{id}/{version}")]
+        [Route("package/{owner}/{name}/{id}/{version}")]
         [HttpGet]
         public async Task<HttpResponseMessage> GetPackage(string owner, string name, string id, string version)
         {
@@ -189,7 +189,7 @@ namespace StagingWebApi.Controllers
             }
         }
 
-        [Route("stage/{owner}/{name}/{id}/{version}")]
+        [Route("package/{owner}/{name}/{id}/{version}")]
         [HttpDelete]
         public async Task<HttpResponseMessage> DeletePackage(string owner, string name, string id, string version)
         {

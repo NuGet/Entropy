@@ -3,16 +3,15 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Data.SqlClient;
 using System.Linq;
-using System.Net.Http;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Configuration;
 
 namespace StagingWebApi.Resources
 {
-    public class V3RegistrationResource : StageResourceBase
+    public class V3Resource : StageResourceBase
     {
-        public V3RegistrationResource(string ownerName, string stageId)
+        public V3Resource(string ownerName, string stageId)
             : base(ownerName, stageId)
         {
             Configuration rootWebConfig = WebConfigurationManager.OpenWebConfiguration("/StagingWebApi");
@@ -25,16 +24,39 @@ namespace StagingWebApi.Resources
             set;
         }
 
-        public async Task<IDictionary<string, PackageDetails>> GetPackageDetails()
+        public async Task<Uri> GetPackageBaseAddress()
+        {
+            Uri serviceBase = await GetServiceBase();
+            if (serviceBase == null)
+            {
+                return null;
+            }
+
+            Uri address = await Utils.GetService(serviceBase, "PackageBaseAddress/3.0.0");
+            return (address == null) ? null : address;
+        }
+
+        public async Task<Uri> GetSearchQueryService()
+        {
+            Uri serviceBase = await GetServiceBase();
+            if (serviceBase == null)
+            {
+                return null;
+            }
+
+            Uri address = await Utils.GetService(serviceBase, "SearchQueryService/3.0.0-beta");
+            return (address == null) ? null : address;
+        }
+
+        async Task<Uri> GetServiceBase()
         {
             using (SqlConnection connection = new SqlConnection(ConnectionString))
             {
                 connection.Open();
 
                 SqlCommand command = new SqlCommand(@"
-                    SELECT StagePackage.[Id], StagePackage.[Version]
-                    FROM StagePackage
-                    INNER JOIN Stage ON StagePackage.StageKey = Stage.[Key]
+                    SELECT Stage.BaseService
+                    FROM Stage
                     INNER JOIN StageOwner ON Stage.[Key] = StageOwner.StageKey
                     INNER JOIN Owner ON Owner.[Key] = StageOwner.OwnerKey
                     WHERE Owner.Name = @OwnerName
@@ -44,26 +66,14 @@ namespace StagingWebApi.Resources
                 command.Parameters.AddWithValue("OwnerName", OwnerName);
                 command.Parameters.AddWithValue("StageName", StageName);
 
-                SqlDataReader reader = await command.ExecuteReaderAsync();
+                string result = (string)await command.ExecuteScalarAsync();
 
-                IDictionary<string, PackageDetails> result = new Dictionary<string, PackageDetails>(StringComparer.OrdinalIgnoreCase);
-
-                while (reader.Read())
+                if (result == null)
                 {
-                    string id = reader.GetString(0);
-                    string version = reader.GetString(1);
-
-                    PackageDetails packageDetails;
-                    if (!result.TryGetValue(id, out packageDetails))
-                    {
-                        packageDetails = new PackageDetails(id);
-                        result.Add(id, packageDetails);
-                    }
-
-                    packageDetails.Versions.Add(version);
+                    return null;
                 }
 
-                return result;
+                return new Uri(result);
             }
         }
     }
