@@ -1,9 +1,15 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using NuGet.Versioning;
+using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data.SqlClient;
+using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Configuration;
@@ -12,9 +18,11 @@ namespace StagingWebApi.Resources
 {
     public class V3RegistrationResource : StageResourceBase
     {
-        public V3RegistrationResource(string ownerName, string stageId)
+        public V3RegistrationResource(Uri registrationUri, string ownerName, string stageId)
             : base(ownerName, stageId)
         {
+            RegistrationUri = registrationUri;
+
             Configuration rootWebConfig = WebConfigurationManager.OpenWebConfiguration("/StagingWebApi");
             ConnectionString = rootWebConfig.ConnectionStrings.ConnectionStrings["PackageStaging"].ConnectionString;
         }
@@ -22,7 +30,13 @@ namespace StagingWebApi.Resources
         public string ConnectionString
         {
             get;
-            set;
+            private set;
+        }
+
+        public Uri RegistrationUri
+        {
+            get;
+            private set;
         }
 
         public async Task<IDictionary<string, PackageDetails>> GetPackageDetails()
@@ -64,6 +78,264 @@ namespace StagingWebApi.Resources
                 }
 
                 return result;
+            }
+        }
+
+        public async Task<HttpResponseMessage> GetIndex(string id)
+        {
+            Uri baseServiceResource = await GetBaseServiceIndex(id);
+
+            using (SqlConnection connection = new SqlConnection(ConnectionString))
+            {
+                connection.Open();
+
+                SqlCommand command = new SqlCommand(@"
+                    SELECT StagePackage.[Version], StagePackage.[NupkgLocation]
+                    FROM StagePackage
+                    INNER JOIN Stage ON Stage.[Key] = StagePackage.StageKey
+                    INNER JOIN StageOwner ON Stage.[Key] = StageOwner.StageKey
+                    INNER JOIN Owner ON Owner.[Key] = StageOwner.OwnerKey
+                    WHERE Owner.Name = @OwnerName
+                      AND Stage.Name = @StageName
+                      AND StagePackage.[Id] = @Id
+                ", connection);
+
+                command.Parameters.AddWithValue("OwnerName", OwnerName);
+                command.Parameters.AddWithValue("StageName", StageName);
+                command.Parameters.AddWithValue("Id", id.ToLowerInvariant());
+
+                SqlDataReader reader = await command.ExecuteReaderAsync();
+
+                if (!reader.HasRows)
+                {
+                    if (baseServiceResource == null)
+                    {
+                        return new HttpResponseMessage(HttpStatusCode.NotFound);
+                    }
+                    else
+                    {
+                        HttpResponseMessage redirect = new HttpResponseMessage(HttpStatusCode.Redirect);
+                        redirect.Headers.Location = baseServiceResource;
+                        return redirect;
+                    }
+                }
+                else
+                {
+                    List<JObject> packageMetatdata = new List<JObject>();
+
+                    IDictionary<string, string> packageContentLocations = new Dictionary<string, string>();
+
+                    while (reader.Read())
+                    {
+                        string version = reader.GetString(0);
+
+                        //TODO: add stage package to packageMetadata
+
+                        packageMetatdata.Add(MakeCatalogEntry(id, version));
+
+                        packageContentLocations[version] = reader.GetString(1);
+                    }
+
+                    if (baseServiceResource != null)
+                    {
+                        IEnumerable<JObject> existingPackages = await GetPackageMetadata(baseServiceResource, packageContentLocations);
+                        if (existingPackages != null)
+                        {
+                            packageMetatdata.AddRange(existingPackages);
+                        }
+                    }
+
+                    HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
+                    response.Content = Utils.CreateJsonContent(MakeJson(packageMetatdata, packageContentLocations, RegistrationUri.AbsoluteUri));
+                    return response;
+                }
+            }
+        }
+
+        public async Task<HttpResponseMessage> GetPage(string id, string lower, string upper)
+        {
+            return await Task.FromResult(new HttpResponseMessage(HttpStatusCode.NotImplemented));
+        }
+
+        async Task<Uri> GetBaseServiceIndex(string id)
+        {
+            Uri address = await GetRegistrationBaseAddress();
+            return (address == null) ? null : new Uri(address, string.Format("{0}/index.json", id).ToLowerInvariant());
+        }
+
+        async Task<Uri> GetRegistrationBaseAddress()
+        {
+            using (SqlConnection connection = new SqlConnection(ConnectionString))
+            {
+                connection.Open();
+
+                SqlCommand command = new SqlCommand(@"
+                    SELECT Stage.BaseService
+                    FROM Stage
+                    INNER JOIN StageOwner ON Stage.[Key] = StageOwner.StageKey
+                    INNER JOIN Owner ON Owner.[Key] = StageOwner.OwnerKey
+                    WHERE Owner.Name = @OwnerName
+                      AND Stage.Name = @StageName
+                ", connection);
+
+                command.Parameters.AddWithValue("OwnerName", OwnerName);
+                command.Parameters.AddWithValue("StageName", StageName);
+
+                string result = (string)await command.ExecuteScalarAsync();
+
+                if (result == null)
+                {
+                    return null;
+                }
+
+                Uri serviceBase = new Uri(result);
+
+                Uri address = await Utils.GetService(serviceBase, "RegistrationsBaseUrl/3.0.0-beta");
+
+                return (address == null) ? null : address;
+            }
+        }
+
+        JObject MakeCatalogEntry(string id, string version)
+        {
+            JObject obj = new JObject();
+
+            obj["@id"] = string.Format("http://tempuri.org#{0}/{1}", id, version).ToLowerInvariant();
+            obj["@type"] = "PackageDetails";
+            obj["authors"] = "";
+            obj["description"] = id;
+            obj["iconUrl"] = "";
+            obj["id"] = id;
+            obj["language"] = "";
+            obj["licenseUrl"] = "";
+            obj["listed"] = true;
+            obj["minClientVersion"] = "";
+            obj["projectUrl"] = "";
+            obj["published"] = "1999-01-01T00:00:00.000Z";
+            obj["requireLicenseAcceptance"] = false;
+            obj["summary"] = id;
+            obj["tags"] = new JArray("");
+            obj["title"] = id;
+            obj["version"] = version;
+
+            return obj;
+        }
+
+        async static Task<IEnumerable<JObject>> LoadRanges(HttpClient httpClient, Uri registrationUri, CancellationToken token)
+        {
+            var index = await Utils.LoadResource(httpClient, registrationUri, token);
+            if (index == null)
+            {
+                return null;
+            }
+
+            IList<Task<JObject>> rangeTasks = new List<Task<JObject>>();
+            foreach (JObject item in index["items"])
+            {
+                var lower = NuGetVersion.Parse(item["lower"].ToString());
+                var upper = NuGetVersion.Parse(item["upper"].ToString());
+                JToken items;
+                if (!item.TryGetValue("items", out items))
+                {
+                    var rangeUri = item["@id"].ToObject<Uri>();
+                    rangeTasks.Add(Utils.LoadResource(httpClient, rangeUri, token));
+                }
+                else
+                {
+                    rangeTasks.Add(Task.FromResult(item));
+                }
+            }
+            await Task.WhenAll(rangeTasks.ToArray());
+            return rangeTasks.Select((t) => t.Result);
+        }
+
+        async Task<IEnumerable<JObject>> GetPackageMetadata(Uri registrationUri, IDictionary<string, string> packageContentLocations)
+        {
+            HttpClient client = new HttpClient();
+            var ranges = await LoadRanges(client, registrationUri, CancellationToken.None);
+            if (ranges == null)
+            {
+                return null;
+            }
+
+            var results = new List<JObject>();
+            foreach (var rangeObj in ranges)
+            {
+                foreach (JObject packageObj in rangeObj["items"])
+                {
+                    var catalogEntry = (JObject)packageObj["catalogEntry"];
+                    results.Add(catalogEntry);
+
+                    packageContentLocations[packageObj["catalogEntry"]["version"].ToString()] = packageObj["packageContent"].ToString();
+                }
+            }
+            return results;
+        }
+
+        static string MakeJson(List<JObject> packageMetadata, IDictionary<string, string> packageContentLocations, string registration)
+        {
+            NuGetVersion lower = null;
+            NuGetVersion upper = null;
+            foreach (JObject entry in packageMetadata)
+            {
+                NuGetVersion currentEntry = NuGetVersion.Parse(entry["version"].ToString());
+
+                if (lower == null || lower > currentEntry)
+                {
+                    lower = currentEntry;
+                }
+                if (upper == null || upper < currentEntry)
+                {
+                    upper = currentEntry;
+                }
+            }
+
+            using (StringWriter writer = new StringWriter())
+            {
+                using (JsonTextWriter jsonWriter = new JsonTextWriter(writer))
+                {
+                    jsonWriter.Formatting = Formatting.Indented;
+
+                    jsonWriter.WriteStartObject();
+                    jsonWriter.WritePropertyName("items");
+                    jsonWriter.WriteStartArray();
+
+                    //  just a single range
+                    jsonWriter.WriteStartObject();
+
+                    jsonWriter.WritePropertyName("lower");
+                    jsonWriter.WriteValue(lower.ToNormalizedString());
+
+                    jsonWriter.WritePropertyName("upper");
+                    jsonWriter.WriteValue(upper.ToNormalizedString());
+
+                    jsonWriter.WritePropertyName("items");
+                    jsonWriter.WriteStartArray();
+
+                    foreach (JObject catalogEntry in packageMetadata)
+                    {
+                        string packageContent = packageContentLocations[catalogEntry["version"].ToString()];
+
+                        jsonWriter.WriteStartObject();
+                        jsonWriter.WritePropertyName("packageContent");
+                        jsonWriter.WriteValue(packageContent);
+                        jsonWriter.WritePropertyName("registration");
+                        jsonWriter.WriteValue(registration);
+                        jsonWriter.WritePropertyName("catalogEntry");
+                        jsonWriter.WriteRawValue(catalogEntry.ToString());
+                        jsonWriter.WriteEndObject();
+                    }
+
+                    jsonWriter.WriteEndArray();
+                    jsonWriter.WriteEndObject();
+                    jsonWriter.WriteEndArray();
+
+                    jsonWriter.WriteEndObject();
+
+                    jsonWriter.Flush();
+                    writer.Flush();
+                    return writer.ToString();
+                }
             }
         }
     }

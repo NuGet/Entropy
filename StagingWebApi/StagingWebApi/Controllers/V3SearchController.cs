@@ -38,7 +38,7 @@ namespace StagingWebApi.Controllers
 
             SearchQuery query = ProcessQuery(Request.GetQueryNameValuePairs());
 
-            V3RegistrationResource registration = new V3RegistrationResource(owner, name);
+            V3RegistrationResource registration = new V3RegistrationResource(null, owner, name);
 
             string authority = Request.RequestUri.GetLeftPart(UriPartial.Authority);
             string registrationsBaseAddress = string.Format("{0}/v3/registration/{1}/{2}/", authority, owner, name);
@@ -53,13 +53,24 @@ namespace StagingWebApi.Controllers
 
             JObject obj = JObject.Parse(json);
 
+            HashSet<string> packageIdsFromRemote = new HashSet<string>(obj["data"].Select((p) => p["id"].ToString()), StringComparer.OrdinalIgnoreCase);
+
+            // simple hack for now - just add the local stage packages into the result from the server
+            foreach (var stagePackage in stagePackages.Values)
+            {
+                if (!packageIdsFromRemote.Contains(stagePackage.Id))
+                {
+                    ((JArray)obj["data"]).Add(MakeSearchResultEntry(registrationsBaseAddress, stagePackage));
+                }
+            }
+
             RAMDirectory directory = new RAMDirectory();
 
             //TODO: need to use same Analyzer as NuGet.org otherwise this drops data
             IndexWriter writer = new IndexWriter(directory, new StandardAnalyzer(Lucene.Net.Util.Version.LUCENE_30), IndexWriter.MaxFieldLength.UNLIMITED);
-
+            
             IDictionary<string, JObject> stash = new Dictionary<string, JObject>();
-
+           
             foreach (JObject entry in obj["data"])
             {
                 string id = entry["id"].ToString();
@@ -98,8 +109,9 @@ namespace StagingWebApi.Controllers
 
                     string entryId = stashedEntry["@id"].ToString();
 
+                    //  really getting quite hacky: only go in here if we are **modifying** a result from the remote service then
                     PackageDetails stagePackage;
-                    if (stagePackages.TryGetValue(id, out stagePackage))
+                    if (stagePackages.TryGetValue(id, out stagePackage) && packageIdsFromRemote.Contains(stashedEntry["id"].ToString()))
                     {
                         foreach (var stagePackageVersion in stagePackage.Versions)
                         {
@@ -136,6 +148,53 @@ namespace StagingWebApi.Controllers
             response.Content = Utils.CreateJsonContent(obj.ToString());
 
             return await Task.FromResult(response);
+        }
+
+        static JObject MakeSearchResultEntry(string registrationBaseAddress, PackageDetails packageDetails)
+        {
+            var highestVersion = NuGetVersion.Parse(packageDetails.Versions.First());
+            foreach (var packageDetailsVersion in packageDetails.Versions)
+            {
+                var current = NuGetVersion.Parse(packageDetailsVersion);
+                if (highestVersion < current)
+                {
+                    highestVersion = current;
+                }
+            }
+
+            string version = highestVersion.ToNormalizedString();
+
+            JObject obj = new JObject();
+
+            string entryId = string.Format("{0}{1}/{2}.json", registrationBaseAddress, packageDetails.Id, version).ToLowerInvariant();
+
+            obj["@id"] = entryId;
+            obj["@type"] = "Package";
+            obj["registration"] = string.Format("{0}{1}/index.json", registrationBaseAddress, packageDetails.Id).ToLowerInvariant();
+            obj["id"] = packageDetails.Id;
+            obj["description"] = packageDetails.Id;
+            obj["Summary"] = packageDetails.Id;
+            obj["title"] = packageDetails.Id;
+            obj["iconUrl"] = "";
+            obj["licenseUrl"] = "";
+            obj["projectUrl"] = "";
+            obj["tags"] = new JArray();
+            obj["authors"] = "";
+            obj["version"] = version;
+            obj["versions"] = new JArray();
+
+            foreach (var packageDetailsVersion in packageDetails.Versions)
+            {
+                JObject versionDetail = new JObject();
+
+                versionDetail["version"] = packageDetailsVersion;
+                versionDetail["downloads"] = 0;
+                versionDetail["@id"] = string.Format("{0}{1}/{2}.json", registrationBaseAddress, packageDetails.Id, packageDetailsVersion).ToLowerInvariant();
+
+                ((JArray)obj["versions"]).Add(versionDetail);
+            }
+
+            return obj;
         }
 
         static Query MakeLuceneQuery(string requestQuery)
