@@ -2,9 +2,37 @@
 <html>
 <head>
     <title>Show Results</title>
-	<meta charset="utf-8" />
+
+    <script src="https://code.jquery.com/jquery-1.10.2.js"></script>
+    <script>
+
+        var display = function (data) {
+
+            var items = [];
+            $.each(data, function (i, item) {
+                items.push("<li>" + item.id + " " + item.version + "</li>");
+            });
+
+            $("<ul/>", {
+                "class": "my-new-list",
+                html: items.join("")
+            }).appendTo("body");
+        }
+
+        var load = function (url) {
+            $.getJSON(url, display)
+                .fail(function (jqXHR, textStatus, error) {
+                    console.log(error);
+                });
+        }
+
+        $(document).ready(function () {
+            if (window.location.hash !== "") {
+                load(window.location.hash.substr(1));
+            }
+        });
+    </script>
 </head>
 <body>
-    This is a test page
 </body>
 </html>
