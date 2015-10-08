@@ -1,0 +1,2243 @@
+﻿
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>nuget - ProjectKIssueList</title>
+
+
+
+    <link rel="stylesheet" href="//ajax.aspnetcdn.com/ajax/bootstrap/3.0.0/css/bootstrap.min.css" />
+    <meta name="x-stylesheet-fallback-test" class="hidden" />
+    <script>!function(a,b,c){var d,e=document,f=e.getElementsByTagName("SCRIPT"),g=f[f.length-1].previousElementSibling,h=e.defaultView&&e.defaultView.getComputedStyle?e.defaultView.getComputedStyle(g):g.currentStyle;if(h&&h[a]!==b)for(d=0;d<c.length;d++)e.write('<link rel="stylesheet" href="'+c[d]+'"/>')}("visibility","hidden",["\/lib\/bootstrap\/css\/bootstrap.min.css"]);</script>
+    <link rel="stylesheet" href="/css/site.css?v=ZEtD9hIfGJGgikRFVpaH0dNMuevV-Uh59FuS_5_3qAQ" />
+
+</head>
+<body>
+    <div class="navbar navbar-inverse">
+        <div class="container">
+            <div class="navbar-collapse collapse">
+                <ul class="nav navbar-nav">
+                    <li class=""><a href="/">Home</a></li>
+                    <li class=""><a href="/kcore">kcore</a></li>
+                    <li class=""><a href="/mvc">mvc</a></li>
+                    <li class=""><a href="/data">data</a></li>
+                    <li class=""><a href="/pm">pm</a></li>
+                    <li class=""><a href="/docs">docs</a></li>
+                    <li class=""><a href="/engineering">engineering</a></li>
+                    <li class="active"><a href="/nuget">nuget</a></li>
+                </ul>
+                <ul class="nav navbar-nav navbar-right">
+                    <li><p class="navbar-text">Signed in as <a href="https://github.com/RanjiniM">RanjiniM</a></p></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="container body-content">
+
+
+
+        <div class="row">
+            <div class="col-md-8">
+                <ul class="nav nav-pills" id="app-tabs">
+                    <li class="active"><a href="#group-by-assignee">Group by assignee</a></li>
+                    <li class=""><a href="#group-by-milestone">Group by milestone</a></li>
+                    <li class=""><a href="#group-by-repo">Group by repo</a></li>
+                </ul>
+            </div>
+            <div class="col-md-4 text-right">
+                <button class="btn btn-info" type="button" data-toggle="collapse" data-target="#collapseExample">
+                    Included repos <span class="badge">7</span>
+                </button>
+            </div>
+        </div>
+
+        <br />
+
+        <div class="collapse" id="collapseExample">
+            <div class="well">
+                <ol>
+                    <li><a href="https://github.com/nuget/Engineering/issues">nuget/Engineering</a></li>
+                    <li><a href="https://github.com/nuget/Home/issues">nuget/Home</a></li>
+                    <li><a href="https://github.com/nuget/NuGet.Client/issues">nuget/NuGet.Client</a></li>
+                    <li><a href="https://github.com/nuget/NuGet.PackageManagement/issues">nuget/NuGet.PackageManagement</a></li>
+                    <li><a href="https://github.com/nuget/NuGet.VisualStudioExtension/issues">nuget/NuGet.VisualStudioExtension</a></li>
+                    <li><a href="https://github.com/nuget/NuGet2/issues">nuget/NuGet2</a></li>
+                    <li><a href="https://github.com/nuget/NuGet3/issues">nuget/NuGet3</a></li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-2 col-md-push-10">
+                <h3>Issues</h3>
+                <div class="alert alert-info" data-toggle="tooltip" data-placement="left" title="Open issues not in Backlog milestone">
+                    <a href="https://github.com/search?q=is%3Aissue%20is%3Aopen%20repo%3Anuget%2FEngineering%20repo%3Anuget%2FHome%20repo%3Anuget%2FNuGet2%20repo%3Anuget%2FNuGet3%20repo%3Anuget%2FNuGet.Client%20repo%3Anuget%2FNuGet.PackageManagement%20repo%3Anuget%2FNuGet.VisualStudioExtension%20-milestone%3ABacklog%20-milestone%3ADiscussion%20-milestone%3ADiscussions &amp;s=updated">Open</a> <span class="badge">484</span>
+                </div>
+                <div class="alert alert-info" data-toggle="tooltip" data-placement="left" title="Open issues with '2 - Working' label">
+                    <a href="https://github.com/search?q=is%3Aissue%20is%3Aopen%20label%3A%222%20-%20Working%22%20repo%3Anuget%2FEngineering%20repo%3Anuget%2FHome%20repo%3Anuget%2FNuGet2%20repo%3Anuget%2FNuGet3%20repo%3Anuget%2FNuGet.Client%20repo%3Anuget%2FNuGet.PackageManagement%20repo%3Anuget%2FNuGet.VisualStudioExtension &amp;s=updated">Working</a> <span class="badge">19</span>
+                </div>
+                <div class="alert alert-info" data-toggle="tooltip" data-placement="left" title="Open issues not in a milestone">
+                    <a href="https://github.com/search?q=is%3Aissue%20is%3Aopen%20no%3Amilestone%20repo%3Anuget%2FEngineering%20repo%3Anuget%2FHome%20repo%3Anuget%2FNuGet2%20repo%3Anuget%2FNuGet3%20repo%3Anuget%2FNuGet.Client%20repo%3Anuget%2FNuGet.PackageManagement%20repo%3Anuget%2FNuGet.VisualStudioExtension &amp;s=updated">Untriaged</a> <span class="badge">77</span>
+                </div>
+                <h3>PRs</h3>
+                <div class="alert alert-info" data-toggle="tooltip" data-placement="left" title="Open PRs">
+                    <a href="https://github.com/search?q=is%3Apr%20is%3Aopen%20repo%3Anuget%2FEngineering%20repo%3Anuget%2FHome%20repo%3Anuget%2FNuGet2%20repo%3Anuget%2FNuGet3%20repo%3Anuget%2FNuGet.Client%20repo%3Anuget%2FNuGet.PackageManagement%20repo%3Anuget%2FNuGet.VisualStudioExtension &amp;s=updated">Open</a> <span class="badge">20</span>
+                </div>
+                <div class="alert alert-danger" data-toggle="tooltip" data-placement="left" title="Open PRs over 14 days old">
+                    <a href="https://github.com/search?q=is%3Apr%20is%3Aopen%20created%3A%3C%3D2015-09-17%20repo%3Anuget%2FEngineering%20repo%3Anuget%2FHome%20repo%3Anuget%2FNuGet2%20repo%3Anuget%2FNuGet3%20repo%3Anuget%2FNuGet.Client%20repo%3Anuget%2FNuGet.PackageManagement%20repo%3Anuget%2FNuGet.VisualStudioExtension &amp;s=updated">Stale</a> <span class="badge">12</span>
+                </div>
+            </div>
+
+            <div class="col-md-10 col-md-pull-2">
+                <div class="tab-content">
+                    <div class="tab-pane active" id="group-by-assignee">
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <h3 class="panel-title"><strong>danliu</strong> <span class="badge">2</span></h3>
+                            </div>
+                            <div class="panel-body">
+                                <ul class="list-group">
+                                    <li class="list-group-item" style="">
+                                        <div class="row">
+                                            <div class="col-md-1">
+                                                <a href="https://github.com/danliu">
+                                                    <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/1087852?v=3" title="danliu" alt="danliu" />
+                                                </a>
+                                            </div>
+
+                                            <div class="col-md-1">
+                                                <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/Home/issues/1484">1484</a></span>
+                                            </div>
+
+                                            <div class="col-md-10">
+                                                <div><strong>Add functional tests for project K</strong></div>
+
+                                                <span class="label" style="background-color: #CCCCCC; color: #000000">2 - Working</span>
+                                                <span class="label" style="background-color: #159818; color: #ffffff">Area:VS.Client</span>
+                                                <span class="label" style="background-color: #bfd4f2; color: #000000">V3.3-Sprint1</span>
+
+                                                <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Started working on 9/29/2015 11:07:21 AM -07:00">Started working 2 days ago</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">3.3.0-Beta</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">nuget/Home</span>
+                                            </div>
+                                        </div>
+
+                                    </li>
+                                    <li class="list-group-item" style="">
+                                        <div class="row">
+                                            <div class="col-md-1">
+                                                <a href="https://github.com/danliu">
+                                                    <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/1087852?v=3" title="danliu" alt="danliu" />
+                                                </a>
+                                            </div>
+
+                                            <div class="col-md-1">
+                                                <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/Home/issues/1419">1419</a></span>
+                                            </div>
+
+                                            <div class="col-md-10">
+                                                <div><strong>Validate and test the sections of NuGet project.json schema</strong></div>
+
+                                                <span class="label" style="background-color: #CCCCCC; color: #000000">2 - Working</span>
+                                                <span class="label" style="background-color: #159818; color: #ffffff">Area:VS.Client</span>
+                                                <span class="label" style="background-color: #bfd4f2; color: #000000">V3.3-Sprint1</span>
+
+                                                <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Started working on 10/1/2015 10:04:20 AM -07:00">Started working 1 hour ago</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">3.3.0-Beta</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">nuget/Home</span>
+                                            </div>
+                                        </div>
+
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <h3 class="panel-title"><strong>deepakaravindr</strong> <span class="badge">1</span></h3>
+                            </div>
+                            <div class="panel-body">
+                                <ul class="list-group">
+                                    <li class="list-group-item" style="">
+                                        <div class="row">
+                                            <div class="col-md-1">
+                                                <a href="https://github.com/deepakaravindr">
+                                                    <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/2380340?v=3" title="deepakaravindr" alt="deepakaravindr" />
+                                                </a>
+                                            </div>
+
+                                            <div class="col-md-1">
+                                                <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/Home/issues/1421">1421</a></span>
+                                            </div>
+
+                                            <div class="col-md-10">
+                                                <div><strong>&#x27;nuget.exe add&#x27; to add packages to offline feed</strong></div>
+
+                                                <span class="label" style="background-color: #CCCCCC; color: #000000">2 - Working</span>
+                                                <span class="label" style="background-color: #207de5; color: #ffffff">Type:Feature</span>
+                                                <span class="label" style="background-color: #bfd4f2; color: #000000">V3.3-Sprint1</span>
+
+                                                <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Started working on 9/24/2015 2:25:50 PM -07:00">Started working 6 days ago</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">3.3.0-Beta</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">nuget/Home</span>
+                                            </div>
+                                        </div>
+
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <h3 class="panel-title"><strong>emgarten</strong> <span class="badge">5</span></h3>
+                            </div>
+                            <div class="panel-body">
+                                <ul class="list-group">
+                                    <li class="list-group-item" style="">
+                                        <div class="row">
+                                            <div class="col-md-1">
+                                                <a href="https://github.com/emgarten">
+                                                    <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/6381138?v=3" title="emgarten" alt="emgarten" />
+                                                </a>
+                                            </div>
+
+                                            <div class="col-md-1">
+                                                <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/Home/issues/1448">1448</a></span>
+                                            </div>
+
+                                            <div class="col-md-10">
+                                                <div><strong>Package restore intermittently fails with &quot;Unable to find version &#x27;x&#x27; of package &#x27;y&#x27;&quot;</strong></div>
+
+                                                <span class="label" style="background-color: #CCCCCC; color: #000000">2 - Working</span>
+                                                <span class="label" style="background-color: #bfd4f2; color: #000000">V3.3-Sprint1</span>
+
+                                                <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Started working on 9/29/2015 8:17:31 PM -07:00">Started working 1 day ago</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">Commandline 3.2.1</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">nuget/Home</span>
+                                            </div>
+                                        </div>
+
+                                    </li>
+                                    <li class="list-group-item" style="">
+                                        <div class="row">
+                                            <div class="col-md-1">
+                                                <a href="https://github.com/emgarten">
+                                                    <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/6381138?v=3" title="emgarten" alt="emgarten" />
+                                                </a>
+                                            </div>
+
+                                            <div class="col-md-1">
+                                                <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/Home/issues/1427">1427</a></span>
+                                            </div>
+
+                                            <div class="col-md-10">
+                                                <div><strong>Fix NuGet.Config casing</strong></div>
+
+                                                <span class="label" style="background-color: #CCCCCC; color: #000000">2 - Working</span>
+                                                <span class="label" style="background-color: #207de5; color: #ffffff">Type:Bug</span>
+                                                <span class="label" style="background-color: #bfd4f2; color: #000000">V3.3-Sprint1</span>
+
+                                                <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Started working on 9/29/2015 8:17:31 PM -07:00">Started working 1 day ago</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">Commandline 3.2.1</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">nuget/Home</span>
+                                            </div>
+                                        </div>
+
+                                    </li>
+                                    <li class="list-group-item" style="">
+                                        <div class="row">
+                                            <div class="col-md-1">
+                                                <a href="https://github.com/emgarten">
+                                                    <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/6381138?v=3" title="emgarten" alt="emgarten" />
+                                                </a>
+                                            </div>
+
+                                            <div class="col-md-1">
+                                                <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/Home/issues/1426">1426</a></span>
+                                            </div>
+
+                                            <div class="col-md-10">
+                                                <div><strong>nuget.exe network request optimizations</strong></div>
+
+                                                <span class="label" style="background-color: #CCCCCC; color: #000000">2 - Working</span>
+                                                <span class="label" style="background-color: #207de5; color: #ffffff">Type:Feature</span>
+                                                <span class="label" style="background-color: #bfd4f2; color: #000000">V3.3-Sprint1</span>
+
+                                                <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Started working on 9/29/2015 8:17:31 PM -07:00">Started working 1 day ago</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">Commandline 3.2.1</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">nuget/Home</span>
+                                            </div>
+                                        </div>
+
+                                    </li>
+                                    <li class="list-group-item" style="">
+                                        <div class="row">
+                                            <div class="col-md-1">
+                                                <a href="https://github.com/emgarten">
+                                                    <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/6381138?v=3" title="emgarten" alt="emgarten" />
+                                                </a>
+                                            </div>
+
+                                            <div class="col-md-1">
+                                                <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/Home/issues/1321">1321</a></span>
+                                            </div>
+
+                                            <div class="col-md-10">
+                                                <div><strong>nuget.exe: Code to construct SourceRepositoryProvider object is repeated several times</strong></div>
+
+                                                <span class="label" style="background-color: #CCCCCC; color: #000000">2 - Working</span>
+                                                <span class="label" style="background-color: #bfd4f2; color: #000000">V3.3-Sprint1</span>
+
+                                                <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Started working on 9/29/2015 8:17:31 PM -07:00">Started working 1 day ago</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">Commandline 3.2.1</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">nuget/Home</span>
+                                            </div>
+                                        </div>
+
+                                    </li>
+                                    <li class="list-group-item" style="">
+                                        <div class="row">
+                                            <div class="col-md-1">
+                                                <a href="https://github.com/emgarten">
+                                                    <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/6381138?v=3" title="emgarten" alt="emgarten" />
+                                                </a>
+                                            </div>
+
+                                            <div class="col-md-1">
+                                                <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/Home/issues/1227">1227</a></span>
+                                            </div>
+
+                                            <div class="col-md-10">
+                                                <div><strong>nuget.exe should skip DNX projects</strong></div>
+
+                                                <span class="label" style="background-color: #CCCCCC; color: #000000">2 - Working</span>
+                                                <span class="label" style="background-color: #fbca04; color: #000000">Priority:0</span>
+                                                <span class="label" style="background-color: #207de5; color: #ffffff">Type:Bug</span>
+                                                <span class="label" style="background-color: #bfd4f2; color: #000000">V3.3-Sprint1</span>
+
+                                                <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Started working on 9/29/2015 8:17:31 PM -07:00">Started working 1 day ago</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">Commandline 3.2.1</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">nuget/Home</span>
+                                            </div>
+                                        </div>
+
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <h3 class="panel-title"><strong>feiling</strong> <span class="badge">3</span></h3>
+                            </div>
+                            <div class="panel-body">
+                                <ul class="list-group">
+                                    <li class="list-group-item" style="">
+                                        <div class="row">
+                                            <div class="col-md-1">
+                                                <a href="https://github.com/feiling">
+                                                    <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/2679220?v=3" title="feiling" alt="feiling" />
+                                                </a>
+                                            </div>
+
+                                            <div class="col-md-1">
+                                                <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/Home/issues/1430">1430</a></span>
+                                            </div>
+
+                                            <div class="col-md-10">
+                                                <div><strong>Minor UI update: update the top according to the new design</strong></div>
+
+                                                <span class="label" style="background-color: #CCCCCC; color: #000000">2 - Working</span>
+                                                <span class="label" style="background-color: #207de5; color: #ffffff">Type:Feature</span>
+                                                <span class="label" style="background-color: #bfd4f2; color: #000000">V3.3-Sprint1</span>
+
+                                                <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Started working on 9/25/2015 9:45:59 AM -07:00">Started working 6 days ago</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">&lt;no milestone&gt;</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">nuget/Home</span>
+                                            </div>
+                                        </div>
+
+                                    </li>
+                                    <li class="list-group-item" style="">
+                                        <div class="row">
+                                            <div class="col-md-1">
+                                                <a href="https://github.com/feiling">
+                                                    <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/2679220?v=3" title="feiling" alt="feiling" />
+                                                </a>
+                                            </div>
+
+                                            <div class="col-md-1">
+                                                <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/Home/issues/1491">1491</a></span>
+                                            </div>
+
+                                            <div class="col-md-10">
+                                                <div><strong>UI change: change class SearchResultPackageMetadata to match the new UI design</strong></div>
+
+                                                <span class="label" style="background-color: #CCCCCC; color: #000000">2 - Working</span>
+                                                <span class="label" style="background-color: #207de5; color: #ffffff">Type:Feature</span>
+                                                <span class="label" style="background-color: #bfd4f2; color: #000000">V3.3-Sprint1</span>
+
+                                                <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Started working on 9/30/2015 1:25:32 PM -07:00">Started working 21 hours ago</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">&lt;no milestone&gt;</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">nuget/Home</span>
+                                            </div>
+                                        </div>
+
+                                    </li>
+                                    <li class="list-group-item" style="">
+                                        <div class="row">
+                                            <div class="col-md-1">
+                                                <a href="https://github.com/feiling">
+                                                    <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/2679220?v=3" title="feiling" alt="feiling" />
+                                                </a>
+                                            </div>
+
+                                            <div class="col-md-1">
+                                                <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/Home/issues/1431">1431</a></span>
+                                            </div>
+
+                                            <div class="col-md-10">
+                                                <div><strong>Minor UI update: update the package list according to the new design</strong></div>
+
+                                                <span class="label" style="background-color: #CCCCCC; color: #000000">2 - Working</span>
+                                                <span class="label" style="background-color: #207de5; color: #ffffff">Type:Feature</span>
+                                                <span class="label" style="background-color: #bfd4f2; color: #000000">V3.3-Sprint1</span>
+
+                                                <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Started working on 9/30/2015 1:25:51 PM -07:00">Started working 21 hours ago</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">&lt;no milestone&gt;</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">nuget/Home</span>
+                                            </div>
+                                        </div>
+
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <h3 class="panel-title"><strong>johnataylor</strong> <span class="badge">2</span></h3>
+                            </div>
+                            <div class="panel-body">
+                                <ul class="list-group">
+                                    <li class="list-group-item" style="background-color: wheat">
+                                        <div class="row">
+                                            <div class="col-md-1">
+                                                <a href="https://github.com/johnataylor">
+                                                    <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/2523898?v=3" title="johnataylor" alt="johnataylor" />
+                                                </a>
+                                            </div>
+
+                                            <div class="col-md-1">
+                                                <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/Home/issues/737">737</a></span>
+                                            </div>
+
+                                            <div class="col-md-10">
+                                                <div><strong>`Update-Package [packagename] -reinstall` reinstalls all packages instead of just the named one</strong></div>
+
+                                                <span class="label" style="background-color: #CCCCCC; color: #000000">2 - Working</span>
+                                                <span class="label" style="background-color: #159818; color: #ffffff">Area:VS.Client</span>
+                                                <span class="label" style="background-color: #fbca04; color: #000000">Priority:1</span>
+
+                                                <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Started working on 6/12/2015 5:07:55 PM -07:00">Started working 110 days ago</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">3.3.0-Beta</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">nuget/Home</span>
+                                            </div>
+                                        </div>
+
+                                    </li>
+                                    <li class="list-group-item" style="background-color: wheat">
+                                        <div class="row">
+                                            <div class="col-md-1">
+                                                <a href="https://github.com/johnataylor">
+                                                    <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/2523898?v=3" title="johnataylor" alt="johnataylor" />
+                                                </a>
+                                            </div>
+
+                                            <div class="col-md-1">
+                                                <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/Home/issues/1370">1370</a></span>
+                                            </div>
+
+                                            <div class="col-md-10">
+                                                <div><strong>Update-Package fails when using prerelease versions and multiple sources</strong></div>
+
+                                                <span class="label" style="background-color: #CCCCCC; color: #000000">2 - Working</span>
+                                                <span class="label" style="background-color: #fbca04; color: #000000">Priority:1</span>
+                                                <span class="label" style="background-color: #207de5; color: #ffffff">Type:Bug</span>
+
+                                                <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Started working on 9/30/2015 5:04:32 PM -07:00">Started working 18 hours ago</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">3.3.0-Beta</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">nuget/Home</span>
+                                            </div>
+                                        </div>
+
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <h3 class="panel-title"><strong>MeniZalzman</strong> <span class="badge">2</span></h3>
+                            </div>
+                            <div class="panel-body">
+                                <ul class="list-group">
+                                    <li class="list-group-item" style="">
+                                        <div class="row">
+                                            <div class="col-md-1">
+                                                <a href="https://github.com/MeniZalzman">
+                                                    <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/9874966?v=3" title="MeniZalzman" alt="MeniZalzman" />
+                                                </a>
+                                            </div>
+
+                                            <div class="col-md-1">
+                                                <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/Engineering/issues/16">16</a></span>
+                                            </div>
+
+                                            <div class="col-md-10">
+                                                <div><strong>[EngineeringSystem] Create a new build script to enable local build on NuGet.Client</strong></div>
+
+                                                <span class="label" style="background-color: #CCCCCC; color: #000000">2 - Working</span>
+                                                <span class="label" style="background-color: #bfd4f2; color: #000000">V3.3-Sprint1</span>
+
+                                                <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Started working on 9/30/2015 3:16:18 PM -07:00">Started working 19 hours ago</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">&lt;no milestone&gt;</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">nuget/Engineering</span>
+                                            </div>
+                                        </div>
+
+                                    </li>
+                                    <li class="list-group-item" style="">
+                                        <div class="row">
+                                            <div class="col-md-1">
+                                                <a href="https://github.com/MeniZalzman">
+                                                    <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/9874966?v=3" title="MeniZalzman" alt="MeniZalzman" />
+                                                </a>
+                                            </div>
+
+                                            <div class="col-md-1">
+                                                <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/Engineering/issues/15">15</a></span>
+                                            </div>
+
+                                            <div class="col-md-10">
+                                                <div><strong>[EngineeringSystem] Create a new build configuration to enable Continue integration on NuGet.Client</strong></div>
+
+                                                <span class="label" style="background-color: #CCCCCC; color: #000000">2 - Working</span>
+                                                <span class="label" style="background-color: #bfd4f2; color: #000000">V3.3-Sprint1</span>
+
+                                                <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Started working on 9/30/2015 3:20:11 PM -07:00">Started working 19 hours ago</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">&lt;no milestone&gt;</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">nuget/Engineering</span>
+                                            </div>
+                                        </div>
+
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <h3 class="panel-title"><strong>zhili1208</strong> <span class="badge">4</span></h3>
+                            </div>
+                            <div class="panel-body">
+                                <ul class="list-group">
+                                    <li class="list-group-item" style="">
+                                        <div class="row">
+                                            <div class="col-md-1">
+                                                <a href="https://github.com/zhili1208">
+                                                    <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/7131513?v=3" title="zhili1208" alt="zhili1208" />
+                                                </a>
+                                            </div>
+
+                                            <div class="col-md-1">
+                                                <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/Home/issues/1444">1444</a></span>
+                                            </div>
+
+                                            <div class="col-md-10">
+                                                <div><strong>Design and implement IPackageManagerProvider API</strong></div>
+
+                                                <span class="label" style="background-color: #CCCCCC; color: #000000">2 - Working</span>
+                                                <span class="label" style="background-color: #207de5; color: #ffffff">Type:Feature</span>
+                                                <span class="label" style="background-color: #bfd4f2; color: #000000">V3.3-Sprint1</span>
+
+                                                <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Started working on 9/24/2015 11:33:06 AM -07:00">Started working 6 days ago</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">&lt;no milestone&gt;</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">nuget/Home</span>
+                                            </div>
+                                        </div>
+
+                                    </li>
+                                    <li class="list-group-item" style="">
+                                        <div class="row">
+                                            <div class="col-md-1">
+                                                <a href="https://github.com/zhili1208">
+                                                    <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/7131513?v=3" title="zhili1208" alt="zhili1208" />
+                                                </a>
+                                            </div>
+
+                                            <div class="col-md-1">
+                                                <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/Home/issues/1447">1447</a></span>
+                                            </div>
+
+                                            <div class="col-md-10">
+                                                <div><strong>Implement PackageManagerProvider order sort</strong></div>
+
+                                                <span class="label" style="background-color: #CCCCCC; color: #000000">2 - Working</span>
+                                                <span class="label" style="background-color: #207de5; color: #ffffff">Type:Feature</span>
+                                                <span class="label" style="background-color: #bfd4f2; color: #000000">V3.3-Sprint1</span>
+
+                                                <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Started working on 9/24/2015 1:55:05 PM -07:00">Started working 6 days ago</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">&lt;no milestone&gt;</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">nuget/Home</span>
+                                            </div>
+                                        </div>
+
+                                    </li>
+                                    <li class="list-group-item" style="">
+                                        <div class="row">
+                                            <div class="col-md-1">
+                                                <a href="https://github.com/zhili1208">
+                                                    <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/7131513?v=3" title="zhili1208" alt="zhili1208" />
+                                                </a>
+                                            </div>
+
+                                            <div class="col-md-1">
+                                                <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/Home/issues/1445">1445</a></span>
+                                            </div>
+
+                                            <div class="col-md-10">
+                                                <div><strong>Intergate IPackageManagerProvider into PackageManagement.UI</strong></div>
+
+                                                <span class="label" style="background-color: #CCCCCC; color: #000000">2 - Working</span>
+                                                <span class="label" style="background-color: #207de5; color: #ffffff">Type:Feature</span>
+                                                <span class="label" style="background-color: #bfd4f2; color: #000000">V3.3-Sprint1</span>
+
+                                                <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Started working on 9/28/2015 4:09:33 PM -07:00">Started working 2 days ago</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">&lt;no milestone&gt;</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">nuget/Home</span>
+                                            </div>
+                                        </div>
+
+                                    </li>
+                                    <li class="list-group-item" style="">
+                                        <div class="row">
+                                            <div class="col-md-1">
+                                                <a href="https://github.com/zhili1208">
+                                                    <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/7131513?v=3" title="zhili1208" alt="zhili1208" />
+                                                </a>
+                                            </div>
+
+                                            <div class="col-md-1">
+                                                <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/Home/issues/1446">1446</a></span>
+                                            </div>
+
+                                            <div class="col-md-10">
+                                                <div><strong>Bower/NuGet integration UI layout and warning Message</strong></div>
+
+                                                <span class="label" style="background-color: #CCCCCC; color: #000000">2 - Working</span>
+                                                <span class="label" style="background-color: #207de5; color: #ffffff">Type:Feature</span>
+                                                <span class="label" style="background-color: #bfd4f2; color: #000000">V3.3-Sprint1</span>
+
+                                                <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Started working on 9/29/2015 3:20:34 PM -07:00">Started working 1 day ago</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">&lt;no milestone&gt;</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">nuget/Home</span>
+                                            </div>
+                                        </div>
+
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane" id="group-by-milestone">
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <h3 class="panel-title"><strong>&lt;no milestone&gt;</strong> <span class="badge">9</span></h3>
+                            </div>
+                            <div class="panel-body">
+                                <ul class="list-group">
+                                    <li class="list-group-item" style="">
+                                        <div class="row">
+                                            <div class="col-md-1">
+                                                <a href="https://github.com/zhili1208">
+                                                    <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/7131513?v=3" title="zhili1208" alt="zhili1208" />
+                                                </a>
+                                            </div>
+
+                                            <div class="col-md-1">
+                                                <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/Home/issues/1444">1444</a></span>
+                                            </div>
+
+                                            <div class="col-md-10">
+                                                <div><strong>Design and implement IPackageManagerProvider API</strong></div>
+
+                                                <span class="label" style="background-color: #CCCCCC; color: #000000">2 - Working</span>
+                                                <span class="label" style="background-color: #207de5; color: #ffffff">Type:Feature</span>
+                                                <span class="label" style="background-color: #bfd4f2; color: #000000">V3.3-Sprint1</span>
+
+                                                <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Started working on 9/24/2015 11:33:06 AM -07:00">Started working 6 days ago</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">&lt;no milestone&gt;</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">nuget/Home</span>
+                                            </div>
+                                        </div>
+
+                                    </li>
+                                    <li class="list-group-item" style="">
+                                        <div class="row">
+                                            <div class="col-md-1">
+                                                <a href="https://github.com/zhili1208">
+                                                    <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/7131513?v=3" title="zhili1208" alt="zhili1208" />
+                                                </a>
+                                            </div>
+
+                                            <div class="col-md-1">
+                                                <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/Home/issues/1447">1447</a></span>
+                                            </div>
+
+                                            <div class="col-md-10">
+                                                <div><strong>Implement PackageManagerProvider order sort</strong></div>
+
+                                                <span class="label" style="background-color: #CCCCCC; color: #000000">2 - Working</span>
+                                                <span class="label" style="background-color: #207de5; color: #ffffff">Type:Feature</span>
+                                                <span class="label" style="background-color: #bfd4f2; color: #000000">V3.3-Sprint1</span>
+
+                                                <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Started working on 9/24/2015 1:55:05 PM -07:00">Started working 6 days ago</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">&lt;no milestone&gt;</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">nuget/Home</span>
+                                            </div>
+                                        </div>
+
+                                    </li>
+                                    <li class="list-group-item" style="">
+                                        <div class="row">
+                                            <div class="col-md-1">
+                                                <a href="https://github.com/feiling">
+                                                    <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/2679220?v=3" title="feiling" alt="feiling" />
+                                                </a>
+                                            </div>
+
+                                            <div class="col-md-1">
+                                                <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/Home/issues/1430">1430</a></span>
+                                            </div>
+
+                                            <div class="col-md-10">
+                                                <div><strong>Minor UI update: update the top according to the new design</strong></div>
+
+                                                <span class="label" style="background-color: #CCCCCC; color: #000000">2 - Working</span>
+                                                <span class="label" style="background-color: #207de5; color: #ffffff">Type:Feature</span>
+                                                <span class="label" style="background-color: #bfd4f2; color: #000000">V3.3-Sprint1</span>
+
+                                                <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Started working on 9/25/2015 9:45:59 AM -07:00">Started working 6 days ago</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">&lt;no milestone&gt;</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">nuget/Home</span>
+                                            </div>
+                                        </div>
+
+                                    </li>
+                                    <li class="list-group-item" style="">
+                                        <div class="row">
+                                            <div class="col-md-1">
+                                                <a href="https://github.com/zhili1208">
+                                                    <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/7131513?v=3" title="zhili1208" alt="zhili1208" />
+                                                </a>
+                                            </div>
+
+                                            <div class="col-md-1">
+                                                <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/Home/issues/1445">1445</a></span>
+                                            </div>
+
+                                            <div class="col-md-10">
+                                                <div><strong>Intergate IPackageManagerProvider into PackageManagement.UI</strong></div>
+
+                                                <span class="label" style="background-color: #CCCCCC; color: #000000">2 - Working</span>
+                                                <span class="label" style="background-color: #207de5; color: #ffffff">Type:Feature</span>
+                                                <span class="label" style="background-color: #bfd4f2; color: #000000">V3.3-Sprint1</span>
+
+                                                <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Started working on 9/28/2015 4:09:33 PM -07:00">Started working 2 days ago</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">&lt;no milestone&gt;</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">nuget/Home</span>
+                                            </div>
+                                        </div>
+
+                                    </li>
+                                    <li class="list-group-item" style="">
+                                        <div class="row">
+                                            <div class="col-md-1">
+                                                <a href="https://github.com/zhili1208">
+                                                    <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/7131513?v=3" title="zhili1208" alt="zhili1208" />
+                                                </a>
+                                            </div>
+
+                                            <div class="col-md-1">
+                                                <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/Home/issues/1446">1446</a></span>
+                                            </div>
+
+                                            <div class="col-md-10">
+                                                <div><strong>Bower/NuGet integration UI layout and warning Message</strong></div>
+
+                                                <span class="label" style="background-color: #CCCCCC; color: #000000">2 - Working</span>
+                                                <span class="label" style="background-color: #207de5; color: #ffffff">Type:Feature</span>
+                                                <span class="label" style="background-color: #bfd4f2; color: #000000">V3.3-Sprint1</span>
+
+                                                <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Started working on 9/29/2015 3:20:34 PM -07:00">Started working 1 day ago</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">&lt;no milestone&gt;</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">nuget/Home</span>
+                                            </div>
+                                        </div>
+
+                                    </li>
+                                    <li class="list-group-item" style="">
+                                        <div class="row">
+                                            <div class="col-md-1">
+                                                <a href="https://github.com/feiling">
+                                                    <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/2679220?v=3" title="feiling" alt="feiling" />
+                                                </a>
+                                            </div>
+
+                                            <div class="col-md-1">
+                                                <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/Home/issues/1491">1491</a></span>
+                                            </div>
+
+                                            <div class="col-md-10">
+                                                <div><strong>UI change: change class SearchResultPackageMetadata to match the new UI design</strong></div>
+
+                                                <span class="label" style="background-color: #CCCCCC; color: #000000">2 - Working</span>
+                                                <span class="label" style="background-color: #207de5; color: #ffffff">Type:Feature</span>
+                                                <span class="label" style="background-color: #bfd4f2; color: #000000">V3.3-Sprint1</span>
+
+                                                <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Started working on 9/30/2015 1:25:32 PM -07:00">Started working 21 hours ago</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">&lt;no milestone&gt;</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">nuget/Home</span>
+                                            </div>
+                                        </div>
+
+                                    </li>
+                                    <li class="list-group-item" style="">
+                                        <div class="row">
+                                            <div class="col-md-1">
+                                                <a href="https://github.com/feiling">
+                                                    <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/2679220?v=3" title="feiling" alt="feiling" />
+                                                </a>
+                                            </div>
+
+                                            <div class="col-md-1">
+                                                <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/Home/issues/1431">1431</a></span>
+                                            </div>
+
+                                            <div class="col-md-10">
+                                                <div><strong>Minor UI update: update the package list according to the new design</strong></div>
+
+                                                <span class="label" style="background-color: #CCCCCC; color: #000000">2 - Working</span>
+                                                <span class="label" style="background-color: #207de5; color: #ffffff">Type:Feature</span>
+                                                <span class="label" style="background-color: #bfd4f2; color: #000000">V3.3-Sprint1</span>
+
+                                                <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Started working on 9/30/2015 1:25:51 PM -07:00">Started working 21 hours ago</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">&lt;no milestone&gt;</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">nuget/Home</span>
+                                            </div>
+                                        </div>
+
+                                    </li>
+                                    <li class="list-group-item" style="">
+                                        <div class="row">
+                                            <div class="col-md-1">
+                                                <a href="https://github.com/MeniZalzman">
+                                                    <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/9874966?v=3" title="MeniZalzman" alt="MeniZalzman" />
+                                                </a>
+                                            </div>
+
+                                            <div class="col-md-1">
+                                                <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/Engineering/issues/16">16</a></span>
+                                            </div>
+
+                                            <div class="col-md-10">
+                                                <div><strong>[EngineeringSystem] Create a new build script to enable local build on NuGet.Client</strong></div>
+
+                                                <span class="label" style="background-color: #CCCCCC; color: #000000">2 - Working</span>
+                                                <span class="label" style="background-color: #bfd4f2; color: #000000">V3.3-Sprint1</span>
+
+                                                <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Started working on 9/30/2015 3:16:18 PM -07:00">Started working 19 hours ago</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">&lt;no milestone&gt;</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">nuget/Engineering</span>
+                                            </div>
+                                        </div>
+
+                                    </li>
+                                    <li class="list-group-item" style="">
+                                        <div class="row">
+                                            <div class="col-md-1">
+                                                <a href="https://github.com/MeniZalzman">
+                                                    <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/9874966?v=3" title="MeniZalzman" alt="MeniZalzman" />
+                                                </a>
+                                            </div>
+
+                                            <div class="col-md-1">
+                                                <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/Engineering/issues/15">15</a></span>
+                                            </div>
+
+                                            <div class="col-md-10">
+                                                <div><strong>[EngineeringSystem] Create a new build configuration to enable Continue integration on NuGet.Client</strong></div>
+
+                                                <span class="label" style="background-color: #CCCCCC; color: #000000">2 - Working</span>
+                                                <span class="label" style="background-color: #bfd4f2; color: #000000">V3.3-Sprint1</span>
+
+                                                <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Started working on 9/30/2015 3:20:11 PM -07:00">Started working 19 hours ago</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">&lt;no milestone&gt;</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">nuget/Engineering</span>
+                                            </div>
+                                        </div>
+
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <h3 class="panel-title"><strong>3.3.0-Beta</strong> <span class="badge">5</span></h3>
+                            </div>
+                            <div class="panel-body">
+                                <ul class="list-group">
+                                    <li class="list-group-item" style="background-color: wheat">
+                                        <div class="row">
+                                            <div class="col-md-1">
+                                                <a href="https://github.com/johnataylor">
+                                                    <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/2523898?v=3" title="johnataylor" alt="johnataylor" />
+                                                </a>
+                                            </div>
+
+                                            <div class="col-md-1">
+                                                <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/Home/issues/737">737</a></span>
+                                            </div>
+
+                                            <div class="col-md-10">
+                                                <div><strong>`Update-Package [packagename] -reinstall` reinstalls all packages instead of just the named one</strong></div>
+
+                                                <span class="label" style="background-color: #CCCCCC; color: #000000">2 - Working</span>
+                                                <span class="label" style="background-color: #159818; color: #ffffff">Area:VS.Client</span>
+                                                <span class="label" style="background-color: #fbca04; color: #000000">Priority:1</span>
+
+                                                <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Started working on 6/12/2015 5:07:55 PM -07:00">Started working 110 days ago</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">3.3.0-Beta</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">nuget/Home</span>
+                                            </div>
+                                        </div>
+
+                                    </li>
+                                    <li class="list-group-item" style="">
+                                        <div class="row">
+                                            <div class="col-md-1">
+                                                <a href="https://github.com/deepakaravindr">
+                                                    <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/2380340?v=3" title="deepakaravindr" alt="deepakaravindr" />
+                                                </a>
+                                            </div>
+
+                                            <div class="col-md-1">
+                                                <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/Home/issues/1421">1421</a></span>
+                                            </div>
+
+                                            <div class="col-md-10">
+                                                <div><strong>&#x27;nuget.exe add&#x27; to add packages to offline feed</strong></div>
+
+                                                <span class="label" style="background-color: #CCCCCC; color: #000000">2 - Working</span>
+                                                <span class="label" style="background-color: #207de5; color: #ffffff">Type:Feature</span>
+                                                <span class="label" style="background-color: #bfd4f2; color: #000000">V3.3-Sprint1</span>
+
+                                                <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Started working on 9/24/2015 2:25:50 PM -07:00">Started working 6 days ago</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">3.3.0-Beta</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">nuget/Home</span>
+                                            </div>
+                                        </div>
+
+                                    </li>
+                                    <li class="list-group-item" style="">
+                                        <div class="row">
+                                            <div class="col-md-1">
+                                                <a href="https://github.com/danliu">
+                                                    <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/1087852?v=3" title="danliu" alt="danliu" />
+                                                </a>
+                                            </div>
+
+                                            <div class="col-md-1">
+                                                <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/Home/issues/1484">1484</a></span>
+                                            </div>
+
+                                            <div class="col-md-10">
+                                                <div><strong>Add functional tests for project K</strong></div>
+
+                                                <span class="label" style="background-color: #CCCCCC; color: #000000">2 - Working</span>
+                                                <span class="label" style="background-color: #159818; color: #ffffff">Area:VS.Client</span>
+                                                <span class="label" style="background-color: #bfd4f2; color: #000000">V3.3-Sprint1</span>
+
+                                                <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Started working on 9/29/2015 11:07:21 AM -07:00">Started working 2 days ago</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">3.3.0-Beta</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">nuget/Home</span>
+                                            </div>
+                                        </div>
+
+                                    </li>
+                                    <li class="list-group-item" style="background-color: wheat">
+                                        <div class="row">
+                                            <div class="col-md-1">
+                                                <a href="https://github.com/johnataylor">
+                                                    <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/2523898?v=3" title="johnataylor" alt="johnataylor" />
+                                                </a>
+                                            </div>
+
+                                            <div class="col-md-1">
+                                                <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/Home/issues/1370">1370</a></span>
+                                            </div>
+
+                                            <div class="col-md-10">
+                                                <div><strong>Update-Package fails when using prerelease versions and multiple sources</strong></div>
+
+                                                <span class="label" style="background-color: #CCCCCC; color: #000000">2 - Working</span>
+                                                <span class="label" style="background-color: #fbca04; color: #000000">Priority:1</span>
+                                                <span class="label" style="background-color: #207de5; color: #ffffff">Type:Bug</span>
+
+                                                <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Started working on 9/30/2015 5:04:32 PM -07:00">Started working 18 hours ago</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">3.3.0-Beta</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">nuget/Home</span>
+                                            </div>
+                                        </div>
+
+                                    </li>
+                                    <li class="list-group-item" style="">
+                                        <div class="row">
+                                            <div class="col-md-1">
+                                                <a href="https://github.com/danliu">
+                                                    <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/1087852?v=3" title="danliu" alt="danliu" />
+                                                </a>
+                                            </div>
+
+                                            <div class="col-md-1">
+                                                <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/Home/issues/1419">1419</a></span>
+                                            </div>
+
+                                            <div class="col-md-10">
+                                                <div><strong>Validate and test the sections of NuGet project.json schema</strong></div>
+
+                                                <span class="label" style="background-color: #CCCCCC; color: #000000">2 - Working</span>
+                                                <span class="label" style="background-color: #159818; color: #ffffff">Area:VS.Client</span>
+                                                <span class="label" style="background-color: #bfd4f2; color: #000000">V3.3-Sprint1</span>
+
+                                                <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Started working on 10/1/2015 10:04:20 AM -07:00">Started working 1 hour ago</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">3.3.0-Beta</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">nuget/Home</span>
+                                            </div>
+                                        </div>
+
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <h3 class="panel-title"><strong>Commandline 3.2.1</strong> <span class="badge">5</span></h3>
+                            </div>
+                            <div class="panel-body">
+                                <ul class="list-group">
+                                    <li class="list-group-item" style="">
+                                        <div class="row">
+                                            <div class="col-md-1">
+                                                <a href="https://github.com/emgarten">
+                                                    <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/6381138?v=3" title="emgarten" alt="emgarten" />
+                                                </a>
+                                            </div>
+
+                                            <div class="col-md-1">
+                                                <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/Home/issues/1448">1448</a></span>
+                                            </div>
+
+                                            <div class="col-md-10">
+                                                <div><strong>Package restore intermittently fails with &quot;Unable to find version &#x27;x&#x27; of package &#x27;y&#x27;&quot;</strong></div>
+
+                                                <span class="label" style="background-color: #CCCCCC; color: #000000">2 - Working</span>
+                                                <span class="label" style="background-color: #bfd4f2; color: #000000">V3.3-Sprint1</span>
+
+                                                <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Started working on 9/29/2015 8:17:31 PM -07:00">Started working 1 day ago</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">Commandline 3.2.1</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">nuget/Home</span>
+                                            </div>
+                                        </div>
+
+                                    </li>
+                                    <li class="list-group-item" style="">
+                                        <div class="row">
+                                            <div class="col-md-1">
+                                                <a href="https://github.com/emgarten">
+                                                    <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/6381138?v=3" title="emgarten" alt="emgarten" />
+                                                </a>
+                                            </div>
+
+                                            <div class="col-md-1">
+                                                <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/Home/issues/1427">1427</a></span>
+                                            </div>
+
+                                            <div class="col-md-10">
+                                                <div><strong>Fix NuGet.Config casing</strong></div>
+
+                                                <span class="label" style="background-color: #CCCCCC; color: #000000">2 - Working</span>
+                                                <span class="label" style="background-color: #207de5; color: #ffffff">Type:Bug</span>
+                                                <span class="label" style="background-color: #bfd4f2; color: #000000">V3.3-Sprint1</span>
+
+                                                <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Started working on 9/29/2015 8:17:31 PM -07:00">Started working 1 day ago</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">Commandline 3.2.1</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">nuget/Home</span>
+                                            </div>
+                                        </div>
+
+                                    </li>
+                                    <li class="list-group-item" style="">
+                                        <div class="row">
+                                            <div class="col-md-1">
+                                                <a href="https://github.com/emgarten">
+                                                    <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/6381138?v=3" title="emgarten" alt="emgarten" />
+                                                </a>
+                                            </div>
+
+                                            <div class="col-md-1">
+                                                <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/Home/issues/1426">1426</a></span>
+                                            </div>
+
+                                            <div class="col-md-10">
+                                                <div><strong>nuget.exe network request optimizations</strong></div>
+
+                                                <span class="label" style="background-color: #CCCCCC; color: #000000">2 - Working</span>
+                                                <span class="label" style="background-color: #207de5; color: #ffffff">Type:Feature</span>
+                                                <span class="label" style="background-color: #bfd4f2; color: #000000">V3.3-Sprint1</span>
+
+                                                <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Started working on 9/29/2015 8:17:31 PM -07:00">Started working 1 day ago</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">Commandline 3.2.1</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">nuget/Home</span>
+                                            </div>
+                                        </div>
+
+                                    </li>
+                                    <li class="list-group-item" style="">
+                                        <div class="row">
+                                            <div class="col-md-1">
+                                                <a href="https://github.com/emgarten">
+                                                    <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/6381138?v=3" title="emgarten" alt="emgarten" />
+                                                </a>
+                                            </div>
+
+                                            <div class="col-md-1">
+                                                <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/Home/issues/1321">1321</a></span>
+                                            </div>
+
+                                            <div class="col-md-10">
+                                                <div><strong>nuget.exe: Code to construct SourceRepositoryProvider object is repeated several times</strong></div>
+
+                                                <span class="label" style="background-color: #CCCCCC; color: #000000">2 - Working</span>
+                                                <span class="label" style="background-color: #bfd4f2; color: #000000">V3.3-Sprint1</span>
+
+                                                <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Started working on 9/29/2015 8:17:31 PM -07:00">Started working 1 day ago</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">Commandline 3.2.1</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">nuget/Home</span>
+                                            </div>
+                                        </div>
+
+                                    </li>
+                                    <li class="list-group-item" style="">
+                                        <div class="row">
+                                            <div class="col-md-1">
+                                                <a href="https://github.com/emgarten">
+                                                    <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/6381138?v=3" title="emgarten" alt="emgarten" />
+                                                </a>
+                                            </div>
+
+                                            <div class="col-md-1">
+                                                <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/Home/issues/1227">1227</a></span>
+                                            </div>
+
+                                            <div class="col-md-10">
+                                                <div><strong>nuget.exe should skip DNX projects</strong></div>
+
+                                                <span class="label" style="background-color: #CCCCCC; color: #000000">2 - Working</span>
+                                                <span class="label" style="background-color: #fbca04; color: #000000">Priority:0</span>
+                                                <span class="label" style="background-color: #207de5; color: #ffffff">Type:Bug</span>
+                                                <span class="label" style="background-color: #bfd4f2; color: #000000">V3.3-Sprint1</span>
+
+                                                <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Started working on 9/29/2015 8:17:31 PM -07:00">Started working 1 day ago</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">Commandline 3.2.1</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">nuget/Home</span>
+                                            </div>
+                                        </div>
+
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane" id="group-by-repo">
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <h3 class="panel-title"><strong>nuget/Home</strong> <span class="badge">17</span></h3>
+                            </div>
+                            <div class="panel-body">
+                                <ul class="list-group">
+                                    <li class="list-group-item" style="background-color: wheat">
+                                        <div class="row">
+                                            <div class="col-md-1">
+                                                <a href="https://github.com/johnataylor">
+                                                    <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/2523898?v=3" title="johnataylor" alt="johnataylor" />
+                                                </a>
+                                            </div>
+
+                                            <div class="col-md-1">
+                                                <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/Home/issues/737">737</a></span>
+                                            </div>
+
+                                            <div class="col-md-10">
+                                                <div><strong>`Update-Package [packagename] -reinstall` reinstalls all packages instead of just the named one</strong></div>
+
+                                                <span class="label" style="background-color: #CCCCCC; color: #000000">2 - Working</span>
+                                                <span class="label" style="background-color: #159818; color: #ffffff">Area:VS.Client</span>
+                                                <span class="label" style="background-color: #fbca04; color: #000000">Priority:1</span>
+
+                                                <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Started working on 6/12/2015 5:07:55 PM -07:00">Started working 110 days ago</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">3.3.0-Beta</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">nuget/Home</span>
+                                            </div>
+                                        </div>
+
+                                    </li>
+                                    <li class="list-group-item" style="">
+                                        <div class="row">
+                                            <div class="col-md-1">
+                                                <a href="https://github.com/zhili1208">
+                                                    <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/7131513?v=3" title="zhili1208" alt="zhili1208" />
+                                                </a>
+                                            </div>
+
+                                            <div class="col-md-1">
+                                                <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/Home/issues/1444">1444</a></span>
+                                            </div>
+
+                                            <div class="col-md-10">
+                                                <div><strong>Design and implement IPackageManagerProvider API</strong></div>
+
+                                                <span class="label" style="background-color: #CCCCCC; color: #000000">2 - Working</span>
+                                                <span class="label" style="background-color: #207de5; color: #ffffff">Type:Feature</span>
+                                                <span class="label" style="background-color: #bfd4f2; color: #000000">V3.3-Sprint1</span>
+
+                                                <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Started working on 9/24/2015 11:33:06 AM -07:00">Started working 6 days ago</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">&lt;no milestone&gt;</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">nuget/Home</span>
+                                            </div>
+                                        </div>
+
+                                    </li>
+                                    <li class="list-group-item" style="">
+                                        <div class="row">
+                                            <div class="col-md-1">
+                                                <a href="https://github.com/zhili1208">
+                                                    <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/7131513?v=3" title="zhili1208" alt="zhili1208" />
+                                                </a>
+                                            </div>
+
+                                            <div class="col-md-1">
+                                                <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/Home/issues/1447">1447</a></span>
+                                            </div>
+
+                                            <div class="col-md-10">
+                                                <div><strong>Implement PackageManagerProvider order sort</strong></div>
+
+                                                <span class="label" style="background-color: #CCCCCC; color: #000000">2 - Working</span>
+                                                <span class="label" style="background-color: #207de5; color: #ffffff">Type:Feature</span>
+                                                <span class="label" style="background-color: #bfd4f2; color: #000000">V3.3-Sprint1</span>
+
+                                                <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Started working on 9/24/2015 1:55:05 PM -07:00">Started working 6 days ago</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">&lt;no milestone&gt;</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">nuget/Home</span>
+                                            </div>
+                                        </div>
+
+                                    </li>
+                                    <li class="list-group-item" style="">
+                                        <div class="row">
+                                            <div class="col-md-1">
+                                                <a href="https://github.com/deepakaravindr">
+                                                    <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/2380340?v=3" title="deepakaravindr" alt="deepakaravindr" />
+                                                </a>
+                                            </div>
+
+                                            <div class="col-md-1">
+                                                <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/Home/issues/1421">1421</a></span>
+                                            </div>
+
+                                            <div class="col-md-10">
+                                                <div><strong>&#x27;nuget.exe add&#x27; to add packages to offline feed</strong></div>
+
+                                                <span class="label" style="background-color: #CCCCCC; color: #000000">2 - Working</span>
+                                                <span class="label" style="background-color: #207de5; color: #ffffff">Type:Feature</span>
+                                                <span class="label" style="background-color: #bfd4f2; color: #000000">V3.3-Sprint1</span>
+
+                                                <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Started working on 9/24/2015 2:25:50 PM -07:00">Started working 6 days ago</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">3.3.0-Beta</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">nuget/Home</span>
+                                            </div>
+                                        </div>
+
+                                    </li>
+                                    <li class="list-group-item" style="">
+                                        <div class="row">
+                                            <div class="col-md-1">
+                                                <a href="https://github.com/feiling">
+                                                    <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/2679220?v=3" title="feiling" alt="feiling" />
+                                                </a>
+                                            </div>
+
+                                            <div class="col-md-1">
+                                                <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/Home/issues/1430">1430</a></span>
+                                            </div>
+
+                                            <div class="col-md-10">
+                                                <div><strong>Minor UI update: update the top according to the new design</strong></div>
+
+                                                <span class="label" style="background-color: #CCCCCC; color: #000000">2 - Working</span>
+                                                <span class="label" style="background-color: #207de5; color: #ffffff">Type:Feature</span>
+                                                <span class="label" style="background-color: #bfd4f2; color: #000000">V3.3-Sprint1</span>
+
+                                                <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Started working on 9/25/2015 9:45:59 AM -07:00">Started working 6 days ago</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">&lt;no milestone&gt;</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">nuget/Home</span>
+                                            </div>
+                                        </div>
+
+                                    </li>
+                                    <li class="list-group-item" style="">
+                                        <div class="row">
+                                            <div class="col-md-1">
+                                                <a href="https://github.com/zhili1208">
+                                                    <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/7131513?v=3" title="zhili1208" alt="zhili1208" />
+                                                </a>
+                                            </div>
+
+                                            <div class="col-md-1">
+                                                <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/Home/issues/1445">1445</a></span>
+                                            </div>
+
+                                            <div class="col-md-10">
+                                                <div><strong>Intergate IPackageManagerProvider into PackageManagement.UI</strong></div>
+
+                                                <span class="label" style="background-color: #CCCCCC; color: #000000">2 - Working</span>
+                                                <span class="label" style="background-color: #207de5; color: #ffffff">Type:Feature</span>
+                                                <span class="label" style="background-color: #bfd4f2; color: #000000">V3.3-Sprint1</span>
+
+                                                <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Started working on 9/28/2015 4:09:33 PM -07:00">Started working 2 days ago</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">&lt;no milestone&gt;</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">nuget/Home</span>
+                                            </div>
+                                        </div>
+
+                                    </li>
+                                    <li class="list-group-item" style="">
+                                        <div class="row">
+                                            <div class="col-md-1">
+                                                <a href="https://github.com/danliu">
+                                                    <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/1087852?v=3" title="danliu" alt="danliu" />
+                                                </a>
+                                            </div>
+
+                                            <div class="col-md-1">
+                                                <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/Home/issues/1484">1484</a></span>
+                                            </div>
+
+                                            <div class="col-md-10">
+                                                <div><strong>Add functional tests for project K</strong></div>
+
+                                                <span class="label" style="background-color: #CCCCCC; color: #000000">2 - Working</span>
+                                                <span class="label" style="background-color: #159818; color: #ffffff">Area:VS.Client</span>
+                                                <span class="label" style="background-color: #bfd4f2; color: #000000">V3.3-Sprint1</span>
+
+                                                <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Started working on 9/29/2015 11:07:21 AM -07:00">Started working 2 days ago</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">3.3.0-Beta</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">nuget/Home</span>
+                                            </div>
+                                        </div>
+
+                                    </li>
+                                    <li class="list-group-item" style="">
+                                        <div class="row">
+                                            <div class="col-md-1">
+                                                <a href="https://github.com/zhili1208">
+                                                    <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/7131513?v=3" title="zhili1208" alt="zhili1208" />
+                                                </a>
+                                            </div>
+
+                                            <div class="col-md-1">
+                                                <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/Home/issues/1446">1446</a></span>
+                                            </div>
+
+                                            <div class="col-md-10">
+                                                <div><strong>Bower/NuGet integration UI layout and warning Message</strong></div>
+
+                                                <span class="label" style="background-color: #CCCCCC; color: #000000">2 - Working</span>
+                                                <span class="label" style="background-color: #207de5; color: #ffffff">Type:Feature</span>
+                                                <span class="label" style="background-color: #bfd4f2; color: #000000">V3.3-Sprint1</span>
+
+                                                <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Started working on 9/29/2015 3:20:34 PM -07:00">Started working 1 day ago</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">&lt;no milestone&gt;</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">nuget/Home</span>
+                                            </div>
+                                        </div>
+
+                                    </li>
+                                    <li class="list-group-item" style="">
+                                        <div class="row">
+                                            <div class="col-md-1">
+                                                <a href="https://github.com/emgarten">
+                                                    <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/6381138?v=3" title="emgarten" alt="emgarten" />
+                                                </a>
+                                            </div>
+
+                                            <div class="col-md-1">
+                                                <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/Home/issues/1448">1448</a></span>
+                                            </div>
+
+                                            <div class="col-md-10">
+                                                <div><strong>Package restore intermittently fails with &quot;Unable to find version &#x27;x&#x27; of package &#x27;y&#x27;&quot;</strong></div>
+
+                                                <span class="label" style="background-color: #CCCCCC; color: #000000">2 - Working</span>
+                                                <span class="label" style="background-color: #bfd4f2; color: #000000">V3.3-Sprint1</span>
+
+                                                <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Started working on 9/29/2015 8:17:31 PM -07:00">Started working 1 day ago</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">Commandline 3.2.1</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">nuget/Home</span>
+                                            </div>
+                                        </div>
+
+                                    </li>
+                                    <li class="list-group-item" style="">
+                                        <div class="row">
+                                            <div class="col-md-1">
+                                                <a href="https://github.com/emgarten">
+                                                    <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/6381138?v=3" title="emgarten" alt="emgarten" />
+                                                </a>
+                                            </div>
+
+                                            <div class="col-md-1">
+                                                <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/Home/issues/1427">1427</a></span>
+                                            </div>
+
+                                            <div class="col-md-10">
+                                                <div><strong>Fix NuGet.Config casing</strong></div>
+
+                                                <span class="label" style="background-color: #CCCCCC; color: #000000">2 - Working</span>
+                                                <span class="label" style="background-color: #207de5; color: #ffffff">Type:Bug</span>
+                                                <span class="label" style="background-color: #bfd4f2; color: #000000">V3.3-Sprint1</span>
+
+                                                <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Started working on 9/29/2015 8:17:31 PM -07:00">Started working 1 day ago</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">Commandline 3.2.1</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">nuget/Home</span>
+                                            </div>
+                                        </div>
+
+                                    </li>
+                                    <li class="list-group-item" style="">
+                                        <div class="row">
+                                            <div class="col-md-1">
+                                                <a href="https://github.com/emgarten">
+                                                    <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/6381138?v=3" title="emgarten" alt="emgarten" />
+                                                </a>
+                                            </div>
+
+                                            <div class="col-md-1">
+                                                <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/Home/issues/1426">1426</a></span>
+                                            </div>
+
+                                            <div class="col-md-10">
+                                                <div><strong>nuget.exe network request optimizations</strong></div>
+
+                                                <span class="label" style="background-color: #CCCCCC; color: #000000">2 - Working</span>
+                                                <span class="label" style="background-color: #207de5; color: #ffffff">Type:Feature</span>
+                                                <span class="label" style="background-color: #bfd4f2; color: #000000">V3.3-Sprint1</span>
+
+                                                <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Started working on 9/29/2015 8:17:31 PM -07:00">Started working 1 day ago</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">Commandline 3.2.1</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">nuget/Home</span>
+                                            </div>
+                                        </div>
+
+                                    </li>
+                                    <li class="list-group-item" style="">
+                                        <div class="row">
+                                            <div class="col-md-1">
+                                                <a href="https://github.com/emgarten">
+                                                    <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/6381138?v=3" title="emgarten" alt="emgarten" />
+                                                </a>
+                                            </div>
+
+                                            <div class="col-md-1">
+                                                <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/Home/issues/1321">1321</a></span>
+                                            </div>
+
+                                            <div class="col-md-10">
+                                                <div><strong>nuget.exe: Code to construct SourceRepositoryProvider object is repeated several times</strong></div>
+
+                                                <span class="label" style="background-color: #CCCCCC; color: #000000">2 - Working</span>
+                                                <span class="label" style="background-color: #bfd4f2; color: #000000">V3.3-Sprint1</span>
+
+                                                <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Started working on 9/29/2015 8:17:31 PM -07:00">Started working 1 day ago</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">Commandline 3.2.1</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">nuget/Home</span>
+                                            </div>
+                                        </div>
+
+                                    </li>
+                                    <li class="list-group-item" style="">
+                                        <div class="row">
+                                            <div class="col-md-1">
+                                                <a href="https://github.com/emgarten">
+                                                    <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/6381138?v=3" title="emgarten" alt="emgarten" />
+                                                </a>
+                                            </div>
+
+                                            <div class="col-md-1">
+                                                <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/Home/issues/1227">1227</a></span>
+                                            </div>
+
+                                            <div class="col-md-10">
+                                                <div><strong>nuget.exe should skip DNX projects</strong></div>
+
+                                                <span class="label" style="background-color: #CCCCCC; color: #000000">2 - Working</span>
+                                                <span class="label" style="background-color: #fbca04; color: #000000">Priority:0</span>
+                                                <span class="label" style="background-color: #207de5; color: #ffffff">Type:Bug</span>
+                                                <span class="label" style="background-color: #bfd4f2; color: #000000">V3.3-Sprint1</span>
+
+                                                <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Started working on 9/29/2015 8:17:31 PM -07:00">Started working 1 day ago</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">Commandline 3.2.1</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">nuget/Home</span>
+                                            </div>
+                                        </div>
+
+                                    </li>
+                                    <li class="list-group-item" style="">
+                                        <div class="row">
+                                            <div class="col-md-1">
+                                                <a href="https://github.com/feiling">
+                                                    <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/2679220?v=3" title="feiling" alt="feiling" />
+                                                </a>
+                                            </div>
+
+                                            <div class="col-md-1">
+                                                <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/Home/issues/1491">1491</a></span>
+                                            </div>
+
+                                            <div class="col-md-10">
+                                                <div><strong>UI change: change class SearchResultPackageMetadata to match the new UI design</strong></div>
+
+                                                <span class="label" style="background-color: #CCCCCC; color: #000000">2 - Working</span>
+                                                <span class="label" style="background-color: #207de5; color: #ffffff">Type:Feature</span>
+                                                <span class="label" style="background-color: #bfd4f2; color: #000000">V3.3-Sprint1</span>
+
+                                                <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Started working on 9/30/2015 1:25:32 PM -07:00">Started working 21 hours ago</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">&lt;no milestone&gt;</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">nuget/Home</span>
+                                            </div>
+                                        </div>
+
+                                    </li>
+                                    <li class="list-group-item" style="">
+                                        <div class="row">
+                                            <div class="col-md-1">
+                                                <a href="https://github.com/feiling">
+                                                    <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/2679220?v=3" title="feiling" alt="feiling" />
+                                                </a>
+                                            </div>
+
+                                            <div class="col-md-1">
+                                                <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/Home/issues/1431">1431</a></span>
+                                            </div>
+
+                                            <div class="col-md-10">
+                                                <div><strong>Minor UI update: update the package list according to the new design</strong></div>
+
+                                                <span class="label" style="background-color: #CCCCCC; color: #000000">2 - Working</span>
+                                                <span class="label" style="background-color: #207de5; color: #ffffff">Type:Feature</span>
+                                                <span class="label" style="background-color: #bfd4f2; color: #000000">V3.3-Sprint1</span>
+
+                                                <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Started working on 9/30/2015 1:25:51 PM -07:00">Started working 21 hours ago</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">&lt;no milestone&gt;</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">nuget/Home</span>
+                                            </div>
+                                        </div>
+
+                                    </li>
+                                    <li class="list-group-item" style="background-color: wheat">
+                                        <div class="row">
+                                            <div class="col-md-1">
+                                                <a href="https://github.com/johnataylor">
+                                                    <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/2523898?v=3" title="johnataylor" alt="johnataylor" />
+                                                </a>
+                                            </div>
+
+                                            <div class="col-md-1">
+                                                <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/Home/issues/1370">1370</a></span>
+                                            </div>
+
+                                            <div class="col-md-10">
+                                                <div><strong>Update-Package fails when using prerelease versions and multiple sources</strong></div>
+
+                                                <span class="label" style="background-color: #CCCCCC; color: #000000">2 - Working</span>
+                                                <span class="label" style="background-color: #fbca04; color: #000000">Priority:1</span>
+                                                <span class="label" style="background-color: #207de5; color: #ffffff">Type:Bug</span>
+
+                                                <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Started working on 9/30/2015 5:04:32 PM -07:00">Started working 18 hours ago</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">3.3.0-Beta</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">nuget/Home</span>
+                                            </div>
+                                        </div>
+
+                                    </li>
+                                    <li class="list-group-item" style="">
+                                        <div class="row">
+                                            <div class="col-md-1">
+                                                <a href="https://github.com/danliu">
+                                                    <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/1087852?v=3" title="danliu" alt="danliu" />
+                                                </a>
+                                            </div>
+
+                                            <div class="col-md-1">
+                                                <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/Home/issues/1419">1419</a></span>
+                                            </div>
+
+                                            <div class="col-md-10">
+                                                <div><strong>Validate and test the sections of NuGet project.json schema</strong></div>
+
+                                                <span class="label" style="background-color: #CCCCCC; color: #000000">2 - Working</span>
+                                                <span class="label" style="background-color: #159818; color: #ffffff">Area:VS.Client</span>
+                                                <span class="label" style="background-color: #bfd4f2; color: #000000">V3.3-Sprint1</span>
+
+                                                <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Started working on 10/1/2015 10:04:20 AM -07:00">Started working 1 hour ago</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">3.3.0-Beta</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">nuget/Home</span>
+                                            </div>
+                                        </div>
+
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <h3 class="panel-title"><strong>nuget/Engineering</strong> <span class="badge">2</span></h3>
+                            </div>
+                            <div class="panel-body">
+                                <ul class="list-group">
+                                    <li class="list-group-item" style="">
+                                        <div class="row">
+                                            <div class="col-md-1">
+                                                <a href="https://github.com/MeniZalzman">
+                                                    <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/9874966?v=3" title="MeniZalzman" alt="MeniZalzman" />
+                                                </a>
+                                            </div>
+
+                                            <div class="col-md-1">
+                                                <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/Engineering/issues/16">16</a></span>
+                                            </div>
+
+                                            <div class="col-md-10">
+                                                <div><strong>[EngineeringSystem] Create a new build script to enable local build on NuGet.Client</strong></div>
+
+                                                <span class="label" style="background-color: #CCCCCC; color: #000000">2 - Working</span>
+                                                <span class="label" style="background-color: #bfd4f2; color: #000000">V3.3-Sprint1</span>
+
+                                                <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Started working on 9/30/2015 3:16:18 PM -07:00">Started working 19 hours ago</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">&lt;no milestone&gt;</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">nuget/Engineering</span>
+                                            </div>
+                                        </div>
+
+                                    </li>
+                                    <li class="list-group-item" style="">
+                                        <div class="row">
+                                            <div class="col-md-1">
+                                                <a href="https://github.com/MeniZalzman">
+                                                    <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/9874966?v=3" title="MeniZalzman" alt="MeniZalzman" />
+                                                </a>
+                                            </div>
+
+                                            <div class="col-md-1">
+                                                <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/Engineering/issues/15">15</a></span>
+                                            </div>
+
+                                            <div class="col-md-10">
+                                                <div><strong>[EngineeringSystem] Create a new build configuration to enable Continue integration on NuGet.Client</strong></div>
+
+                                                <span class="label" style="background-color: #CCCCCC; color: #000000">2 - Working</span>
+                                                <span class="label" style="background-color: #bfd4f2; color: #000000">V3.3-Sprint1</span>
+
+                                                <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Started working on 9/30/2015 3:20:11 PM -07:00">Started working 19 hours ago</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">&lt;no milestone&gt;</span>
+                                                <span class="badge pull-right" style="margin-left: 4px">nuget/Engineering</span>
+                                            </div>
+                                        </div>
+
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title"><strong>Pull Requests</strong> <span class="badge">20</span></h3>
+                    </div>
+                    <div class="panel-body">
+                        <ul class="list-group">
+                            <li class="list-group-item" style="background-color: wheat">
+
+
+                                <div class="row">
+                                    <div class="col-md-1">
+                                        <a href="https://github.com/mrahl">
+                                            <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/9974216?v=3" title="mrahl" alt="mrahl" />
+                                        </a>
+                                    </div>
+
+                                    <div class="col-md-1">
+                                        <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/NuGet3/pull/11">11</a></span>
+                                    </div>
+
+                                    <div class="col-md-10">
+                                        <div>
+                                            <strong>Added test for resolving versions when updating in a diamond dependency graph</strong>
+                                            <span class="label label-danger">Stale!</span>
+                                        </div>
+
+                                        <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Opened on 5/4/2015 11:07:17 PM -07:00">Opened 149 days ago</span>
+                                        <span class="badge pull-right" style="margin-left: 4px">nuget/NuGet3</span>
+                                    </div>
+                                </div>
+
+                            </li>
+                            <li class="list-group-item" style="">
+
+
+                                <div class="row">
+                                    <div class="col-md-1">
+                                        <a href="https://github.com/emgarten">
+                                            <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/6381138?v=3" title="emgarten" alt="emgarten" />
+                                        </a>
+                                    </div>
+
+                                    <div class="col-md-1">
+                                        <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/NuGet.VisualStudioExtension/pull/37">37</a></span>
+                                    </div>
+
+                                    <div class="col-md-10">
+                                        <div>
+                                            <strong>IVsPackageRestorer2 and batch mode public APIs</strong>
+                                            <span class="label label-danger">Stale!</span>
+                                        </div>
+
+                                        <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Opened on 6/29/2015 5:20:49 PM -07:00">Opened 93 days ago</span>
+                                        <span class="badge pull-right" style="margin-left: 4px">nuget/NuGet.VisualStudioExtension</span>
+                                    </div>
+                                </div>
+
+                            </li>
+                            <li class="list-group-item" style="background-color: wheat">
+
+
+                                <div class="row">
+                                    <div class="col-md-1">
+                                        <a href="https://github.com/AArnott">
+                                            <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/3548?v=3" title="AArnott" alt="AArnott" />
+                                        </a>
+                                    </div>
+
+                                    <div class="col-md-1">
+                                        <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/NuGet3/pull/100">100</a></span>
+                                    </div>
+
+                                    <div class="col-md-10">
+                                        <div>
+                                            <strong>Use the $(UserProfile) MSBuild macro where possible</strong>
+                                            <span class="label label-danger">Stale!</span>
+                                        </div>
+
+                                        <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Opened on 8/6/2015 9:19:42 PM -07:00">Opened 55 days ago</span>
+                                        <span class="badge pull-right" style="margin-left: 4px">nuget/NuGet3</span>
+                                    </div>
+                                </div>
+
+                            </li>
+                            <li class="list-group-item" style="background-color: wheat">
+
+
+                                <div class="row">
+                                    <div class="col-md-1">
+                                        <a href="https://github.com/mrward">
+                                            <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/372361?v=3" title="mrward" alt="mrward" />
+                                        </a>
+                                    </div>
+
+                                    <div class="col-md-1">
+                                        <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/NuGet3/pull/104">104</a></span>
+                                    </div>
+
+                                    <div class="col-md-10">
+                                        <div>
+                                            <strong>Add Xamarin.WatchOS framework</strong>
+                                            <span class="label label-danger">Stale!</span>
+                                        </div>
+
+                                        <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Opened on 8/11/2015 4:57:05 AM -07:00">Opened 51 days ago</span>
+                                        <span class="badge pull-right" style="margin-left: 4px">nuget/NuGet3</span>
+                                    </div>
+                                </div>
+
+                            </li>
+                            <li class="list-group-item" style="background-color: wheat">
+
+
+                                <div class="row">
+                                    <div class="col-md-1">
+                                        <a href="https://github.com/derigel23">
+                                            <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/175250?v=3" title="derigel23" alt="derigel23" />
+                                        </a>
+                                    </div>
+
+                                    <div class="col-md-1">
+                                        <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/NuGet2/pull/1">1</a></span>
+                                    </div>
+
+                                    <div class="col-md-10">
+                                        <div>
+                                            <strong>Fix package id case-insensitivity in different places</strong>
+                                            <span class="label label-danger">Stale!</span>
+                                        </div>
+
+                                        <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Opened on 8/12/2015 12:37:10 AM -07:00">Opened 50 days ago</span>
+                                        <span class="badge pull-right" style="margin-left: 4px">nuget/NuGet2</span>
+                                    </div>
+                                </div>
+
+                            </li>
+                            <li class="list-group-item" style="background-color: wheat">
+
+
+                                <div class="row">
+                                    <div class="col-md-1">
+                                        <a href="https://github.com/mrward">
+                                            <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/372361?v=3" title="mrward" alt="mrward" />
+                                        </a>
+                                    </div>
+
+                                    <div class="col-md-1">
+                                        <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/NuGet2/pull/2">2</a></span>
+                                    </div>
+
+                                    <div class="col-md-10">
+                                        <div>
+                                            <strong>Add Xamarin.WatchOS framework</strong>
+                                            <span class="label label-danger">Stale!</span>
+                                        </div>
+
+                                        <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Opened on 8/12/2015 11:39:10 AM -07:00">Opened 49 days ago</span>
+                                        <span class="badge pull-right" style="margin-left: 4px">nuget/NuGet2</span>
+                                    </div>
+                                </div>
+
+                            </li>
+                            <li class="list-group-item" style="background-color: wheat">
+
+
+                                <div class="row">
+                                    <div class="col-md-1">
+                                        <a href="https://github.com/eric-winkler">
+                                            <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/2142978?v=3" title="eric-winkler" alt="eric-winkler" />
+                                        </a>
+                                    </div>
+
+                                    <div class="col-md-1">
+                                        <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/NuGet2/pull/5">5</a></span>
+                                    </div>
+
+                                    <div class="col-md-10">
+                                        <div>
+                                            <strong>Fix race in concurrent RestorePackage operations</strong>
+                                            <span class="label label-danger">Stale!</span>
+                                        </div>
+
+                                        <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Opened on 8/15/2015 10:54:26 PM -07:00">Opened 46 days ago</span>
+                                        <span class="badge pull-right" style="margin-left: 4px">nuget/NuGet2</span>
+                                    </div>
+                                </div>
+
+                            </li>
+                            <li class="list-group-item" style="">
+
+
+                                <div class="row">
+                                    <div class="col-md-1">
+                                        <a href="https://github.com/MeniZalzman">
+                                            <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/9874966?v=3" title="MeniZalzman" alt="MeniZalzman" />
+                                        </a>
+                                    </div>
+
+                                    <div class="col-md-1">
+                                        <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/NuGet3/pull/124">124</a></span>
+                                    </div>
+
+                                    <div class="col-md-10">
+                                        <div>
+                                            <strong>Removing the SetDefaultSource code from the PackageSourceProvider</strong>
+                                            <span class="label label-danger">Stale!</span>
+                                        </div>
+
+                                        <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Opened on 8/28/2015 10:39:44 AM -07:00">Opened 34 days ago</span>
+                                        <span class="badge pull-right" style="margin-left: 4px">nuget/NuGet3</span>
+                                    </div>
+                                </div>
+
+                            </li>
+                            <li class="list-group-item" style="">
+
+
+                                <div class="row">
+                                    <div class="col-md-1">
+                                        <a href="https://github.com/zhili1208">
+                                            <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/7131513?v=3" title="zhili1208" alt="zhili1208" />
+                                        </a>
+                                    </div>
+
+                                    <div class="col-md-1">
+                                        <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/NuGet.VisualStudioExtension/pull/76">76</a></span>
+                                    </div>
+
+                                    <div class="col-md-10">
+                                        <div>
+                                            <strong>added getfiles</strong>
+                                            <span class="label label-danger">Stale!</span>
+                                        </div>
+
+                                        <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Opened on 9/4/2015 3:13:02 PM -07:00">Opened 26 days ago</span>
+                                        <span class="badge pull-right" style="margin-left: 4px">nuget/NuGet.VisualStudioExtension</span>
+                                    </div>
+                                </div>
+
+                            </li>
+                            <li class="list-group-item" style="background-color: wheat">
+
+
+                                <div class="row">
+                                    <div class="col-md-1">
+                                        <a href="https://github.com/mrward">
+                                            <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/372361?v=3" title="mrward" alt="mrward" />
+                                        </a>
+                                    </div>
+
+                                    <div class="col-md-1">
+                                        <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/NuGet2/pull/10">10</a></span>
+                                    </div>
+
+                                    <div class="col-md-10">
+                                        <div>
+                                            <strong>Add Xamarin.tvOS framework</strong>
+                                            <span class="label label-danger">Stale!</span>
+                                        </div>
+
+                                        <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Opened on 9/11/2015 6:36:18 AM -07:00">Opened 20 days ago</span>
+                                        <span class="badge pull-right" style="margin-left: 4px">nuget/NuGet2</span>
+                                    </div>
+                                </div>
+
+                            </li>
+                            <li class="list-group-item" style="background-color: wheat">
+
+
+                                <div class="row">
+                                    <div class="col-md-1">
+                                        <a href="https://github.com/mrward">
+                                            <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/372361?v=3" title="mrward" alt="mrward" />
+                                        </a>
+                                    </div>
+
+                                    <div class="col-md-1">
+                                        <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/NuGet3/pull/130">130</a></span>
+                                    </div>
+
+                                    <div class="col-md-10">
+                                        <div>
+                                            <strong>Add Xamarin.tvOS framework</strong>
+                                            <span class="label label-danger">Stale!</span>
+                                        </div>
+
+                                        <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Opened on 9/11/2015 6:38:23 AM -07:00">Opened 20 days ago</span>
+                                        <span class="badge pull-right" style="margin-left: 4px">nuget/NuGet3</span>
+                                    </div>
+                                </div>
+
+                            </li>
+                            <li class="list-group-item" style="background-color: wheat">
+
+
+                                <div class="row">
+                                    <div class="col-md-1">
+                                        <a href="https://github.com/darrelmiller">
+                                            <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/447694?v=3" title="darrelmiller" alt="darrelmiller" />
+                                        </a>
+                                    </div>
+
+                                    <div class="col-md-1">
+                                        <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/NuGet3/pull/131">131</a></span>
+                                    </div>
+
+                                    <div class="col-md-10">
+                                        <div>
+                                            <strong>Set Default RequestCachePolicy</strong>
+                                            <span class="label label-danger">Stale!</span>
+                                        </div>
+
+                                        <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Opened on 9/14/2015 6:45:19 PM -07:00">Opened 16 days ago</span>
+                                        <span class="badge pull-right" style="margin-left: 4px">nuget/NuGet3</span>
+                                    </div>
+                                </div>
+
+                            </li>
+                            <li class="list-group-item" style="background-color: wheat">
+
+
+                                <div class="row">
+                                    <div class="col-md-1">
+                                        <a href="https://github.com/GearedToWar">
+                                            <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/8271806?v=3" title="GearedToWar" alt="GearedToWar" />
+                                        </a>
+                                    </div>
+
+                                    <div class="col-md-1">
+                                        <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/NuGet2/pull/12">12</a></span>
+                                    </div>
+
+                                    <div class="col-md-10">
+                                        <div>
+                                            <strong>Add support for Shared project.</strong>
+                                        </div>
+
+                                        <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Opened on 9/23/2015 3:01:28 PM -07:00">Opened 7 days ago</span>
+                                        <span class="badge pull-right" style="margin-left: 4px">nuget/NuGet2</span>
+                                    </div>
+                                </div>
+
+                            </li>
+                            <li class="list-group-item" style="background-color: wheat">
+
+
+                                <div class="row">
+                                    <div class="col-md-1">
+                                        <a href="https://github.com/dsplaisted">
+                                            <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/145043?v=3" title="dsplaisted" alt="dsplaisted" />
+                                        </a>
+                                    </div>
+
+                                    <div class="col-md-1">
+                                        <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/NuGet3/pull/132">132</a></span>
+                                    </div>
+
+                                    <div class="col-md-10">
+                                        <div>
+                                            <strong>Fall back to runtime-agnostic native folder if package doesn&#x27;t have a runtime-specific native folder</strong>
+                                        </div>
+
+                                        <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Opened on 9/24/2015 2:49:08 PM -07:00">Opened 6 days ago</span>
+                                        <span class="badge pull-right" style="margin-left: 4px">nuget/NuGet3</span>
+                                    </div>
+                                </div>
+
+                            </li>
+                            <li class="list-group-item" style="">
+
+
+                                <div class="row">
+                                    <div class="col-md-1">
+                                        <a href="https://github.com/emgarten">
+                                            <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/6381138?v=3" title="emgarten" alt="emgarten" />
+                                        </a>
+                                    </div>
+
+                                    <div class="col-md-1">
+                                        <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/NuGet3/pull/135">135</a></span>
+                                    </div>
+
+                                    <div class="col-md-10">
+                                        <div>
+                                            <strong>Dotnet generations support</strong>
+                                        </div>
+
+                                        <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Opened on 9/29/2015 12:13:07 AM -07:00">Opened 2 days ago</span>
+                                        <span class="badge pull-right" style="margin-left: 4px">nuget/NuGet3</span>
+                                    </div>
+                                </div>
+
+                            </li>
+                            <li class="list-group-item" style="">
+
+
+                                <div class="row">
+                                    <div class="col-md-1">
+                                        <a href="https://github.com/yishaigalatzer">
+                                            <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/1238711?v=3" title="yishaigalatzer" alt="yishaigalatzer" />
+                                        </a>
+                                    </div>
+
+                                    <div class="col-md-1">
+                                        <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/NuGet3/pull/136">136</a></span>
+                                    </div>
+
+                                    <div class="col-md-10">
+                                        <div>
+                                            <strong>Fix https://github.com/NuGet/Home/issues/1157</strong>
+                                        </div>
+
+                                        <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Opened on 9/30/2015 11:29:19 AM -07:00">Opened 23 hours ago</span>
+                                        <span class="badge pull-right" style="margin-left: 4px">nuget/NuGet3</span>
+                                    </div>
+                                </div>
+
+                            </li>
+                            <li class="list-group-item" style="">
+
+
+                                <div class="row">
+                                    <div class="col-md-1">
+                                        <a href="https://github.com/feiling">
+                                            <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/2679220?v=3" title="feiling" alt="feiling" />
+                                        </a>
+                                    </div>
+
+                                    <div class="col-md-1">
+                                        <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/NuGet.Client/pull/2">2</a></span>
+                                    </div>
+
+                                    <div class="col-md-10">
+                                        <div>
+                                            <strong>Implementing the top panel according to the new UI design.</strong>
+                                        </div>
+
+                                        <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Opened on 9/30/2015 1:14:33 PM -07:00">Opened 21 hours ago</span>
+                                        <span class="badge pull-right" style="margin-left: 4px">nuget/NuGet.Client</span>
+                                    </div>
+                                </div>
+
+                            </li>
+                            <li class="list-group-item" style="">
+
+
+                                <div class="row">
+                                    <div class="col-md-1">
+                                        <a href="https://github.com/zhili1208">
+                                            <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/7131513?v=3" title="zhili1208" alt="zhili1208" />
+                                        </a>
+                                    </div>
+
+                                    <div class="col-md-1">
+                                        <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/NuGet.Client/pull/3">3</a></span>
+                                    </div>
+
+                                    <div class="col-md-10">
+                                        <div>
+                                            <strong>Fix1444</strong>
+                                        </div>
+
+                                        <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Opened on 9/30/2015 1:55:04 PM -07:00">Opened 21 hours ago</span>
+                                        <span class="badge pull-right" style="margin-left: 4px">nuget/NuGet.Client</span>
+                                    </div>
+                                </div>
+
+                            </li>
+                            <li class="list-group-item" style="">
+
+
+                                <div class="row">
+                                    <div class="col-md-1">
+                                        <a href="https://github.com/danliu">
+                                            <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/1087852?v=3" title="danliu" alt="danliu" />
+                                        </a>
+                                    </div>
+
+                                    <div class="col-md-1">
+                                        <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/NuGet.Client/pull/4">4</a></span>
+                                    </div>
+
+                                    <div class="col-md-10">
+                                        <div>
+                                            <strong>Add functional tests for project K</strong>
+                                        </div>
+
+                                        <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Opened on 9/30/2015 1:59:36 PM -07:00">Opened 21 hours ago</span>
+                                        <span class="badge pull-right" style="margin-left: 4px">nuget/NuGet.Client</span>
+                                    </div>
+                                </div>
+
+                            </li>
+                            <li class="list-group-item" style="">
+
+
+                                <div class="row">
+                                    <div class="col-md-1">
+                                        <a href="https://github.com/emgarten">
+                                            <img style="margin:0.1em" height="32" width="32" src="https://avatars.githubusercontent.com/u/6381138?v=3" title="emgarten" alt="emgarten" />
+                                        </a>
+                                    </div>
+
+                                    <div class="col-md-1">
+                                        <span style="margin:0.1em; font-size: large">#<a href="https://github.com/NuGet/NuGet3/pull/137">137</a></span>
+                                    </div>
+
+                                    <div class="col-md-10">
+                                        <div>
+                                            <strong>Support random combinations of NuGet.config file names to support DNX</strong>
+                                        </div>
+
+                                        <span class="badge pull-right" style="margin-left: 4px" data-toggle="tooltip" data-placement="bottom" title="Opened on 9/30/2015 4:13:28 PM -07:00">Opened 18 hours ago</span>
+                                        <span class="badge pull-right" style="margin-left: 4px">nuget/NuGet3</span>
+                                    </div>
+                                </div>
+
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+        <hr />
+        <footer>
+            <p>&copy; 2015 - <a href="https://github.com/Eilon/ProjectKIssueList">ProjectKIssueList</a></p>
+        </footer>
+    </div>
+
+
+
+    <script src="//ajax.aspnetcdn.com/ajax/jquery/jquery-2.1.4.min.js">
+    </script>
+    <script>(window.jQuery||document.write("<script src=\"\/lib\/jquery\/dist\/jquery.min.js\"><\/script>"));</script>
+    <script src="//ajax.aspnetcdn.com/ajax/bootstrap/3.0.0/bootstrap.min.js">
+    </script>
+    <script>(window.jQuery && window.jQuery.fn && window.jQuery.fn.modal||document.write("<script src=\"\/lib\/bootstrap\/dist\/js\/bootstrap.min.js\"><\/script>"));</script>
+    <script src="/js/site.js?v=EWaMeWsJBYWmL2g_KkgXZQ5nPe-a3Ichp0LEgzXczKo"></script>
+
+
+
+    <script type="text/javascript">
+        $('#app-tabs a').click(function (e) {
+            e.preventDefault()
+            $(this).tab('show')
+        });
+
+        $(function () {
+            $('[data-toggle="tooltip"]').tooltip()
+        });
+    </script>
+
+</body>
+</html>
