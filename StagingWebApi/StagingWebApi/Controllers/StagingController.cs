@@ -61,33 +61,6 @@ namespace StagingWebApi.Controllers
             }
         }
 
-        [Route("stage/{owner}/{name}")]
-        [HttpDelete]
-        public async Task<HttpResponseMessage> DeleteStage(string owner, string name)
-        {
-            StageResource stageResource = new StageResource(owner, name);
-            HttpResponseMessage response = await stageResource.Delete();
-
-            if (response.IsSuccessStatusCode)
-            {
-                PackageStorageBase storage = new AzurePackageStorage();
-                foreach (PackageResource packageResource in stageResource.Packages)
-                {
-                    try
-                    {
-                        await storage.Delete(packageResource.NupkgLocation);
-                        await storage.Delete(packageResource.NuspecLocation);
-                    }
-                    catch (Exception e)
-                    {
-                        Trace.TraceWarning(e.Message);
-                    }
-                }
-            }
-
-            return response;
-        }
-
         [Route("upload/{owner}/{name}")]
         [HttpPost]
         public async Task<HttpResponseMessage> PostPackage(string owner, string name)
@@ -153,6 +126,114 @@ namespace StagingWebApi.Controllers
             return response;
         }
 
+        [Route("stage/{owner}")]
+        [HttpGet]
+        public async Task<HttpResponseMessage> GetStages(string owner)
+        {
+            if (Request.Headers.Accept.Contains(new MediaTypeWithQualityHeaderValue("text/html")))
+            {
+                HttpResponseMessage redirect = new HttpResponseMessage(HttpStatusCode.Redirect);
+                redirect.Headers.Location = new Uri(Request.RequestUri.GetLeftPart(UriPartial.Authority) + "/content/show.html#" + Request.RequestUri.AbsoluteUri);
+                return redirect;
+            }
+            else
+            {
+                StageResource resource = new StageResource(owner, null)
+                {
+                    Authority = Request.RequestUri.GetLeftPart(UriPartial.Authority)
+                };
+                return await resource.ListPackages();
+            }
+        }
+
+        [Route("stage/{owner}/{name}")]
+        [HttpDelete]
+        public async Task<HttpResponseMessage> DeleteStage(string owner, string name)
+        {
+            StageResource stageResource = new StageResource(owner, name);
+            HttpResponseMessage response = await stageResource.Delete();
+
+            if (response.IsSuccessStatusCode)
+            {
+                PackageStorageBase storage = new AzurePackageStorage();
+                foreach (PackageResource packageResource in stageResource.Packages)
+                {
+                    try
+                    {
+                        await storage.Delete(packageResource.NupkgLocation);
+                        await storage.Delete(packageResource.NuspecLocation);
+                    }
+                    catch (Exception e)
+                    {
+                        Trace.TraceWarning(e.Message);
+                    }
+                }
+            }
+
+            return response;
+        }
+
+        [Route("stage/{owner}/{name}/{id}")]
+        [HttpDelete]
+        public async Task<HttpResponseMessage> DeletePackage(string owner, string name, string id)
+        {
+            StageResource stageResource = new StageResource(owner, name);
+            HttpResponseMessage response = await stageResource.DeletePackage(id);
+
+            if (response.IsSuccessStatusCode)
+            {
+                PackageStorageBase storage = new AzurePackageStorage();
+                foreach (PackageResource packageResource in stageResource.Packages)
+                {
+                    try
+                    {
+                        await storage.Delete(packageResource.NupkgLocation);
+                        await storage.Delete(packageResource.NuspecLocation);
+                    }
+                    catch (Exception e)
+                    {
+                        Trace.TraceWarning(e.Message);
+                    }
+                }
+            }
+
+            return response;
+        }
+
+        [Route("stage/{owner}/{name}/{id}/{version}")]
+        [HttpDelete]
+        public async Task<HttpResponseMessage> DeletePackageVersion(string owner, string name, string id, string version)
+        {
+            StagePackage package = new StagePackage(id, version);
+            if (!package.IsValid)
+            {
+                HttpResponseMessage errResponse = new HttpResponseMessage(HttpStatusCode.BadRequest);
+                errResponse.Content = Utils.CreateErrorContent(package.Reason);
+                return errResponse;
+            }
+
+            PackageResource resource = new PackageResource(owner, name, package);
+            HttpResponseMessage response = await resource.Delete();
+
+            if (response.IsSuccessStatusCode)
+            {
+                try
+                {
+                    PackageStorageBase storage = new AzurePackageStorage();
+                    await storage.Delete(resource.NupkgLocation);
+                    await storage.Delete(resource.NuspecLocation);
+
+                    //TODO: consider two phase updates on database
+                }
+                catch (Exception e)
+                {
+                    Trace.TraceWarning(e.Message);
+                }
+            }
+
+            return response;
+        }
+
         [Route("package/{owner}/{name}/{id}/{version}")]
         [HttpGet]
         public async Task<HttpResponseMessage> GetPackage(string owner, string name, string id, string version)
@@ -187,40 +268,6 @@ namespace StagingWebApi.Controllers
                     return response;
                 }
             }
-        }
-
-        [Route("package/{owner}/{name}/{id}/{version}")]
-        [HttpDelete]
-        public async Task<HttpResponseMessage> DeletePackage(string owner, string name, string id, string version)
-        {
-            StagePackage package = new StagePackage(id, version);
-            if (!package.IsValid)
-            {
-                HttpResponseMessage errResponse = new HttpResponseMessage(HttpStatusCode.BadRequest);
-                errResponse.Content = Utils.CreateErrorContent(package.Reason);
-                return errResponse;
-            }
-
-            PackageResource resource = new PackageResource(owner, name, package);
-            HttpResponseMessage response = await resource.Delete();
-
-            if (response.IsSuccessStatusCode)
-            {
-                try
-                {
-                    PackageStorageBase storage = new AzurePackageStorage();
-                    await storage.Delete(resource.NupkgLocation);
-                    await storage.Delete(resource.NuspecLocation);
-
-                    //TODO: consider two phase updates on database
-                }
-                catch (Exception e)
-                {
-                    Trace.TraceWarning(e.Message);
-                }
-            }
-
-            return response;
         }
     }
 }

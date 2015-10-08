@@ -93,6 +93,58 @@ BEGIN
 END
 GO
 
+IF OBJECT_ID('DeleteStagePackage', 'P') IS NOT NULL
+	DROP PROCEDURE DeleteStagePackage
+GO
+
+CREATE PROCEDURE DeleteStagePackage
+@OwnerName VARCHAR(256),
+@StageName VARCHAR(256),
+@Id VARCHAR(1024)
+AS
+BEGIN
+	DECLARE @StageKey INT
+	DECLARE @OwnerKey INT
+		
+	SELECT @StageKey = StageOwner.StageKey, @OwnerKey = StageOwner.OwnerKey
+	FROM Stage
+	INNER JOIN StageOwner ON Stage.[Key] = StageOwner.StageKey
+	INNER JOIN [Owner] ON [Owner].[Key] = StageOwner.OwnerKey
+	WHERE [Owner].[Name] = @OwnerName
+	  AND Stage.[Name] = @StageName
+
+	IF (@@ROWCOUNT > 0)
+	BEGIN
+		CREATE TABLE #DeletedPackagesTempTable (
+			[Id] VARCHAR(1024),
+			[Version] VARCHAR(1024),
+			NupkgLocation VARCHAR(1024),
+			NuspecLocation VARCHAR(1024)
+		)
+
+		/* always return at least one row to show we were successful, NULLs are ignored in the code */
+		INSERT #DeletedPackagesTempTable VALUES ( NULL, NULL, NULL, NULL )
+
+		INSERT INTO #DeletedPackagesTempTable
+		SELECT 
+			[Id],
+			[Version],
+			NupkgLocation,
+			NuspecLocation
+		FROM StagePackage
+		WHERE StageKey = @StageKey
+		  AND Id = @Id
+
+		BEGIN TRAN
+			DELETE StagePackage WHERE StageKey = @StageKey AND Id = @Id
+		COMMIT TRAN
+
+		/* return a list of packages we have deleted */
+		SELECT * FROM #DeletedPackagesTempTable
+	END
+END
+GO
+
 IF OBJECT_ID('CreatePackage', 'P') IS NOT NULL
 	DROP PROCEDURE CreatePackage
 GO

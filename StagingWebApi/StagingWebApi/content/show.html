@@ -6,17 +6,84 @@
     <script src="https://code.jquery.com/jquery-1.10.2.js"></script>
     <script>
 
+        var deleteResource = function (resource) {
+            console.log('DELETE ' + resource);
+
+            $.ajax({
+                url: resource,
+                type: 'DELETE',
+                success: function (result) {
+                    window.location.reload();
+                }
+            });
+        }
+
+        var make_delete_button = function (resource, text) {
+            return '<button onclick="deleteResource(\'' + resource + '\')">' + text + '</button>';
+        }
+
+        var display_owner = function (owner) {
+            html = '';
+            html += '<h1>owner: <em>' + owner.name + '</em></h1>';
+            $.each(owner.stages, function (i, stage) {
+                html += '<h2>stage: <em>' + stage.name + '</em></h2>' + make_delete_button(stage['@id'], 'DELETE STAGE');
+                html += '<table>';
+                $.each(stage.packages, function (i, p) {
+                    html += '<tr>';
+                    html += '<td>' + p.id + '</td>';
+                    html += '<td>' + make_delete_button(p['@id'], 'DELETE PACKAGE') + '</td>';
+                    html += '<td><table>';
+                    $.each(p.versions, function (i, v) {
+                        html += '<tr>';
+                        html += '<td>' + v.version + '</td>';
+                        html += '<td>' + make_delete_button(v['@id'], 'DELETE VERSION') + '</td>';
+                        html += '</tr>';
+                    });
+                    html += '</table></td>';
+                    html += '</tr>';
+                });
+                html += '</table>';
+            });
+            $('body').html(html);
+        }
+
+        var display_stage = function (stage) {
+
+        }
+
+        var display_package = function (data) {
+
+        }
+
+        var display_unrecognized = function (data) {
+
+        }
+
         var display = function (data) {
 
-            var items = [];
-            $.each(data, function (i, item) {
-                items.push("<li>" + item.id + " " + item.version + "</li>");
-            });
+            switch (data['@type']) {
+                case 'Owner':
+                    display_owner(data);
+                    break;
+                case 'Stage':
+                    display_stage(data);
+                    break;
+                case 'Package':
+                    display_package(data);
+                    break;
+                default:
+                    display_unrecognized(data);
+            }
 
-            $("<ul/>", {
-                "class": "my-new-list",
-                html: items.join("")
-            }).appendTo("body");
+            //var items = [];
+            //$.each(data, function (i, item) {
+            //    items.push("<li>" + item.id + " " + item.version[0] + "</li>");
+            //});
+
+            //$("<ul/>", {
+            //    "class": "my-new-list",
+            //    html: items.join("")
+            //}).appendTo("body");
         }
 
         var load = function (url) {
@@ -33,6 +100,4 @@
         });
     </script>
 </head>
-<body>
-</body>
 </html>

@@ -37,6 +37,8 @@ namespace StagingWebApi.Resources
             ConnectionString = rootWebConfig.ConnectionStrings.ConnectionStrings["PackageStaging"].ConnectionString;
         }
 
+        public string Authority { get; set; }
+
         public string ConnectionString { get; set; }
         public string BaseService { get; private set; }
         public List<PackageResource> Packages { get; private set; }
@@ -188,6 +190,102 @@ namespace StagingWebApi.Resources
             }
         }
 
+        public async Task<HttpResponseMessage> DeletePackage(string packageId)
+        {
+            using (SqlConnection connection = new SqlConnection(ConnectionString))
+            {
+                connection.Open();
+
+                SqlCommand command = new SqlCommand("DeleteStagePackage", connection);
+                command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.AddWithValue("OwnerName", OwnerName);
+                command.Parameters.AddWithValue("StageName", StageName);
+                command.Parameters.AddWithValue("Id", packageId);
+
+                SqlDataReader reader = await command.ExecuteReaderAsync();
+
+                if (!reader.HasRows)
+                {
+                    return new HttpResponseMessage(HttpStatusCode.NotFound);
+                }
+
+                while (reader.Read())
+                {
+                    if (!reader.IsDBNull(0))
+                    {
+                        string id = reader.GetString(0);
+                        string version = reader.GetString(1);
+                        Uri nupkgLocation = new Uri(reader.GetString(2));
+                        Uri nuspecLocation = new Uri(reader.GetString(3));
+
+                        StagePackage package = new StagePackage();
+                        package.Load(id, version);
+
+                        Packages.Add(new PackageResource(
+                            OwnerName,
+                            StageName,
+                            package,
+                            nupkgLocation,
+                            nuspecLocation));
+                    }
+                }
+
+                return new HttpResponseMessage(HttpStatusCode.OK);
+            }
+        }
+
+        public async Task<HttpResponseMessage> ListPackages()
+        {
+            using (SqlConnection connection = new SqlConnection(ConnectionString))
+            {
+                connection.Open();
+
+                SqlCommand command = new SqlCommand(@"
+                    SELECT Stage.Name, [Id], [Version]
+                    FROM Stage
+                    LEFT OUTER JOIN StagePackage ON Stage.[Key] = StagePackage.StageKey 
+                    INNER JOIN StageOwner ON StageOwner.StageKey = Stage.[Key]
+                    INNER JOIN [Owner] ON [Owner].[Key] = StageOwner.OwnerKey
+                    WHERE [Owner].Name = @OwnerName
+                    ORDER BY Stage.Name, [Id]
+                ", connection);
+
+                command.Parameters.AddWithValue("OwnerName", OwnerName);
+
+                SqlDataReader reader = await command.ExecuteReaderAsync();
+
+                if (!reader.HasRows)
+                {
+                    return new HttpResponseMessage(HttpStatusCode.NotFound);
+                }
+
+                IDictionary<string, Stage> stages = new Dictionary<string, Stage>(StringComparer.OrdinalIgnoreCase);
+
+                Owner owner = new Owner(Authority + "/stage/", OwnerName);
+                //Owner owner = new Owner("", OwnerName);
+
+                while (reader.Read())
+                {
+                    string stageName = reader.GetString(0);
+
+                    if (reader.IsDBNull(1))
+                    {
+                        owner.Add(stageName);
+                    }
+                    else
+                    {
+                        string id = reader.GetString(1);
+                        string version = reader.GetString(2);
+                        owner.Add(stageName, id, version);
+                    }
+                }
+
+                HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
+                response.Content = Utils.CreateJsonContent(owner.ToJson());
+                return response;
+            }
+        }
+
         string ToJson()
         {
             using (StringWriter textWriter = new StringWriter())
@@ -195,7 +293,6 @@ namespace StagingWebApi.Resources
                 using (JsonTextWriter jsonWriter = new JsonTextWriter(textWriter))
                 {
                     jsonWriter.Formatting = Formatting.Indented;
-
                     jsonWriter.WriteStartArray();
                     foreach (StagePackage package in _packages)
                     {
@@ -207,10 +304,8 @@ namespace StagingWebApi.Resources
                         jsonWriter.WriteEndObject();
                     }
                     jsonWriter.WriteEndArray();
-
                     jsonWriter.Flush();
                     textWriter.Flush();
-
                     return textWriter.ToString();
                 }
             }

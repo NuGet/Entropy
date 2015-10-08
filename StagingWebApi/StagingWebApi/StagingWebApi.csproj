@@ -139,6 +139,8 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Index.cs" />
+    <Compile Include="Owner.cs" />
+    <Compile Include="Package.cs" />
     <Compile Include="PackageDetails.cs" />
     <Compile Include="Resources\PackageResource.cs" />
     <Compile Include="FilePackageStorage.cs" />
@@ -150,6 +152,7 @@
     <Compile Include="Resources\V3FlatResource.cs" />
     <Compile Include="Resources\V3RegistrationResource.cs" />
     <Compile Include="Resources\V3Resource.cs" />
+    <Compile Include="Stage.cs" />
     <Compile Include="StageDefinition.cs" />
     <Compile Include="StagePackage.cs" />
     <Compile Include="Resources\StageResource.cs" />
