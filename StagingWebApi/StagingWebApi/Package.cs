@@ -5,13 +5,13 @@ namespace StagingWebApi
 {
     class Package
     {
-        string _baseAddress;
+        string _address;
         string _id;
         List<string> _versions;
 
-        public Package(string baseAddress, string id)
+        public Package(string address, string id)
         {
-            _baseAddress = baseAddress;
+            _address = address;
             _id = id;
             _versions = new List<string>();
         }
@@ -25,7 +25,7 @@ namespace StagingWebApi
         {
             jsonWriter.WriteStartObject();
             jsonWriter.WritePropertyName("@id");
-            jsonWriter.WriteValue((_baseAddress + _id).ToLowerInvariant());
+            jsonWriter.WriteValue(_address);
             jsonWriter.WritePropertyName("@type");
             jsonWriter.WriteValue("Package");
             jsonWriter.WritePropertyName("id");
@@ -36,7 +36,7 @@ namespace StagingWebApi
             {
                 jsonWriter.WriteStartObject();
                 jsonWriter.WritePropertyName("@id");
-                jsonWriter.WriteValue((_baseAddress + _id + "/" + version).ToLowerInvariant());
+                jsonWriter.WriteValue(_address + "/" + version.ToLowerInvariant());
                 jsonWriter.WritePropertyName("version");
                 jsonWriter.WriteValue(version);
                 jsonWriter.WriteEndObject();

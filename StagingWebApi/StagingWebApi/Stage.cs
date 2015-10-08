@@ -6,13 +6,13 @@ namespace StagingWebApi
 {
     public class Stage
     {
-        string _baseAddress;
+        string _address;
         string _name;
         IDictionary<string, Package> _packages;
 
-        public Stage(string baseAddress, string name)
+        public Stage(string address, string name)
         {
-            _baseAddress = baseAddress;
+            _address = address;
             _name = name;
             _packages = new Dictionary<string, Package>(StringComparer.OrdinalIgnoreCase);
         }
@@ -21,7 +21,7 @@ namespace StagingWebApi
         {
             jsonWriter.WriteStartObject();
             jsonWriter.WritePropertyName("@id");
-            jsonWriter.WriteValue((_baseAddress + _name).ToLowerInvariant());
+            jsonWriter.WriteValue(_address);
             jsonWriter.WritePropertyName("@type");
             jsonWriter.WriteValue("Stage");
             jsonWriter.WritePropertyName("name");
@@ -41,7 +41,7 @@ namespace StagingWebApi
             Package package;
             if (!_packages.TryGetValue(id, out package))
             {
-                package = new Package(_baseAddress + _name + "/", id);
+                package = new Package(_address + "/" + id.ToLowerInvariant(), id);
                 _packages.Add(id, package);
             }
             package.Add(version);

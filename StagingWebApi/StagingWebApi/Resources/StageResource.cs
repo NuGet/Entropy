@@ -261,8 +261,7 @@ namespace StagingWebApi.Resources
 
                 IDictionary<string, Stage> stages = new Dictionary<string, Stage>(StringComparer.OrdinalIgnoreCase);
 
-                Owner owner = new Owner(Authority + "/stage/", OwnerName);
-                //Owner owner = new Owner("", OwnerName);
+                Owner owner = new Owner("", OwnerName);
 
                 while (reader.Read())
                 {

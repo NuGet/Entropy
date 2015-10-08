@@ -19,24 +19,34 @@
         }
 
         var make_delete_button = function (resource, text) {
+
+            console.log(resource);
+
             return '<button onclick="deleteResource(\'' + resource + '\')">' + text + '</button>';
         }
 
-        var display_owner = function (owner) {
+        var get_address = function (baseAddress, address) {
+            if (address.startsWith('http')) {
+                return address;
+            }
+            return baseAddress + address;
+        }
+
+        var display_owner = function (baseAddress, owner) {
             html = '';
             html += '<h1>owner: <em>' + owner.name + '</em></h1>';
             $.each(owner.stages, function (i, stage) {
-                html += '<h2>stage: <em>' + stage.name + '</em></h2>' + make_delete_button(stage['@id'], 'DELETE STAGE');
+                html += '<h2>stage: <em>' + stage.name + '</em></h2>' + make_delete_button(get_address(baseAddress, stage['@id']), 'DELETE STAGE');
                 html += '<table>';
                 $.each(stage.packages, function (i, p) {
                     html += '<tr>';
                     html += '<td>' + p.id + '</td>';
-                    html += '<td>' + make_delete_button(p['@id'], 'DELETE PACKAGE') + '</td>';
+                    html += '<td>' + make_delete_button(get_address(baseAddress, p['@id']), 'DELETE PACKAGE') + '</td>';
                     html += '<td><table>';
                     $.each(p.versions, function (i, v) {
                         html += '<tr>';
                         html += '<td>' + v.version + '</td>';
-                        html += '<td>' + make_delete_button(v['@id'], 'DELETE VERSION') + '</td>';
+                        html += '<td>' + make_delete_button(get_address(baseAddress, v['@id']), 'DELETE VERSION') + '</td>';
                         html += '</tr>';
                     });
                     html += '</table></td>';
@@ -47,32 +57,32 @@
             $('body').html(html);
         }
 
-        var display_stage = function (stage) {
+        var display_stage = function (baseAddress, stage) {
 
         }
 
-        var display_package = function (data) {
+        var display_package = function (baseAddress, data) {
 
         }
 
-        var display_unrecognized = function (data) {
+        var display_unrecognized = function (baseAddress, data) {
 
         }
 
-        var display = function (data) {
+        var display = function (baseAddress, data) {
 
             switch (data['@type']) {
                 case 'Owner':
-                    display_owner(data);
+                    display_owner(baseAddress, data);
                     break;
                 case 'Stage':
-                    display_stage(data);
+                    display_stage(baseAddress, data);
                     break;
                 case 'Package':
-                    display_package(data);
+                    display_package(baseAddress, data);
                     break;
                 default:
-                    display_unrecognized(data);
+                    display_unrecognized(baseAddress, data);
             }
 
             //var items = [];
@@ -87,7 +97,7 @@
         }
 
         var load = function (url) {
-            $.getJSON(url, display)
+            $.getJSON(url, function (data) { display(url, data); })
                 .fail(function (jqXHR, textStatus, error) {
                     console.log(error);
                 });

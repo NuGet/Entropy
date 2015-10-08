@@ -7,14 +7,14 @@ namespace StagingWebApi
 {
     class Owner
     {
-        string _baseAddress;
+        string _address;
         string _name;
 
         IDictionary<string, Stage> _stages;
 
-        public Owner(string baseAddress, string name)
+        public Owner(string address, string name)
         {
-            _baseAddress = baseAddress;
+            _address = address;
             _name = name;
             _stages = new Dictionary<string, Stage>(StringComparer.OrdinalIgnoreCase);
         }
@@ -23,7 +23,7 @@ namespace StagingWebApi
         {
             jsonWriter.WriteStartObject();
             jsonWriter.WritePropertyName("@id");
-            jsonWriter.WriteValue((_baseAddress + _name).ToLowerInvariant());
+            jsonWriter.WriteValue(_address);
             jsonWriter.WritePropertyName("@type");
             jsonWriter.WriteValue("Owner");
             jsonWriter.WritePropertyName("name");
@@ -43,7 +43,7 @@ namespace StagingWebApi
             Stage stage;
             if (!_stages.TryGetValue(name, out stage))
             {
-                stage = new Stage(_baseAddress + _name + "/", name);
+                stage = new Stage(_address + "/" + name.ToLowerInvariant(), name);
                 _stages.Add(name, stage);
             }
             return stage;
