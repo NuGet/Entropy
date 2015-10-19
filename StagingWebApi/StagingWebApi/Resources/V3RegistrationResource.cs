@@ -1,5 +1,8 @@
-﻿using Newtonsoft.Json;
+﻿using JsonLD.Core;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using NuGet.Services.Metadata.Catalog;
+using NuGet.Services.Metadata.Catalog.JsonLDIntegration;
 using NuGet.Versioning;
 using System;
 using System.Collections.Generic;
@@ -9,10 +12,16 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Configuration;
+using System.Xml;
+using System.Xml.Linq;
+using System.Xml.Xsl;
+using VDS.RDF;
+using VDS.RDF.Parsing;
 
 namespace StagingWebApi.Resources
 {
@@ -90,7 +99,7 @@ namespace StagingWebApi.Resources
                 connection.Open();
 
                 SqlCommand command = new SqlCommand(@"
-                    SELECT StagePackage.[Version], StagePackage.[NupkgLocation]
+                    SELECT StagePackage.[Version], StagePackage.NupkgLocation, StagePackage.NuspecLocation
                     FROM StagePackage
                     INNER JOIN Stage ON Stage.[Key] = StagePackage.StageKey
                     INNER JOIN StageOwner ON Stage.[Key] = StageOwner.StageKey
@@ -128,12 +137,13 @@ namespace StagingWebApi.Resources
                     while (reader.Read())
                     {
                         string version = reader.GetString(0);
+                        string nupkgLocation = reader.GetString(1);
+                        string nuspecLocation = reader.GetString(2);
 
-                        //TODO: add stage package to packageMetadata
+                        //packageMetatdata.Add(MakeCatalogEntry(id, version));
+                        packageMetatdata.Add(await MakeCatalogEntry(nuspecLocation));
 
-                        packageMetatdata.Add(MakeCatalogEntry(id, version));
-
-                        packageContentLocations[version] = reader.GetString(1);
+                        packageContentLocations[version] = nupkgLocation;
                     }
 
                     if (baseServiceResource != null)
@@ -221,6 +231,105 @@ namespace StagingWebApi.Resources
             return obj;
         }
 
+        async Task<JObject> MakeCatalogEntry(string nuspecLocation)
+        {
+            Uri baseAddress = new Uri("http://tempuri.org/test");
+
+            HttpClient client = new HttpClient();
+
+            XDocument original = XDocument.Load(await client.GetStreamAsync(nuspecLocation));
+
+            XDocument nuspec = NormalizeNuspecNamespace(original, GetXslt("XSLT.normalizeNuspecNamespace.xslt"));
+            IGraph graph = CreateNuspecGraph(nuspec, baseAddress, GetXslt("XSLT.nuspec.xslt"));
+
+            //  Compact JSON-LD projection of RDF
+
+            JToken frame = GetJson("Context.package.json");
+
+            using (var writer = new StringWriter())
+            {
+                IRdfWriter jsonLdWriter = new JsonLdWriter();
+                jsonLdWriter.Save(graph, writer);
+                writer.Flush();
+
+                JToken flattened = JToken.Parse(writer.ToString());
+                JObject framed = JsonLdProcessor.Frame(flattened, frame, new JsonLdOptions());
+                JObject compacted = JsonLdProcessor.Compact(framed, frame["@context"], new JsonLdOptions());
+
+                compacted.Remove("@context");
+
+                return compacted;
+            }
+        }
+
+        JToken GetJson(string name)
+        {
+            using (var stream = GetResourceStream(name))
+            {
+                using (var reader = new StreamReader(stream))
+                {
+                    return JToken.Parse(reader.ReadToEnd());
+                }
+            }
+        }
+
+        XslCompiledTransform GetXslt(string name)
+        {
+            using (var stream = GetResourceStream(name))
+            {
+                using (var reader = new StreamReader(stream))
+                {
+                    XslCompiledTransform xslt = new XslCompiledTransform();
+                    xslt.Load(XmlReader.Create(reader));
+                    return xslt;
+                }
+            }
+        }
+
+        public static Stream GetResourceStream(string resName)
+        {
+            foreach (string resourceName in Assembly.GetExecutingAssembly().GetManifestResourceNames())
+            {
+                string s = resourceName;
+            }
+            string name = Assembly.GetExecutingAssembly().GetName().Name;
+            return Assembly.GetExecutingAssembly().GetManifestResourceStream(name + "." + resName);
+        }
+
+        static XDocument NormalizeNuspecNamespace(XDocument original, XslCompiledTransform xslt)
+        {
+            XDocument result = new XDocument();
+            using (XmlWriter writer = result.CreateWriter())
+            {
+                xslt.Transform(original.CreateReader(), writer);
+            }
+            return result;
+        }
+
+        static IGraph CreateNuspecGraph(XDocument nuspec, Uri baseAddress, XslCompiledTransform xslt)
+        {
+            XsltArgumentList arguments = new XsltArgumentList();
+            arguments.AddParam("base", "", baseAddress.ToString());
+            arguments.AddParam("extension", "", ".json");
+
+            arguments.AddExtensionObject("urn:helper", new XsltHelper());
+
+            XDocument rdfxml = new XDocument();
+            using (XmlWriter writer = rdfxml.CreateWriter())
+            {
+                xslt.Transform(nuspec.CreateReader(), arguments, writer);
+            }
+
+            XmlDocument doc = new XmlDocument();
+            doc.Load(rdfxml.CreateReader());
+
+            IGraph graph = new Graph();
+            RdfXmlParser rdfXmlParser = new RdfXmlParser();
+            rdfXmlParser.Load(graph, doc);
+
+            return graph;
+        }
+
         async static Task<IEnumerable<JObject>> LoadRanges(HttpClient httpClient, Uri registrationUri, CancellationToken token)
         {
             var index = await Utils.LoadResource(httpClient, registrationUri, token);
@@ -294,7 +403,7 @@ namespace StagingWebApi.Resources
             {
                 using (JsonTextWriter jsonWriter = new JsonTextWriter(writer))
                 {
-                    jsonWriter.Formatting = Formatting.Indented;
+                    jsonWriter.Formatting = Newtonsoft.Json.Formatting.Indented;
 
                     jsonWriter.WriteStartObject();
                     jsonWriter.WritePropertyName("items");
