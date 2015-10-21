@@ -17,8 +17,9 @@ namespace StagingWebApi.Controllers
         {
             try
             {
-                StageResource resource = new StageResource(ownerName, stageName);
-                if (!await resource.Exists())
+                StagePersistenceFactory factory = new StagePersistenceFactory();
+                IStagePersistence persistence = factory.Create();
+                if (!await persistence.ExistsStage(ownerName, stageName))
                 {
                     return new HttpResponseMessage(HttpStatusCode.NotFound);
                 }

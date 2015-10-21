@@ -4,28 +4,24 @@ using System.Collections.Generic;
 
 namespace StagingWebApi
 {
-    public class Stage
+    public class Stage : LinkedDataDocument
     {
-        string _address;
-        string _name;
         IDictionary<string, Package> _packages;
 
-        public Stage(string address, string name)
+        public Stage(string address, string name) : base(address, "Stage")
         {
-            _address = address;
-            _name = name;
+            Name = name;
             _packages = new Dictionary<string, Package>(StringComparer.OrdinalIgnoreCase);
         }
 
-        public void WriteJson(JsonWriter jsonWriter)
+        public string Name { get; set; }
+
+        public override void WriteJson(JsonWriter jsonWriter)
         {
             jsonWriter.WriteStartObject();
-            jsonWriter.WritePropertyName("@id");
-            jsonWriter.WriteValue(_address);
-            jsonWriter.WritePropertyName("@type");
-            jsonWriter.WriteValue("Stage");
+            WriteResource(jsonWriter);
             jsonWriter.WritePropertyName("name");
-            jsonWriter.WriteValue(_name);
+            jsonWriter.WriteValue(Name);
             jsonWriter.WritePropertyName("packages");
             jsonWriter.WriteStartArray();
             foreach (var package in _packages.Values)
@@ -36,15 +32,19 @@ namespace StagingWebApi
             jsonWriter.WriteEndObject();
         }
 
-        public void Add(string id, string version)
+        public void Add(string id, string version, DateTime staged, string nuspecLocation, string packageOwner)
         {
             Package package;
             if (!_packages.TryGetValue(id, out package))
             {
-                package = new Package(_address + "/" + id.ToLowerInvariant(), id);
+                package = new Package(BaseAddress + "/" + id.ToLowerInvariant(), id);
                 _packages.Add(id, package);
             }
-            package.Add(version);
+            package.Add(version, staged, nuspecLocation, packageOwner);
+        }
+        public static string MakeRelativeUri(string ownerName, string stageName)
+        {
+            return string.Format("{0}/{1}", Owner.MakeRelativeUri(ownerName), stageName).ToLowerInvariant();
         }
     }
 }

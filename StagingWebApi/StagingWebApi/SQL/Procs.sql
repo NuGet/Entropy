@@ -1,4 +1,122 @@
 ﻿
+IF OBJECT_ID('GetOwner', 'P') IS NOT NULL
+	DROP PROCEDURE GetOwner
+GO
+
+CREATE PROCEDURE GetOwner
+@OwnerName VARCHAR(256)
+AS
+    SELECT
+        [Owner].Name, 
+        Stage.Name,
+        StagePackage.[Id],
+        StagePackage.[Version],
+        StagePackage.Staged,
+        StagePackage.NuspecLocation,
+        PackageOwner.Name
+    FROM Stage
+    LEFT OUTER JOIN StagePackage ON Stage.[Key] = StagePackage.StageKey 
+    LEFT OUTER JOIN StagePackageOwner ON StagePackage.[Key] = StagePackageOwner.PackageKey 
+    LEFT OUTER JOIN [Owner] PackageOwner ON PackageOwner.[Key] = StagePackageOwner.OwnerKey 
+    INNER JOIN StageOwner ON StageOwner.StageKey = Stage.[Key]
+    INNER JOIN [Owner] ON [Owner].[Key] = StageOwner.OwnerKey
+    WHERE [Owner].Name = @OwnerName
+    ORDER BY Stage.Name, [Id]
+GO
+
+IF OBJECT_ID('GetStage', 'P') IS NOT NULL
+	DROP PROCEDURE GetStage
+GO
+
+CREATE PROCEDURE GetStage
+@OwnerName VARCHAR(256),
+@StageName VARCHAR(256)
+AS
+    SELECT
+        [Owner].Name, 
+        Stage.Name,
+        StagePackage.[Id],
+        StagePackage.[Version],
+        StagePackage.Staged,
+        StagePackage.NuspecLocation,
+        PackageOwner.Name
+    FROM Stage
+    LEFT OUTER JOIN StagePackage ON Stage.[Key] = StagePackage.StageKey 
+    LEFT OUTER JOIN StagePackageOwner ON StagePackage.[Key] = StagePackageOwner.PackageKey 
+    LEFT OUTER JOIN [Owner] PackageOwner ON PackageOwner.[Key] = StagePackageOwner.OwnerKey 
+    INNER JOIN StageOwner ON StageOwner.StageKey = Stage.[Key]
+    INNER JOIN [Owner] ON [Owner].[Key] = StageOwner.OwnerKey
+    WHERE [Owner].Name = @OwnerName
+        AND Stage.[Name] = @StageName
+    ORDER BY Stage.Name, [Id]
+GO
+
+IF OBJECT_ID('GetPackage', 'P') IS NOT NULL
+	DROP PROCEDURE GetPackage
+GO
+
+CREATE PROCEDURE GetPackage
+@OwnerName VARCHAR(256),
+@StageName VARCHAR(256),
+@Id VARCHAR(1024)
+AS
+    SELECT
+        StagePackage.[Id],
+        StagePackage.[Version],
+        StagePackage.Staged,
+        StagePackage.NuspecLocation,
+        PackageOwner.Name
+    FROM Stage
+    INNER JOIN StagePackage ON Stage.[Key] = StagePackage.StageKey 
+    INNER JOIN StagePackageOwner ON StagePackage.[Key] = StagePackageOwner.PackageKey 
+    INNER JOIN [Owner] PackageOwner ON PackageOwner.[Key] = StagePackageOwner.OwnerKey 
+    INNER JOIN StageOwner ON StageOwner.StageKey = Stage.[Key]
+    INNER JOIN [Owner] ON [Owner].[Key] = StageOwner.OwnerKey
+    WHERE [Owner].Name = @OwnerName
+        AND Stage.[Name] = @StageName
+        AND StagePackage.[Id] = @Id
+GO
+
+IF OBJECT_ID('GetPackageVersion', 'P') IS NOT NULL
+	DROP PROCEDURE GetPackageVersion
+GO
+
+CREATE PROCEDURE GetPackageVersion
+@OwnerName VARCHAR(256),
+@StageName VARCHAR(256),
+@Id VARCHAR(1024),
+@Version VARCHAR(1024)
+AS
+	SELECT
+		StagePackage.[Version],
+		StagePackage.Staged,
+		StagePackage.NuspecLocation
+	FROM Stage
+	INNER JOIN StagePackage ON Stage.[Key] = StagePackage.StageKey 
+	INNER JOIN StageOwner ON StageOwner.StageKey = Stage.[Key]
+	INNER JOIN [Owner] ON [Owner].[Key] = StageOwner.OwnerKey
+	WHERE [Owner].Name = @OwnerName
+		AND Stage.[Name] = @StageName
+		AND StagePackage.[Id] = @Id
+		AND StagePackage.[Version] = @Version
+GO
+
+IF OBJECT_ID('ExistsStage', 'P') IS NOT NULL
+	DROP PROCEDURE ExistsStage
+GO
+
+CREATE PROCEDURE ExistsStage
+@OwnerName VARCHAR(256),
+@StageName VARCHAR(256)
+AS
+    SELECT 1
+    FROM Stage
+    INNER JOIN StageOwner ON Stage.[Key] = StageOwner.StageKey
+    INNER JOIN [Owner] ON [Owner].[Key] = StageOwner.OwnerKey
+    WHERE [Owner].Name = @OwnerName
+        AND Stage.Name = @StageName
+GO
+
 IF OBJECT_ID('CreateStage', 'P') IS NOT NULL
 	DROP PROCEDURE CreateStage
 GO
@@ -11,8 +129,8 @@ AS
 	IF EXISTS (
 		SELECT *
 		FROM Stage
-		INNER JOIN [StageOwner] ON [Stage].[Key] = [StageOwner].[StageKey]
-		INNER JOIN [Owner] ON [Owner].[Key] = [StageOwner].[OwnerKey]
+		INNER JOIN StageOwner ON [Stage].[Key] = StageOwner.StageKey
+		INNER JOIN [Owner] ON [Owner].[Key] = StageOwner.OwnerKey
 		WHERE [Owner].[Name] = @OwnerName
 	      AND [Stage].[Name] = @StageName
 		)
@@ -41,6 +159,64 @@ AS
 	END
 GO
 
+IF OBJECT_ID('CreatePackage', 'P') IS NOT NULL
+	DROP PROCEDURE CreatePackage
+GO
+
+CREATE PROCEDURE CreatePackage
+@OwnerName VARCHAR(256),
+@StageName VARCHAR(256),
+@Id VARCHAR(1024),
+@Version VARCHAR(1024),
+@PackageOwner VARCHAR(256),
+@NupkgLocation VARCHAR(1024),
+@NuspecLocation VARCHAR(1024),
+@Staged DATETIME
+AS
+	IF EXISTS (
+		SELECT *
+		FROM StagePackage
+		INNER JOIN Stage ON Stage.[Key] = StagePackage.StageKey
+		INNER JOIN StageOwner ON Stage.[Key] = StageOwner.StageKey
+		INNER JOIN [Owner] ON [Owner].[Key] = StageOwner.OwnerKey
+		WHERE [Owner].[Name] = @OwnerName
+	      AND Stage.[Name] = @StageName
+	      AND StagePackage.[Id] = @Id
+	      AND StagePackage.[Version] = @Version
+		)
+	BEGIN
+		SELECT 1
+	END
+	ELSE
+	BEGIN
+		DECLARE @OwnerKey INT
+		SELECT @OwnerKey = [Key] FROM [Owner] WHERE [Name] = @PackageOwner
+
+		IF @OwnerKey IS NULL
+		BEGIN
+			SELECT 2
+		END
+
+		BEGIN TRAN
+
+			INSERT INTO StagePackage ( [Id], [Version], StageKey, Staged, NupkgLocation, NuspecLocation )
+			SELECT @Id, @Version, StageKey, @Staged, @NupkgLocation, @NuspecLocation
+			FROM Stage
+			INNER JOIN StageOwner ON Stage.[Key] = StageOwner.[StageKey]
+			INNER JOIN [Owner] ON [Owner].[Key] = StageOwner.[OwnerKey]
+			WHERE [Owner].[Name] = @OwnerName
+			  AND Stage.[Name] = @StageName
+
+			DECLARE @PackageKey INT = SCOPE_IDENTITY()
+
+			INSERT StagePackageOwner (OwnerKey, PackageKey) VALUES (@OwnerKey, @PackageKey)
+
+		COMMIT TRAN
+
+		SELECT 0
+	END
+GO
+
 IF OBJECT_ID('DeleteStage', 'P') IS NOT NULL
 	DROP PROCEDURE DeleteStage
 GO
@@ -53,10 +229,10 @@ BEGIN
 	DECLARE @StageKey INT
 	DECLARE @OwnerKey INT
 		
-	SELECT @StageKey = [StageOwner].[StageKey], @OwnerKey = [StageOwner].[OwnerKey]
+	SELECT @StageKey = StageOwner.StageKey, @OwnerKey = StageOwner.OwnerKey
 	FROM Stage
-	INNER JOIN [StageOwner] ON [Stage].[Key] = [StageOwner].[StageKey]
-	INNER JOIN [Owner] ON [Owner].[Key] = [StageOwner].[OwnerKey]
+	INNER JOIN StageOwner ON Stage.[Key] = StageOwner.StageKey
+	INNER JOIN [Owner] ON [Owner].[Key] = StageOwner.OwnerKey
 	WHERE [Owner].[Name] = @OwnerName
 	    AND [Stage].[Name] = @StageName
 
@@ -65,8 +241,8 @@ BEGIN
 		CREATE TABLE #DeletedPackagesTempTable (
 			[Id] VARCHAR(1024),
 			[Version] VARCHAR(1024),
-			[NupkgLocation] VARCHAR(1024),
-			[NuspecLocation] VARCHAR(1024)
+			NupkgLocation VARCHAR(1024),
+			NuspecLocation VARCHAR(1024)
 		)
 
 		/* always return at least one row to show we were successful, NULLs are ignored in the code */
@@ -78,13 +254,13 @@ BEGIN
 			[Version],
 			NupkgLocation,
 			NuspecLocation
-		FROM [StagePackage]
+		FROM StagePackage
 		WHERE StageKey = @StageKey
 
 		BEGIN TRAN
 			DELETE [Stage] WHERE [Key] = @StageKey
-			DELETE [StageOwner] WHERE StageKey = @StageKey AND OwnerKey = @OwnerKey
-			DELETE [StagePackage] WHERE StageKey = @StageKey
+			DELETE StageOwner WHERE StageKey = @StageKey AND OwnerKey = @OwnerKey
+			DELETE StagePackage WHERE StageKey = @StageKey
 		COMMIT TRAN
 
 		/* return a list of packages we have deleted */
@@ -93,11 +269,11 @@ BEGIN
 END
 GO
 
-IF OBJECT_ID('DeleteStagePackage', 'P') IS NOT NULL
-	DROP PROCEDURE DeleteStagePackage
+IF OBJECT_ID('DeletePackage', 'P') IS NOT NULL
+	DROP PROCEDURE DeletePackage
 GO
 
-CREATE PROCEDURE DeleteStagePackage
+CREATE PROCEDURE DeletePackage
 @OwnerName VARCHAR(256),
 @StageName VARCHAR(256),
 @Id VARCHAR(1024)
@@ -145,51 +321,11 @@ BEGIN
 END
 GO
 
-IF OBJECT_ID('CreatePackage', 'P') IS NOT NULL
-	DROP PROCEDURE CreatePackage
+IF OBJECT_ID('DeletePackageVersion', 'P') IS NOT NULL
+	DROP PROCEDURE DeletePackageVersion
 GO
 
-CREATE PROCEDURE CreatePackage
-@OwnerName VARCHAR(256),
-@StageName VARCHAR(256),
-@Id VARCHAR(1024),
-@Version VARCHAR(1024),
-@NupkgLocation VARCHAR(1024),
-@NuspecLocation VARCHAR(1024)
-AS
-	IF EXISTS (
-		SELECT *
-		FROM StagePackage
-		INNER JOIN [Stage] ON [Stage].[Key] = [StagePackage].[StageKey]
-		INNER JOIN [StageOwner] ON [Stage].[Key] = [StageOwner].[StageKey]
-		INNER JOIN [Owner] ON [Owner].[Key] = [StageOwner].[OwnerKey]
-		WHERE [Owner].[Name] = @OwnerName
-	      AND [Stage].[Name] = @StageName
-	      AND [StagePackage].[Id] = @Id
-	      AND [StagePackage].[Version] = @Version
-		)
-	BEGIN
-		SELECT 0
-	END
-	ELSE
-	BEGIN
-		INSERT INTO StagePackage ( [Id], [Version], StageKey, NupkgLocation, NuspecLocation )
-		SELECT @Id, @Version, StageKey, @NupkgLocation, @NuspecLocation
-		FROM Stage
-		INNER JOIN [StageOwner] ON [Stage].[Key] = [StageOwner].[StageKey]
-		INNER JOIN [Owner] ON [Owner].[Key] = [StageOwner].[OwnerKey]
-		WHERE [Owner].[Name] = @OwnerName
-			AND [Stage].[Name] = @StageName
-
-		SELECT 1
-	END
-GO
-
-IF OBJECT_ID('DeletePackage', 'P') IS NOT NULL
-	DROP PROCEDURE DeletePackage
-GO
-
-CREATE PROCEDURE DeletePackage
+CREATE PROCEDURE DeletePackageVersion
 @OwnerName VARCHAR(256),
 @StageName VARCHAR(256),
 @Id VARCHAR(1024),
@@ -205,13 +341,13 @@ BEGIN
 		@NupkgLocation = NupkgLocation,
 		@NuspecLocation = NuspecLocation
 	FROM StagePackage
-    INNER JOIN [Stage] ON [Stage].[Key] = [StagePackage].[StageKey]
-    INNER JOIN [StageOwner] ON [Stage].[Key] = [StageOwner].[StageKey]
-    INNER JOIN [Owner] ON [Owner].[Key] = [StageOwner].[OwnerKey]
+    INNER JOIN Stage ON Stage.[Key] = StagePackage.StageKey
+    INNER JOIN StageOwner ON Stage.[Key] = StageOwner.StageKey
+    INNER JOIN [Owner] ON [Owner].[Key] = StageOwner.OwnerKey
     WHERE [Owner].[Name] = @OwnerName
-        AND [Stage].[Name] = @StageName
-        AND [StagePackage].[Id] = @Id
-        AND [StagePackage].[Version] = @Version
+        AND Stage.[Name] = @StageName
+        AND StagePackage.[Id] = @Id
+        AND StagePackage.[Version] = @Version
 
     DELETE StagePackage WHERE [Key] = @StagePackageKey
 

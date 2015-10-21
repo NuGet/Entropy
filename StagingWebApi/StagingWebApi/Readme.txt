@@ -1,7 +1,7 @@
 ﻿
 1) create a stage
 
-curl -v -X POST -d "{\"ownerName\":\"tom\",\"stageName\":\"test\",\"baseService\":\"http://api.nuget.org/v3/index.json\"}" http://nugetpush.azurewebsites.net/create
+curl -v -X POST -d "{\"ownerName\":\"tom\",\"stageName\":\"test\",\"baseService\":\"http://api.nuget.org/v3/index.json\"}" http://nugetpush.azurewebsites.net/create/stage
 
 2) check we created it successfully
 
@@ -13,9 +13,9 @@ curl -v -X DELETE http://nugetpush.azurewebsites.net/stage/tom/test
 
 4) we can push a package to this stage
 
-curl -v -X POST -T c:\data\nupkgs\entityframework.10.0.0.nupkg http://nugetpush.azurewebsites.net/upload/tom/test
+curl -v -X POST -T c:\data\nupkgs\entityframework.10.0.0.nupkg http://nugetpush.azurewebsites.net/create/package/tom/test
 
-curl -v -X POST -T c:\data\nupkgs\zombie.1.0.1-beta.nupkg http://nugetpush.azurewebsites.net/upload/tom/test
+curl -v -X POST -T c:\data\nupkgs\zombie.1.0.1-beta.nupkg http://nugetpush.azurewebsites.net/create/package/tom/test
 
 5) and now we have a package source we can use in Visual Studio
 

@@ -1,7 +1,5 @@
-﻿using StagingWebApi.Resources;
-using System;
+﻿using System;
 using System.Diagnostics;
-using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -12,261 +10,175 @@ namespace StagingWebApi.Controllers
 {
     public class StagingController : ApiController
     {
-        [Route("create")]
-        [HttpPost]
-        public async Task<HttpResponseMessage> PostStage()
+        public StagingController()
         {
-            HttpResponseMessage response;
+            StagePersistenceFactory factory = new StagePersistenceFactory();
+            Persistence = factory.Create();
+        }
 
+        private IStagePersistence Persistence { get; set; }
+
+        private HttpResponseMessage RedirectHtml()
+        {
+            HttpResponseMessage redirect = new HttpResponseMessage(HttpStatusCode.Redirect);
+            redirect.Headers.Location = new Uri(Request.RequestUri.GetLeftPart(UriPartial.Authority) + "/content/show.html#" + Request.RequestUri.AbsoluteUri);
+            return redirect;
+        }
+
+        private bool IsHTMLRequest()
+        {
+            return Request.Headers.Accept.Contains(new MediaTypeWithQualityHeaderValue("text/html"));
+        }
+
+        // basic GETs to access the state of the staging area - if HTML is requested they all redirect to a single show.html page which calls back for the JSON
+
+        [Route("stage/{owner}")]
+        [HttpGet]
+        public async Task<HttpResponseMessage> GetOwner(string owner)
+        {
             try
             {
-                Stream stream = await Request.Content.ReadAsStreamAsync();
-
-                StageDefinition definition = StageDefinition.ReadFromStream(stream);
-
-                if (definition.IsValid)
+                if (IsHTMLRequest())
                 {
-                    IResource resource = new StageResource(definition.OwnerName, definition.StageName, definition.BaseService);
-                    response = await resource.Save();
+                    return RedirectHtml();
                 }
                 else
                 {
-                    response = new HttpResponseMessage(HttpStatusCode.BadRequest);
-                    response.Content = Utils.CreateErrorContent(definition.Reason);
+                    return await Persistence.GetOwner(owner);
                 }
             }
             catch (Exception e)
             {
                 Trace.TraceError(e.Message);
-                response = new HttpResponseMessage(HttpStatusCode.InternalServerError);
+                return new HttpResponseMessage(HttpStatusCode.InternalServerError);
             }
-
-            return response;
         }
 
         [Route("stage/{owner}/{name}")]
         [HttpGet]
         public async Task<HttpResponseMessage> GetStage(string owner, string name)
         {
-            if (Request.Headers.Accept.Contains(new MediaTypeWithQualityHeaderValue("text/html")))
-            {
-                HttpResponseMessage redirect = new HttpResponseMessage(HttpStatusCode.Redirect);
-                redirect.Headers.Location = new Uri(Request.RequestUri.GetLeftPart(UriPartial.Authority) + "/content/show.html#" + Request.RequestUri.AbsoluteUri);
-                return redirect;
-            }
-            else
-            {
-                IResource resource = new StageResource(owner, name);
-                return await resource.Load();
-            }
-        }
-
-        [Route("upload/{owner}/{name}")]
-        [HttpPost]
-        public async Task<HttpResponseMessage> PostPackage(string owner, string name)
-        {
-            Uri nupkgLocation = null;
-            Uri nuspecLocation = null;
-            PackageStorageBase storage = null;
-            bool storageSaveSuccess = false;
-            bool tryStorageCleanup = false;
-            HttpResponseMessage response;
-
             try
             {
-                Stream stream = await Request.Content.ReadAsStreamAsync();
-
-                StagePackage package = StagePackage.ReadFromStream(stream);
-
-                if (package.IsValid)
+                if (IsHTMLRequest())
                 {
-                    //TODO: currently the Location is storage URI to the blob, it might be more flexible to make this the blob name
-
-                    storage = new AzurePackageStorage();
-
-                    nupkgLocation = await storage.Save(stream, package.GetNupkgName(storage.Root), package.GetNupkgName(string.Empty), "application/octet-stream");
-                    nuspecLocation = await storage.Save(package.NuspecStream, package.GetNuspecName(storage.Root), package.GetNuspecName(string.Empty), "text/xml");
-
-                    storageSaveSuccess = true;
-
-                    IResource resource = new PackageResource(owner, name, package, nupkgLocation, nuspecLocation);
-                    response = await resource.Save();
-
-                    if (response.StatusCode != HttpStatusCode.Created)
-                    {
-                        tryStorageCleanup = true;
-                    }
+                    return RedirectHtml();
                 }
                 else
                 {
-                    response = new HttpResponseMessage(HttpStatusCode.BadRequest);
-                    response.Content = Utils.CreateErrorContent(package.Reason);
+                    return await Persistence.GetStage(owner, name);
                 }
             }
             catch (Exception e)
             {
                 Trace.TraceError(e.Message);
-                tryStorageCleanup = true;
-                response = new HttpResponseMessage(HttpStatusCode.InternalServerError);
+                return new HttpResponseMessage(HttpStatusCode.InternalServerError);
             }
-
-            if (storageSaveSuccess && tryStorageCleanup)
-            {
-                try
-                {
-                    await storage.Delete(nupkgLocation);
-                    await storage.Delete(nuspecLocation);
-                }
-                catch (Exception e)
-                {
-                    Trace.TraceWarning(e.Message);
-                }
-            }
-
-            return response;
         }
 
-        [Route("stage/{owner}")]
+        [Route("stage/{owner}/{name}/{id}")]
         [HttpGet]
-        public async Task<HttpResponseMessage> GetStages(string owner)
+        public async Task<HttpResponseMessage> GetPackage(string owner, string name, string id)
         {
-            if (Request.Headers.Accept.Contains(new MediaTypeWithQualityHeaderValue("text/html")))
+            try
             {
-                HttpResponseMessage redirect = new HttpResponseMessage(HttpStatusCode.Redirect);
-                redirect.Headers.Location = new Uri(Request.RequestUri.GetLeftPart(UriPartial.Authority) + "/content/show.html#" + Request.RequestUri.AbsoluteUri);
-                return redirect;
-            }
-            else
-            {
-                StageResource resource = new StageResource(owner, null)
+                if (IsHTMLRequest())
                 {
-                    Authority = Request.RequestUri.GetLeftPart(UriPartial.Authority)
-                };
-                return await resource.ListPackages();
+                    return RedirectHtml();
+                }
+                else
+                {
+                    return await Persistence.GetPackage(owner, name, id);
+                }
+            }
+            catch (Exception e)
+            {
+                Trace.TraceError(e.Message);
+                return new HttpResponseMessage(HttpStatusCode.InternalServerError);
             }
         }
+
+        [Route("stage/{owner}/{name}/{id}/{version}")]
+        [HttpGet]
+        public async Task<HttpResponseMessage> GetPackageVersion(string owner, string name, string id, string version)
+        {
+            try
+            {
+                if (IsHTMLRequest())
+                {
+                    return RedirectHtml();
+                }
+                else
+                {
+                    return await Persistence.GetPackageVersion(owner, name, id, version);
+                }
+            }
+            catch (Exception e)
+            {
+                Trace.TraceError(e.Message);
+                return new HttpResponseMessage(HttpStatusCode.InternalServerError);
+            }
+        }
+
+        //  These DELETE are on the same routes and so the same Controller
 
         [Route("stage/{owner}/{name}")]
         [HttpDelete]
         public async Task<HttpResponseMessage> DeleteStage(string owner, string name)
         {
-            StageResource stageResource = new StageResource(owner, name);
-            HttpResponseMessage response = await stageResource.Delete();
-
-            if (response.IsSuccessStatusCode)
+            try
             {
-                PackageStorageBase storage = new AzurePackageStorage();
-                foreach (PackageResource packageResource in stageResource.Packages)
+                var result = await Persistence.DeleteStage(owner, name);
+                if (result.Item1.IsSuccessStatusCode)
                 {
-                    try
-                    {
-                        await storage.Delete(packageResource.NupkgLocation);
-                        await storage.Delete(packageResource.NuspecLocation);
-                    }
-                    catch (Exception e)
-                    {
-                        Trace.TraceWarning(e.Message);
-                    }
+                    await Utils.CleanUpArtifacts(result.Item2);
                 }
+                return result.Item1;
             }
-
-            return response;
+            catch (Exception e)
+            {
+                Trace.TraceError(e.Message);
+                return new HttpResponseMessage(HttpStatusCode.InternalServerError);
+            }
         }
 
         [Route("stage/{owner}/{name}/{id}")]
         [HttpDelete]
         public async Task<HttpResponseMessage> DeletePackage(string owner, string name, string id)
         {
-            StageResource stageResource = new StageResource(owner, name);
-            HttpResponseMessage response = await stageResource.DeletePackage(id);
-
-            if (response.IsSuccessStatusCode)
+            try
             {
-                PackageStorageBase storage = new AzurePackageStorage();
-                foreach (PackageResource packageResource in stageResource.Packages)
+                var result = await Persistence.DeletePackage(owner, name, id);
+                if (result.Item1.IsSuccessStatusCode)
                 {
-                    try
-                    {
-                        await storage.Delete(packageResource.NupkgLocation);
-                        await storage.Delete(packageResource.NuspecLocation);
-                    }
-                    catch (Exception e)
-                    {
-                        Trace.TraceWarning(e.Message);
-                    }
+                    await Utils.CleanUpArtifacts(result.Item2);
                 }
+                return result.Item1;
             }
-
-            return response;
+            catch (Exception e)
+            {
+                Trace.TraceError(e.Message);
+                return new HttpResponseMessage(HttpStatusCode.InternalServerError);
+            }
         }
 
         [Route("stage/{owner}/{name}/{id}/{version}")]
         [HttpDelete]
         public async Task<HttpResponseMessage> DeletePackageVersion(string owner, string name, string id, string version)
         {
-            StagePackage package = new StagePackage(id, version);
-            if (!package.IsValid)
+            try
             {
-                HttpResponseMessage errResponse = new HttpResponseMessage(HttpStatusCode.BadRequest);
-                errResponse.Content = Utils.CreateErrorContent(package.Reason);
-                return errResponse;
+                var result = await Persistence.DeletePackageVersion(owner, name, id, version);
+                if (result.Item1.IsSuccessStatusCode)
+                {
+                    await Utils.CleanUpArtifacts(result.Item2);
+                }
+                return result.Item1;
             }
-
-            PackageResource resource = new PackageResource(owner, name, package);
-            HttpResponseMessage response = await resource.Delete();
-
-            if (response.IsSuccessStatusCode)
+            catch (Exception e)
             {
-                try
-                {
-                    PackageStorageBase storage = new AzurePackageStorage();
-                    await storage.Delete(resource.NupkgLocation);
-                    await storage.Delete(resource.NuspecLocation);
-
-                    //TODO: consider two phase updates on database
-                }
-                catch (Exception e)
-                {
-                    Trace.TraceWarning(e.Message);
-                }
-            }
-
-            return response;
-        }
-
-        [Route("package/{owner}/{name}/{id}/{version}")]
-        [HttpGet]
-        public async Task<HttpResponseMessage> GetPackage(string owner, string name, string id, string version)
-        {
-            if (Request.Headers.Accept.Contains(new MediaTypeWithQualityHeaderValue("text/html")))
-            {
-                HttpResponseMessage redirect = new HttpResponseMessage(HttpStatusCode.Redirect);
-                redirect.Headers.Location = new Uri(Request.RequestUri.GetLeftPart(UriPartial.Authority) + "/content/show.html#" + Request.RequestUri.AbsoluteUri);
-                return redirect;
-            }
-            else
-            {
-                StagePackage package = new StagePackage(id, version);
-                if (!package.IsValid)
-                {
-                    HttpResponseMessage errResponse = new HttpResponseMessage(HttpStatusCode.BadRequest);
-                    errResponse.Content = Utils.CreateErrorContent(package.Reason);
-                    return errResponse;
-                }
-
-                PackageResource resource = new PackageResource(owner, name, package);
-                HttpResponseMessage response = await resource.Load();
-
-                if (response.IsSuccessStatusCode)
-                {
-                    HttpResponseMessage redirect = new HttpResponseMessage(HttpStatusCode.Redirect);
-                    redirect.Headers.Location = resource.NupkgLocation;
-                    return redirect;
-                }
-                else
-                {
-                    return response;
-                }
+                Trace.TraceError(e.Message);
+                return new HttpResponseMessage(HttpStatusCode.InternalServerError);
             }
         }
     }

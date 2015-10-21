@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -22,6 +23,21 @@ namespace StagingWebApi
             HttpContent content = new StringContent(json);
             content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
             return content;
+        }
+
+        public static HttpResponseMessage CreateErrorResponse(HttpStatusCode statusCode, string reason)
+        {
+            return new HttpResponseMessage(statusCode) { Content = CreateErrorContent(reason) };
+        }
+
+        public static HttpResponseMessage CreateJsonResponse(HttpStatusCode statusCode, string json)
+        {
+            return new HttpResponseMessage(statusCode) { Content = CreateJsonContent(json) };
+        }
+
+        public static Uri CreateBaseAddress(Uri requestUri, string path)
+        {
+            return new UriBuilder(requestUri.Scheme, requestUri.Host, requestUri.Port, path).Uri;
         }
 
         public static IDictionary<string, List<Uri>> MakeIndex(string indexJson)
@@ -98,6 +114,22 @@ namespace StagingWebApi
             var obj = JObject.Parse(json);
 
             return obj;
+        }
+
+        public static async Task CleanUpArtifacts(List<Uri> artifacts)
+        {
+            PackageStorageBase storage = new AzurePackageStorage();
+            foreach (var artifact in artifacts)
+            {
+                try
+                {
+                    await storage.Delete(artifact);
+                }
+                catch (Exception e)
+                {
+                    Trace.TraceWarning(e.Message);
+                }
+            }
         }
     }
 }
