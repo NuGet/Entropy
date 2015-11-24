@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.23107.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StructuresSolution", "StructuresSolution\StructuresSolution.csproj", "{4FB106E8-CD3F-4EF6-83B4-4D9C2677EFDB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Structures", "Structures\Structures.csproj", "{F696039A-7644-4C1D-A4DA-EBACC4F7DD23}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4FB106E8-CD3F-4EF6-83B4-4D9C2677EFDB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4FB106E8-CD3F-4EF6-83B4-4D9C2677EFDB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4FB106E8-CD3F-4EF6-83B4-4D9C2677EFDB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4FB106E8-CD3F-4EF6-83B4-4D9C2677EFDB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F696039A-7644-4C1D-A4DA-EBACC4F7DD23}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F696039A-7644-4C1D-A4DA-EBACC4F7DD23}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F696039A-7644-4C1D-A4DA-EBACC4F7DD23}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F696039A-7644-4C1D-A4DA-EBACC4F7DD23}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
