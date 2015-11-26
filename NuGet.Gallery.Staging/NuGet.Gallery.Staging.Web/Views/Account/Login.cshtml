@@ -1,0 +1,46 @@
+﻿@model NuGet.Gallery.Staging.Web.ViewModels.LoginViewModel
+@{
+    ViewBag.SiteNavigation = "Account";
+    Page.Title = "Log in";
+}
+
+<div class="row withboxes">
+    <article class="col-md-12">
+        <div class="box">
+            <header>
+                <h1><span class="icon contribute">Log in</span></h1>
+            </header>
+            <p>Use your <a href="https://nuget.org">NuGet.org</a> login details to access NuGet Gallery Staging.</p>
+
+            @using (Html.BeginForm("Login", "Account", new { ReturnUrl = ViewBag.ReturnUrl }, FormMethod.Post, new { role = "form" }))
+            {
+                @Html.AntiForgeryToken()
+
+                @Html.ValidationSummary(true)
+
+                <fieldset class="form">
+                    <div class="form-field">
+                        @Html.LabelFor(m => m.Username)
+                        @Html.TextBoxFor(m => m.Username, new { autofocus = true })
+                        @Html.ValidationMessageFor(m => m.Username)
+                    </div>
+                    <div class="form-field">
+                        @Html.LabelFor(m => m.Password)
+                        @Html.PasswordFor(m => m.Password)
+                        @Html.ValidationMessageFor(m => m.Password)
+                    </div>
+                </fieldset>
+                
+                <footer>
+                    <input type="submit" value="Log in" title="Log in"/>
+                    <a href="https://www.nuget.org/users/account/LogOn">don't have an account?</a> |
+                    <a href="https://www.nuget.org/account/ForgotPassword">reset password</a>
+                </footer>
+            }
+        </div>
+    </article>
+</div>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}

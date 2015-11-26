@@ -1,7 +1,13 @@
+<<<<<<< HEAD
 ﻿using StagingWebApi.Resources;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+=======
+﻿// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
+using System;
+>>>>>>> 15898dffd7c655c67c3d2a9a02c8142b328fef7d
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -11,7 +17,11 @@ namespace StagingWebApi.Controllers
 {
     public class V3Controller : ApiController
     {
+<<<<<<< HEAD
         [Route("stage/v3/{ownerName}/{stageName}/index.json")]
+=======
+        [Route("source/v3/{ownerName}/{stageName}/index.json")]
+>>>>>>> 15898dffd7c655c67c3d2a9a02c8142b328fef7d
         [HttpGet]
         public async Task<HttpResponseMessage> GetStageIndex(string ownerName, string stageName)
         {

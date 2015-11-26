@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -5,6 +6,13 @@ using System.Data.SqlClient;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Web;
+=======
+﻿// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
+using System;
+using System.Data.SqlClient;
+using System.Threading.Tasks;
+>>>>>>> 15898dffd7c655c67c3d2a9a02c8142b328fef7d
 using System.Web.Configuration;
 
 namespace StagingWebApi.Resources
@@ -14,7 +22,11 @@ namespace StagingWebApi.Resources
         public V3Resource(string ownerName, string stageId)
             : base(ownerName, stageId)
         {
+<<<<<<< HEAD
             Configuration rootWebConfig = WebConfigurationManager.OpenWebConfiguration("/StagingWebApi");
+=======
+            var rootWebConfig = WebConfigurationManager.OpenWebConfiguration("/StagingWebApi");
+>>>>>>> 15898dffd7c655c67c3d2a9a02c8142b328fef7d
             ConnectionString = rootWebConfig.ConnectionStrings.ConnectionStrings["PackageStaging"].ConnectionString;
         }
 
@@ -50,11 +62,19 @@ namespace StagingWebApi.Resources
 
         async Task<Uri> GetServiceBase()
         {
+<<<<<<< HEAD
             using (SqlConnection connection = new SqlConnection(ConnectionString))
             {
                 connection.Open();
 
                 SqlCommand command = new SqlCommand(@"
+=======
+            using (var connection = new SqlConnection(ConnectionString))
+            {
+                connection.Open();
+
+                var command = new SqlCommand(@"
+>>>>>>> 15898dffd7c655c67c3d2a9a02c8142b328fef7d
                     SELECT Stage.BaseService
                     FROM Stage
                     INNER JOIN StageOwner ON Stage.[Key] = StageOwner.StageKey

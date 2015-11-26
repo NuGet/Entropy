@@ -1,9 +1,15 @@
 ﻿using Newtonsoft.Json;
+<<<<<<< HEAD
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Web;
+=======
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+>>>>>>> 15898dffd7c655c67c3d2a9a02c8142b328fef7d
 
 namespace StagingWebApi
 {
@@ -29,10 +35,18 @@ namespace StagingWebApi
 
         public string ToJson()
         {
+<<<<<<< HEAD
             using (TextWriter writer = new StringWriter())
             {
                 using (JsonWriter jsonWriter = new JsonTextWriter(writer))
                 {
+=======
+            using (var writer = new StringWriter())
+            {
+                using (var jsonWriter = new JsonTextWriter(writer))
+                {
+                    jsonWriter.Formatting = Formatting.Indented;
+>>>>>>> 15898dffd7c655c67c3d2a9a02c8142b328fef7d
                     WriteJson(jsonWriter);
                     jsonWriter.Flush();
                     writer.Flush();
@@ -44,10 +58,15 @@ namespace StagingWebApi
         public void WriteJson(JsonWriter jsonWriter)
         {
             jsonWriter.WriteStartObject();
+<<<<<<< HEAD
 
             jsonWriter.WritePropertyName("version");
             jsonWriter.WriteValue("3.0.0-beta.1");
 
+=======
+            jsonWriter.WritePropertyName("version");
+            jsonWriter.WriteValue("3.0.0-beta.1");
+>>>>>>> 15898dffd7c655c67c3d2a9a02c8142b328fef7d
             jsonWriter.WritePropertyName("resources");
             jsonWriter.WriteStartArray();
             foreach (var resource in _resources)
@@ -59,7 +78,10 @@ namespace StagingWebApi
                 jsonWriter.WriteEndObject();
             }
             jsonWriter.WriteEndArray();
+<<<<<<< HEAD
 
+=======
+>>>>>>> 15898dffd7c655c67c3d2a9a02c8142b328fef7d
             jsonWriter.WriteEndObject();
         }
 

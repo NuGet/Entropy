@@ -1,6 +1,11 @@
 ﻿using JsonLD.Core;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+<<<<<<< HEAD
+=======
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
+>>>>>>> 15898dffd7c655c67c3d2a9a02c8142b328fef7d
 using NuGet.Services.Metadata.Catalog;
 using NuGet.Services.Metadata.Catalog.JsonLDIntegration;
 using NuGet.Versioning;
@@ -15,7 +20,10 @@ using System.Net.Http;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+<<<<<<< HEAD
 using System.Web;
+=======
+>>>>>>> 15898dffd7c655c67c3d2a9a02c8142b328fef7d
 using System.Web.Configuration;
 using System.Xml;
 using System.Xml.Linq;

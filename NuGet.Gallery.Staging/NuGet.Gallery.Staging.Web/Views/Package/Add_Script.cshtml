@@ -1,0 +1,32 @@
+﻿<script>
+    $(function() {
+        $('#uploadForm').on('submit', function (e) {
+            if (typeof FormData != 'undefined') { // hello, modern browser!
+                var formData = new FormData(this);
+
+                var xhr = new XMLHttpRequest();
+                xhr.upload.addEventListener('progress', function(evt) {
+                    if (evt.lengthComputable) {
+                        var percentComplete = Math.round(evt.loaded * 100 / evt.total);
+                        $('.bar > .percentage').text(percentComplete.toString() + '%');
+                        $('.bar').attr('style', 'width: ' + percentComplete.toString() + '%');
+                    } else {
+                        $('.bar > .percentage').text('Uploading...');
+                    }
+                }, false);
+                xhr.addEventListener('load', function () { location.href = $.parseJSON(xhr.responseText); }, false);
+                xhr.addEventListener('error', function () { alert('The upload failed.'); }, false);
+                xhr.addEventListener('abort', function () { alert('The upload was cancelled.'); }, false);
+                xhr.open("POST", $(this).attr('action'), true);
+                xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+                xhr.send(formData);
+
+                $('.progress').show();
+                $('#uploadButton').attr('disabled', true);
+
+                e.preventDefault();
+                return false;
+            }
+        });
+    });
+</script>

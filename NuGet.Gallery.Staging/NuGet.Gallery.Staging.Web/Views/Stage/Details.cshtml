@@ -1,0 +1,93 @@
+﻿@using NuGet.Gallery.Staging.Web.Code
+@model NuGet.Gallery.Staging.Web.ViewModels.StageDetailsViewModel
+@{
+    ViewBag.SiteNavigation = "Stage";
+    ViewBag.StageNavigation = "Details";
+    Page.Title = "Stage details - " + Model.Stage.Name;
+}
+
+@section subnav {
+    <div class="subnav">
+        <nav class="sub">
+            @Html.Partial("StageNavigation")
+        </nav>
+    </div>
+}
+
+<div class="row withboxes">
+    <div class="col-md-12">
+    <div class="row withboxes nomargintop">
+        <div class="col-md-12">
+            <div class="box">
+                <header>
+                    <h1 class="ellipsis">
+                        <span class="icon contribute">@Model.Stage.Name</span>
+
+                        <span class="regular-font" style="font-size: 14px;">
+                                @Model.Stage.Packages.Sum(p => p.Versions.Count) packages (@Model.Stage.Packages.Count distinct)
+                            </span>
+
+                        <span class="pull-right" style="vertical-align: middle; font-size: 24px;">
+                                <a href="@Url.Action("Delete", "Stage", new {id = Model.Stage.Name})" title="Delete stage"><i class="fa fa-trash"></i></a>
+                            </span>
+                    </h1>
+                </header>
+
+                <footer>
+                    <p>
+                        @foreach (var source in Model.Stage.Sources.Where(s => s.Value != "unavailable"))
+                        {
+                            <text>
+                                <span class="source">Source URL (@source.Key):</span> <code>@source.Value</code><br/>
+                            </text>
+                        }
+
+                        <span class="source">Package push URL:</span> <code>@(Configuration.BaseApiUrl)push/package/@User.Identity.Name/@Model.Stage.Name</code><br/>
+                        <span class="source">API key:</span> <code>@Model.ApiKey</code>
+                    </p>
+
+                    <hr/>
+
+                    @Html.ActionLink("Add a package...", "Add", "Package", new {id = Model.Stage.Name}, null)
+                </footer>
+            </div>
+        </div>
+    </div>
+
+    <div class="row withboxes">
+        <div class="col-md-12">
+            <div class="row withboxes nomargintop">
+                <div class="col-md-12">
+                    <div class="box">
+                        <header>
+                            <h1 class="ellipsis">
+                                <span class="icon upload">Packages</span>
+                            </h1>
+                        </header>
+
+                        <div class="row">
+                            <div class="col-md-12">
+                                @if (!Model.Stage.Packages.Any())
+                                {
+                                    <p>No packages have been added to the stage yet. @Html.ActionLink("Add a package...", "Add", "Package", new {id = Model.Stage.Name}, null)</p>
+                                }
+                                else
+                                {
+                                    foreach (var package in Model.Stage.Packages)
+                                    {
+                                        foreach (var packageVersion in package.Versions)
+                                        {
+                                            <p>
+                                                <a href="@Url.Action("Delete", "Package", new {id = Model.Stage.Name, packageId = package.Id, packageVersion = packageVersion.Version})" title="Delete package" class="destructive"><i class="fa fa-trash"></i></a>
+                                                @package.Id <small>@packageVersion.Version</small>
+                                            </p>
+                                        }
+                                    }
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>

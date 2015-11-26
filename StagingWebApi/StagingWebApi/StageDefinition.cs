@@ -1,9 +1,17 @@
+<<<<<<< HEAD
 ﻿using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Web;
+=======
+﻿// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
+using Newtonsoft.Json.Linq;
+using System;
+using System.IO;
+>>>>>>> 15898dffd7c655c67c3d2a9a02c8142b328fef7d
 
 namespace StagingWebApi
 {
@@ -25,11 +33,19 @@ namespace StagingWebApi
         {
             stream.Seek(0, SeekOrigin.Begin);
 
+<<<<<<< HEAD
             StageDefinition definition = new StageDefinition();
 
             definition.IsValid = false;
 
             using (StreamReader reader = new StreamReader(stream))
+=======
+            var definition = new StageDefinition();
+
+            definition.IsValid = false;
+
+            using (var reader = new StreamReader(stream))
+>>>>>>> 15898dffd7c655c67c3d2a9a02c8142b328fef7d
             {
                 string json = reader.ReadToEnd();
 

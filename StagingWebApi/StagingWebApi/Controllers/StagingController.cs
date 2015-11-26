@@ -1,4 +1,10 @@
+<<<<<<< HEAD
 ﻿using System;
+=======
+﻿// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
+using System;
+>>>>>>> 15898dffd7c655c67c3d2a9a02c8142b328fef7d
 using System.Diagnostics;
 using System.Net;
 using System.Net.Http;
@@ -30,6 +36,14 @@ namespace StagingWebApi.Controllers
             return Request.Headers.Accept.Contains(new MediaTypeWithQualityHeaderValue("text/html"));
         }
 
+<<<<<<< HEAD
+=======
+        private string MakeV3SourceBaseAddress()
+        {
+            return string.Format("{0}://{1}/source/v3/", Request.RequestUri.Scheme, Request.RequestUri.Authority);
+        }
+
+>>>>>>> 15898dffd7c655c67c3d2a9a02c8142b328fef7d
         // basic GETs to access the state of the staging area - if HTML is requested they all redirect to a single show.html page which calls back for the JSON
 
         [Route("stage/{owner}")]
@@ -44,7 +58,11 @@ namespace StagingWebApi.Controllers
                 }
                 else
                 {
+<<<<<<< HEAD
                     return await Persistence.GetOwner(owner);
+=======
+                    return await Persistence.GetOwner(owner, MakeV3SourceBaseAddress());
+>>>>>>> 15898dffd7c655c67c3d2a9a02c8142b328fef7d
                 }
             }
             catch (Exception e)
@@ -66,7 +84,11 @@ namespace StagingWebApi.Controllers
                 }
                 else
                 {
+<<<<<<< HEAD
                     return await Persistence.GetStage(owner, name);
+=======
+                    return await Persistence.GetStage(owner, name, MakeV3SourceBaseAddress());
+>>>>>>> 15898dffd7c655c67c3d2a9a02c8142b328fef7d
                 }
             }
             catch (Exception e)

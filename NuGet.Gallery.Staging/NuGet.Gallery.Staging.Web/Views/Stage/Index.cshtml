@@ -1,0 +1,60 @@
+﻿@using NuGet.Gallery.Staging.Web.Code
+@model NuGet.Gallery.Staging.Web.ViewModels.ListStagesViewModel
+@{
+    ViewBag.SiteNavigation = "Stage";
+    ViewBag.StageNavigation = "List";
+    Page.Title = "List stages";
+}
+
+@section subnav {
+    <div class="subnav">
+        <nav class="sub">
+            @Html.Partial("StageNavigation")
+        </nav>
+    </div>
+}
+
+<div class="row withboxes">
+    <div class="col-md-12">
+        @foreach (var stage in Model.Stages)
+        {
+            <div class="row withboxes nomargintop">
+                <div class="col-md-12">
+                    <div class="box">
+                        <header>
+                            <h1 class="ellipsis">
+                                <span class="icon contribute">@Html.ActionLink(stage.Name, "Details", "Stage", new { id = @stage.Name }, null)</span>
+                                
+                                <span class="regular-font" style="font-size: 14px;">
+                                    @stage.Packages.Sum(p => p.Versions.Count) packages (@stage.Packages.Count distinct)
+                                </span>
+                                
+                                <span class="pull-right" style="vertical-align: middle; font-size: 24px;">
+                                   <a href="@Url.Action("Delete", "Stage", new { id = stage.Name })" title="Delete stage"><i class="fa fa-trash"></i></a>
+                                </span>
+                            </h1>
+                        </header>
+                        
+                        <footer>
+                            <p>
+                                @foreach (var source in stage.Sources.Where(s => s.Value != "unavailable"))
+                                {
+                                    <text>
+                                        <span class="source">Source URL (@source.Key):</span> <code>@source.Value</code><br/>
+                                    </text>
+                                }
+
+                                <span class="source">Package push URL:</span> <code>@(Configuration.BaseApiUrl)push/package/@User.Identity.Name/@stage.Name</code><br/>
+                                <span class="source">API key:</span> <code>@Model.ApiKey</code>
+                            </p>
+
+                            <hr/>
+
+                            @Html.ActionLink("Details...", "Details", "Stage", new {id = @stage.Name}, null)
+                        </footer>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>

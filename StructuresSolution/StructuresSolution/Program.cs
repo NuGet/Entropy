@@ -11,9 +11,25 @@ namespace StructuresSolution
     {
         static void Main(string[] args)
         {
-            Graph graph = new Graph();
+            Document document = new Document();
 
-            graph.Assert();
+            document.Assert(new[]
+            {
+                new Entry(new Name("a"), new Name("x"), new Value("1")),
+                new Entry(new Name("a"), new Name("y"), new Value("2")),
+                new Entry(new Name("a"), new Name("z"), new Value("3")),
+                new Entry(new Name("b"), new Name("x"), new Value("1")),
+                new Entry(new Name("b"), new Name("y"), new Value("2")),
+                new Entry(new Name("b"), new Name("z"), new Value("3")),
+                new Entry(new Name("c"), new Name("x"), new Value("1")),
+                new Entry(new Name("c"), new Name("y"), new Value("2")),
+                new Entry(new Name("c"), new Name("z"), new Value("3")),
+            });
+
+            foreach (var entry in document.Match(null))
+            {
+                Console.WriteLine(entry);
+            }
         }
     }
 }

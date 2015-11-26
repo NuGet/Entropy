@@ -1,0 +1,51 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>@Page.Title - NuGet Gallery - Staging</title>
+    <link href="~/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+    @Styles.Render("~/bundles/styles/nuget")
+    <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet" type="text/css" />
+    @Scripts.Render("~/bundles/scripts/nuget")
+
+    @RenderSection("head", required: false)
+    @RenderSection("meta", required: false)
+    @RenderSection("socialmeta", required: false)
+</head>
+<body>
+    <div class="header">
+        <a href="~/"><img class="logo" src="~/images/logo.png" border="0" /></a>
+        <div class="nav-toggles">
+            <img class="nav-toggle" data-toggle=".search" src="~/images/search-button.png" border="0" />
+            <img class="nav-toggle" data-toggle=".header nav, .subnav" src="~/images/burger-button.png" border="0" />
+        </div>
+        <div class="search">
+            <form action="https://nuget.org/search" method="get" novalidate="novalidate">
+                <input id="searchbox" type="search" name="q" placeholder="SEARCH" autocomplete="off" value="@ViewData["SearchTerm"]" @(Request.Url != null && (Request.Url.PathAndQuery == "/" || Request.Url.PathAndQuery == "/packages" || Request.Url.PathAndQuery == "/search") ? "autofocus" : string.Empty) />
+                <input type="submit" id="searchbutton" value=" " />
+            </form>
+        </div>
+        <nav>
+            @Html.Partial("SiteNavigation")
+        </nav>
+        <div style="clear: both"></div>
+    </div>
+    @RenderSection("subnav", required: false)
+    <div class="content">
+        <section>
+            @if (ViewData.ContainsKey("Message"))
+            {
+                <div class="@ViewData["MessageType"] message">@ViewData["Message"]</div>
+            }
+            @RenderBody()
+            <div style="clear: both;"></div>
+        </section>
+    </div>
+    <footer class="page">
+        @Html.Partial("Copyright")
+        @RenderSection("footer", required: false)
+        @RenderSection("scripts", required: false)
+    </footer>
+</body>
+</html>

@@ -1,17 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Structures
+﻿namespace Structures
 {
     public class Name
     {
-        string _s;
-        public Name(string s)
+        public Name(string data)
         {
-            _s = s;
+            Data = data;
+        }
+
+        public string Data { get; set; }
+
+        public override string ToString()
+        {
+            return Data;
         }
     }
 }

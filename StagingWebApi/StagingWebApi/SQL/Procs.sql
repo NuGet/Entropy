@@ -117,6 +117,36 @@ AS
         AND Stage.Name = @StageName
 GO
 
+<<<<<<< HEAD
+=======
+IF OBJECT_ID('CreateOwner', 'P') IS NOT NULL
+	DROP PROCEDURE CreateOwner
+GO
+
+CREATE PROCEDURE CreateOwner
+@OwnerName VARCHAR(256)
+AS
+	IF EXISTS (
+		SELECT *
+		FROM [Owner]
+		INNER JOIN StageOwner ON [Owner].[Key] = StageOwner.OwnerKey
+		WHERE [Owner].[Name] = @OwnerName
+		)
+	BEGIN
+		SELECT NULL
+	END
+	ELSE
+	BEGIN
+		DECLARE @ApiKey AS VARCHAR(64)
+		SELECT @ApiKey = CONVERT(VARCHAR(64), NEWID())
+
+		INSERT [Owner] ( Name, ApiKey ) VALUES ( @OwnerName, @ApiKey )
+
+		SELECT @ApiKey
+	END
+GO
+
+>>>>>>> 15898dffd7c655c67c3d2a9a02c8142b328fef7d
 IF OBJECT_ID('CreateStage', 'P') IS NOT NULL
 	DROP PROCEDURE CreateStage
 GO
@@ -357,3 +387,62 @@ BEGIN
 	END
 END
 GO
+<<<<<<< HEAD
+=======
+
+IF OBJECT_ID('CheckAccess', 'P') IS NOT NULL
+	DROP PROCEDURE CheckAccess
+GO
+
+CREATE PROCEDURE CheckAccess
+@StageName VARCHAR(256),
+@ApiKey VARCHAR(64)
+AS
+	SELECT [Owner].Name
+	FROM [Owner]
+	INNER JOIN StageOwner ON StageOwner.OwnerKey = [Owner].[Key]
+	INNER JOIN Stage ON StageOwner.StageKey = Stage.[Key]
+	WHERE Stage.Name = @StageName
+	  AND [Owner].ApiKey = @ApiKey
+GO
+
+IF OBJECT_ID('AddStageOwner', 'P') IS NOT NULL
+	DROP PROCEDURE AddStageOwner
+GO
+
+CREATE PROCEDURE AddStageOwner
+@OwnerName VARCHAR(256),
+@StageName VARCHAR(256),
+@NewOwnerName VARCHAR(256)
+AS
+	DECLARE @NewOwnerKey INT
+	SELECT @NewOwnerKey = [Key]
+	FROM [Owner]
+	WHERE Name = @NewOwnerName
+	
+	IF @NewOwnerKey IS NULL
+	BEGIN
+		SELECT 2
+	END
+
+	IF NOT EXISTS (SELECT [Key] FROM [Owner] WHERE [Owner].Name = @OwnerName)
+	BEGIN
+		SELECT 2
+	END
+
+	INSERT StageOwner ( OwnerKey, StageKey )
+	SELECT @NewOwnerKey, Stage.[Key]
+	FROM Stage
+	INNER JOIN StageOwner ON [Stage].[Key] = StageOwner.StageKey 
+	INNER JOIN [Owner] ON [Owner].[Key] = StageOwner.OwnerKey
+	WHERE [Owner].Name = @OwnerName
+	  AND Stage.Name = @StageName
+
+	IF (@@ROWCOUNT = 1)
+	BEGIN
+		SELECT 1
+	END
+
+	SELECT 0
+GO
+>>>>>>> 15898dffd7c655c67c3d2a9a02c8142b328fef7d

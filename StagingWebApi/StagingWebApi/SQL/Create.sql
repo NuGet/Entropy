@@ -9,7 +9,12 @@ GO
 CREATE TABLE [Owner]
 (
 	[Key] INT IDENTITY,
+<<<<<<< HEAD
 	[Name] VARCHAR(256)
+=======
+	[Name] VARCHAR(256),
+	[ApiKey] VARCHAR(64)
+>>>>>>> 15898dffd7c655c67c3d2a9a02c8142b328fef7d
 )
 GO
 
