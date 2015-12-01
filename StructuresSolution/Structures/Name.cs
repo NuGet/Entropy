@@ -2,6 +2,7 @@
 {
     public class Name
     {
+        //TODO: presumably we can replace this with the System.Xml.Linq Name and Namespace
         public Name(string data)
         {
             Data = data;

@@ -31,14 +31,20 @@ namespace StructuresSolution
             g.Assert(new Clause(new Name("c"), new Name("y"), new Value("3")));
             g.Assert(new Clause(new Name("c"), new Name("z"), new Value("3")));
 
-            Test(g, Clause.Empty);
-            Test(g, new Clause(new Name("a"), null, null));
-            Test(g, new Clause(new Name("b"), new Name("z"), null));
-            Test(g, new Clause(new Name("c"), null, new Value("3")));
-            Test(g, new Clause(new Name("c"), new Name("z"), new Value("3")));
-            Test(g, new Clause(null, new Name("z"), null));
-            Test(g, new Clause(null, new Name("z"), new Value("3")));
-            Test(g, new Clause(null, null, new Value("3")));
+            //Test(g, Clause.Empty);
+            //Test(g, new Clause(new Name("a"), null, null));
+            //Test(g, new Clause(new Name("b"), new Name("z"), null));
+            //Test(g, new Clause(new Name("c"), null, new Value("3")));
+            //Test(g, new Clause(new Name("c"), new Name("z"), new Value("3")));
+            //Test(g, new Clause(null, new Name("z"), null));
+            //Test(g, new Clause(null, new Name("z"), new Value("3")));
+            //Test(g, new Clause(null, null, new Value("3")));
+
+            Query query = new Query();
+
+            query.Add(new QueryName(new Name("c")), new QueryName(new Name("y")), new QueryValue("v0"));
+
+            query.Execute(g);
         }
     }
 }
