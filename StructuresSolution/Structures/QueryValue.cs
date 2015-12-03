@@ -1,25 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Structures
+﻿namespace Structures
 {
     public class QueryValue
     {
         public Value Value { get; private set; }
         public string Variable { get; private set; }
 
-        public QueryValue(string variable)
+        public QueryValue(object obj)
         {
-            Value = null;
-            Variable = variable;
-        }
-        public QueryValue(Value name)
-        {
-            Value = name;
-            Variable = null;
+            if (obj is Variable)
+            {
+                Value = null;
+                Variable = ((Variable)obj).Value;
+            }
+            else
+            {
+                Value = new Value(obj);
+                Variable = null;
+            }
         }
     }
 }

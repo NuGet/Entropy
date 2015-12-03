@@ -4,9 +4,9 @@ namespace Structures
 {
     public interface IGraph
     {
-        void Assert(Clause facts);
-        void Retract(Clause partial);
+        void Assert(Triple facts);
+        void Retract(Triple partial);
         void Add(IGraph g);
-        IEnumerable<Clause> Match(Clause partial);
+        IEnumerable<Triple> Match(Triple partial);
     }
 }

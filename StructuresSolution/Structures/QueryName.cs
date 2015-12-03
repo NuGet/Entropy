@@ -1,25 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Xml.Linq;
 
 namespace Structures
 {
     public class QueryName
     {
-        public Name Name { get; private set; }
+        public XName Name { get; private set; }
         public string Variable { get; private set; }
 
-        public QueryName(string variable)
+        public QueryName(object obj)
         {
-            Name = null;
-            Variable = variable;
-        }
-        public QueryName(Name name)
-        {
-            Name = name;
-            Variable = null;
+            if (obj is XName)
+            {
+                Name = (XName)obj;
+                Variable = null;
+            }
+            else
+            {
+                Name = null;
+                Variable = ((Variable)obj).Value;
+            }
         }
     }
 }

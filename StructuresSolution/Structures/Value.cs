@@ -1,33 +1,41 @@
-﻿namespace Structures
+﻿using System;
+using System.Xml.Linq;
+
+namespace Structures
 {
     public class Value
     {
         public enum ValueType { String, Int, Bool, Double, Name };
 
-        public Value(string x)
+        public Value(object o)
         {
-            Data = x;
-            Type = ValueType.String;
+            Data = o;
+            Type = GetType(o);
         }
-        public Value(int x)
+
+        static ValueType GetType(object o)
         {
-            Data = x;
-            Type = ValueType.Int;
-        }
-        public Value(bool x)
-        {
-            Data = x;
-            Type = ValueType.Bool;
-        }
-        public Value(double x)
-        {
-            Data = x;
-            Type = ValueType.Double;
-        }
-        public Value(Name x)
-        {
-            Data = x;
-            Type = ValueType.Name;
+            if (o is XName)
+            {
+                return ValueType.Name;
+            }
+            if (o is string)
+            {
+                return ValueType.String;
+            }
+            if (o is int)
+            {
+                return ValueType.Int;
+            }
+            if (o is double)
+            {
+                return ValueType.Double;
+            }
+            if (o is bool)
+            {
+                return ValueType.Bool;
+            }
+            throw new ArgumentException(o.GetType().Name);
         }
 
         public object Data

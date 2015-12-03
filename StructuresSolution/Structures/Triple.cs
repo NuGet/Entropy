@@ -1,24 +1,25 @@
 ﻿using System.Text;
+using System.Xml.Linq;
 
 namespace Structures
 {
-    public class Clause
+    public class Triple
     {
-        public static readonly Clause Empty;
-        public Name Subject { get; set; }
-        public Name Predicate { get; set; }
+        public static readonly Triple Empty;
+        public XName Subject { get; set; }
+        public XName Predicate { get; set; }
         public Value Object { get; set; }
 
-        static Clause()
+        static Triple()
         {
-            Empty = new Clause();
+            Empty = new Triple();
         }
 
-        public Clause()
+        public Triple()
         {
         }
 
-        public Clause(Name s, Name p, Value o)
+        public Triple(XName s, XName p, Value o)
         {
             Subject = s;
             Predicate = p;

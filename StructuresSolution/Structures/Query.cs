@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Xml.Linq;
 
 namespace Structures
 {
@@ -12,17 +13,13 @@ namespace Structures
             _query = new List<Tuple<QueryName, QueryName, QueryValue>>();
         }
 
-        public void Add(QueryName s, QueryName p, QueryValue o)
+        public void Add(object s, object p, object o)
         {
-            _query.Add(Tuple.Create(s, p, o));
+            _query.Add(Tuple.Create(new QueryName(s), new QueryName(p), new QueryValue(o)));
         }
 
-        // http://www.gise.cse.iitb.ac.in/wiki/images/3/3a/PTSW.pdf
-
-        public IGraph Execute(IGraph graph)
+        public List<IDictionary<string, Value>> Select(IGraph graph)
         {
-            IGraph result = new Graph();
-
             List<IDictionary<string, Value>> bindings = null;
 
             foreach (var tuple in _query)
@@ -59,12 +56,33 @@ namespace Structures
                 }
             }
 
+            return bindings ?? new List<IDictionary<string, Value>>();
+        }
+
+        public IGraph Construct(IGraph graph)
+        {
+            IGraph result = new Graph();
+
+            List<IDictionary<string, Value>> bindings = Select(graph);
+
+            foreach (var binding in bindings)
+            {
+                foreach (var term in _query)
+                {
+                    XName s = (term.Item1.Name != null) ? term.Item1.Name : (XName)(binding[term.Item1.Variable].Data);
+                    XName p = (term.Item2.Name != null) ? term.Item2.Name : (XName)(binding[term.Item2.Variable].Data);
+                    Value o = (term.Item3.Value != null) ? term.Item3.Value : binding[term.Item3.Variable];
+
+                    result.Assert(new Triple(s, p, o));
+                }
+            }
+
             return result;
         }
 
-        static Clause MakeClause(Tuple<QueryName, QueryName, QueryValue> tuple)
+        static Triple MakeClause(Tuple<QueryName, QueryName, QueryValue> tuple)
         {
-            return new Clause
+            return new Triple
             {
                 Subject = tuple.Item1.Name ?? null,
                 Predicate = tuple.Item2.Name ?? null,
@@ -72,7 +90,7 @@ namespace Structures
             };
         }
 
-        static IDictionary<string, Value> MakeBinding(Tuple<QueryName, QueryName, QueryValue> tuple, Clause clause)
+        static IDictionary<string, Value> MakeBinding(Tuple<QueryName, QueryName, QueryValue> tuple, Triple clause)
         {
             var result = new Dictionary<string, Value>();
             if (tuple.Item1.Variable != null)
@@ -90,7 +108,7 @@ namespace Structures
             return result;
         }
 
-        static IDictionary<string, Value> MakeBinding(Tuple<QueryName, QueryName, QueryValue> tuple, Clause clause, IDictionary<string, Value> currentBinding)
+        static IDictionary<string, Value> MakeBinding(Tuple<QueryName, QueryName, QueryValue> tuple, Triple clause, IDictionary<string, Value> currentBinding)
         {
             var result = new Dictionary<string, Value>(currentBinding);
             if (tuple.Item1.Variable != null)
