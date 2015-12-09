@@ -1,7 +1,6 @@
 ﻿using Structures;
 using System;
 using System.Collections.Generic;
-using System.Xml.Linq;
 
 namespace StructuresSolution
 {
@@ -20,65 +19,62 @@ namespace StructuresSolution
         {
             Graph g = new Graph();
 
-            var ns = XNamespace.Get("http://nuget.org/schema#");
-
-            g.Assert(new Triple(ns.GetName("a"), ns.GetName("x"), new Value("1")));
-            g.Assert(new Triple(ns.GetName("a"), ns.GetName("y"), new Value("2")));
-            g.Assert(new Triple(ns.GetName("a"), ns.GetName("z"), new Value("3")));
-            g.Assert(new Triple(ns.GetName("b"), ns.GetName("x"), new Value("1")));
-            g.Assert(new Triple(ns.GetName("b"), ns.GetName("y"), new Value("2")));
-            g.Assert(new Triple(ns.GetName("b"), ns.GetName("z"), new Value("3")));
-            g.Assert(new Triple(ns.GetName("b"), ns.GetName("z"), new Value("4")));
-            g.Assert(new Triple(ns.GetName("b"), ns.GetName("z"), new Value("5")));
-            g.Assert(new Triple(ns.GetName("c"), ns.GetName("x"), new Value("1")));
-            g.Assert(new Triple(ns.GetName("c"), ns.GetName("y"), new Value("2")));
-            g.Assert(new Triple(ns.GetName("c"), ns.GetName("y"), new Value("3")));
-            g.Assert(new Triple(ns.GetName("c"), ns.GetName("z"), new Value("3")));
-            g.Assert(new Triple(ns.GetName("c"), ns.GetName("z"), new Value(ns.GetName("d"))));
-            g.Assert(new Triple(ns.GetName("c"), ns.GetName("z"), new Value(ns.GetName("e"))));
-            g.Assert(new Triple(ns.GetName("d"), ns.GetName("z"), new Value("4")));
-            g.Assert(new Triple(ns.GetName("d"), ns.GetName("z"), new Value("5")));
-            g.Assert(new Triple(ns.GetName("e"), ns.GetName("z"), new Value("6")));
+            g.Assert(new Name("a"), new Name("x"), "1");
+            g.Assert(new Name("a"), new Name("y"), "2");
+            g.Assert(new Name("a"), new Name("z"), "3");
+            g.Assert(new Name("b"), new Name("x"), "1");
+            g.Assert(new Name("b"), new Name("y"), "2");
+            g.Assert(new Name("b"), new Name("z"), "3");
+            g.Assert(new Name("b"), new Name("z"), "4");
+            g.Assert(new Name("b"), new Name("z"), "5");
+            g.Assert(new Name("c"), new Name("x"), "1");
+            g.Assert(new Name("c"), new Name("y"), "2");
+            g.Assert(new Name("c"), new Name("y"), "3");
+            g.Assert(new Name("c"), new Name("z"), "3");
+            g.Assert(new Name("c"), new Name("z"), new Name("d"));
+            g.Assert(new Name("c"), new Name("z"), new Name("e"));
+            g.Assert(new Name("d"), new Name("z"), "4");
+            g.Assert(new Name("d"), new Name("z"), "5");
+            g.Assert(new Name("e"), new Name("z"), "6");
 
             Test(g, Triple.Empty);
-            Test(g, new Triple(ns.GetName("a"), null, null));
-            Test(g, new Triple(ns.GetName("b"), ns.GetName("z"), null));
-            Test(g, new Triple(ns.GetName("c"), null, new Value("3")));
-            Test(g, new Triple(ns.GetName("c"), ns.GetName("z"), new Value("3")));
-            Test(g, new Triple(null, ns.GetName("z"), null));
-            Test(g, new Triple(null, ns.GetName("z"), new Value("3")));
-            Test(g, new Triple(null, null, new Value("3")));
+            Test(g, new Triple(new Name("a"), null, null));
+            Test(g, new Triple(new Name("b"), new Name("z"), null));
+            Test(g, new Triple(new Name("c"), null, "3"));
+            Test(g, new Triple(new Name("c"), new Name("z"), "3"));
+            Test(g, new Triple(null, new Name("z"), null));
+            Test(g, new Triple(null, new Name("z"), "3"));
+            Test(g, new Triple(null, null, "3"));
         }
 
-        /*
         static void Test1()
         {
             Graph g = new Graph();
 
-            g.Assert(new Triple(new Name("a"), new Name("x"), new Value("1")));
-            g.Assert(new Triple(new Name("a"), new Name("y"), new Value("2")));
-            g.Assert(new Triple(new Name("a"), new Name("z"), new Value("3")));
-            g.Assert(new Triple(new Name("b"), new Name("x"), new Value("1")));
-            g.Assert(new Triple(new Name("b"), new Name("y"), new Value("2")));
-            g.Assert(new Triple(new Name("b"), new Name("z"), new Value("3")));
-            g.Assert(new Triple(new Name("b"), new Name("z"), new Value("4")));
-            g.Assert(new Triple(new Name("b"), new Name("z"), new Value("5")));
-            g.Assert(new Triple(new Name("c"), new Name("x"), new Value("1")));
-            g.Assert(new Triple(new Name("c"), new Name("y"), new Value("2")));
-            g.Assert(new Triple(new Name("c"), new Name("y"), new Value("3")));
-            g.Assert(new Triple(new Name("c"), new Name("z"), new Value("3")));
-            g.Assert(new Triple(new Name("c"), new Name("z"), new Value(new Name("d"))));
-            g.Assert(new Triple(new Name("c"), new Name("z"), new Value(new Name("e"))));
-            g.Assert(new Triple(new Name("d"), new Name("z"), new Value("4")));
-            g.Assert(new Triple(new Name("d"), new Name("z"), new Value("5")));
-            g.Assert(new Triple(new Name("e"), new Name("z"), new Value("6")));
+            g.Assert(new Name("a"), new Name("x"), "1");
+            g.Assert(new Name("a"), new Name("y"), "2");
+            g.Assert(new Name("a"), new Name("z"), "3");
+            g.Assert(new Name("b"), new Name("x"), "1");
+            g.Assert(new Name("b"), new Name("y"), "2");
+            g.Assert(new Name("b"), new Name("z"), "3");
+            g.Assert(new Name("b"), new Name("z"), "4");
+            g.Assert(new Name("b"), new Name("z"), "5");
+            g.Assert(new Name("c"), new Name("x"), "1");
+            g.Assert(new Name("c"), new Name("y"), "2");
+            g.Assert(new Name("c"), new Name("y"), "3");
+            g.Assert(new Name("c"), new Name("z"), "3");
+            g.Assert(new Name("c"), new Name("z"), new Name("d"));
+            g.Assert(new Name("c"), new Name("z"), new Name("e"));
+            g.Assert(new Name("d"), new Name("z"), "4");
+            g.Assert(new Name("d"), new Name("z"), "5");
+            g.Assert(new Name("e"), new Name("z"), "6");
 
-            Query query = new Query();
+            Graph q = new Graph();
+            q.Assert(new Name("c"), new Name("z"), new Variable("v0"));
+            q.Assert(new Variable("v0"), new Name("z"), new Variable("v1"));
 
-            query.Add(new QueryName(new Name("c")), new QueryName(new Name("z")), new QueryValue("v0"));
-            query.Add(new QueryName("v0"), new QueryName(new Name("z")), new QueryValue("v1"));
 
-            foreach (var binding in query.Select(g))
+            foreach (var binding in Query.Select(g, q))
             {
                 foreach (var entry in binding)
                 {
@@ -87,102 +83,121 @@ namespace StructuresSolution
                 Console.WriteLine("----------------------");
             }
         }
-        */
 
         static void Test2()
         {
-            XNamespace ns0 = "http://tempuri.org/lala#";
-            XName a0 = ns0.GetName("a");
-            XName b0 = ns0.GetName("b");
-
-            XNamespace ns1 = "http://tempuri.org/deda#";
-            XName a1 = ns1.GetName("a");
-            XName b1 = ns1.GetName("b");
-
-            var d = new Dictionary<XName, string>();
-
-            d.Add(a0, "1");
-            d.Add(b0, "2");
-            d.Add(a1, "3");
-            d.Add(b1, "4");
-
-            foreach (var entry in d)
-            {
-                Console.WriteLine("{0} = {1}", entry.Key, entry.Value);
-            }
-        }
-
-        /*
-        static void Test3()
-        {
             Graph g = new Graph();
 
-            g.Assert(new Triple(new Name("a"), new Name("x"), new Value("1")));
-            g.Assert(new Triple(new Name("a"), new Name("y"), new Value("2")));
-            g.Assert(new Triple(new Name("a"), new Name("z"), new Value("3")));
-            g.Assert(new Triple(new Name("b"), new Name("x"), new Value("1")));
-            g.Assert(new Triple(new Name("b"), new Name("y"), new Value("2")));
-            g.Assert(new Triple(new Name("b"), new Name("z"), new Value("3")));
-            g.Assert(new Triple(new Name("b"), new Name("z"), new Value("4")));
-            g.Assert(new Triple(new Name("b"), new Name("z"), new Value("5")));
-            g.Assert(new Triple(new Name("c"), new Name("x"), new Value("1")));
-            g.Assert(new Triple(new Name("c"), new Name("y"), new Value("2")));
-            g.Assert(new Triple(new Name("c"), new Name("y"), new Value("3")));
-            g.Assert(new Triple(new Name("c"), new Name("z"), new Value("3")));
-            g.Assert(new Triple(new Name("c"), new Name("z"), new Value(new Name("d"))));
-            g.Assert(new Triple(new Name("c"), new Name("z"), new Value(new Name("e"))));
-            g.Assert(new Triple(new Name("d"), new Name("z"), new Value("4")));
-            g.Assert(new Triple(new Name("d"), new Name("z"), new Value("5")));
-            g.Assert(new Triple(new Name("e"), new Name("z"), new Value("6")));
+            g.Assert(new Name("a"), new Name("x"), "1");
+            g.Assert(new Name("a"), new Name("y"), "2");
+            g.Assert(new Name("a"), new Name("z"), "3");
+            g.Assert(new Name("b"), new Name("x"), "1");
+            g.Assert(new Name("b"), new Name("y"), "2");
+            g.Assert(new Name("b"), new Name("z"), "3");
+            g.Assert(new Name("b"), new Name("z"), "4");
+            g.Assert(new Name("b"), new Name("z"), "5");
+            g.Assert(new Name("c"), new Name("x"), "1");
+            g.Assert(new Name("c"), new Name("y"), "2");
+            g.Assert(new Name("c"), new Name("y"), "3");
+            g.Assert(new Name("c"), new Name("z"), "3");
+            g.Assert(new Name("c"), new Name("z"), new Name("d"));
+            g.Assert(new Name("c"), new Name("z"), new Name("e"));
+            g.Assert(new Name("d"), new Name("z"), "4");
+            g.Assert(new Name("d"), new Name("z"), "5");
+            g.Assert(new Name("e"), new Name("z"), "6");
 
-            Query query = new Query();
+            Graph q = new Graph();
+            q.Assert(new Name("c"), new Name("z"), new Variable("v0"));
+            q.Assert(new Variable("v0"), new Name("z"), new Variable("v1"));
 
-            query.Add(new QueryName(new Name("c")), new QueryName(new Name("z")), new QueryValue("v0"));
-            query.Add(new QueryName("v0"), new QueryName(new Name("z")), new QueryValue("v1"));
+            Graph t = new Graph();
+            t.Assert(new Name("o"), new Name("v0"), new Variable("v0"));
+            t.Assert(new Name("o"), new Name("v1"), new Variable("v1"));
 
-            IGraph result = query.Construct(g);
+            IGraph r = Query.Construct(g, q, t);
 
-            foreach (var entry in result.Match(Triple.Empty))
+            foreach (var entry in r.Match(Triple.Empty))
             {
                 Console.WriteLine(entry);
             }
         }
-        */
+
+        static IGraph CreatePackage(string id, string version)
+        {
+            string packageUri = string.Format("{0}/{1}", id, version);
+            IGraph g = new Graph();
+            g.Assert(new Name(packageUri), new Name("id"), id);
+            g.Assert(new Name(packageUri), new Name("version"), version);
+            return g;
+        }
 
         static void Test3()
         {
-            Graph g = new Graph();
+            IGraph g = new Graph();
+            g.Add(CreatePackage("ef", "1.0.0"));
+            g.Add(CreatePackage("ef", "2.0.0"));
+            g.Add(CreatePackage("ef", "3.0.0"));
+            g.Add(CreatePackage("ef", "4.0.0"));
 
-            var ns = XNamespace.Get("http://nuget.org/schema#");
+            IGraph q = new Graph();
+            q.Assert(new Variable("package"), new Name("id"), new Variable("id"));
+            q.Assert(new Variable("package"), new Name("version"), new Variable("version"));
 
-            g.Assert(new Triple(ns.GetName("a"), ns.GetName("x"), new Value("1")));
-            g.Assert(new Triple(ns.GetName("a"), ns.GetName("y"), new Value("2")));
-            g.Assert(new Triple(ns.GetName("a"), ns.GetName("z"), new Value("3")));
-            g.Assert(new Triple(ns.GetName("b"), ns.GetName("x"), new Value("1")));
-            g.Assert(new Triple(ns.GetName("b"), ns.GetName("y"), new Value("2")));
-            g.Assert(new Triple(ns.GetName("b"), ns.GetName("z"), new Value("3")));
-            g.Assert(new Triple(ns.GetName("b"), ns.GetName("z"), new Value("4")));
-            g.Assert(new Triple(ns.GetName("b"), ns.GetName("z"), new Value("5")));
-            g.Assert(new Triple(ns.GetName("c"), ns.GetName("x"), new Value("1")));
-            g.Assert(new Triple(ns.GetName("c"), ns.GetName("y"), new Value("2")));
-            g.Assert(new Triple(ns.GetName("c"), ns.GetName("y"), new Value("3")));
-            g.Assert(new Triple(ns.GetName("c"), ns.GetName("z"), new Value("3")));
-            g.Assert(new Triple(ns.GetName("c"), ns.GetName("z"), new Value(ns.GetName("d"))));
-            g.Assert(new Triple(ns.GetName("c"), ns.GetName("z"), new Value(ns.GetName("e"))));
-            g.Assert(new Triple(ns.GetName("d"), ns.GetName("z"), new Value("4")));
-            g.Assert(new Triple(ns.GetName("d"), ns.GetName("z"), new Value("5")));
-            g.Assert(new Triple(ns.GetName("e"), ns.GetName("z"), new Value("6")));
+            IGraph t = new Graph();
+            t.Assert(new Variable("registration"), new Name("id"), new Variable("id"));
+            t.Assert(new Variable("registration"), new Name("version"), new Variable("version"));
 
-            Query query = new Query();
+            Func<IDictionary<string, object>, object> func = (scope) =>
+            {
+                return new Name(string.Format("http://nuget.org/package/{0}", scope["id"]));
+            };
 
-            query.Add(ns.GetName("c"), ns.GetName("z"), new Variable("v0"));
-            query.Add(new Variable("v0"), ns.GetName("z"), new Variable("v1"));
+            var p = new Dictionary<string, object>
+            {
+                { "registration", func },
+            };
 
-            IGraph result = query.Construct(g);
+            IGraph r = Query.Construct(g, q, t, p);
 
-            foreach (var entry in result.Match(Triple.Empty))
+            foreach (var entry in r.Match(Triple.Empty))
             {
                 Console.WriteLine(entry);
+            }
+        }
+
+        static void Test4()
+        {
+            Graph g = new Graph();
+
+            g.Assert(new Name("a"), new Name("x"), "1");
+            g.Assert(new Name("a"), new Name("y"), "2");
+            g.Assert(new Name("a"), new Name("z"), "3");
+            g.Assert(new Name("b"), new Name("x"), "1");
+            g.Assert(new Name("b"), new Name("y"), "2");
+            g.Assert(new Name("b"), new Name("z"), "3");
+            g.Assert(new Name("b"), new Name("z"), "4");
+            g.Assert(new Name("b"), new Name("z"), "5");
+            g.Assert(new Name("c"), new Name("x"), "1");
+            g.Assert(new Name("c"), new Name("y"), "2");
+            g.Assert(new Name("c"), new Name("y"), "3");
+            g.Assert(new Name("c"), new Name("z"), "3");
+            g.Assert(new Name("c"), new Name("z"), new Name("d"));
+            g.Assert(new Name("c"), new Name("z"), new Name("e"));
+            g.Assert(new Name("d"), new Name("z"), "4");
+            g.Assert(new Name("d"), new Name("z"), "5");
+            g.Assert(new Name("e"), new Name("z"), "6");
+
+            foreach (var s in g.List())
+            {
+                Console.WriteLine(s);
+                foreach (var p in g.List(s))
+                {
+                    Console.WriteLine("\t{0}", p);
+                    foreach (var o in g.List(s, p))
+                    {
+                        Console.WriteLine("\t\t{0}", o);
+                    }
+                }
             }
         }
 
@@ -193,7 +208,8 @@ namespace StructuresSolution
                 //Test0();
                 //Test1();
                 //Test2();
-                Test3();
+                //Test3();
+                Test4();
             }
             catch (Exception e)
             {

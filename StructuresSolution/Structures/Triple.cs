@@ -1,14 +1,13 @@
 ﻿using System.Text;
-using System.Xml.Linq;
 
 namespace Structures
 {
     public class Triple
     {
         public static readonly Triple Empty;
-        public XName Subject { get; set; }
-        public XName Predicate { get; set; }
-        public Value Object { get; set; }
+        public object Subject { get; set; }
+        public object Predicate { get; set; }
+        public object Object { get; set; }
 
         static Triple()
         {
@@ -19,7 +18,7 @@ namespace Structures
         {
         }
 
-        public Triple(XName s, XName p, Value o)
+        public Triple(object s, object p, object o)
         {
             Subject = s;
             Predicate = p;

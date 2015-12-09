@@ -7,28 +7,24 @@ namespace Structures
 {
     public class Graph : IGraph
     {
-        IDictionary<XName, Tuple<IDictionary<XName, ISet<Value>>, IDictionary<Value, ISet<XName>>>> _s;
-        IDictionary<XName, Tuple<IDictionary<XName, ISet<Value>>, IDictionary<Value, ISet<XName>>>> _p;
-        IDictionary<Value, Tuple<IDictionary<XName, ISet<XName>>, IDictionary<XName, ISet<XName>>>> _o;
+        IDictionary<object, Tuple<IDictionary<object, ISet<object>>, IDictionary<object, ISet<object>>>> _s;
+        IDictionary<object, Tuple<IDictionary<object, ISet<object>>, IDictionary<object, ISet<object>>>> _p;
+        IDictionary<object, Tuple<IDictionary<object, ISet<object>>, IDictionary<object, ISet<object>>>> _o;
 
         public Graph()
         {
-            _s = new Dictionary<XName, Tuple<IDictionary<XName, ISet<Value>>, IDictionary<Value, ISet<XName>>>>();
-            _p = new Dictionary<XName, Tuple<IDictionary<XName, ISet<Value>>, IDictionary<Value, ISet<XName>>>>();
-            _o = new Dictionary<Value, Tuple<IDictionary<XName, ISet<XName>>, IDictionary<XName, ISet<XName>>>>();
+            _s = new Dictionary<object, Tuple<IDictionary<object, ISet<object>>, IDictionary<object, ISet<object>>>>();
+            _p = new Dictionary<object, Tuple<IDictionary<object, ISet<object>>, IDictionary<object, ISet<object>>>>();
+            _o = new Dictionary<object, Tuple<IDictionary<object, ISet<object>>, IDictionary<object, ISet<object>>>>();
         }
 
-        public void Assert(Triple fact)
+        public void Assert(object s, object p, object o)
         {
-            if (fact == null || fact.Subject == null || fact.Predicate == null || fact.Object == null)
-            {
-                throw new ArgumentNullException("fact");
-            }
-
-            _s = AddIndex(_s, fact.Subject, fact.Predicate, fact.Object);
-            _p = AddIndex(_p, fact.Predicate, fact.Subject, fact.Object);
-            _o = AddIndex(_o, fact.Object, fact.Subject, fact.Predicate);
+            _s = AddIndex(_s, s, p, o);
+            _p = AddIndex(_p, p, s, o);
+            _o = AddIndex(_o, o, s, p);
         }
+
         public void Retract(Triple fact)
         {
             if (fact == null || fact.Subject == null || fact.Predicate == null || fact.Object == null)
@@ -41,7 +37,7 @@ namespace Structures
         {
             foreach (var fact in g.Match(Triple.Empty))
             {
-                Assert(fact);
+                Assert(fact.Subject, fact.Predicate, fact.Object);
             }
         }
 
@@ -138,6 +134,28 @@ namespace Structures
             return sb.ToString();
         }
 
+        public IEnumerable<object> List()
+        {
+            foreach (var s in _s.Keys)
+            {
+                yield return s;
+            }
+        }
+        public IEnumerable<object> List(object s)
+        {
+            foreach (var p in _s[s].Item1.Keys)
+            {
+                yield return p;
+            }
+        }
+        public IEnumerable<object> List(object s, object p)
+        {
+            foreach (var o in _s[s].Item1[p])
+            {
+                yield return o;
+            }
+        }
+
         static IDictionary<T1, Tuple<IDictionary<T2, ISet<T3>>, IDictionary<T3, ISet<T2>>>>
         AddIndex<T1, T2, T3>(IDictionary<T1, Tuple<IDictionary<T2, ISet<T3>>, IDictionary<T3, ISet<T2>>>> index, T1 v1, T2 v2, T3 v3)
         {
@@ -169,12 +187,12 @@ namespace Structures
             return index;
         }
 
-        IEnumerable<Triple> GetBySubjectPredicateObject(XName s, XName p, Value o)
+        IEnumerable<Triple> GetBySubjectPredicateObject(object s, object p, object o)
         {
-            Tuple<IDictionary<XName, ISet<Value>>, IDictionary<Value, ISet<XName>>> i;
+            Tuple<IDictionary<object, ISet<object>>, IDictionary<object, ISet<object>>> i;
             if (_s.TryGetValue(s, out i))
             {
-                ISet<Value> j;
+                ISet<object> j;
                 if (i.Item1.TryGetValue(p, out j))
                 {
                     if (j.Contains(o))
@@ -185,12 +203,12 @@ namespace Structures
             }
             yield break;
         }
-        IEnumerable<Triple> GetBySubjectPredicate(XName s, XName p)
+        IEnumerable<Triple> GetBySubjectPredicate(object s, object p)
         {
-            Tuple<IDictionary<XName, ISet<Value>>, IDictionary<Value, ISet<XName>>> i;
+            Tuple<IDictionary<object, ISet<object>>, IDictionary<object, ISet<object>>> i;
             if (_s.TryGetValue(s, out i))
             {
-                ISet<Value> j;
+                ISet<object> j;
                 if (i.Item1.TryGetValue(p, out j))
                 {
                     foreach (var o in j)
@@ -201,12 +219,12 @@ namespace Structures
             }
             yield break;
         }
-        IEnumerable<Triple> GetBySubjectObject(XName s, Value o)
+        IEnumerable<Triple> GetBySubjectObject(object s, object o)
         {
-            Tuple<IDictionary<XName, ISet<Value>>, IDictionary<Value, ISet<XName>>> i;
+            Tuple<IDictionary<object, ISet<object>>, IDictionary<object, ISet<object>>> i;
             if (_s.TryGetValue(s, out i))
             {
-                ISet<XName> j;
+                ISet<object> j;
                 if (i.Item2.TryGetValue(o, out j))
                 {
                     foreach (var p in j)
@@ -217,9 +235,9 @@ namespace Structures
             }
             yield break;
         }
-        IEnumerable<Triple> GetBySubject(XName s)
+        IEnumerable<Triple> GetBySubject(object s)
         {
-            Tuple<IDictionary<XName, ISet<Value>>, IDictionary<Value, ISet<XName>>> i;
+            Tuple<IDictionary<object, ISet<object>>, IDictionary<object, ISet<object>>> i;
             if (_s.TryGetValue(s, out i))
             {
                 foreach (var p in i.Item1)
@@ -232,12 +250,12 @@ namespace Structures
             }
             yield break;
         }
-        IEnumerable<Triple> GetByPredicateObject(XName p, Value o)
+        IEnumerable<Triple> GetByPredicateObject(object p, object o)
         {
-            Tuple<IDictionary<XName, ISet<Value>>, IDictionary<Value, ISet<XName>>> i;
+            Tuple<IDictionary<object, ISet<object>>, IDictionary<object, ISet<object>>> i;
             if (_p.TryGetValue(p, out i))
             {
-                ISet<XName> j;
+                ISet<object> j;
                 if (i.Item2.TryGetValue(o, out j))
                 {
                     foreach (var s in j)
@@ -248,9 +266,9 @@ namespace Structures
             }
             yield break;
         }
-        IEnumerable<Triple> GetByPredicate(XName p)
+        IEnumerable<Triple> GetByPredicate(object p)
         {
-            Tuple<IDictionary<XName, ISet<Value>>, IDictionary<Value, ISet<XName>>> i;
+            Tuple<IDictionary<object, ISet<object>>, IDictionary<object, ISet<object>>> i;
             if (_p.TryGetValue(p, out i))
             {
                 foreach (var s in i.Item1)
@@ -263,9 +281,9 @@ namespace Structures
             }
             yield break;
         }
-        IEnumerable<Triple> GetByObject(Value o)
+        IEnumerable<Triple> GetByObject(object o)
         {
-            Tuple<IDictionary<XName, ISet<XName>>, IDictionary<XName, ISet<XName>>> i;
+            Tuple<IDictionary<object, ISet<object>>, IDictionary<object, ISet<object>>> i;
             if (_o.TryGetValue(o, out i))
             {
                 foreach (var s in i.Item1)
