@@ -3,50 +3,34 @@ using System.Collections.Generic;
 
 namespace Structures
 {
-    public class Query
+    public static class Query
     {
-        List<Tuple<QueryName, QueryName, QueryValue>> _query;
-
-        public Query()
+        public static List<IDictionary<string, object>> Select(IGraph graph, IGraph query, IDictionary<string, object> parameters = null)
         {
-            _query = new List<Tuple<QueryName, QueryName, QueryValue>>();
-        }
+            List<IDictionary<string, object>> bindings = null;
 
-        public void Add(QueryName s, QueryName p, QueryValue o)
-        {
-            _query.Add(Tuple.Create(s, p, o));
-        }
-
-        // http://www.gise.cse.iitb.ac.in/wiki/images/3/3a/PTSW.pdf
-
-        public IGraph Execute(IGraph graph)
-        {
-            IGraph result = new Graph();
-
-            List<IDictionary<string, Value>> bindings = null;
-
-            foreach (var tuple in _query)
+            foreach (var queryTriple in query.Match(Triple.Empty))
             {
-                var rows = graph.Match(MakeClause(tuple));
+                var rows = graph.Match(MakeClause(queryTriple));
 
                 if (bindings == null)
                 {
-                    bindings = new List<IDictionary<string, Value>>();
+                    bindings = new List<IDictionary<string, object>>();
 
                     foreach (var row in rows)
                     {
-                        bindings.Add(MakeBinding(tuple, row));
+                        bindings.Add(MakeBinding(queryTriple, row, parameters));
                     }
                 }
                 else
                 {
-                    var newBindings = new List<IDictionary<string, Value>>();
+                    var newBindings = new List<IDictionary<string, object>>();
 
-                    foreach (var currentBinding in bindings)
+                    foreach (var existingBinding in bindings)
                     {
                         foreach (var row in rows)
                         {
-                            var newBinding = MakeBinding(tuple, row, currentBinding);
+                            var newBinding = UpdateBinding(queryTriple, row, existingBinding);
 
                             if (newBinding != null)
                             {
@@ -59,83 +43,132 @@ namespace Structures
                 }
             }
 
+            return bindings ?? new List<IDictionary<string, object>>();
+        }
+
+        public static IGraph Construct(IGraph graph, IGraph query, IGraph template, IDictionary<string, object> parameters = null)
+        {
+            IGraph result = new Graph();
+
+            List<IDictionary<string, object>> bindings = Query.Select(graph, query, parameters);
+
+            foreach (var binding in bindings)
+            {
+                foreach (var templateTriple in template.Match(Triple.Empty))
+                {
+                    //object s = templateTriple.Subject is Variable ? binding[((Variable)templateTriple.Subject).Value] : templateTriple.Subject;
+                    //object p = templateTriple.Predicate is Variable ? binding[((Variable)templateTriple.Predicate).Value] : templateTriple.Predicate;
+                    //object o = templateTriple.Object is Variable ? binding[((Variable)templateTriple.Object).Value] : templateTriple.Object;
+
+                    object s = Construct(binding, templateTriple.Subject);
+                    object p = Construct(binding, templateTriple.Predicate);
+                    object o = Construct(binding, templateTriple.Object);
+
+                    result.Assert(s, p, o);
+                }
+            }
+
             return result;
         }
 
-        static Clause MakeClause(Tuple<QueryName, QueryName, QueryValue> tuple)
+        static object Construct(IDictionary<string, object> binding, object part)
         {
-            return new Clause
+            if (part is Variable)
             {
-                Subject = tuple.Item1.Name ?? null,
-                Predicate = tuple.Item2.Name ?? null,
-                Object = tuple.Item3.Value ?? null
+                object obj = binding[((Variable)part).Value];
+
+                if (obj is Func<IDictionary<string, object>, object>)
+                {
+                    return ((Func<IDictionary<string, object>, object>)obj)(binding);
+                }
+                else
+                {
+                    return obj;
+                }
+            }
+            else
+            {
+                return part;
+            }
+        }
+
+        static Triple MakeClause(Triple queryTriple)
+        {
+            return new Triple
+            {
+                Subject = queryTriple.Subject is Variable ? null : queryTriple.Subject,
+                Predicate = queryTriple.Predicate is Variable ? null : queryTriple.Predicate,
+                Object = queryTriple.Object is Variable ? null : queryTriple.Object
             };
         }
 
-        static IDictionary<string, Value> MakeBinding(Tuple<QueryName, QueryName, QueryValue> tuple, Clause clause)
+        static IDictionary<string, object> MakeBinding(Triple queryTriple, Triple row, IDictionary<string, object> parameters)
         {
-            var result = new Dictionary<string, Value>();
-            if (tuple.Item1.Variable != null)
+            var result = new Dictionary<string, object>(parameters ?? new Dictionary<string, object>());
+            if (queryTriple.Subject is Variable)
             {
-                result[tuple.Item1.Variable] = new Value(clause.Subject);
+                result[((Variable)queryTriple.Subject).Value] = row.Subject;
             }
-            if (tuple.Item2.Variable != null)
+            if (queryTriple.Predicate is Variable)
             {
-                result[tuple.Item2.Variable] = new Value(clause.Predicate);
+                result[((Variable)queryTriple.Predicate).Value] = row.Predicate;
             }
-            if (tuple.Item3.Variable != null)
+            if (queryTriple.Object is Variable)
             {
-                result[tuple.Item3.Variable] = clause.Object;
+                result[((Variable)queryTriple.Object).Value] = row.Object;
             }
             return result;
         }
 
-        static IDictionary<string, Value> MakeBinding(Tuple<QueryName, QueryName, QueryValue> tuple, Clause clause, IDictionary<string, Value> currentBinding)
+        static IDictionary<string, object> UpdateBinding(Triple queryTriple, Triple row, IDictionary<string, object> existingBinding)
         {
-            var result = new Dictionary<string, Value>(currentBinding);
-            if (tuple.Item1.Variable != null)
+            var result = new Dictionary<string, object>(existingBinding);
+            if (queryTriple.Subject is Variable)
             {
-                var newValue = new Value(clause.Subject);
-                if (result.ContainsKey(tuple.Item1.Variable))
+                var variableName = ((Variable)queryTriple.Subject).Value;
+                var newValue = row.Subject;
+                if (result.ContainsKey(variableName))
                 {
-                    if (!result[tuple.Item1.Variable].Equals(newValue))
+                    if (!result[variableName].Equals(newValue))
                     {
                         return null;
                     }
                 }
                 else
                 {
-                    result[tuple.Item1.Variable] = newValue;
+                    result[variableName] = newValue;
                 }
             }
-            if (tuple.Item2.Variable != null)
+            if (queryTriple.Predicate is Variable)
             {
-                var newValue = new Value(clause.Predicate);
-                if (result.ContainsKey(tuple.Item2.Variable))
+                var variableName = ((Variable)queryTriple.Predicate).Value;
+                var newValue = row.Predicate;
+                if (result.ContainsKey(variableName))
                 {
-                    if (!result[tuple.Item2.Variable].Equals(newValue))
+                    if (!result[variableName].Equals(newValue))
                     {
                         return null;
                     }
                 }
                 else
                 {
-                    result[tuple.Item2.Variable] = newValue;
+                    result[variableName] = newValue;
                 }
             }
-            if (tuple.Item3.Variable != null)
+            if (queryTriple.Object is Variable)
             {
-                var newValue = clause.Object;
-                if (result.ContainsKey(tuple.Item3.Variable))
+                var variableName = ((Variable)queryTriple.Object).Value;
+                var newValue = row.Object;
+                if (result.ContainsKey(variableName))
                 {
-                    if (!result[tuple.Item3.Variable].Equals(newValue))
+                    if (!result[variableName].Equals(newValue))
                     {
                         return null;
                     }
                 }
                 else
                 {
-                    result[tuple.Item3.Variable] = newValue;
+                    result[variableName] = newValue;
                 }
             }
             return result;

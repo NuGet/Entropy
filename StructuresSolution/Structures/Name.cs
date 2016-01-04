@@ -1,28 +1,30 @@
-﻿namespace Structures
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Structures
 {
     public class Name
     {
-        //TODO: presumably we can replace this with the System.Xml.Linq Name and Namespace
-        public Name(string data)
+        public Name(string name)
         {
-            Data = data;
+            Value = name;
         }
-
-        public string Data { get; set; }
-
+        public string Value { get; private set; }
         public override string ToString()
         {
-            return Data;
+            return string.Format("<{0}>", Value);
         }
 
         public override int GetHashCode()
         {
-            return Data.GetHashCode();
+            return Value.GetHashCode();
         }
-
         public override bool Equals(object obj)
         {
-            return Data.Equals(((Name)obj).Data);
+            return Value.Equals(((Name)obj).Value);
         }
     }
 }

@@ -2,23 +2,23 @@
 
 namespace Structures
 {
-    public class Clause
+    public class Triple
     {
-        public static readonly Clause Empty;
-        public Name Subject { get; set; }
-        public Name Predicate { get; set; }
-        public Value Object { get; set; }
+        public static readonly Triple Empty;
+        public object Subject { get; set; }
+        public object Predicate { get; set; }
+        public object Object { get; set; }
 
-        static Clause()
+        static Triple()
         {
-            Empty = new Clause();
+            Empty = new Triple();
         }
 
-        public Clause()
+        public Triple()
         {
         }
 
-        public Clause(Name s, Name p, Value o)
+        public Triple(object s, object p, object o)
         {
             Subject = s;
             Predicate = p;

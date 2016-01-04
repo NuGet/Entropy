@@ -1,34 +1,31 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Xml.Linq;
 
 namespace Structures
 {
     public class Graph : IGraph
     {
-        IDictionary<Name, Tuple<IDictionary<Name, ISet<Value>>, IDictionary<Value, ISet<Name>>>> _s;
-        IDictionary<Name, Tuple<IDictionary<Name, ISet<Value>>, IDictionary<Value, ISet<Name>>>> _p;
-        IDictionary<Value, Tuple<IDictionary<Name, ISet<Name>>, IDictionary<Name, ISet<Name>>>> _o;
+        IDictionary<object, Tuple<IDictionary<object, ISet<object>>, IDictionary<object, ISet<object>>>> _s;
+        IDictionary<object, Tuple<IDictionary<object, ISet<object>>, IDictionary<object, ISet<object>>>> _p;
+        IDictionary<object, Tuple<IDictionary<object, ISet<object>>, IDictionary<object, ISet<object>>>> _o;
 
         public Graph()
         {
-            _s = new Dictionary<Name, Tuple<IDictionary<Name, ISet<Value>>, IDictionary<Value, ISet<Name>>>>();
-            _p = new Dictionary<Name, Tuple<IDictionary<Name, ISet<Value>>, IDictionary<Value, ISet<Name>>>>();
-            _o = new Dictionary<Value, Tuple<IDictionary<Name, ISet<Name>>, IDictionary<Name, ISet<Name>>>>();
+            _s = new Dictionary<object, Tuple<IDictionary<object, ISet<object>>, IDictionary<object, ISet<object>>>>();
+            _p = new Dictionary<object, Tuple<IDictionary<object, ISet<object>>, IDictionary<object, ISet<object>>>>();
+            _o = new Dictionary<object, Tuple<IDictionary<object, ISet<object>>, IDictionary<object, ISet<object>>>>();
         }
 
-        public void Assert(Clause fact)
+        public void Assert(object s, object p, object o)
         {
-            if (fact == null || fact.Subject == null || fact.Predicate == null || fact.Object == null)
-            {
-                throw new ArgumentNullException("fact");
-            }
-
-            _s = AddIndex(_s, fact.Subject, fact.Predicate, fact.Object);
-            _p = AddIndex(_p, fact.Predicate, fact.Subject, fact.Object);
-            _o = AddIndex(_o, fact.Object, fact.Subject, fact.Predicate);
+            _s = AddIndex(_s, s, p, o);
+            _p = AddIndex(_p, p, s, o);
+            _o = AddIndex(_o, o, s, p);
         }
-        public void Retract(Clause fact)
+
+        public void Retract(Triple fact)
         {
             if (fact == null || fact.Subject == null || fact.Predicate == null || fact.Object == null)
             {
@@ -38,13 +35,13 @@ namespace Structures
 
         public void Add(IGraph g)
         {
-            foreach (var fact in g.Match(Clause.Empty))
+            foreach (var fact in g.Match(Triple.Empty))
             {
-                Assert(fact);
+                Assert(fact.Subject, fact.Predicate, fact.Object);
             }
         }
 
-        public IEnumerable<Clause> Match(Clause partial)
+        public IEnumerable<Triple> Match(Triple partial)
         {
             if (partial == null)
             {
@@ -57,14 +54,14 @@ namespace Structures
                 {
                     if (partial.Object != null)
                     {
-                        foreach (Clause clause in GetBySubjectPredicateObject(partial.Subject, partial.Predicate, partial.Object))
+                        foreach (Triple clause in GetBySubjectPredicateObject(partial.Subject, partial.Predicate, partial.Object))
                         {
                             yield return clause;
                         }
                     }
                     else
                     {
-                        foreach (Clause clause in GetBySubjectPredicate(partial.Subject, partial.Predicate))
+                        foreach (Triple clause in GetBySubjectPredicate(partial.Subject, partial.Predicate))
                         {
                             yield return clause;
                         }
@@ -74,14 +71,14 @@ namespace Structures
                 {
                     if (partial.Object != null)
                     {
-                        foreach (Clause clause in GetBySubjectObject(partial.Subject, partial.Object))
+                        foreach (Triple clause in GetBySubjectObject(partial.Subject, partial.Object))
                         {
                             yield return clause;
                         }
                     }
                     else
                     {
-                        foreach (Clause clause in GetBySubject(partial.Subject))
+                        foreach (Triple clause in GetBySubject(partial.Subject))
                         {
                             yield return clause;
                         }
@@ -94,14 +91,14 @@ namespace Structures
                 {
                     if (partial.Object != null)
                     {
-                        foreach (Clause clause in GetByPredicateObject(partial.Predicate, partial.Object))
+                        foreach (Triple clause in GetByPredicateObject(partial.Predicate, partial.Object))
                         {
                             yield return clause;
                         }
                     }
                     else
                     {
-                        foreach (Clause clause in GetByPredicate(partial.Predicate))
+                        foreach (Triple clause in GetByPredicate(partial.Predicate))
                         {
                             yield return clause;
                         }
@@ -111,14 +108,14 @@ namespace Structures
                 {
                     if (partial.Object != null)
                     {
-                        foreach (Clause clause in GetByObject(partial.Object))
+                        foreach (Triple clause in GetByObject(partial.Object))
                         {
                             yield return clause;
                         }
                     }
                     else
                     {
-                        foreach (Clause clause in Get())
+                        foreach (Triple clause in Get())
                         {
                             yield return clause;
                         }
@@ -135,6 +132,28 @@ namespace Structures
                 sb.AppendLine(entry.ToString());
             }
             return sb.ToString();
+        }
+
+        public IEnumerable<object> List()
+        {
+            foreach (var s in _s.Keys)
+            {
+                yield return s;
+            }
+        }
+        public IEnumerable<object> List(object s)
+        {
+            foreach (var p in _s[s].Item1.Keys)
+            {
+                yield return p;
+            }
+        }
+        public IEnumerable<object> List(object s, object p)
+        {
+            foreach (var o in _s[s].Item1[p])
+            {
+                yield return o;
+            }
         }
 
         static IDictionary<T1, Tuple<IDictionary<T2, ISet<T3>>, IDictionary<T3, ISet<T2>>>>
@@ -168,116 +187,116 @@ namespace Structures
             return index;
         }
 
-        IEnumerable<Clause> GetBySubjectPredicateObject(Name s, Name p, Value o)
+        IEnumerable<Triple> GetBySubjectPredicateObject(object s, object p, object o)
         {
-            Tuple<IDictionary<Name, ISet<Value>>, IDictionary<Value, ISet<Name>>> i;
+            Tuple<IDictionary<object, ISet<object>>, IDictionary<object, ISet<object>>> i;
             if (_s.TryGetValue(s, out i))
             {
-                ISet<Value> j;
+                ISet<object> j;
                 if (i.Item1.TryGetValue(p, out j))
                 {
                     if (j.Contains(o))
                     {
-                        yield return new Clause { Subject = s, Predicate = p, Object = o };
+                        yield return new Triple { Subject = s, Predicate = p, Object = o };
                     }
                 }
             }
             yield break;
         }
-        IEnumerable<Clause> GetBySubjectPredicate(Name s, Name p)
+        IEnumerable<Triple> GetBySubjectPredicate(object s, object p)
         {
-            Tuple<IDictionary<Name, ISet<Value>>, IDictionary<Value, ISet<Name>>> i;
+            Tuple<IDictionary<object, ISet<object>>, IDictionary<object, ISet<object>>> i;
             if (_s.TryGetValue(s, out i))
             {
-                ISet<Value> j;
+                ISet<object> j;
                 if (i.Item1.TryGetValue(p, out j))
                 {
                     foreach (var o in j)
                     {
-                        yield return new Clause { Subject = s, Predicate = p, Object = o };
+                        yield return new Triple { Subject = s, Predicate = p, Object = o };
                     }
                 }
             }
             yield break;
         }
-        IEnumerable<Clause> GetBySubjectObject(Name s, Value o)
+        IEnumerable<Triple> GetBySubjectObject(object s, object o)
         {
-            Tuple<IDictionary<Name, ISet<Value>>, IDictionary<Value, ISet<Name>>> i;
+            Tuple<IDictionary<object, ISet<object>>, IDictionary<object, ISet<object>>> i;
             if (_s.TryGetValue(s, out i))
             {
-                ISet<Name> j;
+                ISet<object> j;
                 if (i.Item2.TryGetValue(o, out j))
                 {
                     foreach (var p in j)
                     {
-                        yield return new Clause { Subject = s, Predicate = p, Object = o };
+                        yield return new Triple { Subject = s, Predicate = p, Object = o };
                     }
                 }
             }
             yield break;
         }
-        IEnumerable<Clause> GetBySubject(Name s)
+        IEnumerable<Triple> GetBySubject(object s)
         {
-            Tuple<IDictionary<Name, ISet<Value>>, IDictionary<Value, ISet<Name>>> i;
+            Tuple<IDictionary<object, ISet<object>>, IDictionary<object, ISet<object>>> i;
             if (_s.TryGetValue(s, out i))
             {
                 foreach (var p in i.Item1)
                 {
                     foreach (var o in p.Value)
                     {
-                        yield return new Clause { Subject = s, Predicate = p.Key, Object = o };
+                        yield return new Triple { Subject = s, Predicate = p.Key, Object = o };
                     }
                 }
             }
             yield break;
         }
-        IEnumerable<Clause> GetByPredicateObject(Name p, Value o)
+        IEnumerable<Triple> GetByPredicateObject(object p, object o)
         {
-            Tuple<IDictionary<Name, ISet<Value>>, IDictionary<Value, ISet<Name>>> i;
+            Tuple<IDictionary<object, ISet<object>>, IDictionary<object, ISet<object>>> i;
             if (_p.TryGetValue(p, out i))
             {
-                ISet<Name> j;
+                ISet<object> j;
                 if (i.Item2.TryGetValue(o, out j))
                 {
                     foreach (var s in j)
                     {
-                        yield return new Clause { Subject = s, Predicate = p, Object = o };
+                        yield return new Triple { Subject = s, Predicate = p, Object = o };
                     }
                 }
             }
             yield break;
         }
-        IEnumerable<Clause> GetByPredicate(Name p)
+        IEnumerable<Triple> GetByPredicate(object p)
         {
-            Tuple<IDictionary<Name, ISet<Value>>, IDictionary<Value, ISet<Name>>> i;
+            Tuple<IDictionary<object, ISet<object>>, IDictionary<object, ISet<object>>> i;
             if (_p.TryGetValue(p, out i))
             {
                 foreach (var s in i.Item1)
                 {
                     foreach (var o in s.Value)
                     {
-                        yield return new Clause { Subject = s.Key, Predicate = p, Object = o };
+                        yield return new Triple { Subject = s.Key, Predicate = p, Object = o };
                     }
                 }
             }
             yield break;
         }
-        IEnumerable<Clause> GetByObject(Value o)
+        IEnumerable<Triple> GetByObject(object o)
         {
-            Tuple<IDictionary<Name, ISet<Name>>, IDictionary<Name, ISet<Name>>> i;
+            Tuple<IDictionary<object, ISet<object>>, IDictionary<object, ISet<object>>> i;
             if (_o.TryGetValue(o, out i))
             {
                 foreach (var s in i.Item1)
                 {
                     foreach (var p in s.Value)
                     {
-                        yield return new Clause { Subject = s.Key, Predicate = p, Object = o };
+                        yield return new Triple { Subject = s.Key, Predicate = p, Object = o };
                     }
                 }
             }
             yield break;
         }
-        IEnumerable<Clause> Get()
+        IEnumerable<Triple> Get()
         {
             foreach (var s in _s)
             {
@@ -285,7 +304,7 @@ namespace Structures
                 {
                     foreach (var o in p.Value)
                     {
-                        yield return new Clause { Subject = s.Key, Predicate = p.Key, Object = o };
+                        yield return new Triple { Subject = s.Key, Predicate = p.Key, Object = o };
                     }
                 }
             }
