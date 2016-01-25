@@ -4,7 +4,7 @@ $NuGetExe = Join-Path $PSScriptRoot '.nuget\nuget.exe'
 if (-not (Test-Path $NuGetExe)) {
     Write-Host 'Downloading nuget.exe'
     New-Item  -ItemType directory  (Join-Path $PSScriptRoot '.nuget') | Out-Null
-    wget https://dist.nuget.org/win-x86-commandline/latest-prerelease/nuget.exe -OutFile $NuGetExe
+    wget https://dist.nuget.org/win-x86-commandline/v3.3.0/nuget.exe -OutFile $NuGetExe
 }
 
 # Pack will copy all files in this folder into the nupkg
