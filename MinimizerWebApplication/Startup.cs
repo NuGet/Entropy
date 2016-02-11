@@ -18,6 +18,9 @@ namespace MinimizerWebApplication
 {
     public class Startup
     {
+        const string Query = "/query/340";
+        const string RegistrationBaseUrl = "/registration/340/";
+
         Uri _remote;
 
         public void Configuration(IAppBuilder app)
@@ -29,6 +32,19 @@ namespace MinimizerWebApplication
 
         async Task Invoke(IOwinContext context)
         {
+            //  First check that if this is the 3.4.0 client we are definitely getting an Accept-Encoding header
+
+            string userAgent = context.Request.Headers["User-Agent"];
+            string acceptEncoding = context.Request.Headers["Accept-Encoding"];
+            if (userAgent.StartsWith("NuGet Client V3/3.4.0.0") && !acceptEncoding.Contains("gzip"))
+            {
+                await context.Response.WriteAsync("NuGet 3.4 client must be able to accept gzip");
+                context.Response.StatusCode = (int)HttpStatusCode.NotAcceptable;
+                return;
+            }
+
+            //  Now process teh actual request
+
             if (context.Request.Uri.PathAndQuery == "/")
             {
                 await context.Response.WriteAsync("READY");
@@ -40,12 +56,12 @@ namespace MinimizerWebApplication
                 await InterceptIndex(context);
             }
 
-            else if (context.Request.Path.Value == "/query")
+            else if (context.Request.Path.Value == Query)
             {
                 await InterceptQuery(context);
             }
 
-            else if (context.Request.Path.Value.StartsWith("/registration/"))
+            else if (context.Request.Path.Value.StartsWith(RegistrationBaseUrl))
             {
                 await InterceptRegistration(context);
             }
@@ -71,12 +87,20 @@ namespace MinimizerWebApplication
             resources["SearchQueryService"] = new List<string> { local + "/query" };
             resources["SearchQueryService/3.0.0-beta"] = new List<string> { local + "/query" };
             resources["SearchQueryService/3.0.0-rc"] = new List<string> { local + "/query" };
+            //resources["SearchQueryService"] = new List<string> { };
+            //resources["SearchQueryService/3.0.0-beta"] = new List<string> { };
+            //resources["SearchQueryService/3.0.0-rc"] = new List<string> { };
+            resources["SearchQueryService/3.4.0"] = new List<string> { local + Query };
 
             // registration 
 
             resources["RegistrationsBaseUrl"] = new List<string> { local + "/registration/" };
             resources["RegistrationsBaseUrl/3.0.0-beta"] = new List<string> { local + "/registration/" };
             resources["RegistrationsBaseUrl/3.0.0-rc"] = new List<string> { local + "/registration/" };
+            //resources["RegistrationsBaseUrl"] = new List<string> { };
+            //resources["RegistrationsBaseUrl/3.0.0-beta"] = new List<string> { };
+            //resources["RegistrationsBaseUrl/3.0.0-rc"] = new List<string> { };
+            resources["RegistrationsBaseUrl/3.4.0"] = new List<string> { local + RegistrationBaseUrl };
 
             // flat-container
 
@@ -113,14 +137,14 @@ namespace MinimizerWebApplication
                         string normalizedId = resultObj["id"].ToString().ToLowerInvariant();
                         string normalizedVersion = NuGetVersion.Parse(resultObj["version"].ToString()).ToNormalizedString().ToLowerInvariant();
 
-                        resultObj["@id"] = local + "/registration/" + normalizedId + "/" + normalizedVersion + ".json";
-                        resultObj["registration"] = local + "/registration/" + normalizedId + "/index.json";
+                        resultObj["@id"] = local + RegistrationBaseUrl + normalizedId + "/" + normalizedVersion + ".json";
+                        resultObj["registration"] = local + RegistrationBaseUrl + normalizedId + "/index.json";
 
                         foreach (var versionResultObj in resultObj["versions"])
                         {
                             string otherNormalizedVersion = NuGetVersion.Parse(resultObj["version"].ToString()).ToNormalizedString().ToLowerInvariant();
 
-                            versionResultObj["@id"] = local + "/registration/" + normalizedId + "/" + otherNormalizedVersion + ".json";
+                            versionResultObj["@id"] = local + RegistrationBaseUrl + normalizedId + "/" + otherNormalizedVersion + ".json";
                         }
                     }
 
@@ -139,7 +163,7 @@ namespace MinimizerWebApplication
                 return;
             }
 
-            string path = context.Request.Path.Value.Substring("/registration/".Length);
+            string path = context.Request.Path.Value.Substring(RegistrationBaseUrl.Length);
 
             string remoteResourceId = resourceId + path;
 
