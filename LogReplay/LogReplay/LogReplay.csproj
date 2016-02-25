@@ -74,6 +74,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AsyncHelper.cs" />
+    <Compile Include="ColorConsoleTraceListener.cs" />
     <Compile Include="LogParsing\W3CLogEntryParser.cs" />
     <Compile Include="LogParsing\W3CLogEntry.cs" />
     <Compile Include="LogParsing\W3CParseUtils.cs" />
