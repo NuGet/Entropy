@@ -10,7 +10,7 @@ namespace Merge
             var x = new string[] { };
             var y = new string[] { };
 
-            foreach (var s in x.Merge(y, (sx, sy) => { return string.Compare(sx, sy); }))
+            foreach (var s in x.Merge(y, StringComparer.Ordinal))
             {
                 Console.Write($"{s} ");
             }
@@ -23,7 +23,7 @@ namespace Merge
             var x = new[] { "a", "c", "d", "i", "k", "s", "w", "x", "z" };
             var y = new string[] { };
 
-            foreach (var s in x.Merge(y, (sx, sy) => { return string.Compare(sx, sy); }))
+            foreach (var s in x.Merge(y, StringComparer.Ordinal))
             {
                 Console.Write($"{s} ");
             }
@@ -36,7 +36,7 @@ namespace Merge
             var x = new string[] { };
             var y = new[] { "b", "j", "q", "t", "y" };
 
-            foreach (var s in x.Merge(y, (sx, sy) => { return string.Compare(sx, sy); }))
+            foreach (var s in x.Merge(y, StringComparer.Ordinal))
             {
                 Console.Write($"{s} ");
             }
@@ -49,7 +49,7 @@ namespace Merge
             var x = new[] { "a", "c", "d", "i", "j", "k", "s", "w", "x", "z" };
             var y = new[] { "b", "q", "t", "y" };
 
-            foreach (var s in x.Merge(y, (sx, sy) => { return string.Compare(sx, sy); }))
+            foreach (var s in x.Merge(y, StringComparer.Ordinal))
             {
                 Console.Write($"{s} ");
             }
@@ -68,12 +68,10 @@ namespace Merge
                 new[] { "d", "h", "k" },
             };
 
-            Func<string, string, int> f = (sx, sy) => { return string.Compare(sx, sy); };
-
             var acc = Enumerable.Empty<string>();
             foreach (var l in data)
             {
-                acc = acc.Merge(l, f);
+                acc = acc.Merge(l, StringComparer.Ordinal);
             }
 
             foreach (var i in acc)

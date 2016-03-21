@@ -5,7 +5,7 @@ namespace Merge
 {
     public static class SortExtensions
     {
-        public static IEnumerable<T> Merge<T>(this IEnumerable<T> x, IEnumerable<T> y, Func<T, T, int> compare)
+        public static IEnumerable<T> Merge<T>(this IEnumerable<T> x, IEnumerable<T> y, IComparer<T> comparer)
         {
             var ex = x.GetEnumerator();
             var ey = y.GetEnumerator();
@@ -17,7 +17,7 @@ namespace Merge
             {
                 if (fx & fy)
                 {
-                    if (compare(ex.Current, ey.Current) < 0)
+                    if (comparer.Compare(ex.Current, ey.Current) < 0)
                     {
                         yield return ex.Current;
                         fx = ex.MoveNext();

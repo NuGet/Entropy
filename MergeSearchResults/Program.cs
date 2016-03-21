@@ -6,13 +6,28 @@ namespace Merge
 {
     class Program
     {
-        static Func<string, string, int> CreateScoreComparerFunc(IEnumerable<string> docs)
+        class ScoreComparer : Comparer<string>
+        {
+            IDictionary<string, double> _scores;
+
+            public ScoreComparer(IDictionary<string, double> scores)
+            {
+                _scores = scores;
+            }
+
+            public override int Compare(string x, string y)
+            {
+                return (_scores[x] == _scores[y] ? 0 : (_scores[x] > _scores[y] ? -1 : 1));
+            }
+        }
+
+        static ScoreComparer CreateScoreComparerFunc(IEnumerable<string> docs)
         {
             //  mock of what Lucene might have produced
             //  the point is that the scorign (and therefore the relatiev ordering) is encapsulated within this function 
             //  the result is a comparer function that can be used as an argument to a generic Merge function
 
-            var score = new Dictionary<string, double>
+            var scores = new Dictionary<string, double>
             {
                 { "a", 99.0 },
                 { "b", 97.0 },
@@ -42,7 +57,9 @@ namespace Merge
                 { "z", 50.0 },
             };
 
-            return (sx, sy) => { return (score[sx] == score[sy] ? 0 : (score[sx] > score[sy] ? -1 : 1)); };
+            return new ScoreComparer(scores);
+
+            //return (sx, sy) => { return (score[sx] == score[sy] ? 0 : (score[sx] > score[sy] ? -1 : 1)); };
         }
 
         static void Test0()
@@ -87,9 +104,7 @@ namespace Merge
 
             var original = test.Select(ch => new string(ch, 1));
 
-            Func<string, string, int> f = (sx, sy) => { return string.Compare(sx, sy); };
-
-            var sorted = original.MergeSort(f);
+            var sorted = original.MergeSort(StringComparer.OrdinalIgnoreCase);
 
             foreach (var i in sorted)
             {
@@ -104,9 +119,7 @@ namespace Merge
 
             var original = test.Select(ch => new string(ch, 1));
 
-            Func<string, string, int> f = (sx, sy) => { return string.Compare(sx, sy); };
-
-            var sorted = original.MergeSort(f);
+            var sorted = original.MergeSort(StringComparer.OrdinalIgnoreCase);
 
             foreach (var i in sorted)
             {
