@@ -7,6 +7,21 @@ namespace Merge
     {
         public static IEnumerable<T> Merge<T>(this IEnumerable<T> x, IEnumerable<T> y, IComparer<T> comparer)
         {
+            if (x == null)
+            {
+                throw new ArgumentNullException("x");
+            }
+
+            if (y == null)
+            {
+                throw new ArgumentNullException("y");
+            }
+
+            if (comparer == null)
+            {
+                throw new ArgumentNullException("comparer");
+            }
+
             var ex = x.GetEnumerator();
             var ey = y.GetEnumerator();
 
