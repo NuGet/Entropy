@@ -1,0 +1,1 @@
+﻿ChangelogGenerator -o NuGet -r Home -m "3.5 Beta2" -t <Needs this>
