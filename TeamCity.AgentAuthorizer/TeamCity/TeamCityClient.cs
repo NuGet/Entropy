@@ -31,13 +31,16 @@ namespace NuGet.TeamCity.AgentAuthorizer
             _httpClient = new HttpClient(_handler);
         }
 
-        private async Task<JToken> SendAsync(HttpMethod method, string endpoint, HttpContent content = null)
+        private async Task<JToken> SendAsync(HttpMethod method, string endpoint, bool acceptJson = true, HttpContent content = null)
         {
             var requestUrl = new Uri(_serverUrl, endpoint);
             var request = new HttpRequestMessage(method, requestUrl);
 
-            var acceptJson = new MediaTypeWithQualityHeaderValue("application/json");
-            request.Headers.Accept.Add(acceptJson);
+            if (acceptJson)
+            {
+                var acceptJsonHeader = new MediaTypeWithQualityHeaderValue("application/json");
+                request.Headers.Accept.Add(acceptJsonHeader);
+            }
 
             if (content != null)
             {
@@ -48,8 +51,13 @@ namespace NuGet.TeamCity.AgentAuthorizer
 
             response.EnsureSuccessStatusCode();
 
-            var json = await response.Content.ReadAsStringAsync();
-            return JsonConvert.DeserializeObject<JToken>(json);
+            if (acceptJson)
+            {
+                var json = await response.Content.ReadAsStringAsync();
+                return JsonConvert.DeserializeObject<JToken>(json);
+            }
+
+            return null;
         }
 
         public async Task<IReadOnlyList<Agent>> GetAgentsAsync()
@@ -81,14 +89,14 @@ namespace NuGet.TeamCity.AgentAuthorizer
 
         public async Task AddAgentToAgentPoolAsync(int agentPoolId, int agentId)
         {
-            var xml = new XDocument("agent");
+            var xml = new XDocument();
+            xml.Add(new XElement("agent"));
             xml.Root.Add(new XAttribute("id", agentId));
 
             var content = new StringContent(xml.ToString());
             content.Headers.ContentType = new MediaTypeHeaderValue("application/xml");
 
-            var json = await SendAsync(HttpMethod.Put, $"/app/rest/agentPools/id:{agentPoolId}/agents", content);
-            Console.WriteLine(json);
+            await SendAsync(HttpMethod.Post, $"/app/rest/agentPools/id:{agentPoolId}/agents", acceptJson: false, content: content);
         }
 
         public async Task SetAgentAuthorizationAsync(int agentId, bool authorized)
@@ -96,8 +104,7 @@ namespace NuGet.TeamCity.AgentAuthorizer
             var content = new StringContent(authorized.ToString());
             content.Headers.ContentType = new MediaTypeHeaderValue("text/plain");
 
-            var json = await SendAsync(HttpMethod.Put, $"/app/rest/agents/id:{agentId}/authorized", content);
-            Console.WriteLine(json);
+            await SendAsync(HttpMethod.Put, $"/app/rest/agents/id:{agentId}/authorized", acceptJson: false, content: content);
         }
 
         private static IReadOnlyList<Agent> DeserializeResponseAsAgents(JToken json)

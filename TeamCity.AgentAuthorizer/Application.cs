@@ -33,7 +33,7 @@ namespace NuGet.TeamCity.AgentAuthorizer
             Agent agent = null;
             while (agent == null)
             {
-                Console.WriteLine("Wait for the agent to appear in the agent list. Fetching the list of agents...");
+                Console.WriteLine("Waiting for the agent to appear in the agent list. Fetching the list of agents...");
                 var agents = await client.GetAgentsAsync();
                 agent = agents.FirstOrDefault(x => string.Equals(
                     x.Name,
@@ -51,6 +51,10 @@ namespace NuGet.TeamCity.AgentAuthorizer
             {
                 Console.WriteLine($"Authorizing agent '{agent.Name}'...");
                 await client.SetAgentAuthorizationAsync(agent.Id, true);
+            }
+            else
+            {
+                Console.WriteLine($"The agent '{agent.Name}' is already authorized.");
             }
 
             // Wait for the agent to be connected.
