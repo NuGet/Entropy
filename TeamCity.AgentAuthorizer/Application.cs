@@ -6,6 +6,8 @@ namespace NuGet.TeamCity.AgentAuthorizer
 {
     public class Application
     {
+        private static readonly TimeSpan WaitDuration = TimeSpan.FromSeconds(30);
+
         public async Task<ApplicationResult> RunAsync(string[] args)
         {
             Options options;
@@ -29,58 +31,10 @@ namespace NuGet.TeamCity.AgentAuthorizer
         {
             var client = new TeamCityClient(new Uri(options.Server));
 
-            // Wait for the agent to appear in the list.
-            Agent agent = null;
-            while (agent == null)
-            {
-                Console.WriteLine("Waiting for the agent to appear in the agent list. Fetching the list of agents...");
-                var agents = await client.GetAgentsAsync();
-                agent = agents.FirstOrDefault(x => string.Equals(
-                    x.Name,
-                    options.AgentName,
-                    StringComparison.OrdinalIgnoreCase));
-
-                if (agent == null)
-                {
-                    await Task.Delay(TimeSpan.FromSeconds(1));
-                }
-            }
-
-            // Authorize the agent.
-            if (!agent.Authorized)
-            {
-                Console.WriteLine($"Authorizing agent '{agent.Name}'...");
-                await client.SetAgentAuthorizationAsync(agent.Id, true);
-            }
-            else
-            {
-                Console.WriteLine($"The agent '{agent.Name}' is already authorized.");
-            }
-
-            // Wait for the agent to be connected.
-            agent = null;
-            while (agent == null)
-            {
-                Console.WriteLine("Waiting for the agent to be connected. Fetching the list of agents...");
-                var agents = await client.GetAgentsAsync();
-                agent = agents.FirstOrDefault(x => string.Equals(
-                    x.Name,
-                    options.AgentName,
-                    StringComparison.OrdinalIgnoreCase));
-
-                if (!agent.Connected)
-                {
-                    Console.WriteLine($"Agent '{agent.Name}' is not yet connected. Waiting...");
-                    agent = null;
-                }
-
-                if (agent == null)
-                {
-                    await Task.Delay(TimeSpan.FromSeconds(1));
-                }
-            }
-
-            // Add the agent to the agent pool.
+            // Prepare the agent.
+            Agent agent = await PrepareAgentAsync(options, client);
+            
+            // Optionally, add the agent to the agent pool.
             if (options.AgentPoolName != null)
             {
                 var agentPools = await client.GetAgentPoolsAsync();
@@ -108,6 +62,45 @@ namespace NuGet.TeamCity.AgentAuthorizer
             }
 
             return ApplicationResult.Success;
+        }
+
+        private static async Task<Agent> PrepareAgentAsync(Options options, TeamCityClient client)
+        {
+            Agent agent = null;
+
+            while (agent == null)
+            {
+                Console.WriteLine("Ensuring the agent is connected and has been authorized. Fetching the list of agents...");
+                var agents = await client.GetAgentsAsync();
+                agent = agents.FirstOrDefault(x => string.Equals(
+                    x.Name,
+                    options.AgentName,
+                    StringComparison.OrdinalIgnoreCase));
+
+                if (agent == null)
+                {
+                    Console.WriteLine($"Agent '{options.AgentName}' does not appear in the list. Waiting {WaitDuration.TotalSeconds} seconds...");
+                }
+                else if (!agent.Connected)
+                {
+                    Console.WriteLine($"Agent '{options.AgentName}' is not yet connected. Waiting {WaitDuration.TotalSeconds} seconds...");
+                    agent = null;
+                }
+                else if (!agent.Authorized)
+                {
+                    Console.WriteLine($"The agent '{agent.Name}' is not yet authorized. Authorizing...");
+                    await client.SetAgentAuthorizationAsync(agent.Id, true);
+                    Console.WriteLine($"Waiting {WaitDuration.TotalSeconds} seconds...");
+                    agent = null;
+                }
+
+                if (agent == null)
+                {
+                    await Task.Delay(WaitDuration);
+                }
+            }
+
+            return agent;
         }
 
         public static bool TryParseOptions(string[] args, out Options options)
