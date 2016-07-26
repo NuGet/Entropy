@@ -64,7 +64,7 @@ namespace NuGet.TeamCity.AgentAuthorizer
         {
             var endpoint = "/app/rest/agents?" +
                 "locator=authorized:any&" +
-                "fields=agent(id,name,typeId,connected,authorized,href)";
+                "fields=agent(id,name,typeId,connected,enabled,authorized,href)";
             var json = await SendAsync(HttpMethod.Get, endpoint);
             return DeserializeResponseAsAgents(json);
         }
@@ -105,6 +105,14 @@ namespace NuGet.TeamCity.AgentAuthorizer
             content.Headers.ContentType = new MediaTypeHeaderValue("text/plain");
 
             await SendAsync(HttpMethod.Put, $"/app/rest/agents/id:{agentId}/authorized", acceptJson: false, content: content);
+        }
+
+        public async Task SetAgentEnabledAsync(int agentId, bool enabled)
+        {
+            var content = new StringContent(enabled.ToString());
+            content.Headers.ContentType = new MediaTypeHeaderValue("text/plain");
+
+            await SendAsync(HttpMethod.Put, $"/app/rest/agents/id:{agentId}/enabled", acceptJson: false, content: content);
         }
 
         private static IReadOnlyList<Agent> DeserializeResponseAsAgents(JToken json)

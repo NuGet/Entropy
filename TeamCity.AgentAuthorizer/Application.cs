@@ -83,7 +83,14 @@ namespace NuGet.TeamCity.AgentAuthorizer
                 }
                 else if (!agent.Connected)
                 {
-                    Console.WriteLine($"Agent '{options.AgentName}' is not yet connected. Waiting {WaitDuration.TotalSeconds} seconds...");
+                    Console.WriteLine($"Agent '{agent.Name}' is not yet connected. Waiting {WaitDuration.TotalSeconds} seconds...");
+                    agent = null;
+                }
+                else if (agent.Enabled != options.AgentEnabled)
+                {
+                    Console.WriteLine($"The agent '{agent.Name}' does not have the proper enabled status '{options.AgentEnabled}'. Changing...");
+                    await client.SetAgentEnabledAsync(agent.Id, options.AgentEnabled);
+                    Console.WriteLine($"Waiting {WaitDuration.TotalSeconds} seconds...");
                     agent = null;
                 }
                 else if (!agent.Authorized)
@@ -107,16 +114,17 @@ namespace NuGet.TeamCity.AgentAuthorizer
         {
             options = null;
 
-            if (args.Length < 3)
+            if (args.Length < 4)
             {
-                Console.WriteLine("At least three arguments are required.");
+                Console.WriteLine("At least four arguments are required.");
                 Console.WriteLine();
-                Console.WriteLine($"{AppDomain.CurrentDomain.FriendlyName} TC_SERVER TC_AGENT_NAME TIMEOUT_SEC [TC_AGENT_POOL]");
+                Console.WriteLine($"{AppDomain.CurrentDomain.FriendlyName} TC_SERVER TC_AGENT_NAME TC_AGENT_ENABLED TIMEOUT_SEC [TC_AGENT_POOL]");
                 Console.WriteLine();
-                Console.WriteLine("  TC_SERVER       The base HTTP URL for the TeamCity server.");
-                Console.WriteLine("  TC_AGENT_NAME   The name of the TeamCity agent to authorize.");
-                Console.WriteLine("  TIMEOUT_SEC     The maximum number of seconds to take before failing.");
-                Console.WriteLine("  TC_AGENT_POOL   (optional) The pool to move the agent to once authorized.");
+                Console.WriteLine("  TC_SERVER        The base HTTP URL for the TeamCity server.");
+                Console.WriteLine("  TC_AGENT_NAME    The name of the TeamCity agent to authorize.");
+                Console.WriteLine("  TC_AGENT_ENABLED Whether or not the agent should be enabled.");
+                Console.WriteLine("  TIMEOUT_SEC      The maximum number of seconds to take before failing.");
+                Console.WriteLine("  TC_AGENT_POOL    (optional) The pool to move the agent to once authorized.");
                 Console.WriteLine();
                 Console.WriteLine("This application blocks until an agent appears in the provided TeamCity server.");
                 Console.WriteLine("Once the agent appears, the agent with be authorized and the application will");
@@ -130,11 +138,12 @@ namespace NuGet.TeamCity.AgentAuthorizer
             options = new Options();
             options.Server = args[0];
             options.AgentName = args[1];
-            options.Timeout = TimeSpan.FromSeconds(int.Parse(args[2]));
+            options.AgentEnabled = bool.Parse(args[2]);
+            options.Timeout = TimeSpan.FromSeconds(int.Parse(args[3]));
 
-            if (args.Length > 3)
+            if (args.Length > 4)
             {
-                options.AgentPoolName = args[3];
+                options.AgentPoolName = args[4];
             }
 
             return true;

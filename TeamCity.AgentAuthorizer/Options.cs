@@ -6,7 +6,8 @@ namespace NuGet.TeamCity.AgentAuthorizer
     {
         public string Server { get; set; }
         public string AgentName { get; set; }
-        public string AgentPoolName { get; set; }
+        public bool AgentEnabled { get; set; }
         public TimeSpan Timeout { get; set; }
+        public string AgentPoolName { get; set; }
     }
 }
