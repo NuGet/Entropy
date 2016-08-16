@@ -1,0 +1,12 @@
+﻿{
+  "dependencies": {
+    "Microsoft.Extensions.CommandLineUtils": "1.0.0",
+    "NuGet.Protocol.Core.v3": "3.5.0-rc1-final"
+  },
+  "frameworks": {
+    "net46": {}
+  },
+  "runtimes": {
+    "win": {}
+  }
+}
