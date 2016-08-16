@@ -18,20 +18,22 @@ namespace MyGetMirror
                 request.PackagesDirectory);
 
             // Set up the source logic.
+            var sourceFeedBuilder = new MyGetFeedBuilder(request.Source);
             var sourceRepository = Repository.Factory.GetCoreV3(request.Source);
             var sourceDownloaderResource = await sourceRepository.GetResourceAsync<DownloadResource>(token);
             var sourceHttpSourceResource = await sourceRepository.GetResourceAsync<HttpSourceResource>(token);
             var sourceHttpSource = sourceHttpSourceResource.HttpSource;
-            var sourceSymbolsPackageDownloader = new MyGetNuGetSymbolsPackageDownloader(request.Source, sourceHttpSource, logger);
+            var sourceSymbolsPackageDownloader = new MyGetNuGetSymbolsPackageDownloader(sourceFeedBuilder, sourceHttpSource, logger);
 
             // Set up the destination logic.
+            var destinationFeedBuilder = new MyGetFeedBuilder(request.Destination);
             var destinationRepository = Repository.Factory.GetCoreV3(request.Destination);
             var destinationHttpSourceResource = await destinationRepository.GetResourceAsync<HttpSourceResource>(token);
             var destinationHttpSource = destinationHttpSourceResource.HttpSource;
             var destinationMetadataResource = await destinationRepository.GetResourceAsync<MetadataResource>(token);
-            var destinationSymbolsPackageDownloader = new MyGetNuGetSymbolsPackageDownloader(request.Destination, destinationHttpSource, logger);
+            var destinationSymbolsPackageDownloader = new MyGetNuGetSymbolsPackageDownloader(destinationFeedBuilder, destinationHttpSource, logger);
             var destinationExistenceChecker = new NuGetPackageExistenceChecker(destinationMetadataResource, destinationSymbolsPackageDownloader, logger);
-            var destinationNuGetPackagePusher = new NuGetPackagePusher(request.PushDestination, request.DestinationApiKey, destinationHttpSource, logger);
+            var destinationNuGetPackagePusher = new NuGetPackagePusher(destinationFeedBuilder.GetPushUrl(), request.DestinationApiKey, destinationHttpSource, logger);
 
             // Set up the mirror implementations.
             var nuGetPackageMirror = new NuGetPackageMirrorCommand(

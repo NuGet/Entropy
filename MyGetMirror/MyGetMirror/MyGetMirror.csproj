@@ -45,6 +45,7 @@
     <Compile Include="FeedMirrorRequest.cs" />
     <Compile Include="InMemorySettings.cs" />
     <Compile Include="INuGetSymbolsPackageDownloader.cs" />
+    <Compile Include="MyGetFeedBuilder.cs" />
     <Compile Include="MyGetNuGetSymbolsPackageDownloader.cs" />
     <Compile Include="NuGetMirrorCommand.cs" />
     <Compile Include="NuGetPackageEnumerator.cs" />

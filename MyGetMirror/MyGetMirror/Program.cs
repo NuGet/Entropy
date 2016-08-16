@@ -23,11 +23,6 @@ namespace MyGetMirror
                 "The NuGet source to publish packages to. This should be the actual source URL, not the publish URL.",
                 CommandOptionType.SingleValue);
 
-            var pushDestinationOption = application.Option(
-                "--pushDestination",
-                "The push URL to publish packages to.",
-                CommandOptionType.SingleValue);
-
             var destinationApiKeyOption = application.Option(
                 "--destinationApiKey",
                 "The API key to use when pushing to the destination.",
@@ -64,12 +59,6 @@ namespace MyGetMirror
                     validInput = false;
                 }
 
-                if (!pushDestinationOption.HasValue())
-                {
-                    Console.WriteLine($"The --{pushDestinationOption.LongName} option is required.");
-                    validInput = false;
-                }
-
                 if (!destinationApiKeyOption.HasValue())
                 {
                     Console.WriteLine($"The --{destinationApiKeyOption.LongName} option is required.");
@@ -94,7 +83,6 @@ namespace MyGetMirror
                 {
                     Source = sourceOption.Value(),
                     Destination = destinationOption.Value(),
-                    PushDestination = pushDestinationOption.Value(),
                     DestinationApiKey = destinationApiKeyOption.Value(),
                     IncludeNuGet = true,
                     IncludeNuGetSymbols = !excludeNuGetSymbolsOption.HasValue(),

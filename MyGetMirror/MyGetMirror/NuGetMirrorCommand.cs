@@ -93,8 +93,6 @@ namespace MyGetMirror
 
         private async Task ProcessPackageIdentitiesAsync(string taskName, ConcurrentBag<PackageIdentity> packageIdentities, ManualResetEventSlim isFullyEnumerated, CancellationToken token)
         {
-
-
             while (true)
             {
                 PackageIdentity identity;
