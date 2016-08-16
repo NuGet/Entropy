@@ -61,7 +61,7 @@ namespace MyGetMirror
                 result = await _enumerator.GetPageAsync(result.ContinuationToken, token);
                 total += result.PackageIdentities.Count;
 
-                _logger.LogInformationSummary($"[ {taskName} ] A page of {result.PackageIdentities.Count} package(s) has been fetched.");
+                _logger.LogInformationSummary($"[ {taskName} ] A page of {result.PackageIdentities.Count} NuGet package(s) has been fetched.");
 
                 foreach (var identity in result.PackageIdentities)
                 {
@@ -70,7 +70,7 @@ namespace MyGetMirror
             }
 
             isFullyEnumerated.Set();
-            _logger.LogInformationSummary($"[ {taskName} ] The packages have been fully enumerated. {total} package(s) in total.");
+            _logger.LogInformationSummary($"[ {taskName} ] The NuGet packages have been fully enumerated. {total} package(s) in total.");
         }
 
         private string GetEnumerateTaskName()
@@ -104,14 +104,14 @@ namespace MyGetMirror
 
                     if (pushed)
                     {
-                        _logger.LogInformationSummary($"[ {taskName} ] Package {identity} took {stopwatch.Elapsed.TotalSeconds:0.00} seconds to publish.");
+                        _logger.LogInformationSummary($"[ {taskName} ] NuGet package {identity} took {stopwatch.Elapsed.TotalSeconds:0.00} seconds to publish.");
                     }
                     else
                     {
-                        _logger.LogInformationSummary($"[ {taskName} ] Package {identity} took {stopwatch.Elapsed.TotalSeconds:0.00} seconds to detect no push was necessary.");
+                        _logger.LogInformationSummary($"[ {taskName} ] NuGet package {identity} took {stopwatch.Elapsed.TotalSeconds:0.00} seconds to detect no push was necessary.");
                     }
 
-                    _logger.LogInformationSummary($"[ {taskName} ] {packageIdentities.Count} package(s) remain in the queue.");
+                    _logger.LogInformationSummary($"[ {taskName} ] {packageIdentities.Count} NuGet package(s) remain in the queue.");
                 }
                 else
                 {
