@@ -2,7 +2,7 @@
 
 namespace MyGetMirror
 {
-    public class SymbolsPackageResult
+    public class StreamResult
     {
         public bool IsAvailable { get; set; }
         public Stream Stream { get; set; }

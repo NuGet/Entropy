@@ -18,37 +18,42 @@ namespace MyGetMirror
                 request.PackagesDirectory);
 
             // Set up the source logic.
-            var sourceFeedBuilder = new MyGetFeedBuilder(request.Source);
+            var sourceUrlBuilder = new MyGetUrlBuilder(request.Source);
             var sourceRepository = Repository.Factory.GetCoreV3(request.Source);
             var sourceDownloaderResource = await sourceRepository.GetResourceAsync<DownloadResource>(token);
             var sourceHttpSourceResource = await sourceRepository.GetResourceAsync<HttpSourceResource>(token);
             var sourceHttpSource = sourceHttpSourceResource.HttpSource;
-            var sourceSymbolsPackageDownloader = new MyGetNuGetSymbolsPackageDownloader(sourceFeedBuilder, sourceHttpSource, logger);
+            var sourceSymbolsPackageDownloader = new MyGetNuGetSymbolsPackageDownloader(sourceUrlBuilder, sourceHttpSource, logger);
+            var sourcePackageSearchResource = await sourceRepository.GetResourceAsync<PackageSearchResource>(token);
+            var sourceVsixPackageDownloader = new MyGetVsixPackageDownloader(sourceUrlBuilder, sourceHttpSource, logger);
+
+            // Set up enumeration logic for the source.
+            var nuGetPackageEnumerator = new NuGetPackageEnumerator(sourcePackageSearchResource, logger);
+            var vsixPackageEnumerator = new VsixPackageEnumerator(sourceUrlBuilder.GetVsixUrl(), sourceHttpSource, logger);
 
             // Set up the destination logic.
-            var destinationFeedBuilder = new MyGetFeedBuilder(request.Destination);
+            var destinationUrlBuilder = new MyGetUrlBuilder(request.Destination);
             var destinationRepository = Repository.Factory.GetCoreV3(request.Destination);
             var destinationHttpSourceResource = await destinationRepository.GetResourceAsync<HttpSourceResource>(token);
             var destinationHttpSource = destinationHttpSourceResource.HttpSource;
             var destinationMetadataResource = await destinationRepository.GetResourceAsync<MetadataResource>(token);
-            var destinationSymbolsPackageDownloader = new MyGetNuGetSymbolsPackageDownloader(destinationFeedBuilder, destinationHttpSource, logger);
+            var destinationSymbolsPackageDownloader = new MyGetNuGetSymbolsPackageDownloader(destinationUrlBuilder, destinationHttpSource, logger);
             var destinationExistenceChecker = new NuGetPackageExistenceChecker(destinationMetadataResource, destinationSymbolsPackageDownloader, logger);
-            var destinationNuGetPackagePusher = new NuGetPackagePusher(destinationFeedBuilder.GetPushUrl(), request.DestinationApiKey, destinationHttpSource, logger);
+            var destinationVsixPackageDownloader = new MyGetVsixPackageDownloader(destinationUrlBuilder, destinationHttpSource, logger);
 
-            // Set up the mirror implementations.
+            // Set up push logic for the destination.
+            var nuGetPackagePusher = new NuGetPackagePusher(destinationUrlBuilder.GetNuGetPushUrl(), request.DestinationApiKey, destinationHttpSource, logger);
+            var vsixPackagePusher = new MyGetVsixPackagePusher(destinationUrlBuilder.GetVsixPushUrl(), request.DestinationApiKey, destinationHttpSource, logger);
+
+            // Set up the mirror logic.
             var nuGetPackageMirror = new NuGetPackageMirrorCommand(
                 request.OverwriteExisting,
                 request.IncludeNuGetSymbols,
                 sourceDownloaderResource,
                 sourceSymbolsPackageDownloader,
                 destinationExistenceChecker,
-                destinationNuGetPackagePusher,
+                nuGetPackagePusher,
                 settings,
-                logger);
-
-            var sourcePackageSearchResource = await sourceRepository.GetResourceAsync<PackageSearchResource>(token);
-            var nuGetPackageEnumerator = new NuGetPackageEnumerator(
-                sourcePackageSearchResource,
                 logger);
 
             var nuGetMirror = new NuGetMirrorCommand(
@@ -57,10 +62,27 @@ namespace MyGetMirror
                 nuGetPackageMirror,
                 logger);
 
+            var vsixPackageMirror = new VsixPackageMirrorCommand(
+                request.OverwriteExisting,
+                sourceVsixPackageDownloader,
+                destinationVsixPackageDownloader,
+                vsixPackagePusher);
+
+            var vsixMirror = new VsixMirrorCommand(
+                request.MaxDegreeOfParallelism,
+                vsixPackageEnumerator,
+                vsixPackageMirror,
+                logger);
+
             // Execute.
             if (request.IncludeNuGet)
             {
                 await nuGetMirror.Execute(token);
+            }
+
+            if (request.IncludeVsix)
+            {
+                await vsixMirror.Execute(token);
             }
         }
     }

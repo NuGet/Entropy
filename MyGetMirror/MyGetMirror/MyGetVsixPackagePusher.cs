@@ -8,14 +8,14 @@ using NuGet.Protocol;
 
 namespace MyGetMirror
 {
-    public class NuGetPackagePusher
+    public class MyGetVsixPackagePusher : IVsixPackagePusher
     {
         private readonly string _destinationApiKey;
         private readonly HttpSource _httpSource;
         private readonly ILogger _logger;
         private readonly string _pushUrl;
 
-        public NuGetPackagePusher(string pushUrl, string destinationApiKey, HttpSource httpSource, ILogger logger)
+        public MyGetVsixPackagePusher(string pushUrl, string destinationApiKey, HttpSource httpSource, ILogger logger)
         {
             _pushUrl = pushUrl;
             _destinationApiKey = destinationApiKey;
@@ -40,10 +40,10 @@ namespace MyGetMirror
                    };
 
                    var content = new MultipartFormDataContent();
-                   content.Add(packageContent, "package", "package.nupkg");
+                   content.Add(packageContent, "package", "package.vsix");
 
                    var request = HttpRequestMessageFactory.Create(
-                       HttpMethod.Put,
+                       HttpMethod.Post,
                        _pushUrl,
                        new HttpRequestMessageConfiguration(logger: _logger, promptOn403: false));
                    request.Content = content;

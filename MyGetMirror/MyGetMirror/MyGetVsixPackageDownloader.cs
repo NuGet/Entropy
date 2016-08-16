@@ -5,30 +5,29 @@ using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
 using NuGet.Common;
-using NuGet.Packaging.Core;
 using NuGet.Protocol;
 
 namespace MyGetMirror
 {
-    public class MyGetNuGetSymbolsPackageDownloader : INuGetSymbolsPackageDownloader
+    public class MyGetVsixPackageDownloader : IVsixPackageDownloader
     {
         private const int BufferSize = 4096;
-        private readonly MyGetUrlBuilder _urlBuilder;
         private readonly HttpSource _httpSource;
         private readonly ILogger _logger;
+        private readonly MyGetUrlBuilder _urlBuilder;
 
-        public MyGetNuGetSymbolsPackageDownloader(MyGetUrlBuilder urlBuilder, HttpSource httpSource, ILogger logger)
+        public MyGetVsixPackageDownloader(MyGetUrlBuilder urlBuilder, HttpSource httpSource, ILogger logger)
         {
             _urlBuilder = urlBuilder;
             _httpSource = httpSource;
             _logger = logger;
         }
 
-        public async Task<bool> IsAvailableAsync(PackageIdentity identity, CancellationToken token)
+        public async Task<bool> IsAvailableAsync(string id, string version, CancellationToken token)
         {
             var request = new HttpSourceRequest(() =>
             {
-                var url = _urlBuilder.GetSymbolsUrl(identity);
+                var url = _urlBuilder.GetVsixUrl(id, version);
 
                 // Ideally this would be an HTTP HEAD request, but MyGet does not seem to support
                 // this. As an alternative, make an HTTP GET range request for 0 bytes.
@@ -53,9 +52,9 @@ namespace MyGetMirror
             return output;
         }
 
-        public async Task<T> ProcessAsync<T>(PackageIdentity identity, Func<StreamResult, Task<T>> processAsync, CancellationToken token)
+        public async Task<T> ProcessAsync<T>(string id, string version, Func<StreamResult, Task<T>> processAsync, CancellationToken token)
         {
-            var url = _urlBuilder.GetSymbolsUrl(identity);
+            var url = _urlBuilder.GetVsixUrl(id, version);
 
             var request = new HttpSourceRequest(url, _logger);
             request.IgnoreNotFounds = true;
@@ -76,7 +75,7 @@ namespace MyGetMirror
                     }
                     else
                     {
-                        // Save the symbols package to a temporary location.
+                        // Save the VSIX package to a temporary location.
                         var temporaryPath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
                         using (var fileStream = new FileStream(
                             temporaryPath,

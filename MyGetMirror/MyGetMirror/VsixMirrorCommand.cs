@@ -5,23 +5,22 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using NuGet.Common;
-using NuGet.Packaging.Core;
 
 namespace MyGetMirror
 {
-    public class NuGetMirrorCommand
+    public class VsixMirrorCommand
     {
         private const string PushTaskPrefix = "PUSH-";
         private const string EnumerateTaskName = "ENUMERATE";
 
-        private readonly NuGetPackageEnumerator _enumerator;
+        private readonly VsixPackageEnumerator _enumerator;
         private readonly ILogger _logger;
         private readonly int _maxDegreeOfParallelism;
-        private readonly NuGetPackageMirrorCommand _mirror;
+        private readonly VsixPackageMirrorCommand _mirror;
         private readonly int _taskNameWidth;
         private readonly int _pushTaskNameDigitWidth;
 
-        public NuGetMirrorCommand(int maxDegreeOfParallelism, NuGetPackageEnumerator enumerator, NuGetPackageMirrorCommand mirror, ILogger logger)
+        public VsixMirrorCommand(int maxDegreeOfParallelism, VsixPackageEnumerator enumerator, VsixPackageMirrorCommand mirror, ILogger logger)
         {
             _maxDegreeOfParallelism = maxDegreeOfParallelism;
             _enumerator = enumerator;
@@ -35,42 +34,36 @@ namespace MyGetMirror
 
         public async Task Execute(CancellationToken token)
         {
-            var identities = new ConcurrentBag<PackageIdentity>();
+            var packages = new ConcurrentBag<VsixPackage>();
 
             var isFullyEnumerated = new ManualResetEventSlim(false);
 
-            var populateTask = PopulatePackageIdentitiesAsync(identities, isFullyEnumerated, token);
+            var populateTask = PopulatePackagesAsync(packages, isFullyEnumerated, token);
             
             var processTasks = Enumerable
                 .Range(0, _maxDegreeOfParallelism)
                 .Select(i => GetPushTaskName(i))
-                .Select(taskName => ProcessPackageIdentitiesAsync(taskName, identities, isFullyEnumerated, token))
+                .Select(taskName => ProcessPackagesAsync(taskName, packages, isFullyEnumerated, token))
                 .ToArray();
 
             await Task.WhenAll(processTasks.Concat(new[] { populateTask }));
         }
 
-        private async Task PopulatePackageIdentitiesAsync(ConcurrentBag<PackageIdentity> packageIdentities, ManualResetEventSlim isFullyEnumerated, CancellationToken token)
+        private async Task PopulatePackagesAsync(ConcurrentBag<VsixPackage> packages, ManualResetEventSlim isFullyEnumerated, CancellationToken token)
         {
             var taskName = GetEnumerateTaskName();
-            var result = _enumerator.GetInitialResult();
-            var total = 0;
+            var result = await _enumerator.EnumerateAsync(token);
 
-            while (result.HasMoreResults)
+            foreach (var package in result)
             {
-                result = await _enumerator.GetPageAsync(result.ContinuationToken, token);
-                total += result.PackageIdentities.Count;
-
-                _logger.LogInformationSummary($"[ {taskName} ] A page of {result.PackageIdentities.Count} package(s) has been fetched.");
-
-                foreach (var identity in result.PackageIdentities)
-                {
-                    packageIdentities.Add(identity);
-                }
+                packages.Add(package);
             }
 
+            _logger.LogInformationSummary($"[ {taskName} ] A page of {result.Count} VSIX package(s) has been fetched.");
+
             isFullyEnumerated.Set();
-            _logger.LogInformationSummary($"[ {taskName} ] The packages have been fully enumerated. {total} package(s) in total.");
+
+            _logger.LogInformationSummary($"[ {taskName} ] The VSIX packages have been fully enumerated. {result.Count} package(s) in total.");
         }
 
         private string GetEnumerateTaskName()
@@ -91,27 +84,27 @@ namespace MyGetMirror
             return pushTaskName.PadLeft(_taskNameWidth, ' ');
         }
 
-        private async Task ProcessPackageIdentitiesAsync(string taskName, ConcurrentBag<PackageIdentity> packageIdentities, ManualResetEventSlim isFullyEnumerated, CancellationToken token)
+        private async Task ProcessPackagesAsync(string taskName, ConcurrentBag<VsixPackage> packages, ManualResetEventSlim isFullyEnumerated, CancellationToken token)
         {
             while (true)
             {
-                PackageIdentity identity;
+                VsixPackage package;
 
-                if (packageIdentities.TryTake(out identity))
+                if (packages.TryTake(out package))
                 {
                     var stopwatch = Stopwatch.StartNew();
-                    var pushed = await _mirror.MirrorAsync(identity, token);
+                    var pushed = await _mirror.MirrorAsync(package.Id, package.Version, token);
 
                     if (pushed)
                     {
-                        _logger.LogInformationSummary($"[ {taskName} ] Package {identity} took {stopwatch.Elapsed.TotalSeconds:0.00} seconds to publish.");
+                        _logger.LogInformationSummary($"[ {taskName} ] VSIX package {package} took {stopwatch.Elapsed.TotalSeconds:0.00} seconds to publish.");
                     }
                     else
                     {
-                        _logger.LogInformationSummary($"[ {taskName} ] Package {identity} took {stopwatch.Elapsed.TotalSeconds:0.00} seconds to detect no push was necessary.");
+                        _logger.LogInformationSummary($"[ {taskName} ] VSIX package {package} took {stopwatch.Elapsed.TotalSeconds:0.00} seconds to detect no push was necessary.");
                     }
 
-                    _logger.LogInformationSummary($"[ {taskName} ] {packageIdentities.Count} package(s) remain in the queue.");
+                    _logger.LogInformationSummary($"[ {taskName} ] {packages.Count} VSIX package(s) remain in the queue.");
                 }
                 else
                 {

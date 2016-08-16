@@ -61,7 +61,7 @@ namespace MyGetMirror
                 {
                     if (downloadResult.Status != DownloadResourceResultStatus.Available)
                     {
-                        throw new InvalidOperationException($"The package '{identity}' is not available on the source.");
+                        throw new InvalidOperationException($"The NuGet package '{identity}' is not available on the source.");
                     }
 
                     await _packagePusher.PushAsync(downloadResult.PackageStream, token);
@@ -80,15 +80,15 @@ namespace MyGetMirror
             {
                 publishSymbolsPackage = await _symbolsPackageDownloader.ProcessAsync(
                     identity,
-                    async symbolsPackageResult =>
+                    async streamResult =>
                     {
-                        if (!symbolsPackageResult.IsAvailable)
+                        if (!streamResult.IsAvailable)
                         {
                             // The package has no symbols package.
                             return false;
                         }
 
-                        await _packagePusher.PushAsync(symbolsPackageResult.Stream, token);
+                        await _packagePusher.PushAsync(streamResult.Stream, token);
 
                         return true;
                     },

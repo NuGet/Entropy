@@ -4,18 +4,20 @@ using NuGet.Packaging.Core;
 
 namespace MyGetMirror
 {
-    public class MyGetFeedBuilder
+    public class MyGetUrlBuilder
     {
         private readonly string _baseUrl;
+        private readonly string _baseUrlWithoutPreAuth;
 
-        public MyGetFeedBuilder(string source)
+        public MyGetUrlBuilder(string source)
         {
             _baseUrl = GetBaseUrl(source);
+            _baseUrlWithoutPreAuth = GetBaseUrlWithoutPreAuth(_baseUrl);
         }
 
-        public string GetPushUrl()
+        public string GetNuGetPushUrl()
         {
-            return $"{_baseUrl}/api/v2/package";
+            return $"{_baseUrlWithoutPreAuth}/api/v2/package";
         }
 
         public string GetVsixUrl()
@@ -23,11 +25,45 @@ namespace MyGetMirror
             return $"{_baseUrl}/vsix";
         }
 
+        public string GetVsixUrl(string id, string version)
+        {
+            return $"{_baseUrl}/vsix/{id}-{version}.vsix";
+        }
+
+        public string GetVsixPushUrl()
+        {
+            return $"{_baseUrlWithoutPreAuth}/vsix/upload";
+        }
+
         public string GetSymbolsUrl(PackageIdentity identity)
         {
             // Example:
             // https://www.myget.org/F/nugetbuild/symbols/NuGet.ApplicationInsights.Owin/3.0.2633-r-master
             return $"{_baseUrl}/symbols/{identity.Id}/{identity.Version}";
+        }
+
+        private static string GetBaseUrlWithoutPreAuth(string baseUrl)
+        {
+            // Input examples:
+            // - Public or auth: https://www.myget.org/F/nugetbuild
+            // - Pre-auth:       https://www.myget.org/F/nuget-private-test/auth/API-KEY
+            //
+            // We need to strip off the last two pieces if the second to last is "auth", e.g. "auth/API-KEY".
+            var reversedPieces = baseUrl.Split('/').Reverse().ToList();
+
+            if (reversedPieces.Count < 2 || reversedPieces[1] != "auth")
+            {
+                return baseUrl;
+            }
+
+            var pieces = reversedPieces
+                .Skip(2)
+                .Reverse();
+
+            // Input example:
+            // - Public or auth: https://www.myget.org/F/nugetbuild
+            // - Pre-auth:       https://www.myget.org/F/nuget-private-test
+            return string.Join("/", pieces).TrimEnd('/');
         }
 
         private static string GetBaseUrl(string source)

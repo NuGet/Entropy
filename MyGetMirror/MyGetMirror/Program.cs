@@ -85,6 +85,7 @@ namespace MyGetMirror
                     Destination = destinationOption.Value(),
                     DestinationApiKey = destinationApiKeyOption.Value(),
                     IncludeNuGet = true,
+                    IncludeVsix = true,
                     IncludeNuGetSymbols = !excludeNuGetSymbolsOption.HasValue(),
                     OverwriteExisting = overwriteExistingOption.HasValue(),
                     MaxDegreeOfParallelism = maxDegreeOfParallelism
