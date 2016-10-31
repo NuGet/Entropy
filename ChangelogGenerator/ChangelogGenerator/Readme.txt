@@ -1,1 +1,1 @@
-﻿ChangelogGenerator -o NuGet -r Home -m "3.5 RTM" -t c1209324ca4732f65cb26b9a78fddbee80665fc6
+﻿ChangelogGenerator -o NuGet -r Home -m "3.5 RTM" -t <needs this>
