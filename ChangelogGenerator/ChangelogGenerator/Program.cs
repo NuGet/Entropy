@@ -95,7 +95,7 @@ namespace ReadMeGenerator
                         {
                             if (label.Name.Contains("Type"))
                             {
-                                if (labelSet.ContainsKey(label.Name))
+                                if (labelSet.ContainsKey(label.Name) && !label.Name.Contains("ClosedAs:External"))
                                 {
                                     labelSet[label.Name].Add(issue);
                                     continue;
