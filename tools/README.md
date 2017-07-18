@@ -12,7 +12,7 @@ This tool runs network diagnostics against api.nuget.org endpoint. It captures t
 - `npm install`
 - To run the scripts: `npm start` or `node index.js`
 
-### Generating distributable binaries
+### Generating distributable binaries(windows only for now)
 - We use a node package called "pkg" to build an executable 
 - Run the npm exe script to generate the binaries 
     ```
@@ -21,4 +21,4 @@ This tool runs network diagnostics against api.nuget.org endpoint. It captures t
     This will take care of installing `pkg` and creating the executable in the `binaries` folder. This script will also copy the native dependency into the `binaries` folder.
 
 - Zip up the binaries folder and upload it to the distribution channel
-- Test your changes by extracting the zip file in a separate folder(not your current development folder) and running the exe`
+- Test your changes by extracting the zip file in a separate folder(not your current development folder) and running the exe.
