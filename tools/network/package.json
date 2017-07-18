@@ -1,0 +1,43 @@
+{
+  "name": "network",
+  "version": "1.0.0",
+  "description": "Script to gather data for network issues",
+  "main": "index.js",
+  "bin": "index.js",
+  "devDependencies": {
+    "rimraf": "latest",
+    "copy": "latest",
+    "pkg": "latest"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "clean": "rimraf node_modules",
+    "build": "npm install && copy assets\\fibers.js node_modules\\fibers\\fibers.js",
+    "preexe":"rimraf binaries && copy node_modules\\fibers\\bin\\win32-x64-48\\fibers.node assets\\",
+    "exe": "npm run build && pkg package.json --output binaries/win-nuget-network-diagnose.exe",
+    "postexe": "copy assets\\fibers.node binaries\\",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "pkg": {
+    "scripts": [
+      "./node_modules/fibers/fibers.js"
+    ],
+    "assets": "assets"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/NuGet/Engineering"
+  },
+  "author": "Microsoft",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/NuGet/Engineering/issues"
+  },
+  "homepage": "https://github.com/NuGet/Engineering",
+  "dependencies": {
+    "capture-har": "^0.3.2",
+    "node-zip": "^1.1.1",
+    "os": "^0.1.1",
+    "sync": "^0.2.5"
+  }
+}

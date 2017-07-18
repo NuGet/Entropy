@@ -10,6 +10,14 @@
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 
+/.vs/slnx.sqlite
+/.vs/slnx.sqlite-journal
+/.vs
+/tools/network/binaries/*
+/tools/network/assets/*.node
+/tools/network/node_modules/
+/tools/network/nuget-network-diagnostics*
+
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/
