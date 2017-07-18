@@ -1,3 +1,4 @@
+// Patch file for fixing issue with native addons while packaging application into an exe using 'pkg' library
 if (process.fiberLib) {
 	module.exports = process.fiberLib;
 } else {
