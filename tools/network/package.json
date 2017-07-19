@@ -5,9 +5,9 @@
   "main": "index.js",
   "bin": "index.js",
   "devDependencies": {
-    "rimraf": "latest",
-    "copy": "latest",
-    "pkg": "latest"
+    "rimraf": "2.6.1",
+    "copy": "0.3.0",
+    "pkg": "4.1.2"
   },
   "scripts": {
     "start": "node index.js",
@@ -35,9 +35,9 @@
   },
   "homepage": "https://github.com/NuGet/Engineering",
   "dependencies": {
-    "capture-har": "^0.3.2",
-    "node-zip": "^1.1.1",
-    "os": "^0.1.1",
-    "sync": "^0.2.5"
+    "capture-har": "0.3.2",
+    "node-zip": "1.1.1",
+    "os": "0.1.1",
+    "sync": "0.2.5"
   }
 }
