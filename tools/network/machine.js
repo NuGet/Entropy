@@ -22,7 +22,6 @@ module.exports = {
             }
         }
 
-        machine["Hostname"] = os.hostname();
         machine["IP Address"] = addresses;
 
         return machine;
