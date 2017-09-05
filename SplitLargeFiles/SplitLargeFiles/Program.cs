@@ -14,22 +14,35 @@ namespace SplitLargeFiles
         private const string GzipExtension = ".gz";
         private const string FileIndexFormat = "_{0:D4}";
 
-        public static void Main(string[] args)
+        public static int Main(string[] args)
         {
-            MainAsync(args).Wait();
+            return MainAsync(args).Result;
         }
 
-        private static async Task MainAsync(string[] args)
+        private static async Task<int> MainAsync(string[] args)
         {
-            var inputPath = Path.GetFullPath(@"C:\Users\jver\Downloads\test.txt");
+            if (args.Length == 0)
+            {
+                Console.WriteLine("The first parameter should be the path to the large file to split.");
+                return 1;
+            }
+
+            var inputPath = args[0];
+
+            Console.WriteLine("Input parameters:");
+            Console.WriteLine();
+            Console.WriteLine($"  Desired outout file size (bytes): {DesiredFileSize}");
+            Console.WriteLine($"  Input path: {inputPath}");
+            Console.WriteLine();
+
+            if (!File.Exists(inputPath))
+            {
+                Console.WriteLine("The input file does not exist.");
+                return 1; 
+            }
 
             using (var inputStream = new FileStream(inputPath, FileMode.Open))
             {
-                Console.WriteLine("Input parameters:");
-                Console.WriteLine();
-                Console.WriteLine($"  Desired outout file size (bytes): {DesiredFileSize}");
-                Console.WriteLine($"  Input path: {inputPath}");
-                Console.WriteLine();
 
                 Console.Write("Gathering data about the input file...");
                 var properties = await FileProperties.FromFileStreamAsync(inputStream);
@@ -78,10 +91,12 @@ namespace SplitLargeFiles
                         Console.WriteLine(" done.");
                     }
                 }
-
-                Console.WriteLine();
-                Console.WriteLine("The file has been split up.");
             }
+
+            Console.WriteLine();
+            Console.WriteLine("The file has been split up.");
+
+            return 0;
         }
 
         private static string GenerateOutputPathFormat(string inputPath, bool isGzipped)

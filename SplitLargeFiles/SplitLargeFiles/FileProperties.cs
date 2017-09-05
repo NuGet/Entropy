@@ -56,7 +56,7 @@ namespace SplitLargeFiles
         private static bool DetectGzip(Stream stream)
         {
             var header = GetLeadingBytes(stream, 2);
-            if (header[0] != 0x1f || header[1] != 0x8b)
+            if (header.Length < 2 || header[0] != 0x1f || header[1] != 0x8b)
             {
                 return false;
             }
