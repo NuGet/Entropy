@@ -27,7 +27,7 @@ $zipFileName = "out.zip"
 
 if ([string]::IsNullOrEmpty($OutputDirectory))
 {
-    $OutputDirectory = "./";
+    $OutputDirectory = get-location
 }
 else
 {
@@ -48,13 +48,18 @@ $blFilePath = [System.IO.Path]::Combine($OutputDirectory, $blFileName)
 $zipFilePath = [System.IO.Path]::Combine($OutputDirectory, $zipFileName)
 
 Write-Host "Running: msbuild /t:restore /bl:$blFilePath /p:Restoreforce=true $InputFile"
-msbuild /t:restore /bl:$blFilePath /p:Restoreforce=true $InputFile
+msbuild /t:restore /bl:$blFilePath /p:Restoreforce=true $InputFile | out-null
 
 Write-Host "Running: msbuild /t:GenerateRestoreGraphFile /p:RestoreGraphOutputPath=$dgFilePath $InputFile"
-msbuild /t:GenerateRestoreGraphFile /p:RestoreGraphOutputPath=$dgFilePath $InputFile
+msbuild /t:GenerateRestoreGraphFile /p:RestoreGraphOutputPath=$dgFilePath $InputFile | out-null
 
 Write-Host "Running: msbuild /pp:$ppFilePath $InputFile"
-msbuild /pp:$ppFilePath $InputFile
+msbuild /pp:$ppFilePath $InputFile | out-null
 
 Write-Host "Running: Compress-Archive -Path $OutputDirectory -DestinationPath $zipFilePath"
-Compress-Archive -Path $OutputDirectory -DestinationPath $zipFilePath
+Compress-Archive -Force -Path $OutputDirectory -DestinationPath $zipFilePath
+
+Write-Host "Clean up"
+Remove-Item -ea si $dgFilePath | out-null
+Remove-Item -ea si $ppFilePath | out-null
+Remove-Item -ea si  $blFilePath | out-null
