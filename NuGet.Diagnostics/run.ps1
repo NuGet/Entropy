@@ -47,14 +47,14 @@ $ppFilePath = [System.IO.Path]::Combine($OutputDirectory, $ppFileName)
 $blFilePath = [System.IO.Path]::Combine($OutputDirectory, $blFileName)
 $zipFilePath = [System.IO.Path]::Combine($OutputDirectory, $zipFileName)
 
-Write-Host "Running: msbuild /t:GenerateRestoreGraphFile /p:RestoreGraphOutputPath=$dgFilePath"
-msbuild /t:GenerateRestoreGraphFile /p:RestoreGraphOutputPath=$dgFilePath
+Write-Host "Running: msbuild /t:restore /bl:$blFilePath /p:Restoreforce=true $InputFile"
+msbuild /t:restore /bl:$blFilePath /p:Restoreforce=true $InputFile
 
-Write-Host "Running: msbuild /pp:$ppFilePath"
-msbuild /pp:$ppFilePath
+Write-Host "Running: msbuild /t:GenerateRestoreGraphFile /p:RestoreGraphOutputPath=$dgFilePath $InputFile"
+msbuild /t:GenerateRestoreGraphFile /p:RestoreGraphOutputPath=$dgFilePath $InputFile
 
-Write-Host "Running: msbuild /t:restore /bl:$blFilePath"
-msbuild /t:restore /bl:$blFilePath
+Write-Host "Running: msbuild /pp:$ppFilePath $InputFile"
+msbuild /pp:$ppFilePath $InputFile
 
 Write-Host "Running: Compress-Archive -Path $OutputDirectory -DestinationPath $zipFilePath"
 Compress-Archive -Path $OutputDirectory -DestinationPath $zipFilePath
