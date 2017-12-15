@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 
 namespace BuildTestCA
 {
@@ -8,20 +9,29 @@ namespace BuildTestCA
         static void Main(string[] args)
         {
             var currentDirectory = Directory.GetCurrentDirectory();
-            var runner = new OpenSslRunner(
+
+            using (var runner = new OpenSslRunner(
                 Path.Combine(currentDirectory, "output"),
                 Path.Combine(currentDirectory, "openssl.exe"),
                 Path.Combine(currentDirectory, "openssl.conf"),
                 "http://fake-example.blob.core.windows.net/testca/",
-                42000);
-
-            /*
-            runner.StartOcspResponder(
-                CertificateId.IntermediateOcspSigner,
-                CertificateId.IntermediateOcsp);
-            */
-
-            GenerateCertificates(runner);
+                42000))
+            {
+                if (args.Contains("ocsp", StringComparer.OrdinalIgnoreCase))
+                {
+                    runner.StartOcspResponder(CertificateId.IntermediateOcspSigner, CertificateId.IntermediateOcsp);
+                    Console.WriteLine("Press enter to end the process and shut down the OCSP responder.");
+                    Console.ReadLine();
+                }
+                else if (args.Contains("generate", StringComparer.OrdinalIgnoreCase))
+                {
+                    GenerateCertificates(runner);
+                }
+                else
+                {
+                    Console.WriteLine("You must specify one argument. Either 'ocsp' or 'generate'.");
+                }
+            }
         }
 
         private static void GenerateCertificates(OpenSslRunner runner)
