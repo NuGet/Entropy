@@ -10,6 +10,9 @@
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 
+# Azure Functions localsettings file
+local.settings.json
+
 /.vs/slnx.sqlite
 /.vs/slnx.sqlite-journal
 /.vs
