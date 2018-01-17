@@ -22,9 +22,9 @@ namespace NuGet.GithubEventHandler
 
     public static class HttpEventHandler
     {
-        private static string _devdivBaseUrl = "https://devdiv.visualstudio.com/DefaultCollection/";
-        private static string _devdivProjectGuid = "0bdbc590-a062-4c3f-b0f6-9383f67865ee";
-        private static int _nugetPrivateDefinitionId = 8118;
+        private static string _devdivBaseUrl = Environment.GetEnvironmentVariable("DEVDIV_VSTS_BASE_URL");
+        private static string _devdivProjectGuid = Environment.GetEnvironmentVariable("DEVDIV_VSTS_PROJECT_GUID");
+        private static int _nugetPrivateDefinitionId = Int32.Parse(Environment.GetEnvironmentVariable("NUGET_VSTS_PRIVATE_BUILD_DEFINITION_ID"));
         private static string _vstsPat = Environment.GetEnvironmentVariable("VSTS_PAT_ENV_VAR");
 
         [FunctionName("PREventHandler")]
@@ -34,7 +34,6 @@ namespace NuGet.GithubEventHandler
 
             try
             {
-
                 var jsonContent = await req.Content.ReadAsStringAsync();
                 var data = JObject.Parse(jsonContent);
                 var action = GetProperty<string>(data, "action");
@@ -64,7 +63,9 @@ namespace NuGet.GithubEventHandler
 
                 log.Info($"NuGet.GithubEventHandler github webhook queuing a build for branch: {branchName}");
 
-                var res = await QueueBuildAsync(_devdivBaseUrl, _devdivProjectGuid, _nugetPrivateDefinitionId, branchName);
+                ValidateBranchName(branchName);
+
+                var res = await QueueBuildAsync(_vstsPat, _devdivBaseUrl, _devdivProjectGuid, _nugetPrivateDefinitionId, branchName);
 
                 return req.CreateResponse(HttpStatusCode.OK, new
                 {
@@ -77,11 +78,29 @@ namespace NuGet.GithubEventHandler
             }
         }
 
-        private static async Task<Build> QueueBuildAsync(string url, string project, int buildDefinitionId, string branchName)
+        private static void ValidateBranchName(string branchName)
         {
-            if (string.IsNullOrEmpty(_vstsPat))
+            if (!branchName.StartsWith("dev-", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidDataException($"This function only works on branch names starting with dev-");
+            }
+        }
+
+        private static async Task<Build> QueueBuildAsync(string pat, string url, string project, int buildDefinitionId, string branchName)
+        {
+            if (string.IsNullOrEmpty(pat))
             {
                 throw new InvalidOperationException("Unable to read PAT for vsts");
+            }
+
+            if (string.IsNullOrEmpty(url))
+            {
+                throw new InvalidOperationException("Unable to read DevDiv vsts base url");
+            }
+
+            if (string.IsNullOrEmpty(project))
+            {
+                throw new InvalidOperationException("Unable to read DevDiv vsts project guid");
             }
 
             var build = new BuildHttpClient(new Uri(url), new VssBasicCredential(string.Empty, _vstsPat));
@@ -100,7 +119,7 @@ namespace NuGet.GithubEventHandler
                 },
                 Project = target.Project,
                 Priority = QueuePriority.Normal,
-                Reason = BuildReason.Triggered,
+                Reason = BuildReason.PullRequest,
                 SourceBranch = $"refs/heads/{branchName}"
             });
         }
