@@ -27,49 +27,27 @@ namespace NuGet.GithubEventHandler
         private static int _nugetPrivateDefinitionId = Int32.Parse(Environment.GetEnvironmentVariable("NUGET_VSTS_PRIVATE_BUILD_DEFINITION_ID"));
         private static string _vstsPat = Environment.GetEnvironmentVariable("VSTS_PAT_ENV_VAR");
 
+        private const string _branchNameQueryParam = "branchname";
+
         [FunctionName("PREventHandler")]
-        public static async Task<object> RunAsync([HttpTrigger(AuthorizationLevel.Anonymous, "POST", WebHookType = "github")]HttpRequestMessage req, TraceWriter log)
+        public static async Task<object> RunAsync([HttpTrigger(AuthorizationLevel.Function, "GET")]HttpRequestMessage req, TraceWriter log)
         {
             log.Info($"NuGet.GithubEventHandler github webhook triggered!");
 
             try
             {
-                var jsonContent = await req.Content.ReadAsStringAsync();
-                var data = JObject.Parse(jsonContent);
-                var action = GetProperty<string>(data, "action");
-
-                if (!string.Equals(action, "labeled", StringComparison.OrdinalIgnoreCase))
-                {
-                    return req.CreateResponse(HttpStatusCode.BadRequest, new
-                    {
-                        error = "This function only works on applying labels in a PR"
-                    });
-                }
-
-                var label = GetProperty<JObject>(data, "label");
-                var labelName = GetProperty<string>(label, "name");
-
-                if (!string.Equals(labelName, "Build On CI", StringComparison.OrdinalIgnoreCase))
-                {
-                    return req.CreateResponse(HttpStatusCode.BadRequest, new
-                    {
-                        error = "This function only works on applying 'Build On CI' label to a PR"
-                    });
-                }
-
-                var pr = GetProperty<JObject>(data, "pull_request");
-                var head = GetProperty<JObject>(pr, "head");
-                var branchName = GetProperty<string>(head, "ref");
-
-                log.Info($"NuGet.GithubEventHandler github webhook queuing a build for branch: {branchName}");
+                var queryParameters = req.GetQueryNameValuePairs();
+                var branchName = queryParameters.First(p => string.Equals(p.Key, _branchNameQueryParam, StringComparison.OrdinalIgnoreCase)).Value;
 
                 ValidateBranchName(branchName);
+
+                log.Info($"NuGet.GithubEventHandler queuing a build for branch: {branchName}");
 
                 var res = await QueueBuildAsync(_vstsPat, _devdivBaseUrl, _devdivProjectGuid, _nugetPrivateDefinitionId, branchName);
 
                 return req.CreateResponse(HttpStatusCode.OK, new
                 {
-                    greeting = $"Action: {action}, branch: {branchName}, build: {res.Id}"
+                    greeting = $"branch: {branchName}, build: {res.Id}"
                 });
             }
             catch (Exception)
@@ -88,6 +66,11 @@ namespace NuGet.GithubEventHandler
 
         private static async Task<Build> QueueBuildAsync(string pat, string url, string project, int buildDefinitionId, string branchName)
         {
+            if (string.IsNullOrEmpty(branchName))
+            {
+                throw new InvalidOperationException("No branch name passed in the request");
+            }
+
             if (string.IsNullOrEmpty(pat))
             {
                 throw new InvalidOperationException("Unable to read PAT for vsts");
