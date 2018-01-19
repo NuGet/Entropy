@@ -28,9 +28,10 @@ namespace NuGet.GithubEventHandler
         private static string _vstsPat = Environment.GetEnvironmentVariable("VSTS_PAT_ENV_VAR");
 
         private const string _branchNameQueryParam = "branchname";
+        private const string _commitShaQueryParam = "commit";
 
         [FunctionName("PREventHandler")]
-        public static async Task<object> RunAsync([HttpTrigger(AuthorizationLevel.Function, "GET")]HttpRequestMessage req, TraceWriter log)
+        public static async Task<object> RunAsync([HttpTrigger(AuthorizationLevel.Anonymous, "GET")]HttpRequestMessage req, TraceWriter log)
         {
             log.Info($"NuGet.GithubEventHandler github webhook triggered!");
 
@@ -38,16 +39,17 @@ namespace NuGet.GithubEventHandler
             {
                 var queryParameters = req.GetQueryNameValuePairs();
                 var branchName = queryParameters.First(p => string.Equals(p.Key, _branchNameQueryParam, StringComparison.OrdinalIgnoreCase)).Value;
+                var commitSha = queryParameters.First(p => string.Equals(p.Key, _commitShaQueryParam, StringComparison.OrdinalIgnoreCase)).Value;
 
                 ValidateBranchName(branchName);
 
                 log.Info($"NuGet.GithubEventHandler queuing a build for branch: {branchName}");
 
-                var res = await QueueBuildAsync(_vstsPat, _devdivBaseUrl, _devdivProjectGuid, _nugetPrivateDefinitionId, branchName);
+                var res = await QueueBuildAsync(_vstsPat, _devdivBaseUrl, _devdivProjectGuid, _nugetPrivateDefinitionId, branchName, commitSha);
 
                 return req.CreateResponse(HttpStatusCode.OK, new
                 {
-                    greeting = $"branch: {branchName}, build: {res.Id}"
+                    greeting = $"branch: {branchName}, build: {res.Id}, commit: {commitSha}"
                 });
             }
             catch (Exception)
@@ -64,7 +66,7 @@ namespace NuGet.GithubEventHandler
             }
         }
 
-        private static async Task<Build> QueueBuildAsync(string pat, string url, string project, int buildDefinitionId, string branchName)
+        private static async Task<Build> QueueBuildAsync(string pat, string url, string project, int buildDefinitionId, string branchName, string commitSha)
         {
             if (string.IsNullOrEmpty(branchName))
             {
@@ -103,7 +105,8 @@ namespace NuGet.GithubEventHandler
                 Project = target.Project,
                 Priority = QueuePriority.Normal,
                 Reason = BuildReason.PullRequest,
-                SourceBranch = $"refs/heads/{branchName}"
+                SourceBranch = $"refs/heads/{branchName}",
+                SourceVersion = commitSha
             });
         }
 
