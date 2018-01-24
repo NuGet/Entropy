@@ -27,6 +27,8 @@ namespace NuGet.GithubEventHandler
         private static int _nugetPrivateDefinitionId = Int32.Parse(Environment.GetEnvironmentVariable("NUGET_VSTS_PRIVATE_BUILD_DEFINITION_ID"));
         private static string _vstsPat = Environment.GetEnvironmentVariable("VSTS_PAT_ENV_VAR");
 
+        private static string _buildUrl = Environment.GetEnvironmentVariable("DEVDIV_NUGET_BUILD_URL");
+
         private const string _branchNameQueryParam = "branchname";
         private const string _commitShaQueryParam = "commit";
 
@@ -46,11 +48,11 @@ namespace NuGet.GithubEventHandler
                 log.Info($"NuGet.GithubEventHandler queuing a build for branch: {branchName}");
 
                 var res = await QueueBuildAsync(_vstsPat, _devdivBaseUrl, _devdivProjectGuid, _nugetPrivateDefinitionId, branchName, commitSha);
-
-                return req.CreateResponse(HttpStatusCode.OK, new
-                {
-                    greeting = $"branch: {branchName}, build: {res.Id}, commit: {commitSha}"
-                });
+                var response = req.CreateResponse(HttpStatusCode.Redirect);
+                var buildUrlWithId = $"{_buildUrl}{res.Id}";
+                response.Headers.Add("Location", buildUrlWithId);
+                log.Info($"Queued build url: {buildUrlWithId}");
+                return response;
             }
             catch (Exception)
             {
