@@ -2,6 +2,8 @@
 
 The paths are examples.
 
+1. Install the `Windows desktop development with C++` Visual Studio workload.
+
 1. Create build directory, e.g. `D:\src\openssl`.
 
 1. Download and extract [OpenSSL 1.0.2k source](https://www.openssl.org/source/old/1.0.2/openssl-1.0.2k.tar.gz), e.g. `D:\src\openssl\openssl-1.0.2k`.
