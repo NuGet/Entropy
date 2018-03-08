@@ -87,22 +87,38 @@ namespace ReadMeGenerator
                 Dictionary<string, List<Issue>> labelSet = new Dictionary<string, List<Issue>>();
                 foreach (var issue in issues)
                 {
-                    if (issue.Milestone?.Title == options.Milestone)
+                    if(issue.Id == 6482)
+                    {
+
+                    }
+                    if (issue.Milestone != null && issue.Milestone.Title.StartsWith(options.Milestone))
                     {
                         issuesList.Add(issue);
 
+                        bool closed = false;
+                        Label typeLabel = null;
                         foreach (var label in issue.Labels)
                         {
                             if (label.Name.Contains("Type"))
                             {
-                                if (labelSet.ContainsKey(label.Name) && !label.Name.Contains("ClosedAs:External"))
-                                {
-                                    labelSet[label.Name].Add(issue);
-                                    continue;
-                                }
-
-                                labelSet.Add(label.Name, new List<Issue>() { issue });
+                                typeLabel = label;
                             }
+
+                            if (label.Name.Contains("ClosedAs:"))
+                            {
+                                closed = true;
+                            }
+                        }
+
+                        if (!closed && typeLabel != null)
+                        {
+                            if (labelSet.ContainsKey(typeLabel.Name))
+                            {
+                                labelSet[typeLabel.Name].Add(issue);
+                                continue;
+                            }
+
+                            labelSet.Add(typeLabel.Name, new List<Issue>() { issue });
                         }
                     }
                 }
@@ -124,12 +140,12 @@ namespace ReadMeGenerator
             builder.Append("[Full Changelog]" + "(" + changeloglink + ")");
             builder.AppendLine();
             builder.AppendLine();
-            builder.Append("[Issues List]" 
-                + "(" + "https://github.com/" 
-                + options.Organization + "/" 
+            builder.Append("[Issues List]"
+                + "(" + "https://github.com/"
+                + options.Organization + "/"
                 + options.Repo + "/"
-                + "issues?q=is%3Aissue+is%3Aclosed+milestone%3A%22" 
-                + options.Milestone 
+                + "issues?q=is%3Aissue+is%3Aclosed+milestone%3A%22"
+                + options.Milestone
                 + "\")");
             builder.AppendLine();
             builder.AppendLine();

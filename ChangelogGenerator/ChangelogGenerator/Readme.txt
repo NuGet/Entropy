@@ -1,1 +1,1 @@
-﻿ChangelogGenerator -o NuGet -r Home -m "3.5 RTM" -t <needs this>
+﻿ChangelogGenerator -o NuGet -r Home -m "4.6" -t <PAT>
