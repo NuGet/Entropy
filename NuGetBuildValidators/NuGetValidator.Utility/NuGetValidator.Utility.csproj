@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  
+  <PropertyGroup>
+    <TargetFramework>net45</TargetFramework>
+    <RootNamespace>NuGetValidator.Utility</RootNamespace>
+    <AssemblyName>NuGetValidator.Utility</AssemblyName>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Version>2.0.0.0</Version>
+    <AssemblyVersion>$(Version)</AssemblyVersion>
+    <PackageVersion>$(Version)</PackageVersion>
+    <PackageVersion Condition=" '$(ReleaseLabel)'!=''">$(Version)-$(ReleaseLabel)</PackageVersion>
+    <GeneratePackageOnBuild Condition=" '$(pack)'=='true'">true</GeneratePackageOnBuild>
+    <Authors>Ankit Mishra</Authors>
+    <Description>Package used internally in NuGet team's localization validation pipeline.</Description>
+    <RepositoryUrl>https://github.com/mishra14/NuGetBuildValidators</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/mishra14/NuGetBuildValidators</PackageProjectUrl>
+    <RepositoryType>git</RepositoryType>
+  </PropertyGroup>
+
+</Project>

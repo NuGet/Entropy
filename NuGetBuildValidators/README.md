@@ -1,11 +1,17 @@
 # NuGetBuildValidators
 
 ## Introduction
-This is a tool used to validate the localized strings for NuGet.Tools.vsix
+This is a tool used to validate the NuGet artifacts. The repository contains the following validators - 
 
-## Instructions
+## NuGet Validator
 
-* git clone https://github.com/mishra14/NuGetBuildValidators.git
-* cd NuGetBuildValidators
-* `msbuild`
-* `.\bin\Debug\NuGetStringChecker.exe "Path\to\vsix\NuGet.Tools.vsix" "Path\to\extract\NuGet.Tools.Vsix" "Path\to\log\errors.txt"`
+This console application is used to validate the NuGet.Tools.VSIX or NuGet.Client repository for localization of all strings.
+
+[README.md](https://github.com/mishra14/NuGetBuildValidators/tree/master/NuGetValidator)
+
+## NuGet Localization Validator
+
+This tool is used to validate the NuGet.Tools.VSIX for localization of all strings.
+
+[README.md](https://github.com/mishra14/NuGetBuildValidators/tree/master/NuGetValidator.Localization)
+
