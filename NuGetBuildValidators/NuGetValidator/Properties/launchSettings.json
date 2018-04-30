@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "NuGetValidator": {
+      "commandName": "Project",
+      "commandLineArgs": "artifact --files \"F:\\validation\\NuGetValidators.Artifact\\extracted\\Microsoft.Web.XmlTransform.dll\" --output-path E:\\nuget.client\\artifacts\\ArtifactValidation\\artifacts"
+    }
+  }
+}

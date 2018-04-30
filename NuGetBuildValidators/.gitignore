@@ -1,0 +1,5 @@
+*/bin/
+*/obj/
+*/.vs/
+*/*.lock.json
+.vs/

@@ -1,0 +1,56 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net461</TargetFramework>
+    <RootNamespace>NuGetValidator</RootNamespace>
+    <AssemblyName>NuGetValidator</AssemblyName>
+    <IsTool>true</IsTool>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Version>2.0.0.0</Version>
+    <AssemblyVersion>$(Version)</AssemblyVersion>
+    <PackageVersion>$(Version)</PackageVersion>
+    <PackageVersion Condition=" '$(ReleaseLabel)'!=''">$(Version)-$(ReleaseLabel)</PackageVersion>
+    <GeneratePackageOnBuild Condition=" '$(pack)'=='true'">true</GeneratePackageOnBuild>
+    <Authors>Ankit Mishra</Authors>
+    <Description>Package used internally in NuGet team's localization validation pipeline.</Description>
+    <RepositoryUrl>https://github.com/mishra14/NuGetBuildValidators</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/mishra14/NuGetBuildValidators</PackageProjectUrl>
+    <RepositoryType>git</RepositoryType>
+    <BeforePack>PublishAndIlMerge</BeforePack>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.CommandLineUtils" Version="1.1.1" />
+    <PackageReference Include="NuGet.Common" Version="4.0.0" PrivateAssets="All" />
+    <PackageReference Include="ILRepack" Version="2.0.13" PrivateAssets="All" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NuGetValidator.Localization\NuGetValidator.Localization.csproj" />
+    <ProjectReference Include="..\NuGetValidator.Utility\NuGetValidator.Utility.csproj" />
+  </ItemGroup>
+
+  <Target Name="PublishAndIlMerge">
+    <MSBuild Projects="$(MSBuildProjectFullPath)" Targets="ILMerge" />
+  </Target>
+
+  <Target Name="ILMerge">
+    <PropertyGroup>
+      <FinalOutputPath>$(MSBuildProjectDirectory)\$(OutputPath)</FinalOutputPath>
+    </PropertyGroup>
+    <ItemGroup>
+      <BuildArtifacts Include="$(FinalOutputPath)\*.dll" Exclude="$(FinalOutputPath)\sn*" />
+    </ItemGroup>
+    <PropertyGroup>
+      <PathToBuiltExe>$(FinalOutputPath)NuGetValidator.exe</PathToBuiltExe>
+      <PathToMergedExe>$(FinalOutputPath)NuGetValidator.exe</PathToMergedExe>
+      <PathToILMergeLog>$(FinalOutputPath)IlMergeLog.txt</PathToILMergeLog>
+      <IlmergeCommand>$(ILRepack) $(PathToBuiltExe) @(BuildArtifacts, ' ') /out:$(PathToMergedExe) /log:$(PathToILMergeLog)</IlmergeCommand>
+    </PropertyGroup>
+    <Exec Command="$(IlmergeCommand)" ContinueOnError="false" />
+  </Target>
+
+</Project>
