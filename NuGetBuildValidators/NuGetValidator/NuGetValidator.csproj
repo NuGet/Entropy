@@ -19,6 +19,7 @@
     <RepositoryUrl>https://github.com/mishra14/NuGetBuildValidators</RepositoryUrl>
     <PackageProjectUrl>https://github.com/mishra14/NuGetBuildValidators</PackageProjectUrl>
     <RepositoryType>git</RepositoryType>
+    <BeforePack>PublishAndIlMerge</BeforePack>
   </PropertyGroup>
 
   <ItemGroup>
@@ -32,7 +33,7 @@
     <ProjectReference Include="..\NuGetValidator.Utility\NuGetValidator.Utility.csproj" />
   </ItemGroup>
 
-  <Target Name="PublishAndIlMerge" BeforeTargets="_IntermediatePack">
+  <Target Name="PublishAndIlMerge">
     <MSBuild Projects="$(MSBuildProjectFullPath)" Targets="ILMerge" />
   </Target>
 

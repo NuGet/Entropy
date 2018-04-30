@@ -5,6 +5,22 @@
 This is a console application used to validate the localized strings for NuGet.Tools.vsix or NuGet.Client repository. This project uses the libraries from NuGetValidator.Localization to allow a better User Experience.
 
 
+## Build Executable
+
+To build the `NuGetValidator.exe` - 
+
+1. `cd NuGetBuildValidators`
+2. `msbuild NuGetValidators.sln /t:"restore;build" /p:configuration=release`
+3. Artifact is available at `NuGetBuildValidators\NuGetValidator\bin\Release\net461\NuGetValidator.exe`
+
+## Build Tool Package
+
+To build `NuGetValidator.2.0.0.nupkg` - 
+
+1. `cd NuGetBuildValidators`
+2. `msbuild NuGetValidators.sln /t:"restore;build" /p:configuration=release /p:pack=true`
+3. Artifact is available at `NuGetBuildValidators\NuGetValidator\bin\Release\NuGetValidator.2.0.0.nupkg`
+
 ## Usage
 
 ### Using NuGetValidator.exe to validate NuGet.Client repository
