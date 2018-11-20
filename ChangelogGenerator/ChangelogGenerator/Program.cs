@@ -80,7 +80,6 @@ namespace ReadMeGenerator
                 {
                     Filter = IssueFilter.All,
                     State = ItemStateFilter.Closed,
-
                 };
 
                 var issues = await client.Issue.GetAllForRepository(options.Organization, options.Repo, shouldPrioritize);
@@ -96,6 +95,7 @@ namespace ReadMeGenerator
                         issuesList.Add(issue);
 
                         bool closed = false;
+                        bool epicChild = false;
                         Label typeLabel = null;
                         foreach (var label in issue.Labels)
                         {
@@ -108,9 +108,16 @@ namespace ReadMeGenerator
                             {
                                 closed = true;
                             }
+
+                            //Rob and Karan agreed on a convention that if an issue has both epic and feature label set, then it is an epic child and should be exlcuded from release notes
+                            if (label.Name.Contains("Epic") && label.Name.Contains("Feature"))
+                            {
+                                epicChild = true;
+                            }
+
                         }
 
-                        if (!closed && typeLabel != null)
+                        if (!closed && typeLabel != null && epicChild == false)
                         {
                             if (labelSet.ContainsKey(typeLabel.Name))
                             {
