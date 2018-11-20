@@ -109,8 +109,8 @@ namespace ReadMeGenerator
                                 closed = true;
                             }
 
-                            //Rob and Karan agreed on a convention that if an issue has both epic and feature label set, then it is an epic child and should be exlcuded from release notes
-                            if (label.Name.Contains("Epic") && label.Name.Contains("Feature"))
+                            //Rob and Karan agreed on a convention that if an issue has both epic and feature/DCR/bug label set, then it is an epic child and should be exlcuded from release notes
+                            if (label.Name.Contains("Epic") && (label.Name.Contains("Feature") || label.Name.Contains("DCR") || label.Name.Contains("Bug"))                                )
                             {
                                 epicChild = true;
                             }
