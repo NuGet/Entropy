@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ReadMeGenerator
+namespace ChangelogGenerator
 {
     class Options
     {
@@ -82,55 +82,105 @@ namespace ReadMeGenerator
                     State = ItemStateFilter.Closed,
                 };
 
+                List<Issue> problemIssues = new List<Issue>();
+
                 var issues = await client.Issue.GetAllForRepository(options.Organization, options.Repo, shouldPrioritize);
-                Dictionary<string, List<Issue>> labelSet = new Dictionary<string, List<Issue>>();
+                Dictionary<IssueType, List<Issue>> labelSet = new Dictionary<IssueType, List<Issue>>();
                 foreach (var issue in issues)
                 {
-                    if(issue.Id == 6482)
-                    {
-
-                    }
-                    if (issue.Milestone != null && issue.Milestone.Title.StartsWith(options.Milestone))
+                    if (issue.Milestone != null && issue.Milestone.Title == options.Milestone)
                     {
                         issuesList.Add(issue);
 
-                        bool closed = false;
-                        bool epicChild = false;
-                        Label typeLabel = null;
+                        bool issueFixed = true;
+                        bool hidden = false;
+                        IssueType issueType = IssueType.None;
+                        bool epicLabel = false;
+                        bool regressionDuringThisVersion = false;
+
                         foreach (var label in issue.Labels)
                         {
-                            if (label.Name.Contains("Type"))
-                            {
-                                typeLabel = label;
-                            }
-
                             if (label.Name.Contains("ClosedAs:"))
                             {
-                                closed = true;
+                                issueFixed = false;
                             }
 
-                            //Rob and Karan agreed on a convention that if an issue has both epic and feature/DCR/bug label set, then it is an epic child and should be exlcuded from release notes
-                            if (label.Name.Contains("Epic") && (label.Name.Contains("Feature") || label.Name.Contains("DCR") || label.Name.Contains("Bug"))                                )
+                            if (label.Name=="RegressionDuringThisVersion")
                             {
-                                epicChild = true;
+                                regressionDuringThisVersion = true;
+                                hidden = true;
                             }
 
+                            if (label.Name == "Area: Engineering Improvements")
+                            {
+                                hidden = true;
+                            }
+
+                            switch (label.Name)
+                            {
+                                case "Epic":
+                                    epicLabel = true;
+                                    break;
+                                case "Type:Feature":
+                                    issueType = IssueType.Feature;
+                                    break;
+                                case "Type:DCR":
+                                    issueType = IssueType.DCR;
+                                    break;
+                                case "Type:Bug":
+                                    issueType = IssueType.Bug;
+                                    break;
+                                default:
+                                    break;
+                            }
                         }
 
-                        if (!closed && typeLabel != null && epicChild == false)
+                        // if an issue is an epicLabel and has a real IssueType (feature/bug/dcr),
+                        // then hide it... we want to show the primary epic issue only.
+                        if (epicLabel)
                         {
-                            if (labelSet.ContainsKey(typeLabel.Name))
+                            if (issueType == IssueType.None)
                             {
-                                labelSet[typeLabel.Name].Add(issue);
-                                continue;
+                                issueType = IssueType.Feature;
+                            }
+                            else
+                            {
+                                hidden = true;
+                            }
+                        }
+                        else if (issueType == IssueType.None )
+                        {
+                            if (issueFixed && !regressionDuringThisVersion)
+                            {
+                                // PROBLEM : if this is fixed...was it a feature/bug or dcr???
+                                problemIssues.Add(issue);
+                            }
+                            else
+                            {
+                                hidden = true;
+                            }
+                        }
+
+
+                        if (!hidden && issueFixed)
+                        {
+                            List<Issue> issueCollection = null;
+                            if (!labelSet.ContainsKey(issueType))
+                            {
+                                issueCollection = new List<Issue>();
+                                labelSet.Add(issueType, issueCollection);
+                            }
+                            else
+                            {
+                                issueCollection = labelSet[issueType];
                             }
 
-                            labelSet.Add(typeLabel.Name, new List<Issue>() { issue });
+                            issueCollection.Add(issue);
                         }
                     }
                 }
 
-                GenerateMarkdown(labelSet);
+                GenerateMarkdown(labelSet, problemIssues);
             }
             catch (Exception ex)
             {
@@ -138,7 +188,7 @@ namespace ReadMeGenerator
             }
         }
 
-        private static void GenerateMarkdown(Dictionary<string, List<Issue>> labelSet)
+        private static void GenerateMarkdown(Dictionary<IssueType, List<Issue>> labelSet, List<Issue> problemIssues)
         {
             StringBuilder builder = new StringBuilder();
             builder.Append("#" + options.Milestone + " Release Notes");
@@ -158,7 +208,8 @@ namespace ReadMeGenerator
             builder.AppendLine();
             foreach (var key in labelSet.Keys)
             {
-                builder.Append("**" + key.Replace("Type:", "") + ":**");
+                var issueTypeString = key.ToString();
+                builder.Append("**" + issueTypeString + ":**");
                 builder.AppendLine();
                 builder.AppendLine();
                 foreach (var issue in labelSet[key])
@@ -166,6 +217,23 @@ namespace ReadMeGenerator
                     builder.Append("* " + issue.Title + " - " + "[#" + issue.Number + "](" + issue.HtmlUrl + ")");
                     builder.AppendLine();
                     builder.AppendLine();
+                }
+            }
+
+            if (problemIssues.Count > 0)
+            {
+                builder.AppendLine();
+                builder.AppendLine("*********** Problem Data - should be marked as Feature/Bug/DCR or closedAs something");
+
+                foreach (var issue in problemIssues)
+                {
+                    string labelString = null;
+                    foreach (var label in issue.Labels)
+                    {
+                        labelString += label + " ";
+                    }
+
+                    builder.AppendLine(issue.Number + " " + issue.Title + " labels: " + labelString);
                 }
             }
 
