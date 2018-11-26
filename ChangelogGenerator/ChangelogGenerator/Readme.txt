@@ -1,1 +1,1 @@
-﻿ChangelogGenerator -o NuGet -r Home -m "4.9" -t 93dd0e63cb92539506c94bf1549c136059839d8f
+﻿ChangelogGenerator -o NuGet -r Home -m "4.9" -t <key here>
