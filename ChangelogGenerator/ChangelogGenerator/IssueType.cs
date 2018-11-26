@@ -12,5 +12,6 @@ namespace ChangelogGenerator
         Feature,
         Bug,
         DCR,
+        Spec,
     }
 }

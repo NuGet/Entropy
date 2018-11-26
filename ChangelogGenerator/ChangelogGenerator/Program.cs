@@ -130,6 +130,9 @@ namespace ChangelogGenerator
                                 case "Type:Bug":
                                     issueType = IssueType.Bug;
                                     break;
+                                case "Type:Spec":
+                                    issueType = IssueType.Spec;
+                                    break;
                                 default:
                                     break;
                             }
