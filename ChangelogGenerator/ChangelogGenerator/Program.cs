@@ -26,6 +26,9 @@ namespace ChangelogGenerator
         [Option('v', null, HelpText = "Print details during execution.")]
         public bool Verbose { get; set; }
 
+        [Option('i', "IncludeOpen", HelpText = "Include open issues.")]
+        public string IncludeOpen { get; set; }
+
         [HelpOption]
         public string GetUsage()
         {
@@ -74,13 +77,28 @@ namespace ChangelogGenerator
 
         private static async void GetChangelog()
         {
+            RepositoryIssueRequest shouldPrioritize;
             try
             {
-                var shouldPrioritize = new RepositoryIssueRequest
+
+                if (options.IncludeOpen == "Y")
                 {
-                    Filter = IssueFilter.All,
-                    State = ItemStateFilter.Closed,
+                    shouldPrioritize = new RepositoryIssueRequest
+                    {
+                        Filter = IssueFilter.All,
+                        State = ItemStateFilter.All,
+                    };
+                }
+                else
+                {
+                    shouldPrioritize = new RepositoryIssueRequest
+                    {
+                        Filter = IssueFilter.All,
+                        State = ItemStateFilter.Closed,
+                    };
                 };
+           
+                
 
                 List<Issue> problemIssues = new List<Issue>();
 
@@ -97,6 +115,7 @@ namespace ChangelogGenerator
                         IssueType issueType = IssueType.None;
                         bool epicLabel = false;
                         bool regressionDuringThisVersion = false;
+                        bool engineeringImprovement = false;
 
                         foreach (var label in issue.Labels)
                         {
@@ -113,6 +132,7 @@ namespace ChangelogGenerator
 
                             if (label.Name == "Area: Engineering Improvements")
                             {
+                                engineeringImprovement = true;
                                 hidden = true;
                             }
 
@@ -153,7 +173,7 @@ namespace ChangelogGenerator
                         }
                         else if (issueType == IssueType.None )
                         {
-                            if (issueFixed && !regressionDuringThisVersion)
+                            if (issueFixed && !regressionDuringThisVersion && !engineeringImprovement)
                             {
                                 // PROBLEM : if this is fixed...was it a feature/bug or dcr???
                                 problemIssues.Add(issue);
@@ -233,7 +253,7 @@ namespace ChangelogGenerator
                     string labelString = null;
                     foreach (var label in issue.Labels)
                     {
-                        labelString += label + " ";
+                        labelString += label.Name + " ";
                     }
 
                     builder.AppendLine(issue.Number + " " + issue.Title + " labels: " + labelString);
