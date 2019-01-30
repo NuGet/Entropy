@@ -25,7 +25,7 @@ namespace ChangelogGenerator
 
         [Option('l', "RequiredLabel", Required = true, HelpText = "Hide all issues without this label")]
         public string RequiredLabel { get; set; }
-               
+
         [Option('v', null, HelpText = "Print details during execution.")]
         public bool Verbose { get; set; }
 
@@ -81,22 +81,27 @@ namespace ChangelogGenerator
         {
             try
             {
-                var issueFilter = new RepositoryIssueRequest()
+                RepositoryIssueRequest issueQuery;
+
+                if (options.IncludeOpen == "Y")
                 {
-                    Filter = IssueFilter.All,
-                    //Creator = "*",
-                    //Milestone = options.Milestone,
-                    State = ItemStateFilter.Closed,
-                    //Since = new DateTimeOffset(new DateTime(2013, 1, 1)),
-                  //  State = options.IncludeOpen.ToLower() == "y" ? ItemStateFilter.All : ItemStateFilter.Closed,
-                };
-                if (!string.IsNullOrEmpty(options.RequiredLabel))
+                    issueQuery = new RepositoryIssueRequest
+                    {
+                        Filter = IssueFilter.All,
+                        State = ItemStateFilter.All,
+                    };
+                }
+                else
                 {
-                  //  issueFilter.Labels.Add(options.RequiredLabel);
+                    issueQuery = new RepositoryIssueRequest
+                    {
+                        Filter = IssueFilter.All,
+                        State = ItemStateFilter.Closed,
+                    };
                 }
 
-                var issues = await client.Issue.GetAllForRepository(options.Organization, options.Repo, issueFilter);
-                
+                var issues = await client.Issue.GetAllForRepository(options.Organization, options.Repo, issueQuery);
+
                 Dictionary<IssueType, List<Issue>> IssuesByIssueType = new Dictionary<IssueType, List<Issue>>();
                 foreach (var issue in issues)
                 {
@@ -235,7 +240,7 @@ namespace ChangelogGenerator
                 }
             }
 
-            var fileName = "Changelog-" + options.Milestone 
+            var fileName = "Changelog-" + options.Milestone
                 + (string.IsNullOrEmpty(options.RequiredLabel) ? "" : "-" + options.RequiredLabel) + ".md";
             File.WriteAllText(fileName, builder.ToString());
             Console.WriteLine($"{fileName} creation complete");
