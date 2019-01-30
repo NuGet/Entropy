@@ -235,7 +235,8 @@ namespace ChangelogGenerator
                 }
             }
 
-            var fileName = "Changelog-" + options.Milestone + (string.IsNullOrEmpty(options.RequiredLabel) ? "" : options.RequiredLabel) + ".md";
+            var fileName = "Changelog-" + options.Milestone 
+                + (string.IsNullOrEmpty(options.RequiredLabel) ? "" : "-" + options.RequiredLabel) + ".md";
             File.WriteAllText(fileName, builder.ToString());
             Console.WriteLine($"{fileName} creation complete");
             Environment.Exit(0);
