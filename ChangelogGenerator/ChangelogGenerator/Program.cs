@@ -23,6 +23,9 @@ namespace ChangelogGenerator
         [Option('m', "Milestone", Required = true, HelpText = "Milestone to get issues from")]
         public string Milestone { get; set; }
 
+        [Option('l', "RequiredLabel", Required = true, HelpText = "Show only those issues from the selected milestone that have this label")]
+        public string RequiredLabel { get; set; }
+
         [Option('v', null, HelpText = "Print details during execution.")]
         public bool Verbose { get; set; }
 
@@ -42,7 +45,6 @@ namespace ChangelogGenerator
     class Program
     {
         static GitHubClient client = new GitHubClient(new ProductHeaderValue("my-cool-app"));
-        static List<Issue> issuesList = new List<Issue>();
         static string title = string.Empty;
         static string changeloglink = string.Empty;
         static string issueslink = string.Empty;
@@ -77,13 +79,13 @@ namespace ChangelogGenerator
 
         private static async void GetChangelog()
         {
-            RepositoryIssueRequest shouldPrioritize;
             try
             {
+                RepositoryIssueRequest issueQuery;
 
                 if (options.IncludeOpen == "Y")
                 {
-                    shouldPrioritize = new RepositoryIssueRequest
+                    issueQuery = new RepositoryIssueRequest
                     {
                         Filter = IssueFilter.All,
                         State = ItemStateFilter.All,
@@ -91,31 +93,28 @@ namespace ChangelogGenerator
                 }
                 else
                 {
-                    shouldPrioritize = new RepositoryIssueRequest
+                    issueQuery = new RepositoryIssueRequest
                     {
                         Filter = IssueFilter.All,
                         State = ItemStateFilter.Closed,
                     };
-                };
-           
-                
+                }
 
-                List<Issue> problemIssues = new List<Issue>();
+                var issues = await client.Issue.GetAllForRepository(options.Organization, options.Repo, issueQuery);
 
-                var issues = await client.Issue.GetAllForRepository(options.Organization, options.Repo, shouldPrioritize);
-                Dictionary<IssueType, List<Issue>> labelSet = new Dictionary<IssueType, List<Issue>>();
+                Dictionary<IssueType, List<Issue>> IssuesByIssueType = new Dictionary<IssueType, List<Issue>>();
                 foreach (var issue in issues)
                 {
                     if (issue.Milestone != null && issue.Milestone.Title == options.Milestone)
                     {
-                        issuesList.Add(issue);
-
                         bool issueFixed = true;
                         bool hidden = false;
                         IssueType issueType = IssueType.None;
                         bool epicLabel = false;
                         bool regressionDuringThisVersion = false;
                         bool engineeringImprovement = false;
+                        string requiredLabel = options.RequiredLabel?.ToLower();
+                        bool foundRequiredLabel = string.IsNullOrEmpty(requiredLabel);
 
                         foreach (var label in issue.Labels)
                         {
@@ -124,7 +123,7 @@ namespace ChangelogGenerator
                                 issueFixed = false;
                             }
 
-                            if (label.Name=="RegressionDuringThisVersion")
+                            if (label.Name == "RegressionDuringThisVersion")
                             {
                                 regressionDuringThisVersion = true;
                                 hidden = true;
@@ -134,6 +133,11 @@ namespace ChangelogGenerator
                             {
                                 engineeringImprovement = true;
                                 hidden = true;
+                            }
+
+                            if (!foundRequiredLabel && label.Name.ToLower() == requiredLabel)
+                            {
+                                foundRequiredLabel = true;
                             }
 
                             switch (label.Name)
@@ -158,6 +162,11 @@ namespace ChangelogGenerator
                             }
                         }
 
+                        if (!foundRequiredLabel)
+                        {
+                            hidden = true;
+                        }
+
                         // if an issue is an epicLabel and has a real IssueType (feature/bug/dcr),
                         // then hide it... we want to show the primary epic issue only.
                         if (epicLabel)
@@ -171,39 +180,27 @@ namespace ChangelogGenerator
                                 hidden = true;
                             }
                         }
-                        else if (issueType == IssueType.None )
+                        else if (issueType == IssueType.None)
                         {
-                            if (issueFixed && !regressionDuringThisVersion && !engineeringImprovement)
-                            {
-                                // PROBLEM : if this is fixed...was it a feature/bug or dcr???
-                                problemIssues.Add(issue);
-                            }
-                            else
+                            if (!(issueFixed && !regressionDuringThisVersion && !engineeringImprovement))
                             {
                                 hidden = true;
                             }
                         }
 
-
                         if (!hidden && issueFixed)
                         {
-                            List<Issue> issueCollection = null;
-                            if (!labelSet.ContainsKey(issueType))
+                            if (!IssuesByIssueType.ContainsKey(issueType))
                             {
-                                issueCollection = new List<Issue>();
-                                labelSet.Add(issueType, issueCollection);
-                            }
-                            else
-                            {
-                                issueCollection = labelSet[issueType];
+                                IssuesByIssueType.Add(issueType, new List<Issue>());
                             }
 
-                            issueCollection.Add(issue);
+                            IssuesByIssueType[issueType].Add(issue);
                         }
                     }
                 }
 
-                GenerateMarkdown(labelSet, problemIssues);
+                GenerateMarkdown(IssuesByIssueType);
             }
             catch (Exception ex)
             {
@@ -211,7 +208,7 @@ namespace ChangelogGenerator
             }
         }
 
-        private static void GenerateMarkdown(Dictionary<IssueType, List<Issue>> labelSet, List<Issue> problemIssues)
+        private static void GenerateMarkdown(Dictionary<IssueType, List<Issue>> labelSet)
         {
             StringBuilder builder = new StringBuilder();
             builder.Append("#" + options.Milestone + " Release Notes");
@@ -243,25 +240,10 @@ namespace ChangelogGenerator
                 }
             }
 
-            if (problemIssues.Count > 0)
-            {
-                builder.AppendLine();
-                builder.AppendLine("*********** Problem Data - should be marked as Feature/Bug/DCR or closedAs something");
-
-                foreach (var issue in problemIssues)
-                {
-                    string labelString = null;
-                    foreach (var label in issue.Labels)
-                    {
-                        labelString += label.Name + " ";
-                    }
-
-                    builder.AppendLine(issue.Number + " " + issue.Title + " labels: " + labelString);
-                }
-            }
-
-            File.WriteAllText("Changelog.md", builder.ToString());
-            Console.WriteLine("Bazzinga.............");
+            var fileName = "Changelog-" + options.Milestone
+                + (string.IsNullOrEmpty(options.RequiredLabel) ? "" : "-" + options.RequiredLabel) + ".md";
+            File.WriteAllText(fileName, builder.ToString());
+            Console.WriteLine($"{fileName} creation complete");
             Environment.Exit(0);
         }
     }
