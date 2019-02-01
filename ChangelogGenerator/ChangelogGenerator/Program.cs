@@ -23,7 +23,7 @@ namespace ChangelogGenerator
         [Option('m', "Milestone", Required = true, HelpText = "Milestone to get issues from")]
         public string Milestone { get; set; }
 
-        [Option('l', "RequiredLabel", Required = true, HelpText = "Hide all issues without this label")]
+        [Option('l', "RequiredLabel", Required = true, HelpText = "Show only those issues from the selected milestone that have this label")]
         public string RequiredLabel { get; set; }
 
         [Option('v', null, HelpText = "Print details during execution.")]
