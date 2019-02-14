@@ -211,7 +211,7 @@ namespace ChangelogGenerator
         private static void GenerateMarkdown(Dictionary<IssueType, List<Issue>> labelSet)
         {
             StringBuilder builder = new StringBuilder();
-            builder.Append("#" + options.Milestone + " Release Notes");
+            builder.Append("#" + options.Milestone + (!string.IsNullOrEmpty(options.RequiredLabel) ? "-" + options.RequiredLabel.ToLower() : "") + " Release Notes");
             builder.AppendLine();
             builder.AppendLine();
             builder.Append("[Full Changelog]" + "(" + changeloglink + ")");
@@ -221,7 +221,7 @@ namespace ChangelogGenerator
                 + "(" + "https://github.com/"
                 + options.Organization + "/"
                 + options.Repo + "/"
-                + "issues?q=is%3Aissue+is%3Aclosed+milestone%3A%22"
+                + "issues?q=is%3Aissue+is%3Aclosed"+ (!string.IsNullOrEmpty(options.RequiredLabel) ? "+label:" + options.RequiredLabel : "") + "+milestone%3A%22"
                 + options.Milestone
                 + "\")");
             builder.AppendLine();
