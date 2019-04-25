@@ -1,0 +1,11 @@
+{
+  "assembly": [ "assembly full name", "file version", "informational version" ],
+  "environment variables": [ "handshake timeout in seconds", "idle timeout in seconds", "request timeout in seconds" ],
+  "communication": [ "request ID", "method", "type", "state" ],
+  "machine": [ "logical processor count" ],
+  "task": [ "request ID", "method", "type", "state", "current task ID" ],
+  "plugin instance": [ "plugin ID", "state", "process ID" ],
+  "process": [ "process ID", "process name" ],
+  "stopwatch": [ "frequency" ],
+  "thread pool": [ "worker thread minimum count", "worker thread maximum count", "completion port thread minimum count", "completion port thread maximum count" ]
+}
