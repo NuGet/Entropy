@@ -14,5 +14,7 @@ namespace TestIngestionPerf
 
         public TimeSpan TestDuration { get; set; }
         public int PackageCount { get; set; }
+
+        public Action<PackageResult> OnPackageResult { get; set; }
     }
 }

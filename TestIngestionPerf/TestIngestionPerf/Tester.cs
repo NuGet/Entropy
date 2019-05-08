@@ -79,11 +79,15 @@ namespace TestIngestionPerf
                     package.Id,
                     package.Version);
 
-                return new PackageResult(
+                var packageResult = new PackageResult(
                     package,
                     started,
                     pushStopwatch.Elapsed,
                     endpointResults);
+
+                parameters.OnPackageResult?.Invoke(packageResult);
+
+                return packageResult;
             }
             catch (Exception ex)
             {

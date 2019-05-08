@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -25,6 +26,7 @@ namespace TestIngestionPerf
             var versionPattern = "0.0.1-v{0}";
             var testDuration = TimeSpan.FromMinutes(60);
             var packageCount = 240;
+            var outputFile = $"results-{DateTimeOffset.UtcNow:yyyyMMddHHmmssFFFFFFF}.csv";
 
             var pushEndpoint = "https://dev.nugettest.org/api/v2/package";
             var apiKey = "";
@@ -35,19 +37,25 @@ namespace TestIngestionPerf
             var flatContainerEndpoints = new[]
             {
                 "https://apidev.nugettest.org/v3-flatcontainer",
+                "https://nugetgallerydev.blob.core.chinacloudapi.cn/v3-flatcontainer"
             };
             var registrationEndpoints = new[]
             {
                 "https://apidev.nugettest.org/v3/registration3",
                 "https://apidev.nugettest.org/v3/registration3-gz",
                 "https://apidev.nugettest.org/v3/registration3-gz-semver2",
+                "https://nugetgallerydev.blob.core.chinacloudapi.cn/v3-registration3",
+                "https://nugetgallerydev.blob.core.chinacloudapi.cn/v3-registration3-gz",
+                "https://nugetgallerydev.blob.core.chinacloudapi.cn/v3-registration3-gz-semver2",
             };
-            var searchEndpoints = new string[0];
-            var expandableSearchEndpoints = new[]
+            var searchEndpoints = new[]
             {
                 "https://nuget-dev-usnc-v2v3search.nugettest.org/query",
                 "https://nuget-dev-ussc-v2v3search.nugettest.org/query",
+                "https://nuget-dev-eastasia-search.nugettest.org/query",
+                "https://nuget-dev-southeastasia-search.nugettest.org/query",
             };
+            var expandableSearchEndpoints = new string[0];
 
             //var pushEndpoint = "https://int.nugettest.org/api/v2/package";
             //var apiKey = "";
@@ -109,6 +117,9 @@ namespace TestIngestionPerf
                 .Select(endpoint => new SearchChecker(simpleHttpClient, endpoint, portExpander))
                 .ToList());
 
+            var writeLock = new object();
+            AppendLine(writeLock, outputFile, GetCsvHeader(endpointCheckers));
+
             var testParameters = new TestParameters
             {
                 PackagePusher = packagePusher,
@@ -118,33 +129,55 @@ namespace TestIngestionPerf
                 EndpointCheckers = endpointCheckers,
                 TestDuration = testDuration,
                 PackageCount = packageCount,
+                OnPackageResult = x => AppendResult(writeLock, outputFile, x),
             };
 
             var results = await tester.ExecuteAsync(testParameters);
 
-            Console.WriteLine(string.Join(",", new object[]
+            Console.WriteLine(GetCsvHeader(endpointCheckers));
+            foreach (var result in results)
+            {
+                Console.WriteLine(GetCsvLine(result));
+            }
+        }
+
+        private static string GetCsvHeader(IReadOnlyList<IEndpointChecker> endpointCheckers)
+        {
+            return string.Join(",", new object[]
             {
                 "Started",
                 "Id",
                 "Version",
                 "Push Duration",
-            }.Concat(testParameters
-                .EndpointCheckers
+            }.Concat(endpointCheckers
                 .Select(x => x.Name)
-                .Cast<object>())));
+                .Cast<object>()));
+        }
 
-            foreach (var result in results)
+        private static string GetCsvLine(PackageResult packageResult)
+        {
+            return string.Join(",", new object[]
             {
-                Console.WriteLine(string.Join(",", new object[]
-                {
-                    result.Started.ToUniversalTime().ToString("O"),
-                    result.Package.Id,
-                    result.Package.Version.ToNormalizedString(),
-                    result.PushDuration.TotalSeconds,
-                }.Concat(result
-                    .EndpointResults
-                    .Select(x => x.Duration.TotalSeconds)
-                    .Cast<object>())));
+                packageResult.Started.ToUniversalTime().ToString("O"),
+                packageResult.Package.Id,
+                packageResult.Package.Version.ToNormalizedString(),
+                packageResult.PushDuration.TotalSeconds,
+            }.Concat(packageResult
+                .EndpointResults
+                .Select(x => x.Duration.TotalSeconds)
+                .Cast<object>()));
+        }
+
+        private static void AppendResult(object writeLock, string outputFile, PackageResult packageResult)
+        {
+            AppendLine(writeLock, outputFile, GetCsvLine(packageResult));
+        }
+
+        private static void AppendLine(object writeLock, string outputFile, string line)
+        {
+            lock (writeLock)
+            {
+                File.AppendAllLines(outputFile, new[] { line });
             }
         }
     }
