@@ -36,12 +36,12 @@ namespace FixDevV3Blobs
 
             LoadProcessedList();
 
-            var blobList = await LoadBlobList(container);
+            var blobList = await LoadBlobListAsync(container);
 
             Log($"Got {blobList.Count} blobs");
             var blobCount = blobList.Count;
 
-            var stopwatch = await ProcessBlobList(blobList, search, replace);
+            var stopwatch = await ProcessBlobListAsync(blobList, search, replace);
 
             Log(
                 "Processed {0} entries in {1}, processing speed: {2} entries per hour, {3} per 1M. Used {4} tasks.",
@@ -63,13 +63,12 @@ namespace FixDevV3Blobs
             }
         }
 
-        private static async Task<ConcurrentBag<CloudBlockBlob>> LoadBlobList(CloudBlobContainer container)
+        private static async Task<ConcurrentBag<CloudBlockBlob>> LoadBlobListAsync(CloudBlobContainer container)
         {
             var blobList = new ConcurrentBag<CloudBlockBlob>();
 
             BlobContinuationToken continuationToken = null;
             var stopwatch = Stopwatch.StartNew();
-            var n = 10;
             do
             {
                 var segment = await container.ListBlobsSegmentedAsync(
@@ -89,12 +88,12 @@ namespace FixDevV3Blobs
                 range.ForEach(b => blobList.Add(b));
                 continuationToken = segment.ContinuationToken;
                 Log($"Discovered {blobList.Count} blobs in {stopwatch.Elapsed}");
-            } while (--n > 0); //(continuationToken != null);
+            } while (continuationToken != null);
             stopwatch.Stop();
             return blobList;
         }
 
-        private static async Task<Stopwatch> ProcessBlobList(ConcurrentBag<CloudBlockBlob> blobList, string search, string replace)
+        private static async Task<Stopwatch> ProcessBlobListAsync(ConcurrentBag<CloudBlockBlob> blobList, string search, string replace)
         {
             var stopwatch = Stopwatch.StartNew();
             var count = 0;
@@ -112,7 +111,7 @@ namespace FixDevV3Blobs
                         Interlocked.Increment(ref skipped);
                         continue;
                     }
-                    await ProcessBlob(blob, search, replace);
+                    await ProcessBlobAsync(blob, search, replace);
                     if ((curCount % 1000) == 0)
                     {
                         Log(
@@ -135,10 +134,14 @@ namespace FixDevV3Blobs
             return ProcessedBlobs.Contains(blob.Uri.AbsoluteUri);
         }
 
-        private static async Task ProcessBlob(CloudBlockBlob blob, string search, string replace)
+        private static async Task ProcessBlobAsync(CloudBlockBlob blob, string search, string replace)
         {
             var stopwatch = Stopwatch.StartNew();
-            var content = await blob.DownloadTextAsync(Encoding.UTF8, AccessCondition.GenerateIfMatchCondition(blob.Properties.ETag), null, null);
+            var content = await blob.DownloadTextAsync(
+                Encoding.UTF8,
+                AccessCondition.GenerateIfMatchCondition(blob.Properties.ETag),
+                options: null,
+                operationContext: null);
             stopwatch.Stop();
 
             //SaveContent("input", blob, content);
@@ -148,12 +151,17 @@ namespace FixDevV3Blobs
             //SaveContent("output", blob, newContent);
 
             // imitate upload back
-            await Task.Delay(stopwatch.Elapsed);
+            //await Task.Delay(stopwatch.Elapsed);
 
-            //if (newContent != content)
-            //{
-            //    await blob.UploadTextAsync(newContent, Encoding.UTF8, AccessCondition.GenerateIfMatchCondition(blob.Properties.ETag), null, null);
-            //}
+            if (newContent != content)
+            {
+                await blob.UploadTextAsync(
+                    newContent,
+                    Encoding.UTF8,
+                    AccessCondition.GenerateIfMatchCondition(blob.Properties.ETag),
+                    options: null,
+                    operationContext: null);
+            }
             MarkBlobProcessed(blob);
         }
 
