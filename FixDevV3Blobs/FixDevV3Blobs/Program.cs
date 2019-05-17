@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.Storage;
 using Microsoft.Azure.Storage.Blob;
@@ -16,7 +18,7 @@ namespace FixDevV3Blobs
         const int MaxTasks = 32;
 
         const string ProcessedListFilename = "processed.txt";
-        private static HashSet<string> ProcessedBlobs = new HashSet<string>();
+        private static readonly HashSet<string> ProcessedBlobs = new HashSet<string>();
         private static object ProcessedOutputLock = new object();
 
         static async Task<int> Main(string[] args)
@@ -36,16 +38,17 @@ namespace FixDevV3Blobs
 
             var blobList = await LoadBlobList(container);
 
-            Log("Got {0} blobs", blobList.Count);
+            Log($"Got {blobList.Count} blobs");
+            var blobCount = blobList.Count;
 
             var stopwatch = await ProcessBlobList(blobList, search, replace);
 
             Log(
                 "Processed {0} entries in {1}, processing speed: {2} entries per hour, {3} per 1M. Used {4} tasks.",
-                blobList.Count,
+                blobCount,
                 stopwatch.Elapsed,
-                blobList.Count / stopwatch.Elapsed.TotalHours,
-                TimeSpan.FromTicks(stopwatch.Elapsed.Ticks * (1000000 / blobList.Count)),
+                blobCount / stopwatch.Elapsed.TotalHours,
+                TimeSpan.FromTicks(stopwatch.Elapsed.Ticks * (1000000 / blobCount)),
                 MaxTasks);
 
             return 0;
@@ -60,13 +63,13 @@ namespace FixDevV3Blobs
             }
         }
 
-        private static async Task<List<CloudBlockBlob>> LoadBlobList(CloudBlobContainer container)
+        private static async Task<ConcurrentBag<CloudBlockBlob>> LoadBlobList(CloudBlobContainer container)
         {
-            var blobList = new List<CloudBlockBlob>();
+            var blobList = new ConcurrentBag<CloudBlockBlob>();
 
             BlobContinuationToken continuationToken = null;
             var stopwatch = Stopwatch.StartNew();
-            var n = 5;
+            var n = 10;
             do
             {
                 var segment = await container.ListBlobsSegmentedAsync(
@@ -81,43 +84,47 @@ namespace FixDevV3Blobs
                 var range = segment.Results.OfType<CloudBlockBlob>().ToList();
                 if (range.Count != segment.Results.Count())
                 {
-                    throw new Exception("Unexpected result item type: " + segment.Results.First(r => r.GetType() != typeof(CloudBlockBlob)).GetType());
+                    throw new InvalidOperationException("Unexpected result item type: " + segment.Results.First(r => r.GetType() != typeof(CloudBlockBlob)).GetType());
                 }
-                blobList.AddRange(range);
+                range.ForEach(b => blobList.Add(b));
                 continuationToken = segment.ContinuationToken;
-                Log("Discovered {0} blobs in {1}", blobList.Count, stopwatch.Elapsed);
-            } while (continuationToken != null);
+                Log($"Discovered {blobList.Count} blobs in {stopwatch.Elapsed}");
+            } while (--n > 0); //(continuationToken != null);
             stopwatch.Stop();
             return blobList;
         }
 
-        private static async Task<Stopwatch> ProcessBlobList(List<CloudBlockBlob> blobList, string search, string replace)
+        private static async Task<Stopwatch> ProcessBlobList(ConcurrentBag<CloudBlockBlob> blobList, string search, string replace)
         {
             var stopwatch = Stopwatch.StartNew();
-            var tasks = Enumerable.Range(1, MaxTasks).Select(_ => Task.CompletedTask).ToArray();
             var count = 0;
             var skipped = 0;
-            foreach (var blob in blobList)
+            var blobCount = blobList.Count;
+
+            var tasks = Enumerable.Range(1, MaxTasks).Select(async _ => 
             {
-                ++count;
-                //await ProcessBlob(blob);
-                if (Processed(blob))
+                await Task.Yield();
+                while (blobList.TryTake(out var blob))
                 {
-                    ++skipped;
-                    continue;
+                    var curCount = Interlocked.Increment(ref count);
+                    if (Processed(blob))
+                    {
+                        Interlocked.Increment(ref skipped);
+                        continue;
+                    }
+                    await ProcessBlob(blob, search, replace);
+                    if ((curCount % 1000) == 0)
+                    {
+                        Log(
+                            "{0}/{1} (skipped: {2}) {3}, ETA: {4}",
+                            curCount,
+                            blobCount,
+                            skipped,
+                            stopwatch.Elapsed,
+                            TimeSpan.FromSeconds(((double)blobCount - curCount) / curCount * stopwatch.Elapsed.TotalSeconds));
+                    }
                 }
-                await StartProcessing(tasks, blob, search, replace);
-                if ((count % 1000) == 0)
-                {
-                    Log(
-                        "{0}/{1} (skipped: {4}) {2}, ETA: {3}",
-                        count,
-                        blobList.Count,
-                        stopwatch.Elapsed,
-                        TimeSpan.FromSeconds(((double)blobList.Count - count) / count * stopwatch.Elapsed.TotalSeconds),
-                        skipped);
-                }
-            }
+            });
             await Task.WhenAll(tasks);
             stopwatch.Stop();
             return stopwatch;
@@ -128,22 +135,6 @@ namespace FixDevV3Blobs
             return ProcessedBlobs.Contains(blob.Uri.AbsoluteUri);
         }
 
-        private static async Task StartProcessing(Task[] tasks, CloudBlockBlob blob, string search, string replace)
-        {
-            await Task.WhenAny(tasks);
-
-            for (int i = 0; i < tasks.Length; ++i)
-            {
-                if (tasks[i].IsCompleted)
-                {
-                    tasks[i] = ProcessBlob(blob, search, replace);
-                    return;
-                }
-            }
-
-            throw new Exception("Failed to find completed task");
-        }
-
         private static async Task ProcessBlob(CloudBlockBlob blob, string search, string replace)
         {
             var stopwatch = Stopwatch.StartNew();
@@ -152,14 +143,17 @@ namespace FixDevV3Blobs
 
             //SaveContent("input", blob, content);
 
-            content = content.Replace(search, replace);
+            var newContent = content.Replace(search, replace);
 
-            //SaveContent("output", blob, content);
+            //SaveContent("output", blob, newContent);
 
             // imitate upload back
             await Task.Delay(stopwatch.Elapsed);
 
-            //await blob.UploadTextAsync(content, Encoding.UTF8, AccessCondition.GenerateIfMatchCondition(blob.Properties.ETag), null, null);
+            //if (newContent != content)
+            //{
+            //    await blob.UploadTextAsync(newContent, Encoding.UTF8, AccessCondition.GenerateIfMatchCondition(blob.Properties.ETag), null, null);
+            //}
             MarkBlobProcessed(blob);
         }
 
