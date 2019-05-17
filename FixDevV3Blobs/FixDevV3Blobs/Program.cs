@@ -36,11 +36,11 @@ namespace FixDevV3Blobs
 
             var blobList = await LoadBlobList(container);
 
-            Console.WriteLine("Got {0} blobs", blobList.Count);
+            Log("Got {0} blobs", blobList.Count);
 
             var stopwatch = await ProcessBlobList(blobList, search, replace);
 
-            Console.WriteLine(
+            Log(
                 "Processed {0} entries in {1}, processing speed: {2} entries per hour, {3} per 1M. Used {4} tasks.",
                 blobList.Count,
                 stopwatch.Elapsed,
@@ -85,8 +85,8 @@ namespace FixDevV3Blobs
                 }
                 blobList.AddRange(range);
                 continuationToken = segment.ContinuationToken;
-                Console.WriteLine("Discovered {0} blobs in {1}", blobList.Count, stopwatch.Elapsed);
-            } while (--n > 0); //(continuationToken != null);
+                Log("Discovered {0} blobs in {1}", blobList.Count, stopwatch.Elapsed);
+            } while (continuationToken != null);
             stopwatch.Stop();
             return blobList;
         }
@@ -109,7 +109,7 @@ namespace FixDevV3Blobs
                 await StartProcessing(tasks, blob, search, replace);
                 if ((count % 1000) == 0)
                 {
-                    Console.WriteLine(
+                    Log(
                         "{0}/{1} (skipped: {4}) {2}, ETA: {3}",
                         count,
                         blobList.Count,
@@ -182,6 +182,11 @@ namespace FixDevV3Blobs
             {
                 File.AppendAllLines(ProcessedListFilename, new[] { uri });
             }
+        }
+
+        private static void Log(string format, params object[] args)
+        {
+            Console.WriteLine("[{0:hh:mm:ss}] {1}", DateTime.Now, string.Format(format, args));
         }
     }
 }
