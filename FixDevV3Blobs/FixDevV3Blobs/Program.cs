@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Text;
@@ -20,6 +21,10 @@ namespace FixDevV3Blobs
         const string ProcessedListFilename = "processed.txt";
         private static readonly HashSet<string> ProcessedBlobs = new HashSet<string>();
         private static object ProcessedOutputLock = new object();
+        private static int readUncompressedBlobs = 0;
+        private static int writtenUncompressedBlobs = 0;
+        private static int readGzipBlobs = 0;
+        private static int writtenGzipBlobs = 0;
 
         static async Task<int> Main(string[] args)
         {
@@ -115,12 +120,16 @@ namespace FixDevV3Blobs
                     if ((curCount % 1000) == 0)
                     {
                         Log(
-                            "{0}/{1} (skipped: {2}) {3}, ETA: {4}",
+                            "{0}/{1} (skipped: {2}) {3}, ETA: {4} (uncompressed: {5}/{6}, gzip: {7}/{8})",
                             curCount,
                             blobCount,
                             skipped,
                             stopwatch.Elapsed,
-                            TimeSpan.FromSeconds(((double)blobCount - curCount) / curCount * stopwatch.Elapsed.TotalSeconds));
+                            TimeSpan.FromSeconds(((double)blobCount - curCount) / curCount * stopwatch.Elapsed.TotalSeconds),
+                            readUncompressedBlobs,
+                            writtenUncompressedBlobs,
+                            readGzipBlobs,
+                            writtenGzipBlobs);
                     }
                 }
             });
@@ -137,35 +146,79 @@ namespace FixDevV3Blobs
         private static async Task ProcessBlobAsync(CloudBlockBlob blob, string search, string replace)
         {
             var stopwatch = Stopwatch.StartNew();
-            var content = await blob.DownloadTextAsync(
-                Encoding.UTF8,
-                AccessCondition.GenerateIfMatchCondition(blob.Properties.ETag),
-                options: null,
-                operationContext: null);
+            var content = await GetBlobContentAsync(blob);
             stopwatch.Stop();
 
-            //SaveContent("input", blob, content);
+            //SaveLocalContent("input", blob, content);
 
             var newContent = content.Replace(search, replace);
 
-            //SaveContent("output", blob, newContent);
+            //SaveLocalContent("output", blob, newContent);
 
             // imitate upload back
             //await Task.Delay(stopwatch.Elapsed);
 
             if (newContent != content)
             {
-                await blob.UploadTextAsync(
-                    newContent,
+                await SaveBlobContentAsync(blob, newContent);
+            }
+            MarkBlobProcessed(blob);
+        }
+
+        private static async Task<string> GetBlobContentAsync(CloudBlockBlob blob)
+        {
+            if (blob.Properties.ContentEncoding == null)
+            {
+                Interlocked.Increment(ref readUncompressedBlobs);
+                return await blob.DownloadTextAsync(
                     Encoding.UTF8,
                     AccessCondition.GenerateIfMatchCondition(blob.Properties.ETag),
                     options: null,
                     operationContext: null);
             }
-            MarkBlobProcessed(blob);
+            else if ("gzip".Equals(blob.Properties.ContentEncoding, StringComparison.InvariantCultureIgnoreCase))
+            {
+                Interlocked.Increment(ref readGzipBlobs);
+                using (var stream = await blob.OpenReadAsync(AccessCondition.GenerateIfMatchCondition(blob.Properties.ETag), options: null, operationContext: null))
+                using (var gunzipStream = new GZipStream(stream, CompressionMode.Decompress, leaveOpen: true))
+                using (var streamReader = new StreamReader(gunzipStream, Encoding.UTF8, detectEncodingFromByteOrderMarks: false, bufferSize: 81920, leaveOpen: true))
+                {
+                    return await streamReader.ReadToEndAsync();
+                }
+            }
+
+            throw new InvalidOperationException($"Unexpected content encoding: '{blob.Properties.ContentEncoding}'");
         }
 
-        private static void SaveContent(string prefix, CloudBlockBlob blob, string content)
+        private static async Task SaveBlobContentAsync(CloudBlockBlob blob, string content)
+        {
+            if (blob.Properties.ContentEncoding == null)
+            {
+                Interlocked.Increment(ref writtenUncompressedBlobs);
+                await blob.UploadTextAsync(
+                    content,
+                    Encoding.UTF8,
+                    AccessCondition.GenerateIfMatchCondition(blob.Properties.ETag),
+                    options: null,
+                    operationContext: null);
+                return;
+            }
+            else if ("gzip".Equals(blob.Properties.ContentEncoding, StringComparison.InvariantCultureIgnoreCase))
+            {
+                Interlocked.Increment(ref writtenGzipBlobs);
+                using (var stream = await blob.OpenWriteAsync(AccessCondition.GenerateIfMatchCondition(blob.Properties.ETag), options: null, operationContext: null))
+                using (var gzipStream = new GZipStream(stream, CompressionMode.Compress, leaveOpen: true))
+                using (var streamWriter = new StreamWriter(gzipStream, Encoding.UTF8, bufferSize: 81920, leaveOpen: true))
+                {
+                    await streamWriter.WriteAsync(content);
+                    return;
+                }
+            }
+
+            throw new InvalidOperationException($"Unexpected content encoding: '{blob.Properties.ContentEncoding}'");
+        }
+
+        private static void SaveLocalContent(string prefix, CloudBlockBlob blob, string content)
         {
             var name = Path.Combine(prefix, blob.Name);
             var fi = new FileInfo(name);
