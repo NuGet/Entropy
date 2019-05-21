@@ -74,8 +74,10 @@ namespace TestIngestionPerf
                     _logger.LogInformation("All packages have been pushed. Waiting until all packages are available.");
                 }
 
+                var shouldCheckPackage = number % (parameters.PackageCheckFrequency ?? 1) == 0;
+                var endpointCheckers = shouldCheckPackage ? parameters.EndpointCheckers : new IEndpointChecker[0];
                 var endpointResults = await _packageChecker.GetEndpointResultsAsync(
-                    parameters.EndpointCheckers,
+                    endpointCheckers,
                     package.Id,
                     package.Version);
 

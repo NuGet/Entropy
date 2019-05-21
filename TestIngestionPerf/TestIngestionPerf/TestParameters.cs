@@ -12,6 +12,7 @@ namespace TestIngestionPerf
 
         public IReadOnlyList<IEndpointChecker> EndpointCheckers { get; set; }
 
+        public int? PackageCheckFrequency { get; set; }
         public TimeSpan TestDuration { get; set; }
         public int PackageCount { get; set; }
 

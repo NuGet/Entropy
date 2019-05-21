@@ -56,6 +56,7 @@ namespace TestIngestionPerf
                 "https://nuget-dev-southeastasia-search.nugettest.org/query",
             };
             var expandableSearchEndpoints = new string[0];
+            var packageCheckFrequency = 15;
 
             //var pushEndpoint = "https://int.nugettest.org/api/v2/package";
             //var apiKey = "";
@@ -126,6 +127,7 @@ namespace TestIngestionPerf
                 ApiKey = apiKey,
                 IdPattern = idPattern,
                 VersionPattern = versionPattern,
+                PackageCheckFrequency = packageCheckFrequency,
                 EndpointCheckers = endpointCheckers,
                 TestDuration = testDuration,
                 PackageCount = packageCount,
