@@ -211,6 +211,7 @@ namespace FixDevV3Blobs
                 using (var streamWriter = new StreamWriter(gzipStream, Encoding.UTF8, bufferSize: 81920, leaveOpen: true))
                 {
                     await streamWriter.WriteAsync(content);
+                    await streamWriter.FlushAsync();
                     return;
                 }
             }
