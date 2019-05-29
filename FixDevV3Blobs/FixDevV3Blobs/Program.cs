@@ -17,6 +17,7 @@ namespace FixDevV3Blobs
     class Program
     {
         const int MaxTasks = 32;
+        const int MaxRetries = 5;
 
         const string ProcessedListFilename = "processed.txt";
         private static readonly HashSet<string> ProcessedBlobs = new HashSet<string>();
@@ -116,7 +117,24 @@ namespace FixDevV3Blobs
                         Interlocked.Increment(ref skipped);
                         continue;
                     }
-                    await ProcessBlobAsync(blob, search, replace);
+                    int attempt = 0;
+                    do
+                    {
+                        try
+                        {
+                            await ProcessBlobAsync(blob, search, replace);
+                            break;
+                        }
+                        catch (Exception e)
+                        {
+                            Log($"Got exception while processing {blob.Uri.AbsoluteUri}: {e}");
+                            await Task.Delay(TimeSpan.FromSeconds(10));
+                        }
+                    } while (++attempt < MaxRetries);
+                    if (attempt == MaxRetries)
+                    {
+                        LogWarning($"Did not process {blob.Uri.AbsoluteUri}");
+                    }
                     if ((curCount % 1000) == 0)
                     {
                         Log(
@@ -243,6 +261,14 @@ namespace FixDevV3Blobs
         private static void Log(string format, params object[] args)
         {
             Console.WriteLine("[{0:hh:mm:ss}] {1}", DateTime.Now, string.Format(format, args));
+        }
+
+        private static void LogWarning(string format, params object[] args)
+        {
+            var color = Console.ForegroundColor;
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Log(format, args);
+            Console.ForegroundColor = color;
         }
     }
 }
