@@ -125,6 +125,11 @@ namespace FixDevV3Blobs
                             await ProcessBlobAsync(blob, search, replace);
                             break;
                         }
+                        catch (UnsupportedContentEncodingException e)
+                        {
+                            Log($"{blob.Uri.AbsoluteUri}: {e.Message}");
+                            attempt = MaxRetries;
+                        }
                         catch (Exception e)
                         {
                             Log($"Got exception while processing {blob.Uri.AbsoluteUri}: {e}");
@@ -234,7 +239,7 @@ namespace FixDevV3Blobs
                 }
             }
 
-            throw new InvalidOperationException($"Unexpected content encoding: '{blob.Properties.ContentEncoding}'");
+            throw new UnsupportedContentEncodingException(blob.Properties.ContentEncoding);
         }
 
         private static void SaveLocalContent(string prefix, CloudBlockBlob blob, string content)
