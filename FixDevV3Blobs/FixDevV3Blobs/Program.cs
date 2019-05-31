@@ -16,6 +16,9 @@ namespace FixDevV3Blobs
 {
     class Program
     {
+        /// <summary>
+        /// Specifies number of parallel tasks used to process the blobs
+        /// </summary>
         const int MaxTasks = 32;
         const int MaxRetries = 5;
 
@@ -26,6 +29,7 @@ namespace FixDevV3Blobs
         private static int writtenUncompressedBlobs = 0;
         private static int readGzipBlobs = 0;
         private static int writtenGzipBlobs = 0;
+        private static bool dryRun = true;
 
         static async Task<int> Main(string[] args)
         {
@@ -35,6 +39,7 @@ namespace FixDevV3Blobs
             const string containerName = "v3-catalog0";
             const string search = "az635243.vo.msecnd.net/v3-catalog0";
             const string replace = "apidev.nugettest.org/v3/catalog0";
+            dryRun = true; // set to false to actually apply the change
 
             var account = CloudStorageAccount.Parse(connectionString);
             var client = account.CreateCloudBlobClient();
@@ -172,20 +177,28 @@ namespace FixDevV3Blobs
             var content = await GetBlobContentAsync(blob);
             stopwatch.Stop();
 
-            //SaveLocalContent("input", blob, content);
+            if (dryRun)
+            {
+                SaveLocalContent("input", blob, content);
+            }
 
             var newContent = content.Replace(search, replace);
 
-            //SaveLocalContent("output", blob, newContent);
-
-            // imitate upload back
-            //await Task.Delay(stopwatch.Elapsed);
-
-            if (newContent != content)
+            if (dryRun)
             {
-                await SaveBlobContentAsync(blob, newContent);
+                SaveLocalContent("output", blob, newContent);
+
+                //imitate upload back
+                await Task.Delay(stopwatch.Elapsed);
             }
-            MarkBlobProcessed(blob);
+            else
+            {
+                if (newContent != content)
+                {
+                    await SaveBlobContentAsync(blob, newContent);
+                }
+                MarkBlobProcessed(blob);
+            }
         }
 
         private static async Task<string> GetBlobContentAsync(CloudBlockBlob blob)
