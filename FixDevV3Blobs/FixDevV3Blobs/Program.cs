@@ -54,7 +54,7 @@ namespace FixDevV3Blobs
                 blobCount,
                 stopwatch.Elapsed,
                 blobCount / stopwatch.Elapsed.TotalHours,
-                TimeSpan.FromTicks(stopwatch.Elapsed.Ticks * (1000000 / blobCount)),
+                TimeSpan.FromTicks((long)(stopwatch.Elapsed.Ticks * (1000000.0 / blobCount))),
                 MaxTasks);
 
             return 0;
