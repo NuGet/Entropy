@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using SearchScorer.Common;
 
 namespace SearchScorer.Feedback
 {

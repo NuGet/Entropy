@@ -44,26 +44,44 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Feedback\Bucket.cs" />
+    <Compile Include="Common\Bucket.cs" />
+    <Compile Include="Common\ConsoleUtility.cs" />
+    <Compile Include="Common\WildcardUtility.cs" />
     <Compile Include="Feedback\FeedbackCsvWriter.cs" />
     <Compile Include="Feedback\FeedbackDisposition.cs" />
     <Compile Include="Feedback\FeedbackEvaluator.cs" />
     <Compile Include="Feedback\FeedbackItem.cs" />
-    <Compile Include="Feedback\FeedbackItems.cs" />
     <Compile Include="Feedback\FeedbackResult.cs" />
     <Compile Include="Feedback\FeedbackResultAggregator.cs" />
     <Compile Include="Feedback\FeedbackResultType.cs" />
     <Compile Include="Feedback\FeedbackSource.cs" />
+    <Compile Include="IREvalutation\RelevancyReport.cs" />
+    <Compile Include="IREvalutation\RelevancyScoreBuilder.cs" />
+    <Compile Include="IREvalutation\RelevancyScoreEvaluator.cs" />
+    <Compile Include="IREvalutation\RelevancyScoreResult.cs" />
+    <Compile Include="IREvalutation\SearchQueryRelevancyScores.cs" />
+    <Compile Include="IREvalutation\VariantReport.cs" />
+    <Compile Include="IREvalutation\WeightedRelevancyScoreResult.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Feedback\ResultIndexBucket.cs" />
-    <Compile Include="Feedback\SearchClient.cs" />
-    <Compile Include="Feedback\SearchResponse.cs" />
-    <Compile Include="Feedback\SearchResult.cs" />
+    <Compile Include="Common\SearchClient.cs" />
+    <Compile Include="Common\SearchResponse.cs" />
+    <Compile Include="Common\SearchResult.cs" />
     <Compile Include="Feedback\VariantResult.cs" />
+    <Compile Include="Common\SearchQueryCsvReader.cs" />
+    <Compile Include="Common\SearchQueryWithSelections.cs" />
+    <Compile Include="Common\SearchSelectionCount.cs" />
+    <Compile Include="Common\TestSearchQuery.cs" />
+    <Compile Include="Common\TopSearchQueryCsvReader.cs" />
+    <Compile Include="Common\TopSearchSelectionsCsvReader.cs" />
+    <Compile Include="SearchScorerSettings.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <None Include="TestSearchQueries.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="CsvHelper">
@@ -73,5 +91,6 @@
       <Version>12.0.2</Version>
     </PackageReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

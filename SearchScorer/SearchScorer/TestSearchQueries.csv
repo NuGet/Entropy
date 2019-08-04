@@ -1,0 +1,218 @@
+﻿Source,FeedbackDisposition,SearchQuery,Buckets,MostRelevantPackageIds
+GitHubOrTwitter,Unknown,appsf,Prefix,AppsFlyer*
+GitHubOrTwitter,Unknown,azure,TopDownloads,WindowsAzure.Storage
+GitHubOrTwitter,Unknown,Azure PCL,MultiTerm,Microsoft.Azure.Devices.Client.PCL
+GitHubOrTwitter,Unknown,bouncycastle,TopDownloads,Portable.BouncyCastle
+GitHubOrTwitter,Unknown,csharp,TopDownloads,Microsoft.CodeAnalysis.CSharp
+GitHubOrTwitter,Unknown,documentdb,TopDownloads,Microsoft.Azure.DocumentDB
+GitHubOrTwitter,Unknown,DocumentDb,TopDownloads,Microsoft.Azure.DocumentDB
+GitHubOrTwitter,Unknown,entity core,TopDownloads,Microsoft.EntityFrameworkCore
+GitHubOrTwitter,Unknown,entity framework,Tags,Microsoft.EntityFrameworkCore
+GitHubOrTwitter,Unknown,EntityFrameworkCore,TopDownloads,Microsoft.EntityFrameworkCore
+GitHubOrTwitter,Unknown,eventgri,Prefix,Microsoft.Azure.EventGrid
+GitHubOrTwitter,Unknown,FluentAssertion,Prefix,FluentAssertions
+GitHubOrTwitter,Unknown,FxCop,TopDownloads,Microsoft.CodeAnalysis.FxCopAnalyzers
+GitHubOrTwitter,Unknown,google cloud storage,MultiTerm | Tags,Google.Cloud.Storage.V1
+GitHubOrTwitter,Unknown,IdentityModel,TopDownloads,IdentityModel
+GitHubOrTwitter,Unknown,IdentityServer4,ExactMatch,IdentityServer4
+GitHubOrTwitter,Unknown,linq2db,ExactMatch,linq2db
+GitHubOrTwitter,Unknown,microsoft aspnetcore mvc,MultiTerm,Microsoft.AspNetCore.Mvc
+GitHubOrTwitter,Unknown,Microsoft Bot Connector,MultiTerm,Microsoft.Bot.Connector
+GitHubOrTwitter,Unknown,microsoft dependencyinjection,MultiTerm,Microsoft.Extensions.DependencyInjection
+GitHubOrTwitter,Unknown,microsoft dependencyinjection,TopDownloads,Microsoft.Extensions.DependencyInjection
+GitHubOrTwitter,Unknown,Microsoft graph,MultiTerm,Microsoft.Graph
+GitHubOrTwitter,Unknown,microsoft logging console,MultiTerm,Microsoft.Extensions.Logging.Console
+GitHubOrTwitter,Unknown,microsoft.aspnetcore.static,Prefix,Microsoft.AspNetCore.StaticFiles
+GitHubOrTwitter,Unknown,Microsoft.Bot.Con,Prefix,Microsoft.Bot.Connector
+GitHubOrTwitter,Unknown,Microsoft.Extensions,Prefix | TopDownloads,Microsoft.Extensions.*
+GitHubOrTwitter,Unknown,Microsoft.Extensions.Log,Prefix,Microsoft.Extensions.Logging
+GitHubOrTwitter,Unknown,Microsoft.Owin.Host.Sys,Prefix,Microsoft.Owin.Host.SystemWeb
+GitHubOrTwitter,Unknown,mpart,Prefix,mParticle.*
+GitHubOrTwitter,Unknown,ms di,Acronym | Tags,Microsoft.Extensions.DependencyInjection
+GitHubOrTwitter,Unknown,ms ioc,Acronym | Tags,Microsoft.Extensions.DependencyInjection
+GitHubOrTwitter,Unknown,mvc,TopDownloads,Microsoft.AspNetCore.Mvc
+GitHubOrTwitter,Unknown,mysql,TopDownloads,MySqlConnector
+GitHubOrTwitter,Unknown,MySqlConnector,ExactMatch,MySqlConnector
+GitHubOrTwitter,Unknown,NFC,Tags,NdefLibrary
+GitHubOrTwitter,Unknown,nhib,Prefix,NHibernate
+GitHubOrTwitter,Unknown,nsub,Prefix,NSubstituteAutoMocker
+GitHubOrTwitter,Unknown,nsubst,Prefix,NSubstituteAutoMocker
+GitHubOrTwitter,Unknown,pinvoke,TopDownloads,PInvoke.*
+GitHubOrTwitter,Unknown,rx,CommonName | Tags,System.Reactive
+GitHubOrTwitter,Unknown,uwp,TopDownloads,Microsoft.Toolkit.Uwp
+GitHubOrTwitter,Unknown,Xamarin Forms,MultiTerm,Xamarin.Forms
+GitHubOrTwitter,Unknown,Xamarin.Android.Support,Prefix,Xamarin.Android.Support.v4
+InternalAdHoc,NeitherIsBetter,signalr,PartialId,Microsoft.AspNet.SignalR | Microsoft.AspNetCore.SignalR
+InternalAdHoc,NeitherIsBetter,system.web,Prefix,System.Web.Http.Common | System.Web.Providers | System.Web.Optimiziation.React | System.Web.Providers.Core
+InternalAdHoc,NeitherIsBetter,"tags:""aws-sdk-v3""",Tags,AWSSDK.Core
+InternalAdHoc,NewIsGreat,cosmos,PartialId,Microsoft.Azure.Cosmos
+InternalAdHoc,NewIsGreat,fluentassertion,Prefix,FluentAssertions
+InternalAdHoc,NewIsGreat,imagesharp,PartialId,SixLabors.ImageSharp
+InternalAdHoc,NewIsGreat,microsoft.aspnetcore,Prefix,Microsoft.AspNetCore.App
+InternalAdHoc,NewIsGreat,MicrosoftEntityFrameWorkCore.Tools,PartialId,Microsoft.EntityFrameworkCore.Tools
+InternalAdHoc,NewIsGreat,System.Drawing,Prefix,System.Drawing.Common | System.Drawing.Primitives
+InternalAdHoc,NewIsGreat,"tags:""serilog""",Tags,Serilog
+InternalAdHoc,OldIsBetter,common mark,MultiTerm,CommonMark.NET
+InternalAdHoc,OldIsBetter,mysql,PartialId,Mysql.Data
+InternalAdHoc,OldIsBetter,Npgsql.EntityFrameworkCore.PostgreSQL,Prefix,Npgsql.EntityFrameworkCore.PostgreSQL | Npgsql.EntityFrameworkCore.PostgreSQL.Design
+InternalAdHoc,OldIsBetter,pdf,Tags,iTextSharp
+InternalAdHoc,OldIsBetter,socket.io,PartialId | Prefix,SocketIoClientDotNet | Socket.IO.Client
+InternalAdHoc,OldIsBetter,System.Net.Http.Formatting,Prefix,System.Net.Http.Formatting.Extension
+InternalAdHoc,OldIsBetter,system.web.mvc,Prefix,System.Web.Mvc.Extensions
+Mvps,NeitherIsBetter,analyzers,PartialId,Microsoft.CodeAnalysis.FxCopAnalyzers
+Mvps,NeitherIsBetter,apianalysis,PartialId,ApiAnalysis.SimpleJsonAnalyzer
+Mvps,NeitherIsBetter,common helpers,MultiTerm,CommonHelpers
+Mvps,NeitherIsBetter,fxcop,TopDownloads,Microsoft.CodeAnalysis.FxCopAnalyzers
+Mvps,NeitherIsBetter,json,TopDownloads,Newtonsoft.Json
+Mvps,NeitherIsBetter,microsoft.windows.compatibility,ExactMatch,microsoft.windows.compatibility
+Mvps,NeitherIsBetter,Newt,Prefix,Newtonsoft.Json
+Mvps,NeitherIsBetter,Oragon Spring,MultiTerm,Oragon.Spring.Core | Oragon.Spring.Aop | Oragon.Spring.Extensions.DependencyInjection
+Mvps,NeitherIsBetter,Spring.net,CommonName,Spring.Core
+Mvps,NewIsBetterButNeedsWork,app authentication managed identity,MultiTerm,Microsoft.Azure.Services.AppAuthentication
+Mvps,NewIsBetterButNeedsWork,aspnetcore app,MultiTerm,Microsoft.AspNetCore.App
+Mvps,NewIsBetterButNeedsWork,bench,Prefix,BenchmarkDotNet
+Mvps,NewIsBetterButNeedsWork,benchmark,Prefix,BenchmarkDotNet
+Mvps,NewIsBetterButNeedsWork,entity framework,MultiTerm,EntityFramework
+Mvps,NewIsBetterButNeedsWork,entityframeworkcore,PartialId,Microsoft.EntityFrameworkCore
+Mvps,NewIsBetterButNeedsWork,Microsoft.Extensions.Depen,Prefix,Microsoft.Extensions.DependencyInjection
+Mvps,NewIsBetterButNeedsWork,uwp core,MultiTerm | Acronym,Microsoft.NETCore.UniversalWindowsPlatform
+Mvps,NewIsBetterButNeedsWork,windows.extensions,PartialId,system.windows.extensions
+Mvps,NewIsGreat,Android support,MultiTerm,Xamarin.Android.Support.v4
+Mvps,NewIsGreat,Android.Support.Design,MultiTerm,Xamarin.Android.Support.Design
+Mvps,NewIsGreat,arcore,PartialId,Xamarin.Google.ARCore
+Mvps,NewIsGreat,asp.net core async initialization,MultiTerm,AspNetCore.AsyncInitialization
+Mvps,NewIsGreat,boletonet,PartialId,Boleto.Net
+Mvps,NewIsGreat,Cake,PartialId,Cake
+Mvps,NewIsGreat,ci.extension,ExactMatch,ci.extensions
+Mvps,NewIsGreat,Commonhelpers,Prefix,CommonHelpers
+Mvps,NewIsGreat,dependency injection,MultiTerm,Microsoft.Extensions.DependencyInjection.Abstractions | Microsoft.Extensions.DependencyInjection
+Mvps,NewIsGreat,EF Core,Acronym | MultiTerm,Microsoft.EntityFrameworkCore
+Mvps,NewIsGreat,Entityframeworkcore.firebirdsql,ExactMatch,EntityFrameworkCore.FirebirdSql
+Mvps,NewIsGreat,Esri,PartialId,Esri.ArcGISRuntime
+Mvps,NewIsGreat,forms,TopDownloads,Xamarin.Forms
+Mvps,NewIsGreat,gardiner,Author,PowerShellWixExtension
+Mvps,NewIsGreat,identity server,MultiTerm,IdentityServer4
+Mvps,NewIsGreat,json,PartialId | TopDownloads,Newtonsoft.Json
+Mvps,NewIsGreat,json,PartialId,Newtonsoft.Json
+Mvps,NewIsGreat,localization provider core,PartialId,LocalizationProvider.AspNetCore
+Mvps,NewIsGreat,MADE,PartialId,MADE.App
+Mvps,NewIsGreat,microsoft.azure,TopDownloads,Microsoft.WindowsAzure.ConfigurationManager
+Mvps,NewIsGreat,Microsoft.Extensions,TopDownloads,Microsoft.Extensions.Logging.Abstractions
+Mvps,NewIsGreat,ml,TopDownloads,Microsoft.ML
+Mvps,NewIsGreat,mocking,TopDownloads,Moq | Nsubstitute | FakeItEasy
+Mvps,NewIsGreat,newtonsoft,TopDownloads,Newtonsoft.Json
+Mvps,NewIsGreat,nhibernate,TopDownloads,NHibernate
+Mvps,NewIsGreat,noda time,TopDownloads,NodaTime
+Mvps,NewIsGreat,oragon,PartialId,Oragon.Spring.Core
+Mvps,NewIsGreat,Prism forms,TopDownloads,Prism.Forms
+Mvps,NewIsGreat,reactive,TopDownloads,System.Reactive
+Mvps,NewIsGreat,skia,Prefix,SkiaSharp
+Mvps,NewIsGreat,snmp,TopDownloads | Freshness,Lextm.SharpSnmpLib
+Mvps,NewIsGreat,sqlite.net,PartialId,sqlite-net-pcl
+Mvps,NewIsGreat,svg,PartialId,Xamarin.FFImageLoading.Svg
+Mvps,NewIsGreat,tdd,PartialId,NUnit
+Mvps,NewIsGreat,Tweet,PartialId,CoreTweet
+Mvps,NewIsGreat,Ui for uwp,Acronym | MultiTerm,Telerik.UI.for.UniversalWindowsPlatform
+Mvps,NewIsGreat,Umbraco,Prefix,UmbracoCms
+Mvps,NewIsGreat,Umbraco,Prefix,UmbracoCms
+Mvps,NewIsGreat,uwp pdf,MultiTerm,Syncfusion.Pdf.UWP
+Mvps,NewIsGreat,westfall,Author,Xamarin.ANRWatchDog
+Mvps,NewIsGreat,Xamarin,TopDownloads,Xamarin.Forms
+Mvps,NewIsGreat,Xamarin,PartialId,Xamarin.Forms
+Mvps,NewIsGreat,xamarin forms,MultiTerm,Xamarin.Forms
+Mvps,NewIsGreat,xamarin forms,MultiTerm,Xamarin.Forms
+Mvps,NewIsGreat,Xamarin.forms,ExactMatch,Xamarin.Forms
+Mvps,NewIsGreat,XPlat,PartialId,XPlat.Core
+Mvps,NewIsGreat,xunit,TopDownloads,xunit
+Mvps,OldIsBetter,aad,Acronym | Tags,Microsoft.IdentityModel.Clients.ActiveDirectory
+Mvps,OldIsBetter,ADAL,PartialId,Microsoft.IdentityModel.Clients.ActiveDirectory
+Mvps,OldIsBetter,asp.net core initialization,MultiTerm,AspNetCore.AsyncInitialization
+Mvps,OldIsBetter,aws,PartialId,AWSSDK.Core
+Mvps,OldIsBetter,azure f#,PartialId | Tags,FSharp.Azure | FSharp.Azure.StorageTypeProvider
+Mvps,OldIsBetter,Entity framework,MultiTerm,EntityFramework
+Mvps,OldIsBetter,fxcop analyzers,MultiTerm,Microsoft.CodeAnalysis.FxCopAnalyzers
+Mvps,OldIsBetter,json.net,CommonName,Newtonsoft.Json
+Mvps,OldIsBetter,json.net,CommonName,Newtonsoft.Json
+Mvps,OldIsBetter,micro orm,Tags,Dapper
+Mvps,OldIsBetter,microsoft.azure.webjobs.extensions,ExactMatch,Microsoft.Azure.WebJobs.Extensions
+Mvps,OldIsBetter,Microsoft.DotNet.Analyzers.Compatibility,ExactMatch,Microsoft.DotNet.Analyzers.Compatibility
+Mvps,OldIsBetter,multi line,MultiTerm,MultiLineStringAnalyzer
+Mvps,OldIsBetter,netcore,TopDownloads,Microsoft.NETCore.*
+Mvps,OldIsBetter,nlp,PartialId,Stanford.NLP.CoreNLP
+Mvps,OldIsBetter,ooui,Prefix | TopDownloads,Ooui
+Mvps,OldIsBetter,sqlite,TopDownloads,System.Data.Sqlite
+Mvps,OldIsBetter,sqlite.net,MultiTerm,sqlite-net-pcl
+Mvps,OldIsBetter,tags:linqpad-samples,TopDownloads,Octokit
+Mvps,OldIsBetter,text.ui,PartialId,Microsoft.VisualStudio.Text.UI
+Mvps,OldIsBetter,toast notifications,TopDownloads | Tags,Microsoft.Toolkit.Uwp.Notifications
+Mvps,OldIsBetter,unit test,TopDownloads | Tags,NUnit
+NuGetPartnersInternal,NewIsGreat,commandline,PartialId,CommandLineParser
+NuGetPartnersInternal,NewIsGreat,microsoft.*,Prefix,Microsoft.CSharp
+NuGetPartnersInternal,NewIsGreat,ServerHost,TopDownloads,ServerHost
+NuGetPartnersInternal,OldIsBetter,Approximate Nearest Neighbors,Tags,hnswlib
+V2Internal,NeitherIsBetter,ilmerge,TopDownloads,ILMerge | Costura.Fody
+V2Internal,NewIsBetterButNeedsWork,aspnet,PartialId,Microsoft.AspNet.Mvc
+V2Internal,NewIsBetterButNeedsWork,entity,PartialId,entityframework
+V2Internal,NewIsBetterButNeedsWork,logging,PartialId | Tags,Microsoft.Extensions.Logging
+V2Internal,NewIsBetterButNeedsWork,microsoft.bot.con,Prefix,Microsoft.Bot.Connector
+V2Internal,NewIsBetterButNeedsWork,microsoft.netcore.platform,Prefix,microsoft.netcore.platforms
+V2Internal,NewIsBetterButNeedsWork,Microsoft.NETCore.Platform,Prefix,Microsoft.NETCore.Platforms
+V2Internal,NewIsBetterButNeedsWork,netcore,PartialId,microsoft.netcore.platforms
+V2Internal,NewIsBetterButNeedsWork,newtonsoft wamp,MultiTerm,WampSharp.NewtonsoftJson
+V2Internal,NewIsBetterButNeedsWork,nuget,Prefix,NuGet.Packaging
+V2Internal,NewIsBetterButNeedsWork,xamarin,Prefix,Xamarin.Forms
+V2Internal,NewIsGreat,documentdb,TopDownloads,Microsoft.Azure.Documentdb
+V2Internal,NewIsGreat,esri,TopDownloads | Prefix,Esri.ArcGISRuntime
+V2Internal,NewIsGreat,imagesharp,TopDownloads,SixLabors.ImageSharp
+V2Internal,NewIsGreat,microsoft advertising,MultiTerm,Microsoft.Advertising.xaml
+V2Internal,NewIsGreat,microsoft graph,MultiTerm,Microsoft.Graph
+V2Internal,NewIsGreat,msbuild extras,MultiTerm,Msbuild.sdk.extras
+V2Internal,NewIsGreat,prism,TopDownloads,Prism.Core
+V2Internal,NewIsGreat,sqlite,TopDownloads,sqlite
+V2Internal,NewIsGreat,toolkit,TopDownloads,Microsoft.Toolkit
+V2Internal,NewIsGreat,xamarin forms,MultiTerm,Xamarin.Forms
+V2Internal,NewIsGreat,xamarin.android.support,Prefix,Xamarin.Android.Support.*
+V2Internal,NewIsGreat,xunit,TopDownloads,xunit
+V2Internal,OldIsBetter,aws,Prefix,AWSSDK.Core
+V2Internal,OldIsBetter,azure active directory,MultiTerm,Microsoft.IdentityModel.Clients.ActiveDirectory
+V2Internal,OldIsBetter,Build.Extensions,PartialId,Microsoft.NET.Build.Extensions
+V2Internal,OldIsBetter,fxcop,Prefix,Microsoft.CodeAnalysis.FxCopAnalyzers
+V2Internal,OldIsBetter,mahapps,Prefix,MahApps.Metro
+V2Internal,OldIsBetter,newtonsoft json,MultiTerm,Newtonsoft.Json
+V2Internal,OldIsBetter,ORM,Tags,Dapper
+V2Internal,OldIsBetter,razor,PartialId,Microsoft.AspNet.Razor
+V2Internal,OldIsBetter,wilderness labs,Author,Netduino.Foundation
+V3Internal,NeitherIsBetter,Blazor,PartialId,Microsoft.AspNetCore.Blazor | Microsoft.AspNetCore.Blazor.Browser | Microsoft.AspNetCore.Blazor.Analyzers
+V3Internal,NeitherIsBetter,markdown,Prefix,MarkdownSharp
+V3Internal,NeitherIsBetter,markdown,Tags,Markdig
+V3Internal,NewIsBetterButNeedsWork,cosmos,PartialId,Microsoft.Azure.Cosmos
+V3Internal,NewIsBetterButNeedsWork,image,Prefix,ImageProcessor
+V3Internal,NewIsBetterButNeedsWork,lucene,Prefix,Lucene.net
+V3Internal,NewIsBetterButNeedsWork,"MS, .net core",MultiTerm,Microsoft.AspNetCore.*
+V3Internal,NewIsBetterButNeedsWork,nuget.build.task,Prefix,NuGet.Build.Tasks.Pack
+V3Internal,NewIsBetterButNeedsWork,telerik uwp,MultiTerm | Tags,Telerik.UI.for.UniversalWindowsPlatform
+V3Internal,NewIsGreat,applicationinsights,PartialId,Microsoft.ApplicationInsights
+V3Internal,NewIsGreat,aspnetcore,PartialId,Microsoft.AspNetCore.Mvc
+V3Internal,NewIsGreat,Azure,PartialId,WindowsAzure.Storage
+V3Internal,NewIsGreat,blob storage,Tags,WindowsAzure.Storage
+V3Internal,NewIsGreat,csharp,PartialId,Microsoft.CSharp
+V3Internal,NewIsGreat,ef core,MultiTerm | Acronym,Microsoft.EntityFrameworkCore
+V3Internal,NewIsGreat,elasticsearch,PartialId,Elasticsearch.Net
+V3Internal,NewIsGreat,json,PartialId,Newtonsoft.Json
+V3Internal,NewIsGreat,logging,PartialId,Microsoft.Extensions.Logging
+V3Internal,NewIsGreat,nhibernate,TopDownloads,NHibernate
+V3Internal,NewIsGreat,odata,PartialId,Microsoft.Data.OData
+V3Internal,NewIsGreat,orleans,PartialId,Microsoft.Orleans.Core
+V3Internal,NewIsGreat,polly,TopDownloads,Polly
+V3Internal,NewIsGreat,reactive,PartialId,System.Reactive
+V3Internal,NewIsGreat,redis,PartialId,StackExchange.Redis
+V3Internal,NewIsGreat,search,Tags,Microsoft.Azure.Search
+V3Internal,NewIsGreat,serilog,ExactMatch,Serilog
+V3Internal,NewIsGreat,tags:azure,Tags,WindowsAzure.Storage
+V3Internal,NewIsGreat,telerik uwp,MultiTerm,Telerik.UI.for.UniversalWindowsPlatform
+V3Internal,OldIsBetter,excel,Tags,EPPlus
+V3Internal,OldIsBetter,mail,Prefix,MailKit
+V3Internal,OldIsBetter,my sample lib,MultiTerm,My.Sample.Lib
+V3Internal,OldIsBetter,mysql data entity,MultiTerm,MySql.Data.Entity
+V3Internal,OldIsBetter,owners:anangaur,TopDownloads,My.Sample.Lib
+V3Internal,OldIsBetter,pdf,Tags,iTextSharp

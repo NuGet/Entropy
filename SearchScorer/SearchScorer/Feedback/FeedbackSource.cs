@@ -1,6 +1,6 @@
 ﻿namespace SearchScorer.Feedback
 {
-    public enum FeedbackSource
+    public enum SearchQuerySource
     {
         NuGetPartnersInternal,
         InternalAdHoc,

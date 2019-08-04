@@ -1,12 +1,13 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using SearchScorer.Common;
 
 namespace SearchScorer.Feedback
 {
     public class FeedbackItem
     {
         public FeedbackItem(
-            FeedbackSource source,
+            SearchQuerySource source,
             FeedbackDisposition disposition,
             string query,
             IEnumerable<string> mostRelevantPackageIds,
@@ -19,7 +20,7 @@ namespace SearchScorer.Feedback
             MostRelevantPackageIds = mostRelevantPackageIds.ToList();
         }
 
-        public FeedbackSource Source { get; }
+        public SearchQuerySource Source { get; }
         public FeedbackDisposition Disposition { get; }
         public string Query { get; }
         public IReadOnlyList<Bucket> Buckets { get; }

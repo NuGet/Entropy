@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using System.Web;
 using Newtonsoft.Json;
 
-namespace SearchScorer.Feedback
+namespace SearchScorer.Common
 {
     public class SearchClient
     {

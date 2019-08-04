@@ -2,11 +2,10 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Net.Http;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using SearchScorer.Common;
 
 namespace SearchScorer.Feedback
 {
@@ -19,37 +18,42 @@ namespace SearchScorer.Feedback
         private static readonly int MaxResultIndexBucketLength = Enum.GetNames(typeof(ResultIndexBucket)).Max(x => x.Length);
         private static readonly int MaxFeedbackResultTypeLength = Enum.GetNames(typeof(FeedbackResultType)).Max(x => x.Length);
 
-        public static async Task RunAsync(string controlBaseUrl, string treatmentBaseUrl)
+        public static async Task RunAsync(HttpClient httpClient, SearchScorerSettings settings)
         {
             Console.WriteLine("Starting feedback evaluation.");
-            Console.WriteLine($"Control base URL:   {controlBaseUrl}");
-            Console.WriteLine($"Treatment base URL: {treatmentBaseUrl}");
+            Console.WriteLine($"Control base URL:   {settings.ControlBaseUrl}");
+            Console.WriteLine($"Treatment base URL: {settings.TreatmentBaseUrl}");
             Console.WriteLine();
 
-            using (var httpClientHandler = new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip })
-            using (var httpClient = new HttpClient())
-            {
-                var searchClient = new SearchClient(httpClient);
+            var searchClient = new SearchClient(httpClient);
 
-                var input = new ConcurrentBag<FeedbackItem>(FeedbackItems.GetAll());
-                var output = new ConcurrentBag<FeedbackResult>();
-                var processTasks = Enumerable
-                    .Range(0, 16)
-                    .Select(x => ProcessFeedbackAsync(
-                        searchClient,
-                        controlBaseUrl,
-                        treatmentBaseUrl,
-                        input,
-                        output))
-                    .ToList();
+            var testSearchQueries = TestSearchQueryCsvReader.Read(settings.TestSearchQueryCsvPath);
+            var feedbackItems = testSearchQueries
+                .Select(x => new FeedbackItem(
+                    x.Source,
+                    x.FeedbackDisposition,
+                    x.SearchQuery,
+                    x.MostRelevantPackageIds,
+                    x.Buckets.ToArray()));
 
-                var cts = new CancellationTokenSource();
-                var outputTask = OutputFeedbackResultsAsync(output, cts.Token);
+            var input = new ConcurrentBag<FeedbackItem>(feedbackItems);
+            var output = new ConcurrentBag<FeedbackResult>();
+            var processTasks = Enumerable
+                .Range(0, 16)
+                .Select(x => ProcessFeedbackAsync(
+                    searchClient,
+                    settings.ControlBaseUrl,
+                    settings.TreatmentBaseUrl,
+                    input,
+                    output))
+                .ToList();
 
-                await Task.WhenAll(processTasks);
-                cts.Cancel();
-                await outputTask;
-            }
+            var cts = new CancellationTokenSource();
+            var outputTask = OutputFeedbackResultsAsync(output, cts.Token);
+
+            await Task.WhenAll(processTasks);
+            cts.Cancel();
+            await outputTask;
         }
 
         private static async Task OutputFeedbackResultsAsync(
@@ -86,7 +90,7 @@ namespace SearchScorer.Feedback
 
         private static void WriteSummaryToConsole(FeedbackResultAggregator aggregator)
         {
-            WriteHeadingToConsole("Feedback Result Summary", '=');
+            ConsoleUtility.WriteHeading("Feedback Result Summary", '=');
 
             var resultTypeToResults = aggregator.GetResultTypeToResults();
             var totalCount = resultTypeToResults.Sum(p => p.Value.Count);
@@ -116,31 +120,24 @@ namespace SearchScorer.Feedback
 
             var maxQueryLength = aggregator.GetMaxQueryLength();
 
-            WriteHeadingToConsole("Significant Regressions", '-');
+            ConsoleUtility.WriteHeading("Significant Regressions", '-');
             WriteQueriesToConsole(maxQueryLength, "that dropped off the first page", aggregator.GetResultsThatDroppedOffTheFirstPage());
             WriteQueriesToConsole(maxQueryLength, "that dropped below the fold", aggregator.GetResultsThatDroppedBelowTheFold());
 
-            WriteHeadingToConsole("Minor Regressions", '-');
+            ConsoleUtility.WriteHeading("Minor Regressions", '-');
             WriteQueriesToConsole(maxQueryLength, "that moved down, above the fold", aggregator.GetResultsThatMovedDownAboveTheFold());
             WriteQueriesToConsole(maxQueryLength, "that moved down, below the fold", aggregator.GetResultsThatMovedDownBelowTheFold());
 
-            WriteHeadingToConsole("Minor Improvements", '-');
+            ConsoleUtility.WriteHeading("Minor Improvements", '-');
             WriteQueriesToConsole(maxQueryLength, "that rose to below the fold", aggregator.GetResultsThatRoseToBelowTheFold());
             WriteQueriesToConsole(maxQueryLength, "that moved up, above the fold", aggregator.GetResultsThatMovedUpAboveTheFold());
             WriteQueriesToConsole(maxQueryLength, "that moved up, below the fold", aggregator.GetResultsThatMovedUpBelowTheFold());
 
-            WriteHeadingToConsole("All Feedback By Result Type", '-');
+            ConsoleUtility.WriteHeading("All Feedback By Result Type", '-');
             WriteQueriesToConsole(maxQueryLength, "of result type BothBroken", aggregator.GetResultTypeToResults()[FeedbackResultType.BothBroken]);
             WriteQueriesToConsole(maxQueryLength, "of result type Regressed", aggregator.GetResultTypeToResults()[FeedbackResultType.Regressed]);
             WriteQueriesToConsole(maxQueryLength, "of result type Fixed", aggregator.GetResultTypeToResults()[FeedbackResultType.Fixed]);
             WriteQueriesToConsole(maxQueryLength, "of result type BothFixed", aggregator.GetResultTypeToResults()[FeedbackResultType.BothFixed]);
-        }
-
-        private static void WriteHeadingToConsole(string heading, char fence)
-        {
-            Console.WriteLine();
-            Console.WriteLine(heading);
-            Console.WriteLine(new string(fence, heading.Length));
         }
 
         private static void WriteQueriesToConsole(int maxQueryLength, string label, List<FeedbackResult> results)
@@ -287,7 +284,7 @@ namespace SearchScorer.Feedback
 
             foreach (var packageIdPattern in feedbackItem.MostRelevantPackageIds)
             {
-                var regex = new Regex(WildcardToRegular(packageIdPattern), RegexOptions.IgnoreCase);
+                var regex = WildcardUtility.GetPackageIdWildcareRegex(packageIdPattern);
                 foreach (var result in results)
                 {
                     if (regex.IsMatch(result.Id))
@@ -331,14 +328,6 @@ namespace SearchScorer.Feedback
                 pageIndex,
                 foundIds,
                 searchResponse);
-        }
-
-        /// <summary>
-        /// Source: https://stackoverflow.com/a/30300521
-        /// </summary>
-        private static string WildcardToRegular(string value)
-        {
-            return "^" + Regex.Escape(value).Replace("\\?", ".").Replace("\\*", ".*") + "$";
         }
     }
 }

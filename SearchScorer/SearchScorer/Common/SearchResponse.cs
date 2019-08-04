@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace SearchScorer.Feedback
+namespace SearchScorer.Common
 {
     public class SearchResponse
     {

@@ -1,6 +1,8 @@
-﻿using System.Net;
+﻿using System.IO;
+using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
-using SearchScorer.Feedback;
+using SearchScorer.Common;
 
 namespace SearchScorer
 {
@@ -15,10 +17,24 @@ namespace SearchScorer
         {
             ServicePointManager.DefaultConnectionLimit = 64;
 
-            var controlBaseUrl = "https://api-v2v3search-0.nuget.org/";
-            var treatmentBaseUrl = "https://azuresearch-usnc.nuget.org/";
+            var assemblyDir = Path.GetDirectoryName(typeof(Program).Assembly.Location);
+            var settings = new SearchScorerSettings
+            {
+                ControlBaseUrl = "https://api-v2v3search-0.nuget.org/",
+                TreatmentBaseUrl = "https://azuresearch-usnc.nuget.org/",
+                TestSearchQueryCsvPath = Path.Combine(assemblyDir, "TestSearchQueries.csv"),
+                TopSearchQueryCsvPath = @"C:\Users\jver\Desktop\search-scorer\TopQueries-2019-08-03.csv",
+                TopSearchSelectionsCsvPath = @"C:\Users\jver\Desktop\search-scorer\TopSearchSelections-2019-08-03.csv",
+            };
 
-            await FeedbackEvaluator.RunAsync(controlBaseUrl, treatmentBaseUrl);
+            using (var httpClientHandler = new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip })
+            using (var httpClient = new HttpClient())
+            {
+                var searchClient = new SearchClient(httpClient);
+
+                await new IREvalutation.RelevancyScoreEvaluator(searchClient).RunAsync(settings);
+                // await Feedback.FeedbackEvaluator.RunAsync(httpClient, settings);
+            }
         }
     }
 }
