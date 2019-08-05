@@ -151,20 +151,27 @@ namespace SearchScorer.IREvalutation
                 selectionsOfTopQueries,
                 baseUrl);
 
+            return WeightByTopQueries(topQueries, results);
+        }
+
+        private static List<WeightedRelevancyScoreResult<T>> WeightByTopQueries<T>(
+            IReadOnlyDictionary<string, int> topQueries,
+            ConcurrentBag<RelevancyScoreResult<T>> results)
+        {
             // Weight the queries that came from top search selections by their query count.
             var totalQueryCount = 0;
-            var resultsAndWeights = new List<KeyValuePair<RelevancyScoreResult<SearchQueryWithSelections>, int>>();
+            var resultsAndWeights = new List<KeyValuePair<RelevancyScoreResult<T>, int>>();
             foreach (var result in results)
             {
                 var queryCount = topQueries[result.Input.SearchQuery];
-                resultsAndWeights.Add(new KeyValuePair<RelevancyScoreResult<SearchQueryWithSelections>, int>(result, queryCount));
+                resultsAndWeights.Add(new KeyValuePair<RelevancyScoreResult<T>, int>(result, queryCount));
                 totalQueryCount += queryCount;
             }
 
-            var weightedResults = new List<WeightedRelevancyScoreResult<SearchQueryWithSelections>>();
+            var weightedResults = new List<WeightedRelevancyScoreResult<T>>();
             foreach (var pair in resultsAndWeights)
             {
-                weightedResults.Add(new WeightedRelevancyScoreResult<SearchQueryWithSelections>(
+                weightedResults.Add(new WeightedRelevancyScoreResult<T>(
                     pair.Key,
                     1.0 * pair.Value / totalQueryCount));
             }
