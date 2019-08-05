@@ -27,8 +27,8 @@ namespace SearchScorer.Feedback
 
             var searchClient = new SearchClient(httpClient);
 
-            var testSearchQueries = TestSearchQueryCsvReader.Read(settings.TestSearchQueryCsvPath);
-            var feedbackItems = testSearchQueries
+            var feedbackSearchQueries = FeedbackSearchQueryCsvReader.Read(settings.FeedbackSearchQueryCsvPath);
+            var feedbackItems = feedbackSearchQueries
                 .Select(x => new FeedbackItem(
                     x.Source,
                     x.FeedbackDisposition,

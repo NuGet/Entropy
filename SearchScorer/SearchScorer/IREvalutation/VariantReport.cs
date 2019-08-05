@@ -7,22 +7,22 @@ namespace SearchScorer.IREvalutation
     {
         public VariantReport(
             double score,
-            double testSearchQueriesScore,
+            double feedbackSearchQueriesScore,
             double searchQueriesWithSelectionsScore,
-            IReadOnlyList<WeightedRelevancyScoreResult<TestSearchQuery>> testSearchQueries,
+            IReadOnlyList<WeightedRelevancyScoreResult<FeedbackSearchQuery>> feedbackSearchQueries,
             IReadOnlyList<WeightedRelevancyScoreResult<SearchQueryWithSelections>> searchQueriesWithSelections)
         {
             Score = score;
-            TestSearchQueriesScore = testSearchQueriesScore;
+            FeedbackSearchQueriesScore = feedbackSearchQueriesScore;
             SearchQueriesWithSelectionsScore = searchQueriesWithSelectionsScore;
-            TestSearchQueries = testSearchQueries;
+            FeedbackSearchQueries = feedbackSearchQueries;
             SearchQueriesWithSelections = searchQueriesWithSelections;
         }
 
         public double Score { get; }
-        public double TestSearchQueriesScore { get; }
+        public double FeedbackSearchQueriesScore { get; }
         public double SearchQueriesWithSelectionsScore { get; }
-        public IReadOnlyList<WeightedRelevancyScoreResult<TestSearchQuery>> TestSearchQueries { get; }
+        public IReadOnlyList<WeightedRelevancyScoreResult<FeedbackSearchQuery>> FeedbackSearchQueries { get; }
         public IReadOnlyList<WeightedRelevancyScoreResult<SearchQueryWithSelections>> SearchQueriesWithSelections { get; }
     }
 }

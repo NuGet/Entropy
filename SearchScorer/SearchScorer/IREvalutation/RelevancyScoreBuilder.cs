@@ -22,21 +22,21 @@ namespace SearchScorer.IREvalutation
         /// </summary>
         private const int MaximumRelevancyScore = 4;
 
-        public static IReadOnlyList<SearchQueryRelevancyScores<TestSearchQuery>> FromTestSearchQueriesCsv(string path)
+        public static IReadOnlyList<SearchQueryRelevancyScores<FeedbackSearchQuery>> FromFeedbackSearchQueriesCsv(string path)
         {
-            var output = new List<SearchQueryRelevancyScores<TestSearchQuery>>();
-            var testSearchQueries = TestSearchQueryCsvReader.Read(path);
-            foreach (var testSearchQuery in testSearchQueries)
+            var output = new List<SearchQueryRelevancyScores<FeedbackSearchQuery>>();
+            var feedbackSearchQueries = FeedbackSearchQueryCsvReader.Read(path);
+            foreach (var feedback in feedbackSearchQueries)
             {
                 // Give expected package IDs the maximum relevancy score.
-                var scores = testSearchQuery
+                var scores = feedback
                     .MostRelevantPackageIds
                     .ToDictionary(x => x, x => MaximumRelevancyScore, StringComparer.OrdinalIgnoreCase);;
 
-                output.Add(new SearchQueryRelevancyScores<TestSearchQuery>(
-                    testSearchQuery.SearchQuery,
+                output.Add(new SearchQueryRelevancyScores<FeedbackSearchQuery>(
+                    feedback.SearchQuery,
                     scores,
-                    testSearchQuery));
+                    feedback));
             }
 
             return output;

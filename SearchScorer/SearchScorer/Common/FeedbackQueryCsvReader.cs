@@ -10,9 +10,9 @@ using SearchScorer.Feedback;
 
 namespace SearchScorer.Common
 {
-    public static class TestSearchQueryCsvReader
+    public static class FeedbackSearchQueryCsvReader
     {
-        public static IReadOnlyList<TestSearchQuery> Read(string path)
+        public static IReadOnlyList<FeedbackSearchQuery> Read(string path)
         {
             using (var fileStream = File.OpenRead(path))
             using (var streamReader = new StreamReader(fileStream))
@@ -22,7 +22,7 @@ namespace SearchScorer.Common
 
                 return csvReader
                     .GetRecords<Record>()
-                    .Select(x => new TestSearchQuery(
+                    .Select(x => new FeedbackSearchQuery(
                         x.Source,
                         x.FeedbackDisposition,
                         x.SearchQuery,

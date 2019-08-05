@@ -3,9 +3,9 @@ using SearchScorer.Feedback;
 
 namespace SearchScorer.Common
 {
-    public class TestSearchQuery
+    public class FeedbackSearchQuery
     {
-        public TestSearchQuery(
+        public FeedbackSearchQuery(
             SearchQuerySource source,
             FeedbackDisposition feedbackDisposition,
             string searchQuery,

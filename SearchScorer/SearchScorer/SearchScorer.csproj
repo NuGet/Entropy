@@ -69,17 +69,17 @@
     <Compile Include="Common\SearchResponse.cs" />
     <Compile Include="Common\SearchResult.cs" />
     <Compile Include="Feedback\VariantResult.cs" />
-    <Compile Include="Common\SearchQueryCsvReader.cs" />
+    <Compile Include="Common\FeedbackQueryCsvReader.cs" />
     <Compile Include="Common\SearchQueryWithSelections.cs" />
     <Compile Include="Common\SearchSelectionCount.cs" />
-    <Compile Include="Common\TestSearchQuery.cs" />
+    <Compile Include="Common\FeedbackSearchQuery.cs" />
     <Compile Include="Common\TopSearchQueryCsvReader.cs" />
     <Compile Include="Common\TopSearchSelectionsCsvReader.cs" />
     <Compile Include="SearchScorerSettings.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-    <None Include="TestSearchQueries.csv">
+    <None Include="FeedbackSearchQueries.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

@@ -22,7 +22,7 @@ namespace SearchScorer
             {
                 ControlBaseUrl = "https://api-v2v3search-0.nuget.org/",
                 TreatmentBaseUrl = "https://azuresearch-usnc.nuget.org/",
-                TestSearchQueryCsvPath = Path.Combine(assemblyDir, "TestSearchQueries.csv"),
+                FeedbackSearchQueryCsvPath = Path.Combine(assemblyDir, "FeedbackSearchQueries.csv"),
                 TopSearchQueryCsvPath = @"C:\Users\jver\Desktop\search-scorer\TopQueries-2019-08-03.csv",
                 TopSearchSelectionsCsvPath = @"C:\Users\jver\Desktop\search-scorer\TopSearchSelections-2019-08-03.csv",
             };

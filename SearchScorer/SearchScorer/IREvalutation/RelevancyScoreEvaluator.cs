@@ -34,8 +34,8 @@ namespace SearchScorer.IREvalutation
             ConsoleUtility.WriteHeading("Feedback", '=');
             WriteBiggestWinnersAndLosersToConsole(
                 report,
-                v => v.TestSearchQueriesScore,
-                v => v.TestSearchQueries);
+                v => v.FeedbackSearchQueriesScore,
+                v => v.FeedbackSearchQueries);
 
             ConsoleUtility.WriteHeading("Top Search Selections", '=');
             WriteBiggestWinnersAndLosersToConsole(
@@ -93,42 +93,42 @@ namespace SearchScorer.IREvalutation
 
         private async Task<VariantReport> GetVariantReport(string baseUrl, SearchScorerSettings settings)
         {
-            var testSearchQueriesTask = GetTestSearchQueriesScoreAsync(baseUrl, settings);
+            var feedbackSearchQueriesTask = GetFeedbackSearchQueriesScoreAsync(baseUrl, settings);
             var topSearchSelectionsTask = GetTopSearchSelectionsScoreAsync(baseUrl, settings);
 
-            await Task.WhenAll(testSearchQueriesTask, topSearchSelectionsTask);
+            await Task.WhenAll(feedbackSearchQueriesTask, topSearchSelectionsTask);
 
-            var testSearchQueriesScore = testSearchQueriesTask.Result.Sum(x => x.Score);
+            var feedbackSearchQueriesScore = feedbackSearchQueriesTask.Result.Sum(x => x.Score);
             var topSearchSelectionsScore = topSearchSelectionsTask.Result.Sum(x => x.Score);
 
             var score = new[]
             {
-                testSearchQueriesScore,
+                feedbackSearchQueriesScore,
                 topSearchSelectionsScore,
             }.Average();
 
             return new VariantReport(
                 score,
-                testSearchQueriesScore,
+                feedbackSearchQueriesScore,
                 topSearchSelectionsScore,
-                testSearchQueriesTask.Result,
+                feedbackSearchQueriesTask.Result,
                 topSearchSelectionsTask.Result);
         }
 
-        private async Task<List<WeightedRelevancyScoreResult<TestSearchQuery>>> GetTestSearchQueriesScoreAsync(
+        private async Task<List<WeightedRelevancyScoreResult<FeedbackSearchQuery>>> GetFeedbackSearchQueriesScoreAsync(
             string baseUrl,
             SearchScorerSettings settings)
         {
-            var testSearchQueryScores = RelevancyScoreBuilder.FromTestSearchQueriesCsv(settings.TestSearchQueryCsvPath);
+            var feedbackSearchQueryScores = RelevancyScoreBuilder.FromFeedbackSearchQueriesCsv(settings.FeedbackSearchQueryCsvPath);
 
             var results = await ProcessAsync(
-                testSearchQueryScores,
+                feedbackSearchQueryScores,
                 baseUrl);
 
             var totalCount = 1.0 * results.Count;
 
             return results
-                .Select(x => new WeightedRelevancyScoreResult<TestSearchQuery>(
+                .Select(x => new WeightedRelevancyScoreResult<FeedbackSearchQuery>(
                     x,
                     x.ResultScore / totalCount))
                 .ToList();
