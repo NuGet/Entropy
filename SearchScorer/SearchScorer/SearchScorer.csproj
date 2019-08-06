@@ -48,6 +48,9 @@
     <Compile Include="Common\ConsoleUtility.cs" />
     <Compile Include="Common\CuratedSearchQueriesCsvReader.cs" />
     <Compile Include="Common\CuratedSearchQuery.cs" />
+    <Compile Include="Common\GitHubRepository.cs" />
+    <Compile Include="Common\GitHubUsageCsvWriter.cs" />
+    <Compile Include="Common\GitHubUsageJsonReader.cs" />
     <Compile Include="Common\WildcardUtility.cs" />
     <Compile Include="Feedback\FeedbackCsvWriter.cs" />
     <Compile Include="Feedback\FeedbackDisposition.cs" />
