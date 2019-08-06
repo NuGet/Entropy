@@ -75,14 +75,7 @@ namespace SearchScorer.Common
             using (var streamReader = new StreamReader(fileStream))
             using (var csvReader = new CsvReader(streamReader))
             {
-                // Using case sensitive comparison, a search query should only appear once.
-                var caseSensitive = new HashSet<string>();
-
-                // Using case insensitive comparison, PackageIdX and ScoreX should only be set on the first search
-                // query in the file. It's a reasonable user expectation for search to be case insensitive. It is not
-                // in reality (we have camel case splitting) but the expected results for scoring purposes should be
-                // the same for all casings and the expected package IDs score only be defined once.
-                var existingScores = new Dictionary<string, IReadOnlyDictionary<string, int>>(StringComparer.OrdinalIgnoreCase);
+                var existingScores = new Dictionary<string, Dictionary<string, int>>();
 
                 var output = new List<CuratedSearchQuery>();
                 int lineNumber = 1; // The header is read automatically
@@ -91,7 +84,7 @@ namespace SearchScorer.Common
                     lineNumber++;
 
                     var searchQuery = record.SearchQuery.Trim();
-                    if (!caseSensitive.Add(searchQuery))
+                    if (existingScores.ContainsKey(searchQuery))
                     {
                         throw new InvalidOperationException($"The search query '{searchQuery}' is a duplicate in file, line {lineNumber}: {path}");
                     }
@@ -150,33 +143,39 @@ namespace SearchScorer.Common
                         }
                     }
 
-                    if (existingScores.TryGetValue(searchQuery, out var existingPackageIdToScore))
+                    // Look up scores by explicit alias.
+                    if (!string.IsNullOrWhiteSpace(record.Alias))
                     {
-                        if (packageIdToScore.Any())
+                        var alias = record.Alias.Trim();
+                        if (existingScores.TryGetValue(alias, out var aliasScores))
                         {
-                            throw new InvalidOperationException($"There scores for case insensitive search query '{searchQuery}' are defined multiple time in file, line {lineNumber}: {path}");
+                            if (packageIdToScore.Any())
+                            {
+                                throw new InvalidOperationException($"There scores for aliased search query '{searchQuery}' in file, line {lineNumber}: {path}");
+                            }
+
+                            packageIdToScore = aliasScores;
+                            Console.WriteLine($"[ INFO ] '{searchQuery}' => '{alias}'");
                         }
+                        else
+                        {
+                            throw new InvalidOperationException($"The search query alias '{alias}' does not exist above search query '{searchQuery}' in file, line {lineNumber}: {path}");
+                        }
+                    }
+
+                    if (packageIdToScore.Any())
+                    {
+                        existingScores.Add(searchQuery, packageIdToScore);
 
                         output.Add(new CuratedSearchQuery(
                             record.Source,
                             searchQuery,
-                            existingPackageIdToScore));
+                            packageIdToScore));
                     }
                     else
                     {
-                        if (packageIdToScore.Any())
-                        {
-                            existingScores.Add(searchQuery, packageIdToScore);
-
-                            output.Add(new CuratedSearchQuery(
-                                record.Source,
-                                searchQuery,
-                                packageIdToScore));
-                        }
-                        else
-                        {
-                            Console.WriteLine($"WARNING: Skipping search query '{searchQuery}' since it has no scores.");
-                        }
+                        Console.WriteLine($"[ WARN ] Stopping at search query '{searchQuery}' since it has no scores.");
+                        break;
                     }
                 }
 
@@ -188,6 +187,7 @@ namespace SearchScorer.Common
         {
             public SearchQuerySource Source { get; set; }
             public string SearchQuery { get; set; }
+            public string Alias { get; set; }
             public string PackageId0 { get; set; }
             public string Score0 { get; set; }
             public string PackageId1 { get; set; }
