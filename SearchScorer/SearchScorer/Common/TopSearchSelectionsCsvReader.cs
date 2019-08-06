@@ -9,8 +9,9 @@ namespace SearchScorer.Common
     {
         /* This is the query that generates the data:
 
+let minTimestamp = todatetime('2019-07-02T18:57:00Z');
 customMetrics
-| where timestamp > ago(90d)
+| where timestamp > minTimestamp
 | where name == "BrowserSearchSelection"
 | extend SearchQuery = trim("\\s", tostring(customDimensions.SearchTerm))
 | extend selectedPackageId = tolower(tostring(customDimensions.PackageId))

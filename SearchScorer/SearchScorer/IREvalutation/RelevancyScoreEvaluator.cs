@@ -31,31 +31,29 @@ namespace SearchScorer.IREvalutation
             Console.WriteLine($"Control:   {report.ControlReport.Score}");
             Console.WriteLine($"Treatment: {report.TreatmentReport.Score}");
 
+            ConsoleUtility.WriteHeading("Curated Search Queries", '=');
+            WriteBiggestWinnersAndLosersToConsole(report, v => v.CuratedSearchQueries);
+
             ConsoleUtility.WriteHeading("Feedback", '=');
-            WriteBiggestWinnersAndLosersToConsole(
-                report,
-                v => v.FeedbackSearchQueriesScore,
-                v => v.FeedbackSearchQueries);
+            WriteBiggestWinnersAndLosersToConsole(report, v => v.FeedbackSearchQueries);
 
             ConsoleUtility.WriteHeading("Top Search Selections", '=');
-            WriteBiggestWinnersAndLosersToConsole(
-                report,
-                v => v.SearchQueriesWithSelectionsScore,
-                v => v.SearchQueriesWithSelections);
+            WriteBiggestWinnersAndLosersToConsole(report, v => v.SearchQueriesWithSelections);
         }
 
         private static void WriteBiggestWinnersAndLosersToConsole<T>(
             RelevancyReport report,
-            Func<VariantReport, double> getScore,
-            Func<VariantReport, IReadOnlyList<WeightedRelevancyScoreResult<T>>> getResults)
+            Func<VariantReport, SearchQueriesReport<T>> getReport)
         {
-            Console.WriteLine($"Control:   {getScore(report.ControlReport)}");
-            Console.WriteLine($"Treatment: {getScore(report.TreatmentReport)}");
+            Console.WriteLine($"Control:   {getReport(report.ControlReport).Score}");
+            Console.WriteLine($"Treatment: {getReport(report.TreatmentReport).Score}");
 
-            var toTreatment = getResults(report.TreatmentReport)
+            var toTreatment = getReport(report.TreatmentReport)
+                .Queries
                 .GroupBy(x => x.Result.Input.SearchQuery)
                 .ToDictionary(x => x.Key, x => x.First().Score);
-            var scoreChanges = getResults(report.ControlReport)
+            var scoreChanges = getReport(report.ControlReport)
+                .Queries
                 .GroupBy(x => x.Result.Input.SearchQuery)
                 .ToDictionary(x => x.Key, x => toTreatment[x.Key] - x.First().Score)
                 .OrderBy(x => x.Key)
@@ -83,62 +81,101 @@ namespace SearchScorer.IREvalutation
 
         private async Task<RelevancyReport> GetReportAsync(SearchScorerSettings settings)
         {
-            var controlReport = await GetVariantReport(settings.ControlBaseUrl, settings);
-            var treatmentReport = await GetVariantReport(settings.TreatmentBaseUrl, settings);
+            var topQueries = TopSearchQueriesCsvReader.Read(settings.TopSearchQueriesCsvPath);
+            var topSearchReferrals = GoogleAnalyticsSearchReferralsCsvReader.Read(settings.GoogleAnalyticsSearchReferralsCsvPath);
+
+            var controlReport = await GetVariantReport(
+                settings.ControlBaseUrl,
+                settings,
+                topQueries,
+                topSearchReferrals);
+
+            var treatmentReport = await GetVariantReport(
+                settings.TreatmentBaseUrl,
+                settings,
+                topQueries,
+                topSearchReferrals);
 
             return new RelevancyReport(
                 controlReport,
                 treatmentReport);
         }
 
-        private async Task<VariantReport> GetVariantReport(string baseUrl, SearchScorerSettings settings)
+        private async Task<VariantReport> GetVariantReport(
+            string baseUrl,
+            SearchScorerSettings settings,
+            IReadOnlyDictionary<string, int> topQueries,
+            IReadOnlyDictionary<string, int> topSearchReferrals)
         {
+            var curatedSearchQueriesTask = GetCuratedSearchQueriesScoreAsync(baseUrl, settings, topQueries, topSearchReferrals);
             var feedbackSearchQueriesTask = GetFeedbackSearchQueriesScoreAsync(baseUrl, settings);
-            var topSearchSelectionsTask = GetTopSearchSelectionsScoreAsync(baseUrl, settings);
+            var topSearchSelectionsTask = GetTopSearchSelectionsScoreAsync(baseUrl, settings, topQueries);
 
-            await Task.WhenAll(feedbackSearchQueriesTask, topSearchSelectionsTask);
-
-            var feedbackSearchQueriesScore = feedbackSearchQueriesTask.Result.Sum(x => x.Score);
-            var topSearchSelectionsScore = topSearchSelectionsTask.Result.Sum(x => x.Score);
+            await Task.WhenAll(
+                curatedSearchQueriesTask,
+                feedbackSearchQueriesTask,
+                topSearchSelectionsTask);
 
             var score = new[]
             {
-                feedbackSearchQueriesScore,
-                topSearchSelectionsScore,
+                curatedSearchQueriesTask.Result.Score,
+                feedbackSearchQueriesTask.Result.Score,
+                topSearchSelectionsTask.Result.Score,
             }.Average();
 
             return new VariantReport(
                 score,
-                feedbackSearchQueriesScore,
-                topSearchSelectionsScore,
+                curatedSearchQueriesTask.Result,
                 feedbackSearchQueriesTask.Result,
                 topSearchSelectionsTask.Result);
         }
 
-        private async Task<List<WeightedRelevancyScoreResult<FeedbackSearchQuery>>> GetFeedbackSearchQueriesScoreAsync(
+        private async Task<SearchQueriesReport<CuratedSearchQuery>> GetCuratedSearchQueriesScoreAsync(
             string baseUrl,
-            SearchScorerSettings settings)
+            SearchScorerSettings settings,
+            IReadOnlyDictionary<string, int> topQueries,
+            IReadOnlyDictionary<string, int> topSearchReferrals)
         {
-            var feedbackSearchQueryScores = RelevancyScoreBuilder.FromFeedbackSearchQueriesCsv(settings.FeedbackSearchQueryCsvPath);
+            var minQueryCount = topQueries.Min(x => x.Value);
+            var adjustedTopQueries = topQueries.ToDictionary(
+                x => x.Key,
+                x =>
+                {
+                    if (topSearchReferrals.TryGetValue(x.Key, out var referrals))
+                    {
+                        return Math.Max(x.Value - referrals, minQueryCount);
+                    }
+
+                    return x.Value;
+                });
+
+            var scores = RelevancyScoreBuilder.FromCuratedSearchQueriesCsv(settings.CuratedSearchQueriesCsvPath);
 
             var results = await ProcessAsync(
-                feedbackSearchQueryScores,
+                scores,
                 baseUrl);
 
-            var totalCount = 1.0 * results.Count;
-
-            return results
-                .Select(x => new WeightedRelevancyScoreResult<FeedbackSearchQuery>(
-                    x,
-                    x.ResultScore / totalCount))
-                .ToList();
+            return WeightByTopQueries(adjustedTopQueries, results);
         }
 
-        private async Task<List<WeightedRelevancyScoreResult<SearchQueryWithSelections>>> GetTopSearchSelectionsScoreAsync(
+        private async Task<SearchQueriesReport<FeedbackSearchQuery>> GetFeedbackSearchQueriesScoreAsync(
             string baseUrl,
             SearchScorerSettings settings)
         {
-            var topQueries = TopSearchQueryCsvReader.Read(settings.TopSearchQueryCsvPath);
+            var scores = RelevancyScoreBuilder.FromFeedbackSearchQueriesCsv(settings.FeedbackSearchQueriesCsvPath);
+
+            var results = await ProcessAsync(
+                scores,
+                baseUrl);
+
+            return WeightEvently(results);
+        }
+
+        private async Task<SearchQueriesReport<SearchQueryWithSelections>> GetTopSearchSelectionsScoreAsync(
+            string baseUrl,
+            SearchScorerSettings settings,
+            IReadOnlyDictionary<string, int> topQueries)
+        {
             var topSearchSelectionScores = RelevancyScoreBuilder.FromTopSearchSelectionsCsv(settings.TopSearchSelectionsCsvPath);
 
             // Take the the top search selection data by query frequency.
@@ -154,7 +191,20 @@ namespace SearchScorer.IREvalutation
             return WeightByTopQueries(topQueries, results);
         }
 
-        private static List<WeightedRelevancyScoreResult<T>> WeightByTopQueries<T>(
+        private static SearchQueriesReport<T> WeightEvently<T>(ConcurrentBag<RelevancyScoreResult<T>> results)
+        {
+            var totalCount = 1.0 * results.Count;
+
+            var weightedResults = results
+                .Select(x => new WeightedRelevancyScoreResult<T>(
+                    x,
+                    x.ResultScore / totalCount))
+                .ToList();
+
+            return new SearchQueriesReport<T>(weightedResults);
+        }
+
+        private static SearchQueriesReport<T> WeightByTopQueries<T>(
             IReadOnlyDictionary<string, int> topQueries,
             ConcurrentBag<RelevancyScoreResult<T>> results)
         {
@@ -176,7 +226,7 @@ namespace SearchScorer.IREvalutation
                     1.0 * pair.Value / totalQueryCount));
             }
 
-            return weightedResults;
+            return new SearchQueriesReport<T>(weightedResults);
         }
 
         private async Task<ConcurrentBag<RelevancyScoreResult<T>>> ProcessAsync<T>(

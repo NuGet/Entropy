@@ -46,6 +46,8 @@
   <ItemGroup>
     <Compile Include="Common\Bucket.cs" />
     <Compile Include="Common\ConsoleUtility.cs" />
+    <Compile Include="Common\CuratedSearchQueriesCsvReader.cs" />
+    <Compile Include="Common\CuratedSearchQuery.cs" />
     <Compile Include="Common\WildcardUtility.cs" />
     <Compile Include="Feedback\FeedbackCsvWriter.cs" />
     <Compile Include="Feedback\FeedbackDisposition.cs" />
@@ -59,6 +61,7 @@
     <Compile Include="IREvalutation\RelevancyScoreBuilder.cs" />
     <Compile Include="IREvalutation\RelevancyScoreEvaluator.cs" />
     <Compile Include="IREvalutation\RelevancyScoreResult.cs" />
+    <Compile Include="IREvalutation\SearchQueriesReport.cs" />
     <Compile Include="IREvalutation\SearchQueryRelevancyScores.cs" />
     <Compile Include="IREvalutation\VariantReport.cs" />
     <Compile Include="IREvalutation\WeightedRelevancyScoreResult.cs" />
@@ -69,16 +72,19 @@
     <Compile Include="Common\SearchResponse.cs" />
     <Compile Include="Common\SearchResult.cs" />
     <Compile Include="Feedback\VariantResult.cs" />
-    <Compile Include="Common\FeedbackQueryCsvReader.cs" />
+    <Compile Include="Common\FeedbackQueriesCsvReader.cs" />
     <Compile Include="Common\SearchQueryWithSelections.cs" />
     <Compile Include="Common\SearchSelectionCount.cs" />
     <Compile Include="Common\FeedbackSearchQuery.cs" />
-    <Compile Include="Common\TopSearchQueryCsvReader.cs" />
+    <Compile Include="Common\TopSearchQueriesCsvReader.cs" />
     <Compile Include="Common\TopSearchSelectionsCsvReader.cs" />
     <Compile Include="SearchScorerSettings.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <None Include="CuratedSearchQueries.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="FeedbackSearchQueries.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

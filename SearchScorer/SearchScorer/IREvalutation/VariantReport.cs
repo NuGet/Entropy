@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using SearchScorer.Common;
+﻿using SearchScorer.Common;
 
 namespace SearchScorer.IREvalutation
 {
@@ -7,22 +6,19 @@ namespace SearchScorer.IREvalutation
     {
         public VariantReport(
             double score,
-            double feedbackSearchQueriesScore,
-            double searchQueriesWithSelectionsScore,
-            IReadOnlyList<WeightedRelevancyScoreResult<FeedbackSearchQuery>> feedbackSearchQueries,
-            IReadOnlyList<WeightedRelevancyScoreResult<SearchQueryWithSelections>> searchQueriesWithSelections)
+            SearchQueriesReport<CuratedSearchQuery> curatedSearchQueries,
+            SearchQueriesReport<FeedbackSearchQuery> feedbackSearchQueries,
+            SearchQueriesReport<SearchQueryWithSelections> searchQueriesWithSelections)
         {
             Score = score;
-            FeedbackSearchQueriesScore = feedbackSearchQueriesScore;
-            SearchQueriesWithSelectionsScore = searchQueriesWithSelectionsScore;
+            CuratedSearchQueries = curatedSearchQueries;
             FeedbackSearchQueries = feedbackSearchQueries;
             SearchQueriesWithSelections = searchQueriesWithSelections;
         }
 
         public double Score { get; }
-        public double FeedbackSearchQueriesScore { get; }
-        public double SearchQueriesWithSelectionsScore { get; }
-        public IReadOnlyList<WeightedRelevancyScoreResult<FeedbackSearchQuery>> FeedbackSearchQueries { get; }
-        public IReadOnlyList<WeightedRelevancyScoreResult<SearchQueryWithSelections>> SearchQueriesWithSelections { get; }
+        public SearchQueriesReport<CuratedSearchQuery> CuratedSearchQueries { get; }
+        public SearchQueriesReport<FeedbackSearchQuery> FeedbackSearchQueries { get; }
+        public SearchQueriesReport<SearchQueryWithSelections> SearchQueriesWithSelections { get; }
     }
 }

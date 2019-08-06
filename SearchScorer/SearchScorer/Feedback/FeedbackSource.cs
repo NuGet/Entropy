@@ -8,5 +8,6 @@
         V3Internal,
         V2Internal,
         GitHubOrTwitter,
+        TopQuery,
     }
 }

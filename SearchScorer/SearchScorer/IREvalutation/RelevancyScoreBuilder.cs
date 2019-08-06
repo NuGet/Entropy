@@ -20,12 +20,27 @@ namespace SearchScorer.IREvalutation
         /// This is mentioned by Oliver Chapell's "Expected Reciprocal Rank for Graded Relevance" paper. He worked for
         /// Yahoo Labs so it's good enough for me.
         /// </summary>
-        private const int MaximumRelevancyScore = 4;
+        public const int MaximumRelevancyScore = 4;
+
+        public static IReadOnlyList<SearchQueryRelevancyScores<CuratedSearchQuery>> FromCuratedSearchQueriesCsv(string path)
+        {
+            var output = new List<SearchQueryRelevancyScores<CuratedSearchQuery>>();
+            var curatedSearchQueries = CuratedSearchQueriesCsvReader.Read(path);
+            foreach (var query in curatedSearchQueries)
+            {
+                output.Add(new SearchQueryRelevancyScores<CuratedSearchQuery>(
+                    query.SearchQuery,
+                    query.PackageIdToScore,
+                    query));
+            }
+
+            return output;
+        }
 
         public static IReadOnlyList<SearchQueryRelevancyScores<FeedbackSearchQuery>> FromFeedbackSearchQueriesCsv(string path)
         {
             var output = new List<SearchQueryRelevancyScores<FeedbackSearchQuery>>();
-            var feedbackSearchQueries = FeedbackSearchQueryCsvReader.Read(path);
+            var feedbackSearchQueries = FeedbackSearchQueriesCsvReader.Read(path);
             foreach (var feedback in feedbackSearchQueries)
             {
                 // Give expected package IDs the maximum relevancy score.

@@ -10,7 +10,7 @@ using SearchScorer.Feedback;
 
 namespace SearchScorer.Common
 {
-    public static class FeedbackSearchQueryCsvReader
+    public static class FeedbackSearchQueriesCsvReader
     {
         public static IReadOnlyList<FeedbackSearchQuery> Read(string path)
         {
