@@ -9,7 +9,7 @@ namespace SearchScorer.Common
     {
         public static void Write(string path, IReadOnlyList<GitHubRepository> repositories)
         {
-            using (var fileStream = File.OpenWrite(path))
+            using (var fileStream = new FileStream(path, FileMode.Create))
             using (var streamWriter = new StreamWriter(fileStream))
             using (var csvWriter = new CsvWriter(streamWriter))
             {

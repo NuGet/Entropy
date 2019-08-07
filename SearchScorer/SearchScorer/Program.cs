@@ -26,13 +26,19 @@ namespace SearchScorer
                 CuratedSearchQueriesCsvPath = Path.Combine(assemblyDir, "CuratedSearchQueries.csv"),
                 TopSearchQueriesCsvPath = @"C:\Users\jver\Desktop\search-scorer\TopSearchQueries-2019-08-05.csv",
                 TopSearchSelectionsCsvPath = @"C:\Users\jver\Desktop\search-scorer\TopSearchSelections-2019-08-05.csv",
+                TopSearchSelectionsV2CsvPath = @"C:\Users\jver\Desktop\search-scorer\TopSearchSelectionsV2-2019-08-05.csv",
                 GoogleAnalyticsSearchReferralsCsvPath = @"C:\Users\jver\Desktop\search-scorer\GoogleAnalyticsSearchReferrals-2019-07-03-2019-08-04.csv",
                 GitHubUsageJsonPath = @"C:\Users\jver\Desktop\search-scorer\GitHubUsage.v1-2019-08-06.json",
                 GitHubUsageCsvPath = @"C:\Users\jver\Desktop\search-scorer\GitHubUsage.v1-2019-08-06.csv",
             };
 
-            var repositories = GitHubUsageJsonReader.Read(settings.GitHubUsageJsonPath);
-            GitHubUsageCsvWriter.Write(settings.GitHubUsageCsvPath, repositories);
+            // Output data in more convenient formats.
+            GitHubUsageCsvWriter.Write(
+                settings.GitHubUsageCsvPath,
+                GitHubUsageJsonReader.Read(settings.GitHubUsageJsonPath));
+            TopSearchSelectionsV2CsvWriter.Write(
+                settings.TopSearchSelectionsV2CsvPath,
+                TopSearchSelectionsCsvReader.Read(settings.TopSearchSelectionsCsvPath));
 
             using (var httpClientHandler = new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip })
             using (var httpClient = new HttpClient())
