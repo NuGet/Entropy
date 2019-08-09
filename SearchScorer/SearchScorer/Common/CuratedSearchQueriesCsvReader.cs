@@ -91,16 +91,11 @@ namespace SearchScorer.Common
 
                     var pairs = new[]
                     {
-                        new { PackageId = record.PackageId0, Score = record.Score0 },
-                        new { PackageId = record.PackageId1, Score = record.Score1 },
-                        new { PackageId = record.PackageId2, Score = record.Score2 },
-                        new { PackageId = record.PackageId3, Score = record.Score3 },
-                        new { PackageId = record.PackageId4, Score = record.Score4 },
-                        new { PackageId = record.PackageId5, Score = record.Score5 },
-                        new { PackageId = record.PackageId6, Score = record.Score6 },
-                        new { PackageId = record.PackageId7, Score = record.Score7 },
-                        new { PackageId = record.PackageId8, Score = record.Score8 },
-                        new { PackageId = record.PackageId9, Score = record.Score9 },
+                        new { PackageId = record.ID0, Score = record.S0 },
+                        new { PackageId = record.ID1, Score = record.S1 },
+                        new { PackageId = record.ID2, Score = record.S2 },
+                        new { PackageId = record.ID3, Score = record.S3 },
+                        new { PackageId = record.ID4, Score = record.S4 },
                     };
 
                     var packageIdToScore = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
@@ -143,39 +138,17 @@ namespace SearchScorer.Common
                         }
                     }
 
-                    // Look up scores by explicit alias.
-                    if (!string.IsNullOrWhiteSpace(record.Alias))
-                    {
-                        var alias = record.Alias.Trim();
-                        if (existingScores.TryGetValue(alias, out var aliasScores))
-                        {
-                            if (packageIdToScore.Any())
-                            {
-                                throw new InvalidOperationException($"There scores for aliased search query '{searchQuery}' in file, line {lineNumber}: {path}");
-                            }
-
-                            packageIdToScore = aliasScores;
-                            Console.WriteLine($"[ INFO ] '{searchQuery}' => '{alias}'");
-                        }
-                        else
-                        {
-                            throw new InvalidOperationException($"The search query alias '{alias}' does not exist above search query '{searchQuery}' in file, line {lineNumber}: {path}");
-                        }
-                    }
-
                     if (packageIdToScore.Any())
                     {
                         existingScores.Add(searchQuery, packageIdToScore);
 
                         output.Add(new CuratedSearchQuery(
-                            record.Source,
                             searchQuery,
                             packageIdToScore));
                     }
                     else
                     {
-                        Console.WriteLine($"[ WARN ] Stopping at search query '{searchQuery}' since it has no scores.");
-                        break;
+                        Console.WriteLine($"[ WARN ] Skipping at search query '{searchQuery}' since it has no scores.");
                     }
                 }
 
@@ -185,29 +158,17 @@ namespace SearchScorer.Common
 
         private class Record
         {
-            public SearchQuerySource Source { get; set; }
             public string SearchQuery { get; set; }
-            public string Alias { get; set; }
-            public string PackageId0 { get; set; }
-            public string Score0 { get; set; }
-            public string PackageId1 { get; set; }
-            public string Score1 { get; set; }
-            public string PackageId2 { get; set; }
-            public string Score2 { get; set; }
-            public string PackageId3 { get; set; }
-            public string Score3 { get; set; }
-            public string PackageId4 { get; set; }
-            public string Score4 { get; set; }
-            public string PackageId5 { get; set; }
-            public string Score5 { get; set; }
-            public string PackageId6 { get; set; }
-            public string Score6 { get; set; }
-            public string PackageId7 { get; set; }
-            public string Score7 { get; set; }
-            public string PackageId8 { get; set; }
-            public string Score8 { get; set; }
-            public string PackageId9 { get; set; }
-            public string Score9 { get; set; }
+            public string ID0 { get; set; }
+            public string S0 { get; set; }
+            public string ID1 { get; set; }
+            public string S1 { get; set; }
+            public string ID2 { get; set; }
+            public string S2 { get; set; }
+            public string ID3 { get; set; }
+            public string S3 { get; set; }
+            public string ID4 { get; set; }
+            public string S4 { get; set; }
         }
     }
 }

@@ -61,6 +61,7 @@
     <Compile Include="Feedback\FeedbackResultAggregator.cs" />
     <Compile Include="Feedback\FeedbackResultType.cs" />
     <Compile Include="Feedback\FeedbackSource.cs" />
+    <Compile Include="IREvalutation\NormalizedDiscountedCumulativeGain.cs" />
     <Compile Include="IREvalutation\RelevancyReport.cs" />
     <Compile Include="IREvalutation\RelevancyScoreBuilder.cs" />
     <Compile Include="IREvalutation\RelevancyScoreEvaluator.cs" />

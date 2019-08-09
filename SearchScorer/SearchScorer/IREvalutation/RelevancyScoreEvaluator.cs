@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using SearchScorer.Common;
 
@@ -107,27 +106,22 @@ namespace SearchScorer.IREvalutation
             IReadOnlyDictionary<string, int> topQueries,
             IReadOnlyDictionary<string, int> topSearchReferrals)
         {
-            var curatedSearchQueriesTask = GetCuratedSearchQueriesScoreAsync(baseUrl, settings, topQueries, topSearchReferrals);
-            var feedbackSearchQueriesTask = GetFeedbackSearchQueriesScoreAsync(baseUrl, settings);
-            var topSearchSelectionsTask = GetTopSearchSelectionsScoreAsync(baseUrl, settings, topQueries);
-
-            await Task.WhenAll(
-                curatedSearchQueriesTask,
-                feedbackSearchQueriesTask,
-                topSearchSelectionsTask);
+            var curatedSearchQueriesReport = await GetCuratedSearchQueriesScoreAsync(baseUrl, settings, topQueries, topSearchReferrals);
+            var feedbackSearchQueriesReport = await GetFeedbackSearchQueriesScoreAsync(baseUrl, settings);
+            var topSearchSelectionsReport = await GetTopSearchSelectionsScoreAsync(baseUrl, settings, topQueries);
 
             var score = new[]
             {
-                curatedSearchQueriesTask.Result.Score,
-                feedbackSearchQueriesTask.Result.Score,
-                topSearchSelectionsTask.Result.Score,
+                curatedSearchQueriesReport.Score,
+                feedbackSearchQueriesReport.Score,
+                topSearchSelectionsReport.Score,
             }.Average();
 
             return new VariantReport(
                 score,
-                curatedSearchQueriesTask.Result,
-                feedbackSearchQueriesTask.Result,
-                topSearchSelectionsTask.Result);
+                curatedSearchQueriesReport,
+                feedbackSearchQueriesReport,
+                topSearchSelectionsReport);
         }
 
         private async Task<SearchQueriesReport<CuratedSearchQuery>> GetCuratedSearchQueriesScoreAsync(
@@ -244,9 +238,17 @@ namespace SearchScorer.IREvalutation
 
                     while (work.TryTake(out var query))
                     {
-                        var result = await _ndcg.ScoreAsync(query, baseUrl, ResultsToEvaluate);
-                        Console.WriteLine($"[{baseUrl}] {query.SearchQuery} => {result.ResultScore}");
-                        output.Add(result);
+                        try
+                        {
+                            var result = await _ndcg.ScoreAsync(query, baseUrl, ResultsToEvaluate);
+                            Console.WriteLine($"[{baseUrl}] {query.SearchQuery} => {result.ResultScore}");
+                            output.Add(result);
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"[{baseUrl}] {query.SearchQuery} => {ex}");
+                            throw;
+                        }
                     }
                 })
                 .ToList();
@@ -254,111 +256,6 @@ namespace SearchScorer.IREvalutation
             await Task.WhenAll(workers);
 
             return output;
-        }
-
-        private class WeightedResult
-        {
-            RelevancyScoreResult Result { get; }
-            public int Weight { get; }
-        }
-    }
-
-    public class NormalizedDiscountedCumulativeGain
-    {
-        private readonly SearchClient _searchClient;
-
-        public NormalizedDiscountedCumulativeGain(SearchClient searchClient)
-        {
-            _searchClient = searchClient;
-        }
-
-        public async Task<RelevancyScoreResult<T>> ScoreAsync<T>(
-            SearchQueryRelevancyScores<T> query,
-            string baseUrl,
-            int resultsToEvaluate)
-        {
-            var response = await _searchClient.SearchAsync(
-                baseUrl,
-                query.SearchQuery,
-                resultsToEvaluate);
-
-            if (!query.PackageIdToScore.Any() || query.PackageIdToScore.Max(x => x.Value) == 0)
-            {
-                return new RelevancyScoreResult<T>(
-                    0,
-                    query,
-                    response);
-            }
-
-            var patternToScorePairs = new List<KeyValuePair<Regex, int>>();
-            foreach (var pair in query.PackageIdToScore.Where(x => x.Value > 0))
-            {
-                if (WildcardUtility.IsWildcard(pair.Key))
-                {
-                    patternToScorePairs.Add(new KeyValuePair<Regex, int>(
-                        WildcardUtility.GetPackageIdWildcareRegex(pair.Key),
-                        pair.Value));
-                }
-            }
-
-            // Determine the score for each of the returns package IDs.
-            var scores = new List<int>();
-            for (var i = 0; i < response.Data.Count; i++)
-            {
-                var packageId = response.Data[i].Id;
-                if (query.PackageIdToScore.TryGetValue(packageId, out var score))
-                {
-                    scores.Add(score);
-                }
-                else
-                {
-                    // It might be that the score map contains wildcards. Let's try those.
-                    foreach (var pair in patternToScorePairs)
-                    {
-                        if (pair.Key.IsMatch(packageId))
-                        {
-                            scores.Add(pair.Value);
-                            continue;
-                        }
-                    }
-
-                    scores.Add(0);
-                }
-            }
-
-            // Determine the ideal scores by taking the top N scores.
-            var idealScores = query
-                .PackageIdToScore
-                .Select(x => x.Value)
-                .OrderByDescending(x => x)
-                .Take(resultsToEvaluate);
-
-            // Calculate the NDCG.
-            var resultScore = NDCG(scores, idealScores);
-
-            return new RelevancyScoreResult<T>(
-                resultScore,
-                query,
-                response);
-        }
-
-        private static double NDCG(IEnumerable<int> scores, IEnumerable<int> idealScores)
-        {
-            return DCG(scores) / DCG(idealScores);
-        }
-
-        private static double DCG(IEnumerable<int> scores)
-        {
-            var sum = 0.0;
-            var i = 1;
-
-            foreach (var score in scores)
-            {
-                sum += score / Math.Log(i + 1, 2);
-                i++;
-            }
-
-            return sum;
         }
     }
 }
