@@ -1,5 +1,9 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices.ComTypes;
 using System.Threading.Tasks;
 using NuGet.Packaging;
 
@@ -14,6 +18,35 @@ namespace SearchScorer.Common
         public PackageIdPatternValidator(SearchClient searchClient)
         {
             _searchClient = searchClient;
+        }
+
+        public async Task<List<string>> GetNonExistentPackageIdsAsync(IEnumerable<string> packageIds, SearchScorerSettings settings)
+        {
+            var distinct = packageIds.Distinct(StringComparer.OrdinalIgnoreCase);
+            var work = new ConcurrentBag<string>(distinct);
+            var output = new ConcurrentBag<string>();
+
+            var workers = Enumerable
+                .Range(0, 16)
+                .Select(async workerId =>
+                {
+                    while (work.TryTake(out var packageIdPattern))
+                    {
+                        var exists = await DoesPackageIdExistAsync(packageIdPattern, settings);
+                        Console.Write(".");
+                        if (!exists)
+                        {
+                            output.Add(packageIdPattern);
+                        }
+                    }
+                })
+                .ToList();
+
+            await Task.WhenAll(workers);
+
+            return output
+                .OrderBy(x => x, StringComparer.OrdinalIgnoreCase)
+                .ToList();
         }
 
         public async Task<bool> DoesPackageIdExistAsync(
