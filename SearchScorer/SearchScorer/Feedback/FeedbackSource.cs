@@ -9,5 +9,6 @@
         V2Internal,
         GitHubOrTwitter,
         TopQuery,
+        V5External,
     }
 }

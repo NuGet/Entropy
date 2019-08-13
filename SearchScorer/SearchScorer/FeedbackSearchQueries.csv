@@ -43,7 +43,7 @@ GitHubOrTwitter,Unknown,uwp,TopDownloads,Microsoft.Toolkit.Uwp
 GitHubOrTwitter,Unknown,Xamarin Forms,MultiTerm,Xamarin.Forms
 GitHubOrTwitter,Unknown,Xamarin.Android.Support,Prefix,Xamarin.Android.Support.v4
 InternalAdHoc,NeitherIsBetter,signalr,PartialId,Microsoft.AspNet.SignalR | Microsoft.AspNetCore.SignalR
-InternalAdHoc,NeitherIsBetter,system.web,Prefix,System.Web.Http.Common | System.Web.Providers | System.Web.Optimiziation.React | System.Web.Providers.Core
+InternalAdHoc,NeitherIsBetter,system.web,Prefix,System.Web.Http.Common | System.Web.Providers | System.Web.Providers.Core
 InternalAdHoc,NeitherIsBetter,"tags:""aws-sdk-v3""",Tags,AWSSDK.Core
 InternalAdHoc,NewIsGreat,cosmos,PartialId,Microsoft.Azure.Cosmos
 InternalAdHoc,NewIsGreat,fluentassertion,Prefix,FluentAssertions
@@ -216,3 +216,114 @@ V3Internal,OldIsBetter,my sample lib,MultiTerm,My.Sample.Lib
 V3Internal,OldIsBetter,mysql data entity,MultiTerm,MySql.Data.Entity
 V3Internal,OldIsBetter,owners:anangaur,TopDownloads,My.Sample.Lib
 V3Internal,OldIsBetter,pdf,Tags,iTextSharp
+V5External,OldIsBetter,qrcode,,QRCoder | ZXing.Net
+V5External,NeitherIsBetter,aforge.net,,AForge.Imaging | AForge.Video
+V5External,NeitherIsBetter,openssl,,System.Security.Cryptography.OpenSsl
+V5External,OldIsBetter,ClosedXML,,ClosedXML | ClosedXML.*
+V5External,NewIsGreat,Microsoft extensions file configuration,,Microsoft.Extensions.Configuration.FileExtensions
+V5External,NewIsGreat,alexa,,Microsoft.Extensions.Configuration.FileExtensions
+V5External,NewIsGreat,json,,newtonsoft.json
+V5External,OldIsBetter,system.linq.async,,System.Linq.Async
+V5External,NewIsGreat,ServiceStack,,ServiceStack
+V5External,NewIsGreat,ServiceStack,,ServiceStack
+V5External,OldIsBetter,System.Linq.Async,,System.Linq.Async
+V5External,NeitherIsBetter,Bogus,,Bogus | Bogus.*
+V5External,NewIsGreat,ImageSharp,,SixLabors.ImageSharp
+V5External,OldIsBetter,microsoft.extensions.hosting.windowsservices,,microsoft.extensions.hosting.windowsservices
+V5External,NeitherIsBetter,microsoft hosting windowsservice,,microsoft.extensions.hosting.windowsservices
+V5External,OldIsBetter,evolve,,Evolve
+V5External,NewIsGreat,miniprofiler.mvc,,miniprofiler.mvc4
+V5External,NewIsGreat,miniprofiler mvc,,miniprofiler.mvc4
+V5External,NewIsGreat,Xamarin.Android,,Xamarin.Android.Support.Design
+V5External,NewIsGreat,Elasticsearch,,Elasticsearch.Net
+V5External,NewIsGreat,Elasticsearch,,NEST
+V5External,NewIsGreat,commandlineutils,,Microsoft.Extensions.CommandLineUtils
+V5External,NeitherIsBetter,reading excel,,ClosedXML
+V5External,OldIsBetter,Youtrack,,YouTracksharp
+V5External,OldIsBetter,cef,,CefSharp.WinForms
+V5External,NewIsGreat,html parser,,HtmlAgilityPack
+V5External,NewIsGreat,json,,Newtonsoft.Json
+V5External,NewIsGreat,extended xml,,ExtendedXmlSerializer
+V5External,OldIsBetter,XmlSerializer,,ExtendedXmlSerializer
+V5External,NewIsGreat,benchmark .net,,BenchmarkDotNet
+V5External,NewIsGreat,benchmark dot net,,BenchmarkDotNet
+V5External,NewIsGreat,yaml,,YamlDotNet
+V5External,NewIsGreat,json,,Newtonsoft.Json
+V5External,NewIsGreat,servicefabric,,Microsoft.ServiceFabric
+V5External,NewIsGreat,remoting,,Microsoft.ServiceFabric.Services.Remoting
+V5External,OldIsBetter,Alexa.net,,Alexa.Net
+V5External,NewIsGreat,authentication,,Microsoft.AspNetCore.Authentication.Core
+V5External,OldIsBetter,pdf,,itext7
+V5External,NewIsGreat,Vault,,VaultSharp
+V5External,NewIsGreat,Android support,,Xamarin.Android.Support.Design
+V5External,NeitherIsBetter,brot,,Brotli.Net
+V5External,NewIsGreat,fluent,,FluentValidation
+V5External,OldIsBetter,Ocr,,Tesseract
+V5External,NewIsGreat,monogame,,MonoGame.Framework.WindowsDX
+V5External,NewIsGreat,netcore,,Microsoft.NETCore.Platforms
+V5External,NewIsGreat,umbraco commerce,,uCommerce.Umbraco7
+V5External,NeitherIsBetter,font-awesome,,font-awesome
+V5External,NewIsGreat,TopShelf,,Topshelf
+V5External,NeitherIsBetter,codeanalysis.csharp,,Microsoft.CodeAnalysis.CSharp.Features
+V5External,OldIsBetter,ef,,EntityFramework
+V5External,OldIsBetter,log,,NLog
+V5External,NewIsGreat,steam,,SteamKit2
+V5External,NewIsGreat,cache,,Microsoft.Extensions.Caching.Memory
+V5External,NewIsGreat,monogame,,MonoGame.Framework.DesktopGL
+V5External,OldIsBetter,Data.net,,Data.Net
+V5External,NewIsGreat,EntityFramework,,EntityFramework
+V5External,NewIsGreat,postgres EF core,,Npgsql.EntityFrameworkCore.PostgreSQL
+V5External,NewIsGreat,pipelines,,System.IO.Pipelines
+V5External,OldIsBetter,sharpdx,,SharpDX
+V5External,OldIsBetter,naudio,,NAudio
+V5External,OldIsBetter,discord,,Discord.Net
+V5External,NewIsGreat,twitch,,TwitchLib
+V5External,NewIsGreat,serilog,,Serilog.Sinks.File
+V5External,NewIsGreat,itext,,iText7
+V5External,OldIsBetter,audit,,Z.EntityFramework.Plus.Audit.*
+V5External,NeitherIsBetter,logging,,Serilog
+V5External,OldIsBetter,pager,,PagedList.Mvc
+V5External,OldIsBetter,excel,,EPPlus
+V5External,NewIsGreat,Orleans,,Microsoft.Orleans.Core
+V5External,NewIsGreat,Immutable,,System.Collections.Immutable
+V5External,NewIsGreat,CK,,CK.Core
+V5External,NewIsGreat,logging,,Microsoft.Extensions.Logging.Abstractions
+V5External,NewIsGreat,json,,Newtonsoft.Json
+V5External,NewIsGreat,fart,,SuperFarter
+V5External,OldIsBetter,Ef,,EntityFramework
+V5External,NewIsGreat,Json,,Newtonsoft.Json
+V5External,NeitherIsBetter,Twain,,Saraff.Twain
+V5External,OldIsBetter,Log,,NLog
+V5External,NewIsGreat,Hangfire,,HangFire.Core
+V5External,NewIsGreat,Loggly,,loggly-csharp
+V5External,NewIsGreat,Linq,,System.Linq.Queryable
+V5External,NewIsGreat,Xunit,,xunit.core
+V5External,OldIsBetter,Wpf,,MahApps.Metro
+V5External,OldIsBetter,Material,,MahApps.Metro
+V5External,NewIsGreat,Console,,System.Console
+V5External,NewIsGreat,Simpleinjector,,SimpleInjector.Integration.Web
+V5External,NewIsGreat,Kafka,,Confluent.Kafka
+V5External,OldIsBetter,CacheManager,,CacheManager.Core
+V5External,NewIsGreat,Microsoft.,,Microsoft.Extensions.Logging.Abstractions
+V5External,NewIsGreat,json,,Newtonsoft.Json
+V5External,NeitherIsBetter,Enity,,EntityFramework | Microsoft.EntityFrameworkCore
+V5External,NewIsGreat,servicefabric,,Microsoft.ServiceFabric
+V5External,NewIsGreat,itext,,iText7
+V5External,NewIsGreat,entity framework core,,Microsoft.EntityFrameworkCore
+V5External,NewIsGreat,Mysql,,MySQL.data
+V5External,OldIsBetter,Postgres,,Npgsql
+V5External,NewIsGreat,EntityFramework,,Microsoft.EntityFrameworkCore
+V5External,OldIsBetter,compilation,,Microsoft.Net.Compilers
+V5External,NewIsGreat,owin openidconnect,,Microsoft.Owin.Security.OpenIdConnect
+V5External,OldIsBetter,extensions logging log4net,,Microsoft.Extensions.Logging.Log4Net.AspNetCore
+V5External,NewIsGreat,session,,Microsoft.Web.RedisSessionStateProvider
+V5External,NewIsGreat,postgresql,,Npgsql.EntityFrameworkCore.PostgreSQL
+V5External,NewIsGreat,logging,,Microsoft.Extensions.Logging.Abstractions
+V5External,NewIsGreat,FluentValidation,,FluentValidation
+V5External,NewIsGreat,swashbuckle,,Swashbuckle
+V5External,OldIsBetter,systemtesting,,SystemTestingTools
+V5External,NewIsGreat,dotnetnuke,,DotNetNuke.Core
+V5External,NewIsGreat,microsoft,,Microsoft.Extensions.Logging.Abstractions
+V5External,NewIsGreat,problem details,,Hellang.Middleware.ProblemDetails
+V5External,NewIsGreat,IdentityServer,,IdentityServer4
+V5External,NeitherIsBetter,Microsoft.Azure.functions.extension,,Microsoft.Azure.Functions.Extensions
