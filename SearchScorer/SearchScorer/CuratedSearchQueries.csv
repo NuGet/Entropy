@@ -30,7 +30,7 @@ automapper,AutoMapper,4,AutoMapper.Extensions.Microsoft.DependencyInjection,3,Au
 "Tags:""serilog""",serilog,4,Serilog.Extensions.Logging,4,Serilog.*,3,,,,
 oracle,Oracle.ManagedDataAccess,4,Oracle.ManagedDataAccess.Core,4,Oracle.ManagedDataAccess.EntityFramework,4,Oracle.*,3,,
 EntityFramework,EntityFramework,4,Microsoft.EntityFrameworkCore,4,Microsoft.EntityFrameworkCore.SqlServer,3,Microsoft.EntityFrameworkCore.Tools,3,Microsoft.EntityFrameworkCore.Design,3
-"Owner:""Autofac"" Autofac*",Autofac,4,Autofac.Extensions.DependencyInjection,3,Autofact.WebApi2,3,Autofac.Mvc5,3,,
+"Owner:""Autofac"" Autofac*",Autofac,4,Autofac.Extensions.DependencyInjection,3,Autofac.WebApi2,3,Autofac.Mvc5,3,,
 Microsoft.EntityFrameworkCore.Tools,Microsoft.EntityFrameworkCore.Tools,4,Microsoft.EntityFrameworkCore.Tools.DotNet,3,Microsoft.EntityFrameworkCore,2,Microsoft.EntityFrameworkCore.Design,2,,
 moq,Moq,4,AutoMoq,3,Autofac.Extras.Moq ,2,Ninject.MockingKernel.Moq,2,,
 entity framework,EntityFramework,4,Microsoft.EntityFrameworkCore,4,Microsoft.EntityFrameworkCore.SqlServer,3,Microsoft.EntityFrameworkCore.Tools,3,Microsoft.EntityFrameworkCore.Design,3
@@ -86,7 +86,7 @@ Oracle.DataAccess,Oracle.ManagedDataAccess,3,Oracle.ManagedDataAccess.Core,3,Ora
 Random Name Generator,RandomNameGeneratorLibrary,4,RandomNameGenerator,4,MaxHampton.RandomNameGenerator,2,,,,
 RTF,sautinsoft.pdffocus,3,RtfPipe,3,sautinsoft.htmltortf,3,sautinsoft.rtftohtml,3,RtfPipe-Signed,3
 ZPL,Neodynamic.SDK.ThermalLabel,4,Zebra.Printer.SDK,4,JSPrintManager.js,4,PlaylistsNET,2,,
-EPPlus,EPPlus,4,EPPlus.Core,4,ExcelDataReader,2,ClosedXM,2,,
+EPPlus,EPPlus,4,EPPlus.Core,4,ExcelDataReader,2,ClosedXML,2,,
 NLog,NLog,4,,,,,,,,
 system.windows.forms,System.Windows.Forms.DataVisualization,3,System.Windows.Forms.Ribbon35,4,,,,,,
 xamarin.forms,Xamarin.Forms,4,Xamarin.Forms.*,3,,,,,,
@@ -169,7 +169,7 @@ xamarin,Xamarin.Forms,4,Xamarin.Forms.Maps,4,Xamarin.Android.Support.v4,4,Xamari
 dotnet,Microsoft.EntityFrameworkCore.Tools.DotNet,3,BenchmarkDotNet,3,dotnet-xunit,3,Microsoft.DotNet.Watcher.Tools,3,,
 System.Data.SQLite,System.Data.SQLite,4,,,,,,,,
 Microsoft.Owin,Microsoft.Owin,4,Microsoft.Owin.*,4,Owin,3,Microsoft.AspNet.Identity.Owin,3,,
-quartz,Quartz,4,Autofac.Extras.Quartz,3,Topshel.Quartz,3,Quartz.*,3,,
+quartz,Quartz,4,Autofac.Extras.Quartz,3,Topshelf.Quartz,3,Quartz.*,3,,
 mysql.data,MySql.Data,4,MySql.Data.Entity,3,MySql.Data.EntityFrameworkCore,3,Pomelo.EntityFrameworkCore.MySql,1,MySqlConnector,1
 netstandard,NETStandard.Library,4,,,,,,,,
 ini,Microsoft.Extensions.Configuration.Ini,4,ini-parser,4,,,,,,
@@ -221,7 +221,7 @@ System.ValueTuple,System.ValueTuple,4,,,,,,,,
 graphql,GraphQL,4,GraphQL.Client,3,HotChocolate,3,,,,
 Microsoft.AspNetCore.Authentication,Microsoft.AspNetCore.Authentication,4,Microsoft.AspNetCore.Authentication.JwtBearer,3,Microsoft.AspNetCore.Authentication.Cookies,3,Microsoft.AspNetCore.Authentication.OpenIdConnect,3,,
 Bimangle,Bimangle.*,3,,,,,,,,
-dbf,DotNoetDBF,4,DbfDataReader,4,DbfReader,4,,,,
+dbf,DotNetDBF,4,DbfDataReader,4,DbfReader,4,,,,
 ninject,Ninject,4,Ninject.*,3,,,,,,
 "Tags:""syncfusion.xamarin""",Syncfusion.Xamarin.Core,4,Syncfusion.Xamarin.SfGauge,4,Syncfusion.Xamarin.GridCommon,4,Syncfusion.Xamarin.*,3,Xamarin.Forms,2
 Microsoft.AspNetCore.Mvc.Core,Microsoft.AspNetCore.Mvc.Core,4,Microsoft.AspNetCore.Mvc.Abstractions,3,Microsoft.AspNetCore.Mvc.Formatters.Json,2,Microsoft.AspNetCore.Mvc.ViewFeatures,3,Microsoft.AspNetCore.Mvc.DataAnnotations,3
@@ -241,7 +241,7 @@ longcalc,longcalc,2,,,,,,,,
 Selenium,Selenium.WebDriver,4,Selenium.Support,3,Selenium.WebDriver.ChromeDriver,3,Selenium.WebDriver.IEDriver,3,Selenium.Chrome.WebDriver,3
 WebRTC,WebRTC,3,OpenTok,2,Xamarin.OpenTok.*,2,,,,
 openssl,System.Security.Cryptography.OpenSsl,4,ManagedOpenSsl64,3,ManagedOpenSsl32,3,,,,
-xbim,Xbim.Essentials,4,Xbin.Common,4,Xbim.*,3,,,,
+xbim,Xbim.Essentials,4,Xbim.Common,4,Xbim.*,3,,,,
 R.NET.Community,R.NET.Community,4,R.NET.Community.FSharp,2,R.NET.Community.Graphics,2,R.NET,1,,
 ReportViewer,Microsoft.Report.Viewer,4,Microsoft.ReportViewer,4,Microsoft.ReportViewer.WinForms,3,Microsoft.ReportViewer.Runtime.WebForms,3,ReportViewer.WebForms,2
 topshelf,Topshelf,4,Topshelf.Log4Net,3,Topshelf.Nlog,3,Topshelf.Autofac,3,Topshelf.Serilog,3
@@ -250,7 +250,7 @@ System.Threading.Tasks.Extensions,System.Threading.Tasks.Extensions,4,System.Thr
 httpcontext,Microsoft.AspNetCore.Http.Abstractions,4,System.Net.Http,4,Microsoft.AspNetCore.Http,3,,,,
 FluentValidation,FluentValidation,4,FluentValidation.*,3,FluentAssertions,3,,,,
 nhibernate,NHibernate,4,FluentNHibernate,3,,,,,,
-OpenStreetMap,OsmSharp,4,MapSurfer.NET,3,BruTile,3,Itinero,2,,
+OpenStreetMap,OsmSharp,4,MapSurfer.NET.UI,3,BruTile,3,Itinero,2,,
 "Tags:""ffmpeg""",FFmpeg.AutoGen,3,Xabe.FFMpeg,4,,,,,,
 Appeon,SnapObjects.*,2,PowerBuilder.*,2,SnapDevelop.*,2,,,,
 mailkit,Mailkit,4,Sendgrid,1,,,,,,
@@ -259,7 +259,7 @@ System.Web,System.Web.Providers,2,System.Web.Http.Common,2,Microsoft.AspNet.WebA
 devexpress,DevExtreme.AspNet.Data,4,DevExpress.Data,4,DevExpress.Xpo,3,,,,
 aspose,Aspose.PDF,4,Aspose.Words,4,Aspose.Cells,4,Aspose.Email,3,Aspose.Slides.NET,3
 aws,AWSSDK.Core,4,AWSSDK.S3,3,AWSSDK.DynamoDBv2,3,AWSSDK.*,2,,
-mongo,MongoDB.Driver,4,mongocsharpdriver,3,MongoDB.Driver.GridFS,3,MongoDB,2,,
+mongo,MongoDB.Driver,4,mongocsharpdriver,3,MongoDB.Driver.GridFS,3,,,,
 Oracle,Oracle.ManagedDataAccess,4,Oracle.ManagedDataAccess.Core,3,Oracle.ManagedDataAccess.EntityFramework,3,Devart.Data.Oracle,2,Devart.Data.Oracle.EFCore,2
 Microsoft.Extensions.Logging.Abstractions,Microsoft.Extensions.Logging.Abstractions,4,Microsoft.Extensions.Logging,3,Microsoft.Extensions.Logging.*,2,Nlog.Extensions.Logging,2,,
 fody,Fody,4,FodyPackaging,2,,,,,,
@@ -349,7 +349,7 @@ tensorflow,Microsoft.ML,3,Microsoft.ML.TensorFlow,4,TensorFlowSharp,4,,,,
 protobuf-net,protobuf-net,4,Google.Protobuf,3,Google.Protobuf.Tools,2,,,,
 Microsoft.NETCore.Platforms,Microsoft.NETCore.Platforms,4,,,,,,,,
 Nethereum,Nethereum.Hex,4,Nethereum.RPC,4,Nethereum.*,3,Nethereum,2,,
-Dapper.Common,Dapper.Common,4,Dapper,3,,,,,,
+Dapper.Common,Dapper,3,,,,,,,,
 TWAIN,NTwain,4,Saraff.Twain,4,TwainDotNet,4,,,,
 swashbuckle.aspnetcore,Swashbuckle.AspNetCore,4,Swashbuckle.AspNetCore.Annotations        ,3,Swashbuckle.AspNetCore.*,2,,,,
 ColorPicker,AdvancedColorPicker,2,,,,,,,,
