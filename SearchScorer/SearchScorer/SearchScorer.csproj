@@ -51,6 +51,7 @@
     <Compile Include="Common\GitHubRepository.cs" />
     <Compile Include="Common\GitHubUsageCsvWriter.cs" />
     <Compile Include="Common\GitHubUsageJsonReader.cs" />
+    <Compile Include="Common\PackageIdPatternValidator.cs" />
     <Compile Include="Common\TopSearchSelectionsV2CsvWriter.cs" />
     <Compile Include="Common\WildcardUtility.cs" />
     <Compile Include="Feedback\FeedbackCsvWriter.cs" />
@@ -100,6 +101,9 @@
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json">
       <Version>12.0.2</Version>
+    </PackageReference>
+    <PackageReference Include="NuGet.Packaging">
+      <Version>5.2.0</Version>
     </PackageReference>
   </ItemGroup>
   <ItemGroup />

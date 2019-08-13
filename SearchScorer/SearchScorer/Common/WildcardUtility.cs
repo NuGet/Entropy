@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System;
+using System.Text.RegularExpressions;
 
 namespace SearchScorer.Common
 {
@@ -20,6 +21,16 @@ namespace SearchScorer.Common
         private static string WildcardToRegular(string value)
         {
             return "^" + Regex.Escape(value).Replace("\\?", ".").Replace("\\*", ".*") + "$";
+        }
+
+        public static bool Matches(string packageId, string packageIdPattern)
+        {
+            if (!IsWildcard(packageIdPattern))
+            {
+                return StringComparer.OrdinalIgnoreCase.Equals(packageId, packageIdPattern);
+            }
+
+            return GetPackageIdWildcareRegex(packageIdPattern).IsMatch(packageId);
         }
     }
 }
