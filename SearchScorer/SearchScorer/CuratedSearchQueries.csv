@@ -89,7 +89,7 @@ ZPL,Neodynamic.SDK.ThermalLabel,4,Zebra.Printer.SDK,4,JSPrintManager.js,4,Playli
 EPPlus,EPPlus,4,EPPlus.Core,4,ExcelDataReader,2,ClosedXML,2,,
 NLog,NLog,4,,,,,,,,
 system.windows.forms,System.Windows.Forms.DataVisualization,3,System.Windows.Forms.Ribbon35,4,,,,,,
-xamarin.forms,Xamarin.Forms,4,Xamarin.Forms.*,3,,,,,,
+xamarin.forms,Xamarin.Forms,4,Xamarin.Forms.Maps,3,Xamarin.Forms.CarouselView,3,Xamarin.Forms.Mocks,3,,
 hangfire,HangFire,4,Hangfire.AspNetCore,3,HangFire.SqlServer,3,,,,
 system.net.http,system.net.http,4,System.Net.Requests,1,Microsoft.Extensions.Http,3,,,,
 Newtonsoft,Newtonsoft.Json,4,Newtonsoft.Json.Bson,3,Newtonsoft.Json.Schema,3,,,,
