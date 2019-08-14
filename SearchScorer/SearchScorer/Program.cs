@@ -44,30 +44,6 @@ namespace SearchScorer
                 // await VerifyPackageIdsExistAsync(settings, searchClient);
 
                 await new IREvalutation.RelevancyScoreEvaluator(searchClient).RunAsync(settings);
-                
-                // await Feedback.FeedbackEvaluator.RunAsync(httpClient, settings);
-            }
-        }
-
-        private static async Task VerifyPackageIdsExistAsync(SearchScorerSettings settings, SearchClient searchClient)
-        {
-            var validator = new PackageIdPatternValidator(searchClient);
-
-            // Verify all desired package IDs exist.
-            var feedback = FeedbackSearchQueriesCsvReader
-                .Read(settings.FeedbackSearchQueriesCsvPath)
-                .SelectMany(x => x.MostRelevantPackageIds);
-            var curated = CuratedSearchQueriesCsvReader
-                .Read(settings.CuratedSearchQueriesCsvPath)
-                .SelectMany(x => x.PackageIdToScore.Keys);
-            Console.WriteLine("Searching for non-existent package IDs");
-            var allPackageIds = feedback.Concat(curated);
-            var nonExistentPackageIds = await validator.GetNonExistentPackageIdsAsync(allPackageIds, settings);
-            Console.WriteLine();
-            Console.WriteLine($"Found {nonExistentPackageIds.Count}.");
-            foreach (var packageId in nonExistentPackageIds)
-            {
-                Console.WriteLine($" - {packageId}");
             }
         }
 
@@ -80,6 +56,30 @@ namespace SearchScorer
             TopSearchSelectionsV2CsvWriter.Write(
                 settings.TopSearchSelectionsV2CsvPath,
                 TopSearchSelectionsCsvReader.Read(settings.TopSearchSelectionsCsvPath));
+        }
+
+        private static async Task VerifyPackageIdsExistAsync(SearchScorerSettings settings, SearchClient searchClient)
+        {
+            var validator = new PackageIdPatternValidator(searchClient);
+
+            // Verify all desired package IDs exist.
+            var feedback = FeedbackSearchQueriesCsvReader
+                .Read(settings.FeedbackSearchQueriesCsvPath)
+                .SelectMany(x => x.MostRelevantPackageIds);
+
+            var curated = CuratedSearchQueriesCsvReader
+                .Read(settings.CuratedSearchQueriesCsvPath)
+                .SelectMany(x => x.PackageIdToScore.Keys);
+
+            Console.WriteLine("Searching for non-existent package IDs");
+            var allPackageIds = feedback.Concat(curated);
+            var nonExistentPackageIds = await validator.GetNonExistentPackageIdsAsync(allPackageIds, settings);
+            Console.WriteLine();
+            Console.WriteLine($"Found {nonExistentPackageIds.Count}.");
+            foreach (var packageId in nonExistentPackageIds)
+            {
+                Console.WriteLine($" - {packageId}");
+            }
         }
     }
 }
