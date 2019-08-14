@@ -327,3 +327,4 @@ V5External,NewIsGreat,microsoft,,Microsoft.Extensions.Logging.Abstractions
 V5External,NewIsGreat,problem details,,Hellang.Middleware.ProblemDetails
 V5External,NewIsGreat,IdentityServer,,IdentityServer4
 V5External,NeitherIsBetter,Microsoft.Azure.functions.extension,,Microsoft.Azure.Functions.Extensions
+V5External,NewIsGreat,ldap,,Novell.Directory.Ldap.NETStandard
