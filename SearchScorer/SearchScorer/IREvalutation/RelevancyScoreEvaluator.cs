@@ -26,18 +26,11 @@ namespace SearchScorer.IREvalutation
         {
             var report = await GetReportAsync(settings);
 
-            ConsoleUtility.WriteHeading("Scores", '=');
-            Console.WriteLine($"Control:   {report.ControlReport.Score}");
-            Console.WriteLine($"Treatment: {report.TreatmentReport.Score}");
-
             ConsoleUtility.WriteHeading("Curated Search Queries", '=');
             WriteBiggestWinnersAndLosersToConsole(report, v => v.CuratedSearchQueries);
 
             ConsoleUtility.WriteHeading("Feedback", '=');
             WriteBiggestWinnersAndLosersToConsole(report, v => v.FeedbackSearchQueries);
-
-            ConsoleUtility.WriteHeading("Top Search Selections", '=');
-            WriteBiggestWinnersAndLosersToConsole(report, v => v.SearchQueriesWithSelections);
         }
 
         private static void WriteBiggestWinnersAndLosersToConsole<T>(
@@ -108,20 +101,10 @@ namespace SearchScorer.IREvalutation
         {
             var curatedSearchQueriesReport = await GetCuratedSearchQueriesScoreAsync(baseUrl, settings, topQueries, topSearchReferrals);
             var feedbackSearchQueriesReport = await GetFeedbackSearchQueriesScoreAsync(baseUrl, settings);
-            var topSearchSelectionsReport = await GetTopSearchSelectionsScoreAsync(baseUrl, settings, topQueries);
-
-            var score = new[]
-            {
-                curatedSearchQueriesReport.Score,
-                feedbackSearchQueriesReport.Score,
-                topSearchSelectionsReport.Score,
-            }.Average();
 
             return new VariantReport(
-                score,
                 curatedSearchQueriesReport,
-                feedbackSearchQueriesReport,
-                topSearchSelectionsReport);
+                feedbackSearchQueriesReport);
         }
 
         private async Task<SearchQueriesReport<CuratedSearchQuery>> GetCuratedSearchQueriesScoreAsync(

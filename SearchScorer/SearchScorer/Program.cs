@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -35,6 +34,45 @@ namespace SearchScorer
                 GitHubUsageCsvPath = @"C:\Users\jver\Desktop\search-scorer\GitHubUsage.v1-2019-08-06.csv",
             };
 
+            // WriteConvenientCsvs(settings);
+
+            using (var httpClientHandler = new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip })
+            using (var httpClient = new HttpClient())
+            {
+                var searchClient = new SearchClient(httpClient);
+
+                // await VerifyPackageIdsExistAsync(settings, searchClient);
+
+                await new IREvalutation.RelevancyScoreEvaluator(searchClient).RunAsync(settings);
+                
+                // await Feedback.FeedbackEvaluator.RunAsync(httpClient, settings);
+            }
+        }
+
+        private static async Task VerifyPackageIdsExistAsync(SearchScorerSettings settings, SearchClient searchClient)
+        {
+            var validator = new PackageIdPatternValidator(searchClient);
+
+            // Verify all desired package IDs exist.
+            var feedback = FeedbackSearchQueriesCsvReader
+                .Read(settings.FeedbackSearchQueriesCsvPath)
+                .SelectMany(x => x.MostRelevantPackageIds);
+            var curated = CuratedSearchQueriesCsvReader
+                .Read(settings.CuratedSearchQueriesCsvPath)
+                .SelectMany(x => x.PackageIdToScore.Keys);
+            Console.WriteLine("Searching for non-existent package IDs");
+            var allPackageIds = feedback.Concat(curated);
+            var nonExistentPackageIds = await validator.GetNonExistentPackageIdsAsync(allPackageIds, settings);
+            Console.WriteLine();
+            Console.WriteLine($"Found {nonExistentPackageIds.Count}.");
+            foreach (var packageId in nonExistentPackageIds)
+            {
+                Console.WriteLine($" - {packageId}");
+            }
+        }
+
+        private static void WriteConvenientCsvs(SearchScorerSettings settings)
+        {
             // Output data in more convenient formats.
             GitHubUsageCsvWriter.Write(
                 settings.GitHubUsageCsvPath,
@@ -42,33 +80,6 @@ namespace SearchScorer
             TopSearchSelectionsV2CsvWriter.Write(
                 settings.TopSearchSelectionsV2CsvPath,
                 TopSearchSelectionsCsvReader.Read(settings.TopSearchSelectionsCsvPath));
-
-            using (var httpClientHandler = new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip })
-            using (var httpClient = new HttpClient())
-            {
-                var searchClient = new SearchClient(httpClient);
-                var validator = new PackageIdPatternValidator(searchClient);
-
-                // Verify all desired package IDs exist.
-                var feedback = FeedbackSearchQueriesCsvReader
-                    .Read(settings.FeedbackSearchQueriesCsvPath)
-                    .SelectMany(x => x.MostRelevantPackageIds);
-                var curated = CuratedSearchQueriesCsvReader
-                    .Read(settings.CuratedSearchQueriesCsvPath)
-                    .SelectMany(x => x.PackageIdToScore.Keys);
-                Console.WriteLine("Searching for non-existent package IDs");
-                var allPackageIds = feedback.Concat(curated);
-                var nonExistentPackageIds = await validator.GetNonExistentPackageIdsAsync(allPackageIds, settings);
-                Console.WriteLine();
-                Console.WriteLine($"Found {nonExistentPackageIds.Count}.");
-                foreach (var packageId in nonExistentPackageIds)
-                {
-                    Console.WriteLine($" - {packageId}");
-                }
-
-                await new IREvalutation.RelevancyScoreEvaluator(searchClient).RunAsync(settings);
-                // await Feedback.FeedbackEvaluator.RunAsync(httpClient, settings);
-            }
         }
     }
 }
