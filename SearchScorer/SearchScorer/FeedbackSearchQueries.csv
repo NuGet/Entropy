@@ -328,3 +328,18 @@ V5External,NewIsGreat,problem details,,Hellang.Middleware.ProblemDetails
 V5External,NewIsGreat,IdentityServer,,IdentityServer4
 V5External,NeitherIsBetter,Microsoft.Azure.functions.extension,,Microsoft.Azure.Functions.Extensions
 V5External,NewIsGreat,ldap,,Novell.Directory.Ldap.NETStandard
+V5External,OldIsBetter,nsq,,PureNSQSharp
+V5External,NewIsGreat,nlog,,NLog
+V5External,NewIsGreat,xunit,,xunit
+V5External,NewIsGreat,xunit.runner,,xunit.runner.console
+V5External,NewIsGreat,moq,,Moq
+V5External,OldIsBetter,Moq.Analyzers,,Moq.Analyzers
+V5External,OldIsBetter,lucene.net,,Lucene.Net
+V5External,NewIsGreat,lucene,,Lucene.Net
+V5External,NewIsGreat,sharpdx,,SharpDX
+V5External,NewIsGreat,bogus,,Bogus
+V5External,NewIsGreat,wpf toolkit,,Extended.Wpf.Toolkit
+V5External,NewIsGreat,xaml behaviors,,Microsoft.Xaml.Behaviors.Wpf
+V5External,NewIsGreat,io Abstractions,,System.IO.Abstractions
+V5External,NewIsGreat,WindowsAPICodePack,,WindowsAPICodePack-Core
+V5External,NewIsGreat,extended wpf,,Extended.Wpf.Toolkit
