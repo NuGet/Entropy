@@ -42,6 +42,7 @@ GitHubOrTwitter,Unknown,rx,CommonName | Tags,System.Reactive
 GitHubOrTwitter,Unknown,uwp,TopDownloads,Microsoft.Toolkit.Uwp
 GitHubOrTwitter,Unknown,Xamarin Forms,MultiTerm,Xamarin.Forms
 GitHubOrTwitter,Unknown,Xamarin.Android.Support,Prefix,Xamarin.Android.Support.v4
+GitHubOrTwitter,OldIsBetter,microsoft.entityframework.core,,Microsoft.EntityFrameworkCore
 InternalAdHoc,NeitherIsBetter,signalr,PartialId,Microsoft.AspNet.SignalR | Microsoft.AspNetCore.SignalR
 InternalAdHoc,NeitherIsBetter,system.web,Prefix,System.Web.Http.Common | System.Web.Providers | System.Web.Providers.Core
 InternalAdHoc,NeitherIsBetter,"tags:""aws-sdk-v3""",Tags,AWSSDK.Core
@@ -343,3 +344,21 @@ V5External,NewIsGreat,xaml behaviors,,Microsoft.Xaml.Behaviors.Wpf
 V5External,NewIsGreat,io Abstractions,,System.IO.Abstractions
 V5External,NewIsGreat,WindowsAPICodePack,,WindowsAPICodePack-Core
 V5External,NewIsGreat,extended wpf,,Extended.Wpf.Toolkit
+V5External,NewIsGreat,dapper,,Dapper
+V5External,NewIsGreat,kafka,,Confluent.Kafka
+V5External,OldIsBetter,postgres,,Npgsql
+V5External,NewIsGreat,Cassandra,,CassandraCSharpDriver
+V5External,NewIsGreat,pdf core,,PdfSharp
+V5External,NewIsGreat,Windows 7 API Code Pack,,WindowsAPICodePack-Core
+V5External,NewIsGreat,base32,,Albireo.Base32
+V5External,NewIsGreat,System.Net.Http.Formatting,,Microsoft.AspNet.WebApi.Client
+V5External,NewIsGreat,Microsoft.Net.Http,,Microsoft.Net.Http
+V5External,NewIsGreat,Microsoft.VisualStudio.Web.BrowserLink.Loader,,Microsoft.VisualStudio.Web.BrowserLink.Loader
+V5External,NewIsGreat,System.Data.OleDb,,System.Data.OleDb
+V5External,NeitherIsBetter,NHunspell,,NHunspell
+V5External,OldIsBetter,Westwind.Utilities,,Westwind.Utilities
+V5External,OldIsBetter,Microsoft.Windows.Compatibility,,Microsoft.Windows.Compatibility
+V5External,NewIsGreat,HtmlAgilityPack,,HtmlAgilityPack
+V5External,NewIsGreat,Markdig,,Markdig
+V5External,NewIsGreat,MahApps.Metro,,MahApps.Metro
+V5External,NeitherIsBetter,Dragablz,,Dragablz
