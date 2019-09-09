@@ -8,10 +8,11 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>SearchScorer</RootNamespace>
     <AssemblyName>SearchScorer</AssemblyName>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>true</Deterministic>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -48,20 +49,14 @@
     <Compile Include="Common\ConsoleUtility.cs" />
     <Compile Include="Common\CuratedSearchQueriesCsvReader.cs" />
     <Compile Include="Common\CuratedSearchQuery.cs" />
+    <Compile Include="Common\FeedbackDisposition.cs" />
     <Compile Include="Common\GitHubRepository.cs" />
     <Compile Include="Common\GitHubUsageCsvWriter.cs" />
     <Compile Include="Common\GitHubUsageJsonReader.cs" />
     <Compile Include="Common\PackageIdPatternValidator.cs" />
+    <Compile Include="Common\SearchQuerySource.cs" />
     <Compile Include="Common\TopSearchSelectionsV2CsvWriter.cs" />
     <Compile Include="Common\WildcardUtility.cs" />
-    <Compile Include="Feedback\FeedbackCsvWriter.cs" />
-    <Compile Include="Feedback\FeedbackDisposition.cs" />
-    <Compile Include="Feedback\FeedbackEvaluator.cs" />
-    <Compile Include="Feedback\FeedbackItem.cs" />
-    <Compile Include="Feedback\FeedbackResult.cs" />
-    <Compile Include="Feedback\FeedbackResultAggregator.cs" />
-    <Compile Include="Feedback\FeedbackResultType.cs" />
-    <Compile Include="Feedback\FeedbackSource.cs" />
     <Compile Include="IREvalutation\NormalizedDiscountedCumulativeGain.cs" />
     <Compile Include="IREvalutation\RelevancyReport.cs" />
     <Compile Include="IREvalutation\RelevancyScoreBuilder.cs" />
@@ -73,11 +68,9 @@
     <Compile Include="IREvalutation\WeightedRelevancyScoreResult.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Feedback\ResultIndexBucket.cs" />
     <Compile Include="Common\SearchClient.cs" />
     <Compile Include="Common\SearchResponse.cs" />
     <Compile Include="Common\SearchResult.cs" />
-    <Compile Include="Feedback\VariantResult.cs" />
     <Compile Include="Common\FeedbackQueriesCsvReader.cs" />
     <Compile Include="Common\SearchQueryWithSelections.cs" />
     <Compile Include="Common\SearchSelectionCount.cs" />

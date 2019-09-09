@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Web;
 using CsvHelper;
-using SearchScorer.Feedback;
 using SearchScorer.IREvalutation;
 
 namespace SearchScorer.Common

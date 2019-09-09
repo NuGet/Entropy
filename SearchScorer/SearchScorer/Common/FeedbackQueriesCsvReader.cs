@@ -6,7 +6,6 @@ using System.Text;
 using CsvHelper;
 using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
-using SearchScorer.Feedback;
 
 namespace SearchScorer.Common
 {

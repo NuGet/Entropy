@@ -1,4 +1,4 @@
-﻿namespace SearchScorer.Feedback
+﻿namespace SearchScorer.Common
 {
     public enum FeedbackDisposition
     {
