@@ -129,7 +129,13 @@ namespace ChangelogGenerator
                                 hidden = true;
                             }
 
-                            if (label.Name == "Area: Engineering Improvements")
+                            if (label.Name == "Area:Engineering Improvements")
+                            {
+                                engineeringImprovement = true;
+                                hidden = true;
+                            }
+
+                            if (label.Name == "Area:Test")
                             {
                                 engineeringImprovement = true;
                                 hidden = true;
