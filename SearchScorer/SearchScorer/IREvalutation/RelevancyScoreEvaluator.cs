@@ -93,6 +93,20 @@ namespace SearchScorer.IREvalutation
                 treatmentReport);
         }
 
+        public async Task<VariantReport> GetCustomVariantReportAsync(
+            SearchScorerSettings settings,
+            string customVariantUrl)
+        {
+            var topQueries = TopSearchQueriesCsvReader.Read(settings.TopSearchQueriesCsvPath);
+            var topSearchReferrals = GoogleAnalyticsSearchReferralsCsvReader.Read(settings.GoogleAnalyticsSearchReferralsCsvPath);
+
+            return await GetVariantReport(
+                customVariantUrl,
+                settings,
+                topQueries,
+                topSearchReferrals);
+        }
+
         private async Task<VariantReport> GetVariantReport(
             string baseUrl,
             SearchScorerSettings settings,
