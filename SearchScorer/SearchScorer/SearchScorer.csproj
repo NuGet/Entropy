@@ -55,6 +55,8 @@
     <Compile Include="Common\GitHubUsageJsonReader.cs" />
     <Compile Include="Common\PackageIdPatternValidator.cs" />
     <Compile Include="Common\SearchQuerySource.cs" />
+    <Compile Include="Common\SearchProbesCsvWriter.cs" />
+    <Compile Include="Common\SearchServiceClientExtensions.cs" />
     <Compile Include="Common\TopSearchSelectionsV2CsvWriter.cs" />
     <Compile Include="Common\WildcardUtility.cs" />
     <Compile Include="IREvalutation\NormalizedDiscountedCumulativeGain.cs" />
@@ -91,6 +93,9 @@
   <ItemGroup>
     <PackageReference Include="CsvHelper">
       <Version>12.1.2</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Azure.Search">
+      <Version>9.1.0</Version>
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json">
       <Version>12.0.2</Version>

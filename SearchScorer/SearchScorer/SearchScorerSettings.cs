@@ -12,5 +12,11 @@
         public string GoogleAnalyticsSearchReferralsCsvPath { get; set; }
         public string GitHubUsageJsonPath { get; set; }
         public string GitHubUsageCsvPath { get; set; }
+        public string ProbeResultsCsvPath { get; set; }
+
+        // The following settings are only necessary for the "probe" command
+        public string AzureSearchServiceName { get; set; }
+        public string AzureSearchIndexName { get; set; }
+        public string AzureSearchApiKey { get; set; }
     }
 }
