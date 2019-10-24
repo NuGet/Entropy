@@ -44,7 +44,7 @@ skin,MaterialSkin,2,Fozzy.Skin,2,,,,,,
 selenium,Selenium.WebDriver,4,Selenium.WebDriver.ChromeDriver,4,Selenium.WebDriverBackedSelenium,4,Selenium.Support,4,Selenium.*,3
 System.Net.Http.Formatting,Microsoft.AspNet.WebApi.Client,4,System.Net.Http.Formatting.Extension,1,,,,,,
 autofac,Autofac,4,Autofac.Extensions.DependencyInjection,4,autofac.configuration,4,autofac.webapi2,3,Autofac.*,3
-npoi,NPOI,4,DotNetCore.NPOI,4,DotNetCore.NPOI.Core,3,CZD.NPOI,1,DotNetCore.NPOI.OpenXmlFormats,3
+npoi,NPOI,4,DotNetCore.NPOI,4,NPOI.Excel,3,CZD.NPOI,1,NPOI.Mapper,3
 "Tags:""Excel""",EPPlus,4,ExcelDataReader,4,NPOI,4,Aspose.Cells,3,,
 Microsoft.AspNetCore,Microsoft.AspNetCore.App,4,Microsoft.AspNetCore.Mvc,4,Microsoft.AspNetCore.All,4,Microsoft.AspNetCore.*,2,,
 System.Drawing,System.Drawing.Common,4,System.Drawing.Primitives,3,,,,,,
@@ -303,7 +303,7 @@ SAML,Microsoft.IdentityModel.Tokens.Saml,4,Sustainsys.Saml2.*,3,Sustainsys.Saml2
 captcha,recaptcha,4,Captcha,4,,,,,,
 xml,System.Xml.Xdocument,4,System.Xml.ReaderWriter,4,,,,,,
 Quartz,Quartz,4,,,,,,,,
-beetlex,BeetleX,4,BeetleX.FastHttpApi,3,BeetleX.ConcurrentTest,3,BeetleX.FastHttpApi.Admin,3,BeetleX.FastHttpApi.Hosting,3
+beetlex,BeetleX,4,BeetleX.FastHttpApi,3,BeetleX.Bumblebee,3,BeetleX.FastHttpApi.Admin,3,BeetleX.FastHttpApi.Hosting,3
 syncfusion.ej2.blazor,Syncfusion.EJ2.Blazor,4,Syncfusion.EJ2.*,3,,,,,,
 LogicBuilder,,,,,,,,,,
 antlr,Antlr,4,Antlr4,4,Antlr3.Runtime,4,Antlr4.Runtime,4,,
