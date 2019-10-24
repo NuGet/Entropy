@@ -37,8 +37,8 @@ namespace SearchScorer
                 GitHubUsageCsvPath = @"C:\Users\jver\Desktop\search-scorer\GitHubUsage.v1-2019-08-06.csv",
 
                 // The following settings are only necessary if running the "probe" command.
-                AzureSearchServiceName = "nuget-prod-usnc-perf",
-                AzureSearchIndexName = "search-perf-000",
+                AzureSearchServiceName = "",
+                AzureSearchIndexName = "",
                 AzureSearchApiKey = "",
                 ProbeResultsCsvPath = @"C:\Users\jver\Desktop\search-scorer\ProbeResults.csv",
 
