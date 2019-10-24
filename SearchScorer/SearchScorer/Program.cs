@@ -186,6 +186,10 @@ namespace SearchScorer
                 .Read(settings.CuratedSearchQueriesCsvPath)
                 .SelectMany(x => x.PackageIdToScore.Keys);
 
+            var clientCurated = CuratedSearchQueriesCsvReader
+                .Read(settings.ClientCuratedSearchQueriesCsvPath)
+                .SelectMany(x => x.PackageIdToScore.Keys);
+
             Console.WriteLine("Searching for non-existent package IDs");
             var allPackageIds = feedback.Concat(curated);
             var nonExistentPackageIds = await validator.GetNonExistentPackageIdsAsync(allPackageIds, settings);
