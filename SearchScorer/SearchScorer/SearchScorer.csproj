@@ -53,6 +53,7 @@
     <Compile Include="Common\GitHubRepository.cs" />
     <Compile Include="Common\GitHubUsageCsvWriter.cs" />
     <Compile Include="Common\GitHubUsageJsonReader.cs" />
+    <Compile Include="Common\GoogleAnalyticsSearchReferralsCsvReader.cs" />
     <Compile Include="Common\PackageIdPatternValidator.cs" />
     <Compile Include="Common\SearchQuerySource.cs" />
     <Compile Include="Common\SearchProbesCsvWriter.cs" />
@@ -83,6 +84,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <None Include="ClientCuratedSearchQueries.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="CuratedSearchQueries.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

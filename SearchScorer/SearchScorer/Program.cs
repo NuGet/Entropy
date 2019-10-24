@@ -28,6 +28,7 @@ namespace SearchScorer
                 TreatmentBaseUrl = "https://azuresearch-usnc.nuget.org/",
                 FeedbackSearchQueriesCsvPath = Path.Combine(assemblyDir, "FeedbackSearchQueries.csv"),
                 CuratedSearchQueriesCsvPath = Path.Combine(assemblyDir, "CuratedSearchQueries.csv"),
+                ClientCuratedSearchQueriesCsvPath = Path.Combine(assemblyDir, "ClientCuratedSearchQueries.csv"),
                 TopSearchQueriesCsvPath = @"C:\Users\jver\Desktop\search-scorer\TopSearchQueries-2019-08-05.csv",
                 TopSearchSelectionsCsvPath = @"C:\Users\jver\Desktop\search-scorer\TopSearchSelections-2019-08-05.csv",
                 TopSearchSelectionsV2CsvPath = @"C:\Users\jver\Desktop\search-scorer\TopSearchSelectionsV2-2019-08-05.csv",

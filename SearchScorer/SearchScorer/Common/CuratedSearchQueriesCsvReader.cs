@@ -2,73 +2,48 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Web;
 using CsvHelper;
 using SearchScorer.IREvalutation;
 
 namespace SearchScorer.Common
 {
-    public class GoogleAnalyticsSearchReferralsCsvReader
+    public static class CuratedSearchQueriesCsvReader
     {
-        public static IReadOnlyDictionary<string, int> Read(string path)
+        public static IReadOnlyList<CuratedSearchQuery> Read(string path, string fallbackDataPath)
         {
-            using (var fileStream = File.OpenRead(path))
-            using (var streamReader = new StreamReader(fileStream))
-            using (var csvReader = new CsvReader(streamReader))
+            var directData = Read(path, includeEmpty: true);
+            var fallbackData = Read(fallbackDataPath, includeEmpty: false);
+            var searchQueryToFallback = fallbackData.ToDictionary(x => x.SearchQuery, x => x);
+
+            var data = new List<CuratedSearchQuery>();
+            foreach (var query in directData)
             {
-                csvReader.Configuration.HasHeaderRecord = true;
-                csvReader.Configuration.IgnoreBlankLines = true;
-
-                var output = new Dictionary<string, int>();
-
-                csvReader.Read(); // comment
-                csvReader.Read(); // comment 
-                csvReader.Read(); // comment
-                csvReader.Read(); // comment
-                csvReader.Read(); // comment
-                csvReader.Read(); // empty line
-                csvReader.ReadHeader();
-
-                while (csvReader.Read())
+                if (query.PackageIdToScore.Any())
                 {
-                    var landingPage = csvReader.GetField<string>("Landing Page");
-                    var landingUri = new Uri("http://example" + landingPage);
-                    var queryString = HttpUtility.ParseQueryString(landingUri.Query);
-
-                    // Skip queries where we are not hitting the first page.
-                    if (int.TryParse(queryString["page"], out var page) && page != 1)
+                    data.Add(query);
+                }
+                else
+                {
+                    if (searchQueryToFallback.TryGetValue(query.SearchQuery, out var fallback))
                     {
-                        continue;
-                    }
-
-                    var searchTerm = csvReader.GetField<string>("Search Term");
-                    var sessions = int.Parse(csvReader.GetField<string>("Sessions").Replace(",", string.Empty));
-
-                    if (output.TryGetValue(searchTerm, out var existingSessions))
-                    {
-                        output[searchTerm] += sessions;
+                        data.Add(fallback);
                     }
                     else
                     {
-                        output.Add(searchTerm, sessions);
+                        WarnEmpty(query.SearchQuery);
                     }
                 }
-
-                return output;
             }
+
+            return data;
         }
 
-        private class Record
-        {
-            public string LandingPage { get; set; }
-            public string SearcTerm { get; set; }
-            public int Sessions { get; set; }
-        }
-    }
-
-    public static class CuratedSearchQueriesCsvReader
-    {
         public static IReadOnlyList<CuratedSearchQuery> Read(string path)
+        {
+            return Read(path, includeEmpty: false);
+        }
+
+        private static IReadOnlyList<CuratedSearchQuery> Read(string path, bool includeEmpty)
         {
             using (var fileStream = File.OpenRead(path))
             using (var streamReader = new StreamReader(fileStream))
@@ -137,7 +112,7 @@ namespace SearchScorer.Common
                         }
                     }
 
-                    if (packageIdToScore.Any())
+                    if (includeEmpty || packageIdToScore.Any())
                     {
                         existingScores.Add(searchQuery, packageIdToScore);
 
@@ -147,12 +122,17 @@ namespace SearchScorer.Common
                     }
                     else
                     {
-                        Console.WriteLine($"[ WARN ] Skipping at search query '{searchQuery}' since it has no scores.");
+                        WarnEmpty(searchQuery);
                     }
                 }
 
                 return output;
             }
+        }
+
+        private static void WarnEmpty(string searchQuery)
+        {
+            Console.WriteLine($"[ WARN ] Skipping at search query '{searchQuery}' since it has no scores.");
         }
 
         private class Record
