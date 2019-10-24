@@ -1,4 +1,7 @@
-﻿namespace SearchScorer
+﻿using System.Collections;
+using System.Collections.Generic;
+
+namespace SearchScorer
 {
     public class SearchScorerSettings
     {
@@ -19,5 +22,10 @@
         public string AzureSearchServiceName { get; set; }
         public string AzureSearchIndexName { get; set; }
         public string AzureSearchApiKey { get; set; }
+
+        public IEnumerable<double> PackageIdWeights { get; set; }
+        public IEnumerable<double> TokenizedPackageIdWeights { get; set; }
+        public IEnumerable<double> TagsWeights { get; set; }
+        public IEnumerable<double> DownloadWeights { get; set; }
     }
 }
