@@ -6,15 +6,21 @@ namespace SearchScorer.Common
 {
     public static class SearchProbesCsvWriter
     {
-        public static void Write(string path, IEnumerable<SearchProbesRecord> scores)
+        public static void Append(string path, SearchProbesRecord score)
         {
-            using (var fileStream = new FileStream(path, FileMode.Create))
-            using (var streamWriter = new StreamWriter(fileStream))
+            var exists = File.Exists(path);
+
+            using (var streamWriter = new StreamWriter(path, append: true))
             using (var csvWriter = new CsvWriter(streamWriter))
             {
-                csvWriter.WriteHeader<SearchProbesRecord>();
-                csvWriter.NextRecord();
-                csvWriter.WriteRecords(scores);
+                if (!exists)
+                {
+                    csvWriter.WriteHeader<SearchProbesRecord>();
+                    csvWriter.NextRecord();
+                }
+
+                csvWriter.WriteRecord(score);
+                streamWriter.WriteLine();
             }
         }
     }

@@ -41,6 +41,11 @@ namespace SearchScorer
                 AzureSearchIndexName = "",
                 AzureSearchApiKey = "",
                 ProbeResultsCsvPath = @"C:\Users\jver\Desktop\search-scorer\ProbeResults.csv",
+
+                PackageIdWeights = CreateRange(lower: 1, upper: 10, increments: 3),
+                TokenizedPackageIdWeights = CreateRange(lower: 1, upper: 10, increments: 3),
+                TagsWeights = CreateRange(lower: 1, upper: 10, increments: 3),
+                DownloadWeights = CreateRange(lower: 1000, upper: 30000, increments: 5000),
             };
 
             // WriteConvenientCsvs(settings);
@@ -79,8 +84,7 @@ namespace SearchScorer
 
             var index = await azureSearchClient.GetNuGetSearchIndexAsync(settings);
 
-            var results = new List<SearchProbesRecord>();
-            foreach (var test in GetProbeTests())
+            foreach (var test in GetProbeTests(settings))
             {
                 // Update the Azure Search index
                 await azureSearchClient.UpdateNuGetSearchIndexAsync(
@@ -96,29 +100,33 @@ namespace SearchScorer
                     settings,
                     customVariantUrl: settings.TreatmentBaseUrl);
 
-                results.Add(new SearchProbesRecord
-                {
-                    PackageIdWeight = test.PackageIdWeight,
-                    TokenizedPackageIdWeight = test.TokenizedPackageIdWeight,
-                    TagsWeight = test.TagsWeight,
-                    DownloadScoreBoost = test.DownloadScoreBoost,
+                // Save the result to the output path
+                SearchProbesCsvWriter.Append(
+                    settings.ProbeResultsCsvPath,
+                    new SearchProbesRecord
+                    {
+                        PackageIdWeight = test.PackageIdWeight,
+                        TokenizedPackageIdWeight = test.TokenizedPackageIdWeight,
+                        TagsWeight = test.TagsWeight,
+                        DownloadScoreBoost = test.DownloadScoreBoost,
 
-                    CuratedSearchScore = report.CuratedSearchQueries.Score,
-                    FeedbackScore = report.FeedbackSearchQueries.Score
-                });
+                        CuratedSearchScore = report.CuratedSearchQueries.Score,
+                        FeedbackScore = report.FeedbackSearchQueries.Score
+                    });
             }
-
-            SearchProbesCsvWriter.Write(settings.ProbeResultsCsvPath, results);
         }
 
-        private static IEnumerable<SearchProbeTest> GetProbeTests()
+        private static IEnumerable<SearchProbeTest> GetProbeTests(SearchScorerSettings settings)
         {
-            var packageIdWeights = CreateRange(lower: 1, upper: 10, increments: 1);
-            var tokenizedPackageIdWeights = CreateRange(lower: 1, upper: 10, increments: 1);
-            var tagWeights = CreateRange(lower: 1, upper: 10, increments: 1);
-            var downloadWeights = CreateRange(lower: 1000, upper: 30000, increments: 1000);
+            var fields = new[]
+            {
+                settings.PackageIdWeights,
+                settings.TokenizedPackageIdWeights,
+                settings.TagsWeights,
+                settings.DownloadWeights
+            };
 
-            return CartesianProduct(new[] { packageIdWeights, tokenizedPackageIdWeights, tagWeights, downloadWeights })
+            return CartesianProduct(fields)
                 .Select(x =>
                 {
                     var values = x.ToList();
@@ -133,12 +141,13 @@ namespace SearchScorer
                 });
         }
 
-        private static IEnumerable<double> CreateRange(int lower, int upper, double increments)
+        private static IReadOnlyList<double> CreateRange(int lower, int upper, double increments)
         {
             var count = (upper - lower) / increments + 1;
             return Enumerable
                 .Range(0, (int)count)
-                .Select(i => (i * increments + lower));
+                .Select(i => (i * increments + lower))
+                .ToList();
         }
 
         // From: https://codereview.stackexchange.com/questions/122699/finding-a-cartesian-product-of-multiple-lists
