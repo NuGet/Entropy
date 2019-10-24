@@ -6,7 +6,7 @@ namespace SearchScorer.Common
 {
     public static class SearchProbesCsvWriter
     {
-        public static void Write(string path, SearchProbesRecord score)
+        public static void Append(string path, SearchProbesRecord score)
         {
             var exists = File.Exists(path);
 

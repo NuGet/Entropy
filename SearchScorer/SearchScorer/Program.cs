@@ -101,7 +101,7 @@ namespace SearchScorer
                     customVariantUrl: settings.TreatmentBaseUrl);
 
                 // Save the result to the output path
-                SearchProbesCsvWriter.Write(
+                SearchProbesCsvWriter.Append(
                     settings.ProbeResultsCsvPath,
                     new SearchProbesRecord
                     {
@@ -141,12 +141,13 @@ namespace SearchScorer
                 });
         }
 
-        private static IEnumerable<double> CreateRange(int lower, int upper, double increments)
+        private static IReadOnlyList<double> CreateRange(int lower, int upper, double increments)
         {
             var count = (upper - lower) / increments + 1;
             return Enumerable
                 .Range(0, (int)count)
-                .Select(i => (i * increments + lower));
+                .Select(i => (i * increments + lower))
+                .ToList();
         }
 
         // From: https://codereview.stackexchange.com/questions/122699/finding-a-cartesian-product-of-multiple-lists

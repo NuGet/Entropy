@@ -23,9 +23,9 @@ namespace SearchScorer
         public string AzureSearchIndexName { get; set; }
         public string AzureSearchApiKey { get; set; }
 
-        public IEnumerable<double> PackageIdWeights { get; set; }
-        public IEnumerable<double> TokenizedPackageIdWeights { get; set; }
-        public IEnumerable<double> TagsWeights { get; set; }
-        public IEnumerable<double> DownloadWeights { get; set; }
+        public IReadOnlyList<double> PackageIdWeights { get; set; }
+        public IReadOnlyList<double> TokenizedPackageIdWeights { get; set; }
+        public IReadOnlyList<double> TagsWeights { get; set; }
+        public IReadOnlyList<double> DownloadWeights { get; set; }
     }
 }
