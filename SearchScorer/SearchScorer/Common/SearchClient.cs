@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Web;
@@ -9,6 +10,7 @@ namespace SearchScorer.Common
     public class SearchClient
     {
         private readonly HttpClient _httpClient;
+        private readonly ConcurrentDictionary<Uri, Lazy<Task<SearchResponse>>> _cache = new ConcurrentDictionary<Uri, Lazy<Task<SearchResponse>>>();
 
         public SearchClient(HttpClient httpClient)
         {
@@ -31,13 +33,19 @@ namespace SearchScorer.Common
 
             var requestUri = uriBuilder.Uri;
 
-            using (var request = new HttpRequestMessage(HttpMethod.Get, requestUri))
-            using (var response = await _httpClient.SendAsync(request))
-            {
-                response.EnsureSuccessStatusCode();
-                var json = await response.Content.ReadAsStringAsync();
-                return JsonConvert.DeserializeObject<SearchResponse>(json);
-            }
+            var lazyTask = _cache.GetOrAdd(requestUri, _ => new Lazy<Task<SearchResponse>>(
+                async () =>
+                {
+                    using (var request = new HttpRequestMessage(HttpMethod.Get, requestUri))
+                    using (var response = await _httpClient.SendAsync(request))
+                    {
+                        response.EnsureSuccessStatusCode();
+                        var json = await response.Content.ReadAsStringAsync();
+                        return JsonConvert.DeserializeObject<SearchResponse>(json);
+                    }
+                }));
+
+            return await lazyTask.Value;
         }
     }
 }

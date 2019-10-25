@@ -11,6 +11,7 @@ namespace SearchScorer
         public string CuratedSearchQueriesCsvPath { get; set; }
         public string ClientCuratedSearchQueriesCsvPath { get; set; }
         public string TopSearchQueriesCsvPath { get; set; }
+        public string TopClientSearchQueriesCsvPath { get; set; }
         public string TopSearchSelectionsCsvPath { get; set; }
         public string TopSearchSelectionsV2CsvPath { get; set; }
         public string GoogleAnalyticsSearchReferralsCsvPath { get; set; }

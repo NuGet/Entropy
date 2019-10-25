@@ -24,12 +24,13 @@ namespace SearchScorer
             var assemblyDir = Path.GetDirectoryName(typeof(Program).Assembly.Location);
             var settings = new SearchScorerSettings
             {
-                ControlBaseUrl = "https://api-v2v3search-0.nuget.org/",
-                TreatmentBaseUrl = "https://azuresearch-usnc.nuget.org/",
+                ControlBaseUrl = "https://azuresearch-usnc.nuget.org/",
+                TreatmentBaseUrl = "https://azuresearch-usnc-preview.nuget.org/",
                 FeedbackSearchQueriesCsvPath = Path.Combine(assemblyDir, "FeedbackSearchQueries.csv"),
                 CuratedSearchQueriesCsvPath = Path.Combine(assemblyDir, "CuratedSearchQueries.csv"),
                 ClientCuratedSearchQueriesCsvPath = Path.Combine(assemblyDir, "ClientCuratedSearchQueries.csv"),
                 TopSearchQueriesCsvPath = @"C:\Users\jver\Desktop\search-scorer\TopSearchQueries-2019-08-05.csv",
+                TopClientSearchQueriesCsvPath = @"C:\Users\jver\Desktop\search-scorer\TopClientSearchQueries-60d-2019-10-24.csv",
                 TopSearchSelectionsCsvPath = @"C:\Users\jver\Desktop\search-scorer\TopSearchSelections-2019-08-05.csv",
                 TopSearchSelectionsV2CsvPath = @"C:\Users\jver\Desktop\search-scorer\TopSearchSelectionsV2-2019-08-05.csv",
                 GoogleAnalyticsSearchReferralsCsvPath = @"C:\Users\jver\Desktop\search-scorer\GoogleAnalyticsSearchReferrals-2019-07-03-2019-08-04.csv",

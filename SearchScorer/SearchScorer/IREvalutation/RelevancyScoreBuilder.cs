@@ -22,11 +22,24 @@ namespace SearchScorer.IREvalutation
         /// </summary>
         public const int MaximumRelevancyScore = 4;
 
-        public static IReadOnlyList<SearchQueryRelevancyScores<CuratedSearchQuery>> FromCuratedSearchQueriesCsv(string path)
+        public static IReadOnlyList<SearchQueryRelevancyScores<CuratedSearchQuery>> FromCuratedSearchQueriesCsv(SearchScorerSettings settings)
+        {
+            var queries = CuratedSearchQueriesCsvReader.Read(settings.CuratedSearchQueriesCsvPath);
+            return FromCuratedSearchQueries(queries);
+        }
+
+        public static IReadOnlyList<SearchQueryRelevancyScores<CuratedSearchQuery>> FromClientCuratedSearchQueriesCsv(SearchScorerSettings settings)
+        {
+            var queries = CuratedSearchQueriesCsvReader.Read(
+                settings.ClientCuratedSearchQueriesCsvPath,
+                settings.CuratedSearchQueriesCsvPath);
+            return FromCuratedSearchQueries(queries);
+        }
+
+        private static IReadOnlyList<SearchQueryRelevancyScores<CuratedSearchQuery>> FromCuratedSearchQueries(IReadOnlyList<CuratedSearchQuery> queries)
         {
             var output = new List<SearchQueryRelevancyScores<CuratedSearchQuery>>();
-            var curatedSearchQueries = CuratedSearchQueriesCsvReader.Read(path);
-            foreach (var query in curatedSearchQueries)
+            foreach (var query in queries)
             {
                 output.Add(new SearchQueryRelevancyScores<CuratedSearchQuery>(
                     query.SearchQuery,
@@ -37,10 +50,10 @@ namespace SearchScorer.IREvalutation
             return output;
         }
 
-        public static IReadOnlyList<SearchQueryRelevancyScores<FeedbackSearchQuery>> FromFeedbackSearchQueriesCsv(string path)
+        public static IReadOnlyList<SearchQueryRelevancyScores<FeedbackSearchQuery>> FromFeedbackSearchQueriesCsv(SearchScorerSettings settings)
         {
             var output = new List<SearchQueryRelevancyScores<FeedbackSearchQuery>>();
-            var feedbackSearchQueries = FeedbackSearchQueriesCsvReader.Read(path);
+            var feedbackSearchQueries = FeedbackSearchQueriesCsvReader.Read(settings.FeedbackSearchQueriesCsvPath);
             foreach (var feedback in feedbackSearchQueries)
             {
                 // Give expected package IDs the maximum relevancy score.

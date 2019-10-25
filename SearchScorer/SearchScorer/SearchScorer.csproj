@@ -58,6 +58,7 @@
     <Compile Include="Common\SearchQuerySource.cs" />
     <Compile Include="Common\SearchProbesCsvWriter.cs" />
     <Compile Include="Common\SearchServiceClientExtensions.cs" />
+    <Compile Include="Common\TopClientSearchQueriesCsvReader.cs" />
     <Compile Include="Common\TopSearchSelectionsV2CsvWriter.cs" />
     <Compile Include="Common\WildcardUtility.cs" />
     <Compile Include="IREvalutation\NormalizedDiscountedCumulativeGain.cs" />
