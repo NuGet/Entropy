@@ -16,7 +16,7 @@ mysql,MySql.Data,4,Pomelo.EntityFrameworkCore.MySql,4,MySqlConnector,4,MySql.Dat
 Microsoft.AspNetCore.App,Microsoft.AspNetCore.App,4,Microsoft.AspNetCore.Mvc,2,Microsoft.EntityFrameworkCore,2,Microsoft.Extensions.*,2,,
 nlog,NLog,4,NLog.Config,3,Nlog.Extensions.Logging,3,Microsoft.ApplicationInsights.NLogTarget,2,,
 newtonsoft.json,Newtonsoft.Json,4,Newtonsoft.Json.Bson,4,Newtonsoft.Json.Schema,4,,,,
-sqlite,System.Data.SQLite,4,Microsoft.Data.SQLite,4,sqlite-net-pcl,4,Microsoft.EntityFrameworkCore.Sqlite,3,System.Data.SQLite.EF6,3
+sqlite,System.Data.SQLite,4,Microsoft.Data.SQLite,4,sqlite-net-pcl,4,Microsoft.EntityFrameworkCore.Sqlite,3,sqlite,3
 accord.net,Accord.*,4,Accord,4,,,,,,
 nunit,NUnit,4,NUnit3TestAdapter,3,NUnit.*,3,,,,
 Microsoft.EntityFrameworkCore.SqlServer,Microsoft.EntityFrameworkCore.SqlServer,4,Microsoft.EntityFrameworkCore,3,Microsoft.EntityFrameworkCore.*,3,,,,
@@ -336,7 +336,7 @@ mstest,MSTest.TestFramework,4,MSTest.TestAdapter,4,,,,,,
 System.Data,System.Data.SqlClient,3,System.Data.SQLite,3,System.Data.Common,2,,,,
 System.ServiceModel,System.ServiceModel.*,2,,,,,,,,
 DataGridView,Microsoft.Toolkit.Uwp.UI.Controls.DataGrid,2,Microsoft.Toolkit.Uwp.UI.Controls,2,,,,,,
-Microsoft,EntityFramework,2,Microsoft.AspNet.Mvc,2,Microsoft.AspNetCore.Mvc,2,Microsoft.Extensions.Logging,2,,
+Microsoft,EntityFramework,2,Microsoft.AspNet.Mvc,2,Microsoft.AspNetCore.Mvc,2,Microsoft.Extensions.Logging,2,Microsoft.*,1
 Microsoft.Extensions.Caching.Memory,Microsoft.Extensions.Caching.Memory,4,Microsoft.Extensions.Caching.*,2,,,,,,
 entityframework core,Microsoft.EntityFrameworkCore,4,EntityFramework,2,Microsoft.EntityFrameworkCore.*,2,,,,
 firebase,Xamarin.Firebase.Messaging,4,Xamarin.Firebase.*,3,FirebaseAuthentication.net,2,,,,

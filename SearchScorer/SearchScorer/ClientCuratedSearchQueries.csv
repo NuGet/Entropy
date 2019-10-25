@@ -202,7 +202,7 @@ aspnetcore.app,Microsoft.AspNetCore.App,4,Microsoft.AspNetCore.ApplicationInsigh
 microsoft.aspnetcore.app,,,,,,,,,,
 Microsoft.Owin.Host.SystemWeb,,,,,,,,,,
 Microsoft.Extensions.Configuration.FileExtensions,,,,,,,,,,
-SQLite,System.Data.SQLite,4,Microsoft.Data.SQLite,4,sqlite-net-pcl,4,Microsoft.EntityFrameworkCore.Sqlite,3,System.Data.SQLite.EF6,3
+SQLite,System.Data.SQLite,4,Microsoft.Data.SQLite,4,sqlite-net-pcl,4,Microsoft.EntityFrameworkCore.Sqlite,3,sqlite,3
 Microsoft.AspNetCore.Http,,,,,,,,,,
 system.configuration,System.Configuration.ConfigurationManager,4,,,,,,,,
 fody,,,,,,,,,,
