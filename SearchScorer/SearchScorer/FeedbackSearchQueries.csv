@@ -362,3 +362,46 @@ V5External,NewIsGreat,HtmlAgilityPack,,HtmlAgilityPack
 V5External,NewIsGreat,Markdig,,Markdig
 V5External,NewIsGreat,MahApps.Metro,,MahApps.Metro
 V5External,NeitherIsBetter,Dragablz,,Dragablz
+V5External,NeitherIsBetter,identityserver,,IdentityServer4
+V5External,OldIsBetter,log,,Log4Net | NLog
+V5External,OldIsBetter,log file,,Log4Net | NLog
+V5External,OldIsBetter,log database,,Log4Net | NLog
+V5External,NeitherIsBetter,unit test,,Xunit | Nunit | MSTest.*
+V5External,OldIsBetter,log files,,Log4Net | NLog
+V5External,NewIsGreat,mariadb,,MySqlConnector
+V5External,OldIsBetter,GitExtensions.SVN,,GitExtensions.SVN
+V5External,OldIsBetter,log,,NLog
+V5External,OldIsBetter,logging,,NLog
+V5External,OldIsBetter,SQLitePCLRaw.bundle_e_sqlite3,,SQLitePCLRaw.bundle_e_sqlite3
+V5External,OldIsBetter,Microsoft.Extensions.Hosting.WindowsServices,,Microsoft.Extensions.Hosting.WindowsServices
+V5External,OldIsBetter,Microsoft.Extensions.Hosting.WindowsService,,Microsoft.Extensions.Hosting.WindowsServices
+V5External,OldIsBetter,microsoft.extensions.hosting.windowsservices,,Microsoft.Extensions.Hosting.WindowsServices
+V5External,OldIsBetter,microsoft.extensions.hosting.windowsservice,,Microsoft.Extensions.Hosting.WindowsServices
+V5External,OldIsBetter,postgres,,Npgsql
+V5External,OldIsBetter,Microsoft.Azure.Cosmos,,Microsoft.Azure.Cosmos
+V5External,NewIsGreat,json,,Newtonsoft.Json
+V5External,OldIsBetter,Microsoft.AspNetCore.Mvc.Api.Analyzers,,Microsoft.AspNetCore.Mvc.Api.Analyzers
+V5External,OldIsBetter,microsoft.toolkit,,Microsoft.Toolkit | Microsoft.Toolkit.*
+V5External,OldIsBetter,Uno.Microsoft.Toolkit,,Uno.Microsoft.Toolkit
+V5External,OldIsBetter,Microsoft.AspNetCore.Components.Authorization,,Microsoft.AspNetCore.Components.Authorization
+V5External,OldIsBetter,Lucene.Net,,Lucene.Net
+V5External,OldIsBetter,System.IO.Abstractions.Test,,System.IO.Abstractions.TestingHelpers
+V5External,OldIsBetter,System.IO.Abstractions.Test*,,System.IO.Abstractions.TestingHelpers
+V5External,OldIsBetter,WebView,,Microsoft.Web.WebView2 | Microsoft.Toolkit.Wpf.UI.Controls.WebView | Microsoft.Toolkit.Forms.UI.Controls.WebView
+V5External,NeitherIsBetter,Geckofx60,,Geckofx60.32.Windows
+V5External,NeitherIsBetter,microsoft.teamfoundation.,,Microsoft.TeamFoundationServer.Client | Microsoft.TeamFoundation.DistributedTask.Common.Contracts | Microsoft.TeamFoundation.DistributedTask.WebApi
+V5External,NeitherIsBetter,Microsoft.Toolkit.Wpf,,Microsoft.Toolkit.Wpf.UI.Controls.WebView | Microsoft.Toolkit.Wpf.UI.XamlHost | Microsoft.Toolkit.Wpf.UI.Controls
+GitHubOrTwitter,Unknown,Microsoft.AspNetCore.Components.Authorization,,Microsoft.AspNetCore.Components.Authorization
+GitHubOrTwitter,Unknown,Microsoft.AspNetCore.Mvc.Api.Analyzers,,Microsoft.AspNetCore.Mvc.Api.Analyzers
+GitHubOrTwitter,Unknown,microsoft.extensions.hosting.windowsservice,,Microsoft.Extensions.Hosting.WindowsServices
+GitHubOrTwitter,Unknown,elmah.io,,elmah.io | elmah.io.client
+GitHubOrTwitter,Unknown,serilog.sinks.elmahio,,serilog.sinks.elmahio
+GitHubOrTwitter,Unknown,FluentAssertion,,FluentAssertions
+GitHubOrTwitter,Unknown,log,,NLog
+GitHubOrTwitter,Unknown,logging,,NLog
+GitHubOrTwitter,Unknown,log file,,NLog
+GitHubOrTwitter,Unknown,Pkcs11Interop,,Pkcs11Interop | Pkcs11Interop.PDF | Aktiv.RutokenPkcs11Interop | Pkcs11Interop.X509Store
+GitHubOrTwitter,Unknown,Amazon.AspNetCore.Identity.Cognito,,Amazon.AspNetCore.Identity.Cognito
+GitHubOrTwitter,Unknown,Amazon.AspNetCore.DataProtection.SSM,,Amazon.AspNetCore.DataProtection.SSM
+GitHubOrTwitter,Unknown,Microsoft.CrmSdk,,Microsoft.CrmSdk | Microsoft.CrmSdk.*
+InternalAdHoc,Unknown,microsoft.visualstudio.services,,microsoft.visualstudio.services.*
