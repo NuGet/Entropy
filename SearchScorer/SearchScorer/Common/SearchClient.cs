@@ -36,12 +36,25 @@ namespace SearchScorer.Common
             var lazyTask = _cache.GetOrAdd(requestUri, _ => new Lazy<Task<SearchResponse>>(
                 async () =>
                 {
-                    using (var request = new HttpRequestMessage(HttpMethod.Get, requestUri))
-                    using (var response = await _httpClient.SendAsync(request))
+                    var attempt = 0;
+                    while (true)
                     {
-                        response.EnsureSuccessStatusCode();
-                        var json = await response.Content.ReadAsStringAsync();
-                        return JsonConvert.DeserializeObject<SearchResponse>(json);
+                        attempt++;
+                        try
+                        {
+                            using (var request = new HttpRequestMessage(HttpMethod.Get, requestUri))
+                            using (var response = await _httpClient.SendAsync(request))
+                            {
+                                response.EnsureSuccessStatusCode();
+                                var json = await response.Content.ReadAsStringAsync();
+                                return JsonConvert.DeserializeObject<SearchResponse>(json);
+                            }
+                        }
+                        catch (Exception ex) when (attempt < 3)
+                        {
+                            Console.WriteLine("[ WARN ] Search query failed: " + ex.Message);
+                            await Task.Delay(TimeSpan.FromSeconds(1));
+                        }
                     }
                 }));
 

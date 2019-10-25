@@ -10,5 +10,6 @@
         GitHubOrTwitter,
         TopQuery,
         V5External,
+        Hats,
     }
 }

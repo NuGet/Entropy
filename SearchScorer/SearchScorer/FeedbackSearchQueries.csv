@@ -405,3 +405,6 @@ GitHubOrTwitter,Unknown,Amazon.AspNetCore.Identity.Cognito,,Amazon.AspNetCore.Id
 GitHubOrTwitter,Unknown,Amazon.AspNetCore.DataProtection.SSM,,Amazon.AspNetCore.DataProtection.SSM
 GitHubOrTwitter,Unknown,Microsoft.CrmSdk,,Microsoft.CrmSdk | Microsoft.CrmSdk.*
 InternalAdHoc,Unknown,microsoft.visualstudio.services,,microsoft.visualstudio.services.*
+Hats,Unknown,MaterialDesignTheme,,MaterialDesignThemes
+Hats,Unknown,ClrHeap,,ClrHeapAllocationAnalyzer
+Hats,Unknown,clrheap,,ClrHeapAllocationAnalyzer
