@@ -36,6 +36,7 @@ namespace SearchScorer.Common
     public class SearchProbesRecord : SearchProbeTest
     {
         public double CuratedSearchScore { get; set; }
+        public double ClientCuratedSearchScore { get; set; }
         public double FeedbackScore { get; set; }
     }
 }

@@ -45,6 +45,7 @@ namespace SearchScorer.Common
             var indexFieldWeights = index.ScoringProfiles[0].TextWeights.Weights;
             var downloadScoreFunction = index.ScoringProfiles[0].Functions[0];
 
+            indexFieldWeights.Clear();
             indexFieldWeights[PackageIdFieldName] = packageIdWeight;
             indexFieldWeights[TokenizedPackageIdFieldName] = tokenizedPackageIdWeight;
             indexFieldWeights[TagsFieldName] = tagsWeight;
@@ -65,15 +66,6 @@ namespace SearchScorer.Common
             }
 
             var scoringProfile = index.ScoringProfiles[0];
-            var weights = scoringProfile.TextWeights.Weights;
-
-            var expectedFields = new[] { PackageIdFieldName, TokenizedPackageIdFieldName, TagsFieldName };
-            if (expectedFields.Any(expectedField => !weights.ContainsKey(expectedField)))
-            {
-                throw new InvalidOperationException(
-                    $"Azure Search index '{settings.AzureSearchIndexName}' is one of these field weights: {string.Join(", ", expectedFields)}");
-            }
-
             if (scoringProfile.Functions.Count != 1 || scoringProfile.Functions[0].FieldName != DownloadScoreBoostName)
             {
                 throw new InvalidOperationException(

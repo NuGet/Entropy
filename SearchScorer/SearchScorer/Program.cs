@@ -25,7 +25,7 @@ namespace SearchScorer
             var settings = new SearchScorerSettings
             {
                 ControlBaseUrl = "https://azuresearch-usnc.nuget.org/",
-                TreatmentBaseUrl = "https://azuresearch-usnc-preview.nuget.org/",
+                TreatmentBaseUrl = "https://azuresearch-usnc-perf.nuget.org/",
                 FeedbackSearchQueriesCsvPath = Path.Combine(assemblyDir, "FeedbackSearchQueries.csv"),
                 CuratedSearchQueriesCsvPath = Path.Combine(assemblyDir, "CuratedSearchQueries.csv"),
                 ClientCuratedSearchQueriesCsvPath = Path.Combine(assemblyDir, "ClientCuratedSearchQueries.csv"),
@@ -54,39 +54,39 @@ namespace SearchScorer
             using (var httpClientHandler = new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip })
             using (var httpClient = new HttpClient())
             {
-                var searchClient = new SearchClient(httpClient);
-                var scoreEvaluator = new IREvalutation.RelevancyScoreEvaluator(searchClient);
-
                 if (args.Length == 0 || args[0] == "score")
                 {
-                    // await VerifyPackageIdsExistAsync(settings, searchClient);
-                    await RunScoreCommandAsync(settings, scoreEvaluator);
+                    // await VerifyPackageIdsExistAsync(settings, httpClient);
+                    await RunScoreCommandAsync(settings, httpClient);
                 }
                 else if (args[0] == "probe")
                 {
-                    await RunProbeCommandAsync(settings, scoreEvaluator);
+                    await RunProbeCommandAsync(settings, httpClient);
                 }
             }
         }
 
-        private static async Task RunScoreCommandAsync(
-            SearchScorerSettings settings,
-            IREvalutation.RelevancyScoreEvaluator scoreEvaluator)
+        private static async Task RunScoreCommandAsync(SearchScorerSettings settings, HttpClient httpClient)
         {
+            var searchClient = new SearchClient(httpClient);
+            var scoreEvaluator = new IREvalutation.RelevancyScoreEvaluator(searchClient);
             await scoreEvaluator.RunAsync(settings);
         }
 
-        private static async Task RunProbeCommandAsync(
-            SearchScorerSettings settings,
-            IREvalutation.RelevancyScoreEvaluator scoreEvaluator)
+        private static async Task RunProbeCommandAsync(SearchScorerSettings settings, HttpClient httpClient)
         {
             var credentials = new SearchCredentials(settings.AzureSearchApiKey);
             var azureSearchClient = new SearchServiceClient(settings.AzureSearchServiceName, credentials);
 
             var index = await azureSearchClient.GetNuGetSearchIndexAsync(settings);
 
+            Console.WriteLine("Running {0} tests.", GetProbeTests(settings).Count());
+
             foreach (var test in GetProbeTests(settings))
             {
+                var searchClient = new SearchClient(httpClient);
+                var scoreEvaluator = new IREvalutation.RelevancyScoreEvaluator(searchClient);
+
                 // Update the Azure Search index
                 await azureSearchClient.UpdateNuGetSearchIndexAsync(
                     settings,
@@ -112,6 +112,7 @@ namespace SearchScorer
                         DownloadScoreBoost = test.DownloadScoreBoost,
 
                         CuratedSearchScore = report.CuratedSearchQueries.Score,
+                        ClientCuratedSearchScore = report.ClientCuratedSearchQueries.Score,
                         FeedbackScore = report.FeedbackSearchQueries.Score
                     });
             }
@@ -174,8 +175,9 @@ namespace SearchScorer
                 TopSearchSelectionsCsvReader.Read(settings.TopSearchSelectionsCsvPath));
         }
 
-        private static async Task VerifyPackageIdsExistAsync(SearchScorerSettings settings, SearchClient searchClient)
+        private static async Task VerifyPackageIdsExistAsync(SearchScorerSettings settings, HttpClient httpClient)
         {
+            var searchClient = new SearchClient(httpClient);
             var validator = new PackageIdPatternValidator(searchClient);
 
             // Verify all desired package IDs exist.
