@@ -408,3 +408,15 @@ InternalAdHoc,Unknown,microsoft.visualstudio.services,,microsoft.visualstudio.se
 Hats,Unknown,MaterialDesignTheme,,MaterialDesignThemes
 Hats,Unknown,ClrHeap,,ClrHeapAllocationAnalyzer
 Hats,Unknown,clrheap,,ClrHeapAllocationAnalyzer
+InternalAdHoc,Unknown,Azure.Storage,,Azure.Storage.Blobs | Azure.Storage.Queues | Azure.Storage.Files.Shares
+InternalAdHoc,Unknown,Azure.,,Azure.Storage.Blobs | Azure.Storage.Queues | Azure.Storage.Files.Shares
+InternalAdHoc,Unknown,KeyVault,,Azure.Security.KeyVault.*
+InternalAdHoc,Unknown,Azure,,Azure.*
+InternalAdHoc,Unknown,Azure Keyvault,,Azure.Security.KeyVault.*
+InternalAdHoc,Unknown,Azure identity,,Azure.Identity
+InternalAdHoc,Unknown,Azure Storage,,Azure.Storage.Blobs
+InternalAdHoc,Unknown,Azure Storage Blob,,Azure.Storage.Blobs
+InternalAdHoc,Unknown,Azure Storage Blobs,,Azure.Storage.Blobs
+InternalAdHoc,Unknown,Azure.Storage,,Azure.Storage.Blobs
+InternalAdHoc,Unknown,Azure.Storage.Blob,,Azure.Storage.Blobs
+InternalAdHoc,Unknown,Azure.Storage.Blobs,,Azure.Storage.Blobs
