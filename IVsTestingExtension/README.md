@@ -28,3 +28,5 @@ namespace IVsTestingExtension
 
 If you want add you own method instead, you only need to change 1 file, and that's src\Tests\TestMethodProvider.
 The infrastructure autowires the Provider and calls the GetMethod call to get the method that you want to test.
+
+![Example](screenshot.png)
