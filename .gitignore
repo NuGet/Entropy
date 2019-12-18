@@ -21,6 +21,9 @@ local.settings.json
 /tools/network/node_modules/
 /tools/network/nuget-network-diagnostics*
 
+# nuget
+*/gpf/
+
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/
