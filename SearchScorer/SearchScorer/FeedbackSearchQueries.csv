@@ -222,7 +222,7 @@ V5External,NeitherIsBetter,aforge.net,,AForge.Imaging | AForge.Video
 V5External,NeitherIsBetter,openssl,,System.Security.Cryptography.OpenSsl
 V5External,OldIsBetter,ClosedXML,,ClosedXML | ClosedXML.*
 V5External,NewIsGreat,Microsoft extensions file configuration,,Microsoft.Extensions.Configuration.FileExtensions
-V5External,NewIsGreat,alexa,,Microsoft.Extensions.Configuration.FileExtensions
+V5External,NewIsGreat,alexa,,Alexa.NET
 V5External,NewIsGreat,json,,newtonsoft.json
 V5External,OldIsBetter,system.linq.async,,System.Linq.Async
 V5External,NewIsGreat,ServiceStack,,ServiceStack
