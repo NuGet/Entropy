@@ -10,6 +10,7 @@ namespace SearchScorer
         public string FeedbackSearchQueriesCsvPath { get; set; }
         public string CuratedSearchQueriesCsvPath { get; set; }
         public string ClientCuratedSearchQueriesCsvPath { get; set; }
+        public string AzureCuratedSearchQueriesCsvPath { get; set; }
         public string TopSearchQueriesCsvPath { get; set; }
         public string TopClientSearchQueriesCsvPath { get; set; }
         public string TopSearchSelectionsCsvPath { get; set; }

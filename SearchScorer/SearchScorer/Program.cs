@@ -29,6 +29,8 @@ namespace SearchScorer
                 FeedbackSearchQueriesCsvPath = Path.Combine(assemblyDir, "FeedbackSearchQueries.csv"),
                 CuratedSearchQueriesCsvPath = Path.Combine(assemblyDir, "CuratedSearchQueries.csv"),
                 ClientCuratedSearchQueriesCsvPath = Path.Combine(assemblyDir, "ClientCuratedSearchQueries.csv"),
+                AzureCuratedSearchQueriesCsvPath = Path.Combine(assemblyDir, "AzureCuratedSearchQueries.csv"),
+
                 TopSearchQueriesCsvPath = @"C:\Users\jver\Desktop\search-scorer\TopSearchQueries-2019-08-05.csv",
                 TopClientSearchQueriesCsvPath = @"C:\Users\jver\Desktop\search-scorer\TopClientSearchQueries-60d-2019-10-24.csv",
                 TopSearchSelectionsCsvPath = @"C:\Users\jver\Desktop\search-scorer\TopSearchSelections-2019-08-05.csv",
@@ -143,7 +145,7 @@ namespace SearchScorer
                 });
         }
 
-        private static IReadOnlyList<double> CreateRange(int lower, int upper, double increments)
+        private static IReadOnlyList<double> CreateRange(double lower, double upper, double increments)
         {
             var count = (upper - lower) / increments + 1;
             return Enumerable

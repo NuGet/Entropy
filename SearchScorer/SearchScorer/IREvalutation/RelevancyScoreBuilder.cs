@@ -36,6 +36,14 @@ namespace SearchScorer.IREvalutation
             return FromCuratedSearchQueries(queries);
         }
 
+        public static IReadOnlyList<SearchQueryRelevancyScores<CuratedSearchQuery>> FromAzureCuratedSearchQueriesCsv(SearchScorerSettings settings)
+        {
+            var queries = CuratedSearchQueriesCsvReader.Read(
+                settings.AzureCuratedSearchQueriesCsvPath,
+                settings.CuratedSearchQueriesCsvPath);
+            return FromCuratedSearchQueries(queries);
+        }
+
         private static IReadOnlyList<SearchQueryRelevancyScores<CuratedSearchQuery>> FromCuratedSearchQueries(IReadOnlyList<CuratedSearchQuery> queries)
         {
             var output = new List<SearchQueryRelevancyScores<CuratedSearchQuery>>();

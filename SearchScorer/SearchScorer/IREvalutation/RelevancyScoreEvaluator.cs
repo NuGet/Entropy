@@ -33,6 +33,9 @@ namespace SearchScorer.IREvalutation
             ConsoleUtility.WriteHeading("Client Curated Search Queries", '=');
             WriteBiggestWinnersAndLosersToConsole(report, v => v.ClientCuratedSearchQueries);
 
+            ConsoleUtility.WriteHeading("Client Curated Search Queries (Azure)", '=');
+            WriteBiggestWinnersAndLosersToConsole(report, v => v.AzureCuratedSearchQueries);
+
             ConsoleUtility.WriteHeading("Feedback", '=');
             WriteBiggestWinnersAndLosersToConsole(report, v => v.FeedbackSearchQueries);
         }
@@ -76,6 +79,13 @@ namespace SearchScorer.IREvalutation
         {
             var pairList = pairs.ToList();
             ConsoleUtility.WriteHeading($"{heading} ({pairList.Count})", '-');
+
+            if (!pairList.Any())
+            {
+                Console.WriteLine("N/A");
+                return;
+            }
+
             var longestSearchQuery = pairList.Max(x => x.Key.Length);
             foreach (var pair in pairList)
             {
@@ -145,11 +155,13 @@ namespace SearchScorer.IREvalutation
         {
             var curatedSearchQueriesReport = await GetCuratedSearchQueriesScoreAsync(baseUrl, settings, topQueries, topSearchReferrals);
             var clientCuratedSearchQueriesReport = await GetClientCuratedSearchQueriesScoreAsync(baseUrl, settings, topClientQueries);
+            var azureCuratedSearchQueriesReport = await GetAzureCuratedSearchQueriesScoreAsync(baseUrl, settings, topClientQueries);
             var feedbackSearchQueriesReport = await GetFeedbackSearchQueriesScoreAsync(baseUrl, settings);
 
             return new VariantReport(
                 curatedSearchQueriesReport,
                 clientCuratedSearchQueriesReport,
+                azureCuratedSearchQueriesReport,
                 feedbackSearchQueriesReport);
         }
 
@@ -187,6 +199,20 @@ namespace SearchScorer.IREvalutation
             IReadOnlyDictionary<string, int> topClientQueries)
         {
             var scores = RelevancyScoreBuilder.FromClientCuratedSearchQueriesCsv(settings);
+
+            var results = await ProcessAsync(
+                scores,
+                baseUrl);
+
+            return WeightByTopQueries(topClientQueries, results);
+        }
+
+        private async Task<SearchQueriesReport<CuratedSearchQuery>> GetAzureCuratedSearchQueriesScoreAsync(
+            string baseUrl,
+            SearchScorerSettings settings,
+            IReadOnlyDictionary<string, int> topClientQueries)
+        {
+            var scores = RelevancyScoreBuilder.FromAzureCuratedSearchQueriesCsv(settings);
 
             var results = await ProcessAsync(
                 scores,
@@ -250,7 +276,11 @@ namespace SearchScorer.IREvalutation
             var resultsAndWeights = new List<KeyValuePair<RelevancyScoreResult<T>, int>>();
             foreach (var result in results)
             {
-                var queryCount = topQueries[result.Input.SearchQuery];
+                if (!topQueries.TryGetValue(result.Input.SearchQuery, out var queryCount))
+                {
+                    queryCount = 1;
+                }
+
                 resultsAndWeights.Add(new KeyValuePair<RelevancyScoreResult<T>, int>(result, queryCount));
                 totalQueryCount += queryCount;
             }
