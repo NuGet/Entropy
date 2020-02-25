@@ -18,15 +18,9 @@ namespace nuget_sdk_usage
             {
                 var assemblyReference = metadata.GetAssemblyReference(assemblyReferenceHandle);
 
-                var assemblyName = metadata.GetString(assemblyReference.Name);
-
-                if (NuGetAssembly.MatchesName(assemblyName) && !assemblyReference.PublicKeyOrToken.IsNil)
+                if (NuGetAssembly.IsNuGetAssembly(assemblyReference))
                 {
-                    var publicToken = metadata.GetBlobBytes(assemblyReference.PublicKeyOrToken);
-                    if (NuGetAssembly.IsMicrosoftPublicToken(publicToken))
-                    {
-                        return true;
-                    }
+                    return true;
                 }
             }
 
@@ -53,7 +47,7 @@ namespace nuget_sdk_usage
                 var memberReference = metadata.GetMemberReference(memberReferenceHandle);
                 var foundAssemblyReference = TryFindAssemblyReference(memberReferenceHandle, metadata, out var assemblyReference);
 
-                if (foundAssemblyReference && DefinedInNuGetAssembly(assemblyReference))
+                if (foundAssemblyReference && NuGetAssembly.IsNuGetAssembly(assemblyReference))
                 {
                     var assemblyName = assemblyReference.GetAssemblyName();
                     var version = assemblyName.Version?.ToString();
@@ -118,26 +112,6 @@ namespace nuget_sdk_usage
             return sb.ToString();
         }
 
-        private static bool DefinedInNuGetAssembly(AssemblyReference assemblyReference)
-        {
-            var assemblyName = assemblyReference.GetAssemblyName();
-
-            if (assemblyName.Name != null && !NuGetAssembly.MatchesName(assemblyName.Name))
-            {
-                return false;
-            }
-
-            // The strong name keys NuGet uses is in the repo, as is good practise, so we can't be sure
-            // that the 
-            var publicKeyToken = assemblyName.GetPublicKeyToken();
-            if (publicKeyToken == null)
-            {
-                return false;
-            }
-
-            return NuGetAssembly.IsMicrosoftPublicToken(publicKeyToken);
-        }
-
         private static bool TryFindAssemblyReference(EntityHandle handle, MetadataReader metadata, out AssemblyReference assemblyReference)
         {
             assemblyReference = default;
@@ -157,7 +131,9 @@ namespace nuget_sdk_usage
 
                 case HandleKind.TypeSpecification:
                     {
-                        // I don't know what this is, or how to find the assembly the type is defined in.
+                        // To do this properly, we need to call TypeSpecification.DecodeSignature, but use an
+                        // ISignatureTypeProvider that allows us to get the assembly, rather than the type name.
+                        // Something to do later.
                         return false;
                     }
 

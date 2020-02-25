@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.Metadata;
 
 namespace nuget_sdk_usage
 {
     internal static class NuGetAssembly
     {
-        public static IReadOnlyList<string> NuGetAssemblyNames = new List<string>()
+        internal static IReadOnlyList<string> NuGetAssemblyNames = new List<string>()
         {
             "Microsoft.Build.NuGetSdkResolver",
             "NuGet",
@@ -47,12 +48,7 @@ namespace nuget_sdk_usage
             "NuGetConsole.Host.PowerShell"
         };
 
-        public static IReadOnlyList<byte[]> NuGetStrongNamePublicKeyTokens = ConvertPublicKeyTokens(
-            "31bf3856ad364e35", // NuGet.Core assemblies
-            "b03f5f7f11d50a3a" // NuGet.Client assemblies
-            );
-
-        public static bool MatchesName(string filename)
+        internal static bool MatchesName(string filename)
         {
             const string resources = ".resources";
             if (filename.EndsWith(resources))
@@ -63,53 +59,18 @@ namespace nuget_sdk_usage
             return NuGetAssemblyNames.Contains(filename, StringComparer.OrdinalIgnoreCase);
         }
 
-        internal static bool IsMicrosoftPublicToken(byte[] token)
+        internal static bool IsNuGetAssembly(AssemblyReference assemblyReference)
         {
-            if (token == null)
-            {
-                return false;
-            }
+            var assemblyName = assemblyReference.GetAssemblyName();
 
-            foreach (var nugetToken in NuGetStrongNamePublicKeyTokens)
-            {
-                if (nugetToken.Length == token.Length)
-                {
-                    bool matches = true;
-                    for (int i = 0; i < token.Length; i++)
-                    {
-                        if (token[i] != nugetToken[i])
-                        {
-                            matches = false;
-                            break;
-                        }
-                    }
+            var isNuGetAssembly = assemblyName.Name == null || NuGetAssembly.MatchesName(assemblyName.Name);
 
-                    if (matches)
-                    {
-                        return true;
-                    }
-                }
-            }
+            // Originally I wanted to also check the strong name token, to reduce the risk that someone compiled their
+            // code against a custom NuGet assembly with APIs that we don't ship. However, JetBrains compiled their
+            // products against custom NuGet assemblies with a different public token, so we can't do that check if we
+            // want to find out which APIs they're using.
 
-            return false;
-        }
-
-        private static IReadOnlyList<byte[]> ConvertPublicKeyTokens(params string[] tokens)
-        {
-            var result = new List<byte[]>(tokens.Length);
-
-            foreach (var token in tokens)
-            {
-                var bytes = new byte[token.Length / 2];
-                for (int position = 0; position < bytes.Length; position++)
-                {
-                    bytes[position] = Convert.ToByte(token.Substring(position * 2, 2), 16);
-                }
-
-                result.Add(bytes);
-            }
-
-            return result;
+            return isNuGetAssembly;
         }
     }
 }
