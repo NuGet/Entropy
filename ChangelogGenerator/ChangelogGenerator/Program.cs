@@ -81,27 +81,22 @@ namespace ChangelogGenerator
         {
             try
             {
-                RepositoryIssueRequest issueQuery;
-
-                if (options.IncludeOpen == "Y")
+                var issueFilter = new RepositoryIssueRequest()
                 {
-                    issueQuery = new RepositoryIssueRequest
-                    {
-                        Filter = IssueFilter.All,
-                        State = ItemStateFilter.All,
-                    };
-                }
-                else
+                    Filter = IssueFilter.All,
+                    //Creator = "*",
+                    //Milestone = options.Milestone,
+                    State = ItemStateFilter.Closed,
+                    //Since = new DateTimeOffset(new DateTime(2013, 1, 1)),
+                  //  State = options.IncludeOpen.ToLower() == "y" ? ItemStateFilter.All : ItemStateFilter.Closed,
+                };
+                if (!string.IsNullOrEmpty(options.RequiredLabel))
                 {
-                    issueQuery = new RepositoryIssueRequest
-                    {
-                        Filter = IssueFilter.All,
-                        State = ItemStateFilter.Closed,
-                    };
+                  //  issueFilter.Labels.Add(options.RequiredLabel);
                 }
 
-                var issues = await client.Issue.GetAllForRepository(options.Organization, options.Repo, issueQuery);
-
+                var issues = await client.Issue.GetAllForRepository(options.Organization, options.Repo, issueFilter);
+                
                 Dictionary<IssueType, List<Issue>> IssuesByIssueType = new Dictionary<IssueType, List<Issue>>();
                 foreach (var issue in issues)
                 {
@@ -241,7 +236,8 @@ namespace ChangelogGenerator
             }
 
             var fileName = "Changelog-" + options.Milestone
-                + (string.IsNullOrEmpty(options.RequiredLabel) ? "" : "-" + options.RequiredLabel) + ".md";
+                + (string.IsNullOrEmpty(options.RequiredLabel) ? "" : options.RequiredLabel) + ".md";
+
             File.WriteAllText(fileName, builder.ToString());
             Console.WriteLine($"{fileName} creation complete");
             Environment.Exit(0);
