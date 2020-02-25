@@ -59,9 +59,9 @@ namespace nuget_sdk_usage
 
                 case HandleKind.TypeDefinition:
                     {
-                        var typeDefintion = metadata.GetTypeDefinition((TypeDefinitionHandle)handle);
-                        BuildName(typeDefintion.Namespace);
-                        BuildName(typeDefintion.Name);
+                        var typeDefinition = metadata.GetTypeDefinition((TypeDefinitionHandle)handle);
+                        BuildName(typeDefinition.Namespace);
+                        BuildName(typeDefinition.Name);
                         // I think type definitions are always defined in the containing assembly.
                         // When it appears it should belong elsewhere, I think it's an embedded (COM?) type.
                         assembly = GetCurrentAssemblyName(metadata);
@@ -75,20 +75,20 @@ namespace nuget_sdk_usage
 
         private static string GetCurrentAssemblyName(MetadataReader metadata)
         {
-            var assemblyDefition = metadata.GetAssemblyDefinition();
+            var assemblyDefinition = metadata.GetAssemblyDefinition();
 
-            var assemblyName = assemblyDefition.GetAssemblyName();
+            var assemblyName = assemblyDefinition.GetAssemblyName();
             if (assemblyName.Name != null)
             {
                 return assemblyName.Name;
             }
 
-            if (assemblyDefition.Name.IsNil)
+            if (assemblyDefinition.Name.IsNil)
             {
                 throw new NotSupportedException();
             }
 
-            return metadata.GetString(assemblyDefition.Name);
+            return metadata.GetString(assemblyDefinition.Name);
         }
     }
 }
