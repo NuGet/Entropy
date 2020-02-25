@@ -1,0 +1,9 @@
+﻿<Application x:Class="NuGet.Protocol.Plugins.LogViewer.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:NuGet.Protocol.Plugins.LogViewer"
+             StartupUri="MainWindow.xaml">
+    <Application.Resources>
+         
+    </Application.Resources>
+</Application>

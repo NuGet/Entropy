@@ -25,7 +25,7 @@ namespace ChangelogGenerator
 
         [Option('l', "RequiredLabel", Required = true, HelpText = "Show only those issues from the selected milestone that have this label")]
         public string RequiredLabel { get; set; }
-               
+
         [Option('v', null, HelpText = "Print details during execution.")]
         public bool Verbose { get; set; }
 
@@ -206,7 +206,7 @@ namespace ChangelogGenerator
         private static void GenerateMarkdown(Dictionary<IssueType, List<Issue>> labelSet)
         {
             StringBuilder builder = new StringBuilder();
-            builder.Append("#" + options.Milestone + " Release Notes");
+            builder.Append("#" + options.Milestone + (!string.IsNullOrEmpty(options.RequiredLabel) ? "-" + options.RequiredLabel.ToLower() : "") + " Release Notes");
             builder.AppendLine();
             builder.AppendLine();
             builder.Append("[Full Changelog]" + "(" + changeloglink + ")");
@@ -216,7 +216,7 @@ namespace ChangelogGenerator
                 + "(" + "https://github.com/"
                 + options.Organization + "/"
                 + options.Repo + "/"
-                + "issues?q=is%3Aissue+is%3Aclosed+milestone%3A%22"
+                + "issues?q=is%3Aissue+is%3Aclosed"+ (!string.IsNullOrEmpty(options.RequiredLabel) ? "+label:" + options.RequiredLabel : "") + "+milestone%3A%22"
                 + options.Milestone
                 + "\")");
             builder.AppendLine();
@@ -235,7 +235,9 @@ namespace ChangelogGenerator
                 }
             }
 
-            var fileName = "Changelog-" + options.Milestone + (string.IsNullOrEmpty(options.RequiredLabel) ? "" : options.RequiredLabel) + ".md";
+            var fileName = "Changelog-" + options.Milestone
+                + (string.IsNullOrEmpty(options.RequiredLabel) ? "" : options.RequiredLabel) + ".md";
+
             File.WriteAllText(fileName, builder.ToString());
             Console.WriteLine($"{fileName} creation complete");
             Environment.Exit(0);

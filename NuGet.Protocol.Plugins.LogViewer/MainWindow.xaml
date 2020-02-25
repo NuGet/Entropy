@@ -1,0 +1,88 @@
+﻿<Window x:Class="NuGet.Protocol.Plugins.LogViewer.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:NuGet.Protocol.Plugins.LogViewer"
+        mc:Ignorable="d"
+        Title="NuGet Plugin Log Viewer" Height="847.597" Width="1188.817">
+    <Grid>
+        <TabControl Margin="10,85,10,10">
+            <TabItem Header="_Communication">
+                <Grid Background="#FFE5E5E5">
+                    <DataGrid Name="communicationGrid" Margin="10" ItemsSource="{Binding}" AutoGenerateColumns="True" IsReadOnly="True" AutoGeneratingColumn="OnAutoGeneratingColumn" />
+                </Grid>
+            </TabItem>
+            <TabItem Header="_Task">
+                <Grid Background="#FFE5E5E5">
+                    <DataGrid Name="taskGrid" Margin="10" ItemsSource="{Binding}" AutoGenerateColumns="True" IsReadOnly="True" AutoGeneratingColumn="OnAutoGeneratingColumn">
+                        <DataGrid.RowStyle>
+                            <Style TargetType="DataGridRow">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Color}" Value="Red">
+                                        <Setter Property="Background" Value="Red"></Setter>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DataGrid.RowStyle>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+            <TabItem Header="T_hread Pool">
+                <Grid Background="#FFE5E5E5">
+                    <DataGrid Name="threadPoolGrid" Margin="10" ItemsSource="{Binding}" AutoGenerateColumns="True" IsReadOnly="True" AutoGeneratingColumn="OnAutoGeneratingColumn" />
+                </Grid>
+            </TabItem>
+            <TabItem Header="Plugin _Instance">
+                <Grid Background="#FFE5E5E5">
+                    <DataGrid Name="pluginInstanceGrid" Margin="10" ItemsSource="{Binding}" AutoGenerateColumns="True" IsReadOnly="True" AutoGeneratingColumn="OnAutoGeneratingColumn" />
+                </Grid>
+            </TabItem>
+            <TabItem Header="Environment _Variables">
+                <Grid Background="#FFE5E5E5">
+                    <DataGrid Name="environmentVariablesGrid" Margin="10" ItemsSource="{Binding}" AutoGenerateColumns="True" IsReadOnly="True" AutoGeneratingColumn="OnAutoGeneratingColumn" />
+                </Grid>
+            </TabItem>
+            <TabItem Header="_Process">
+                <Grid Background="#FFE5E5E5">
+                    <DataGrid Name="processGrid" Margin="10" ItemsSource="{Binding}" AutoGenerateColumns="True" IsReadOnly="True" AutoGeneratingColumn="OnAutoGeneratingColumn" />
+                </Grid>
+            </TabItem>
+            <TabItem Header="_Assembly">
+                <Grid Background="#FFE5E5E5">
+                    <DataGrid Name="assemblyGrid" Margin="10" ItemsSource="{Binding}" AutoGenerateColumns="True" IsReadOnly="True" AutoGeneratingColumn="OnAutoGeneratingColumn" />
+                </Grid>
+            </TabItem>
+            <TabItem Header="_Machine">
+                <Grid Background="#FFE5E5E5">
+                    <DataGrid Name="machineGrid" Margin="10" ItemsSource="{Binding}" AutoGenerateColumns="True" IsReadOnly="True" AutoGeneratingColumn="OnAutoGeneratingColumn" />
+                </Grid>
+            </TabItem>
+            <TabItem Header="_Log" HorizontalAlignment="Left" Height="20" VerticalAlignment="Top" Width="54">
+                <Grid Background="#FFE5E5E5">
+                    <TextBlock Name="logTextBlob" TextWrapping="Wrap" Margin="10" IsEnabled="False"/>
+                </Grid>
+            </TabItem>
+        </TabControl>
+        <Button Name="browseButton" Content="_Browse..." Margin="1081,10,0,0" VerticalAlignment="Top" Click="BrowseButton_Click" HorizontalAlignment="Left" Width="75"/>
+        <ListView Name="logFilesList" HorizontalAlignment="Left" Height="70" Margin="10,10,0,0" VerticalAlignment="Top" Width="1066">
+            <ListView.Resources>
+                <Style TargetType="GridViewColumnHeader">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                </Style>
+            </ListView.Resources>
+            <ListView.View>
+                <GridView>
+                    <!--<GridViewColumn>
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <Button Name="removeFileButton" Content=" X " ToolTip="Remove" Click="RemoveFileButton_Click" />
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>-->
+                    <GridViewColumn DisplayMemberBinding="{Binding}" />
+                </GridView>
+            </ListView.View>
+        </ListView>
+    </Grid>
+</Window>
