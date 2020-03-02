@@ -15,14 +15,11 @@ namespace GithubIssueTagger
             var client = new GitHubClient(new ProductHeaderValue("nuget-github-issue-tagger"));
             client.Credentials = new Credentials(GetClientSecret());
 
-            if (false)
-            {
-                await RemoveLabelFromAllIssuesAsync(client, "ToBeMoved", "nuget", "home");
+            await RemoveLabelFromAllIssuesAsync(client, "ToBeMoved", "nuget", "home");
 
-                Predicate<Issue> predicate = WasUpdatedInLastSixMonths;
-                await AddLabelToMatchingIssues(client, "ToBeMoved", "nuget", "home", predicate);
+            Predicate<Issue> predicate = WasUpdatedInLastSixMonths;
+            await AddLabelToMatchingIssues(client, "ToBeMoved", "nuget", "home", predicate);
 
-            }
             Console.WriteLine("Done!");
         }
 
