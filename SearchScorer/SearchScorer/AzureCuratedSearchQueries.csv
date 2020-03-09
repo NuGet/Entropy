@@ -1,5 +1,4 @@
 SearchQuery,ID0,S0,ID1,S1,ID2,S2,ID3,S3,ID4,S4
-,,,,,,,,,,
 azure,Azure.Storage.Blobs,4,Azure.*,3,Microsoft.Azure.*,2,WindowsAzure.Storage,2,,
 WindowsAzure.Storage,WindowsAzure.Storage,4,Azure.Storage.Blobs,4,Azure.Storage.*,3,Microsoft.Azure.Storage.Blob,2,,
 Microsoft.Azure,Azure.Storage.Blobs,4,Microsoft.Azure.Storage.Blob,3,Microsoft.Azure.*,2,,,,
