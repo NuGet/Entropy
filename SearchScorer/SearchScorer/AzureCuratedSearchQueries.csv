@@ -144,7 +144,6 @@ Microsoft.Azure.Cosmos.Table,Microsoft.Azure.Cosmos.Table,4,WindowsAzure.Storage
 KeyVaultClient,Microsoft.Azure.KeyVault,4,Azure.Security.KeyVault.*,3,,,,,,
 keyvault,Azure.Security.KeyVault.*,4,Microsoft.Azure.KeyVault.*,3,,,,,,
 keyVault,Azure.Security.KeyVault.*,4,Microsoft.Azure.KeyVault.*,3,,,,,,
-vault,Azure.Security.KeyVault.*,4,Microsoft.Azure.KeyVault.*,3,,,,,,
 eventhub,Azure.Messaging.EventHubs,4,Azure.Messaging.EventHubs.*,3,Microsoft.Azure.EventHubs,2,Microsoft.Azure.EventHubs.*,1,,
 eventhubs,Azure.Messaging.EventHubs,4,Azure.Messaging.EventHubs.*,3,Microsoft.Azure.EventHubs,2,Microsoft.Azure.EventHubs.*,1,,
 cosmos.table,Microsoft.Azure.Cosmos.Table,4,WindowsAzure.Storage,2,,,,,,
