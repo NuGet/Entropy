@@ -113,7 +113,7 @@ WindowsAzure.StorageExtensions,WindowsAzure.StorageExtensions,4,WindowsAzure.Sto
 windowsazureofficial,Azure.Storage.Blobs,4,Azure.*,3,Microsoft.Azure.*,2,,,,
 api key,Azure.Security.KeyVault.Keys,4,,,,,,,,
 azure table storage,Microsoft.Azure.Cosmos.Table,4,WindowsAzure.Storage,3,,,,,,
-Azure.Security.KeyVault,Azure.Security.KeyVault.*,4,Microsoft.Azure.KeyVault.*,2,,,,
+Azure.Security.KeyVault,Azure.Security.KeyVault.*,4,Microsoft.Azure.KeyVault.*,2,,,,,,
 Azure.Security.KeyVault.Keys,Azure.Security.KeyVault.Keys,4,Azure.Security.KeyVault.*,3,Microsoft.Azure.KeyVault.*,2,,,,
 Azure.Security.KeyVault.Secrets,Azure.Security.KeyVault.Secrets,4,Azure.Security.KeyVault.*,3,Microsoft.Azure.KeyVault.*,2,,,,
 WindowsAzure.Storage.Table,Microsoft.Azure.Cosmos.Table,4,WindowsAzure,3,,,,,,
