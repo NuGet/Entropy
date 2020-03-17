@@ -13,8 +13,10 @@ namespace NuGetValidator.Utility
             {
                 var files = new List<string>();
                 var directories = Directory.GetDirectories(root)
-                    .Where(d => Path.GetFileName(d).StartsWith("NuGet", StringComparison.OrdinalIgnoreCase) ||
-                                Path.GetFileName(d).StartsWith("Microsoft", StringComparison.OrdinalIgnoreCase));
+                    .Where(d => !Path.GetFileName(d).Equals("NuGet.VisualStudio.Client") && // Skip NuGet.VisualStudio.
+                                (Path.GetFileName(d).StartsWith("NuGet", StringComparison.OrdinalIgnoreCase) ||
+                                Path.GetFileName(d).StartsWith("Microsoft", StringComparison.OrdinalIgnoreCase))
+                                );
 
                 foreach (var dir in directories)
                 {
