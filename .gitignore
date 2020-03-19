@@ -225,3 +225,6 @@ GeneratedArtifacts/
 _Pvt_Extensions/
 ModelManifest.xml
 ChangelogGenerator/ChangelogGenerator/Readme.txt
+
+# VS Launch Settings
+launchSettings.json
