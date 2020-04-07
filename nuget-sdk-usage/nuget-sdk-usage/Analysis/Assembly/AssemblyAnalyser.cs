@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection.Metadata;
 using System.Text;
 
-namespace nuget_sdk_usage
+namespace nuget_sdk_usage.Analysis.Assembly
 {
     // There isn't much documentation on System.Reflection.Metadata.
     // Apparently it follows the CLI spec fairly closely, so maybe that helps: https://www.ecma-international.org/publications/standards/Ecma-335.htm
@@ -33,7 +32,7 @@ namespace nuget_sdk_usage
 
             void AddMember(string assembly, string member)
             {
-                if (!result.MemberReferences.TryGetValue(assembly, out HashSet<string>? apis))
+                if (!result.MemberReferences.TryGetValue(assembly, out HashSet<string> apis))
                 {
                     apis = new HashSet<string>();
                     result.MemberReferences[assembly] = apis;
@@ -62,9 +61,16 @@ namespace nuget_sdk_usage
                         case MemberReferenceKind.Method:
                             {
                                 var (assembly, member) = TypeNameGenerator.GetFullName(memberReferenceHandle, metadata);
-                                var sig = memberReference.DecodeMethodSignature(MethodSignatureDecoder.Default, null);
-                                var methodSignature = GetMethodSignature(member, sig);
-                                AddMember(assembly, methodSignature);
+                                if (TryGetPropertyName(member, out string propertyName))
+                                {
+                                    AddMember(assembly, propertyName);
+                                }
+                                else
+                                {
+                                    var sig = memberReference.DecodeMethodSignature(MethodSignatureDecoder.Default, null);
+                                    var methodSignature = GetMethodSignature(member, sig);
+                                    AddMember(assembly, methodSignature);
+                                }
                             }
                             break;
 
@@ -83,13 +89,37 @@ namespace nuget_sdk_usage
 
             if (result.MemberReferences.SelectMany(r => r.Value).Any())
             {
-                if (TryGetTargetFramework(metadata, out string? targetFramework))
+                if (TryGetTargetFramework(metadata, out string targetFramework))
                 {
                     result.TargetFrameworks.Add(targetFramework);
                 }
             }
 
             return result;
+        }
+
+        private static bool TryGetPropertyName(string member, out string propertyFullName)
+        {
+            var lastPeriodIndex = member.LastIndexOf('.');
+            string propertyMethodPrefix = member.Length >= lastPeriodIndex + 5
+                ? member.Substring(lastPeriodIndex + 1, 4)
+                : null;
+
+            bool IsPropertyMethodPrefix(string prefix)
+            {
+                return prefix != null && (prefix == "get_" || prefix == "set_");
+            }
+
+            if (!IsPropertyMethodPrefix(propertyMethodPrefix))
+            {
+                propertyFullName = null;
+                return false;
+            }
+
+            string namespaceAndClass = member.Substring(0, lastPeriodIndex + 1);
+            string propertyName = member.Substring(lastPeriodIndex + 5);
+            propertyFullName = namespaceAndClass + propertyName;
+            return true;
         }
 
         private static string GetMethodSignature(string member, MethodSignature<string> sig)
@@ -148,7 +178,7 @@ namespace nuget_sdk_usage
             }
         }
 
-        private static bool TryGetTargetFramework(MetadataReader metadata, [NotNullWhen(true)] out string? targetFramework)
+        private static bool TryGetTargetFramework(MetadataReader metadata, out string targetFramework)
         {
             var assembly = metadata.GetAssemblyDefinition();
             var attributeHandles = assembly.GetCustomAttributes();

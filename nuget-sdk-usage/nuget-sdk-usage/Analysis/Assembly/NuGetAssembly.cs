@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection.Metadata;
 
-namespace nuget_sdk_usage
+namespace nuget_sdk_usage.Analysis.Assembly
 {
     internal static class NuGetAssembly
     {
