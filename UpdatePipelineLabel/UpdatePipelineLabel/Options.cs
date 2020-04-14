@@ -48,8 +48,8 @@ namespace UpdatePipelineLabel
             {
                 return new List<Example>()
                 {
-                    new Example("Update label for all issues (recommended)", new Options { Repo = "NuGet/Home", GitHubToken = "githubToken", ZenHubToken = "zenhubToken"}),
-                    new Example("Update label for issues in the range (rarely used, only used when large number of issues need update)", new Options { Repo = "NuGet/Home", GitHubToken = "githubToken", ZenHubToken = "zenhubToken", IssueNumFrom = 100, IssueNumTo = 900})
+                    new Example("Update label for all issues (recommended)", new Options { Repo = "NuGet/Home", GitHubToken = "GithubToken", ZenHubToken = "ZenhubToken"}),
+                    new Example("Update label for issues in the range (rarely used, only used when large number of issues need update)", new Options { Repo = "NuGet/Home", GitHubToken = "GithubToken", ZenHubToken = "ZenhubToken", IssueNumFrom = 100, IssueNumTo = 900})
                 };
             }
 

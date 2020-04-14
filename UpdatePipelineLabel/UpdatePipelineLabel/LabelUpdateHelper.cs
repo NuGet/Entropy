@@ -19,38 +19,35 @@ namespace UpdatePipelineLabel
         private readonly GitHubClient GitHubClient;
         private readonly ZenHubClient ZenHubClient;
 
-        private string repoName;
-        private string githubToken;
-        private string zenhubToken;
-        private int issueNumberFrom;
-        private int issueNumberTo;
+        private string RepoName;
+        private string GithubToken;
+        private string ZenhubToken;
+        private int IssueNumberFrom;
+        private int IssueNumberTo;
 
         //If specify a range in the command, then only run issues having issue numbers in this range.
         //If range is not specified, run all the issues in the repository.
-        bool processAll;
-
-        //private SummaryReport summaryReport;
-
+        private bool ProcessAll;
         public LabelUpdateHelper(Options options)
         {
-            repoName = options.Repo;
-            githubToken = options.GitHubToken;
-            zenhubToken = options.ZenHubToken;
+            RepoName = options.Repo;
+            GithubToken = options.GitHubToken;
+            ZenhubToken = options.ZenHubToken;
 
             //only run issues which is in the range, if the totall issue number exceed the rate limiting https://developer.github.com/v3/#rate-limiting
-            issueNumberFrom = options.IssueNumFrom;
-            issueNumberTo = options.IssueNumTo;
+            IssueNumberFrom = options.IssueNumFrom;
+            IssueNumberTo = options.IssueNumTo;
 
-            //if issueNumberTo is not specified in the command, or the "from" is larger than "to" , then process all the issues
-            if (issueNumberTo == 0 || (issueNumberFrom > issueNumberTo))
+            //if IssueNumberTo is not specified in the command, or the "from" is larger than "to" , then process all the issues
+            if (IssueNumberTo == 0 || (IssueNumberFrom > IssueNumberTo))
             {
-                processAll = true;
+                ProcessAll = true;
             }
 
             GitHubClient = new GitHubClient(new ProductHeaderValue("nuget-update-pipeline-label"));
-            var creds = new Credentials(githubToken);
+            var creds = new Credentials(GithubToken);
             GitHubClient.Credentials = creds;
-            ZenHubClient = new ZenHubClient(zenhubToken);
+            ZenHubClient = new ZenHubClient(ZenhubToken);
 
             //summaryReport = new SummaryReport();
         }
@@ -59,15 +56,24 @@ namespace UpdatePipelineLabel
         {
             Dictionary<int, string> issueLabelMap = await GernerateIssueLabelMap();
 
-            string[] repoParts = repoName.Split('/');
+            string[] repoParts = RepoName.Split('/');
 
-            List<string> pipelineLabels = new List<string>();
-            pipelineLabels.Add(IssueLabels.NewIssues);
-            pipelineLabels.Add(IssueLabels.Icebox);
-            pipelineLabels.Add(IssueLabels.Backlog);
-            pipelineLabels.Add(IssueLabels.InProgress);
-            pipelineLabels.Add(IssueLabels.InReview);
-            pipelineLabels.Add(IssueLabels.Validating);
+            List<string> pipelineLabels = new List<string>()
+
+            {
+                IssueLabels.NewIssues,
+
+                IssueLabels.Icebox,
+
+                IssueLabels.Backlog,
+
+                IssueLabels.InProgress,
+
+                IssueLabels.InReview,
+
+                IssueLabels.Validating
+            };
+
 
             var issuesForRepo = await GitHubClient.Issue.GetAllForRepository(repoParts[0], repoParts[1]);
 
@@ -76,7 +82,7 @@ namespace UpdatePipelineLabel
             foreach (var issue in issuesForRepo)
             {
                 //only test for issues which has the issue number in the range
-                if ((issue.Number < issueNumberFrom || issue.Number > issueNumberTo) && !processAll)
+                if ((issue.Number < IssueNumberFrom || issue.Number > IssueNumberTo) && !ProcessAll)
                 {
                     continue;
                 }
@@ -157,7 +163,7 @@ namespace UpdatePipelineLabel
         private async Task<Dictionary<int, string>> GernerateIssueLabelMap()
         {
             Dictionary<int, string> issueLabelMap = new Dictionary<int, string>();
-            string[] repoParts = repoName.Split('/');
+            string[] repoParts = RepoName.Split('/');
             Repository repo = await GitHubClient.Repository.Get(repoParts[0], repoParts[1]);
 
             ZenHubRepositoryClient repoClient = ZenHubClient.GetRepositoryClient(repo.Id);
@@ -173,7 +179,7 @@ namespace UpdatePipelineLabel
 
                             foreach (var pipeline in zenHubBoard.Value.Pipelines)
                             {
-                                string pipelineLabel = $"Pipeline: {pipeline.Name}";
+                                string pipelineLabel = $"Pipeline:{pipeline.Name}";
                                 foreach (IssueDetails issue in pipeline.Issues)
                                 {
                                     issueLabelMap.Add(issue.IssueNumber, pipelineLabel);
