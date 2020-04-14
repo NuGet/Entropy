@@ -17,7 +17,8 @@ Error handling:
 => Reason: When updating this issue, Github throws an exceptioin. 
 => Solution: Need to mannually add pipeline label to this issue.
 
-2.System.Text.Json throws an exception: The JSON value could not be converted to System.Int32. Path: $.pipelines[0].issues[1160].estimate.value | LineNumber: 0 | BytePositionInLine: 62341.
+[update, https://github.com/AlexGhiondea/ZenHub.NET/pull/15 is merged, no more following exception]
+2.System.Text.Json throws an exception:ï¿½The JSON value could not be converted to System.Int32. Path: $.pipelines[0].issues[1160].estimate.value | LineNumber: 0 | BytePositionInLine: 62341.
 => Reason: There is a parsing error(usually there is a float estimation of an issue https://github.com/AlexGhiondea/ZenHub.NET/pull/15 )
 => Solution: Need to find the issue and manually change the estimation to an int.
    step1: Add zenhub token in the end of this URL: https://github.com/ZenHubIO/API#authentication
