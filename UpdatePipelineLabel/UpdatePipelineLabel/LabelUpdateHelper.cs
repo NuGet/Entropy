@@ -142,10 +142,6 @@ namespace UpdatePipelineLabel
                         await GitHubClient.Issue.Update(repoParts[0], repoParts[1], issue.Number, issueUpdate);
                         Console.WriteLine($"Updated : issue {issue.HtmlUrl} ");
                         updatedCount++;
-
-                        //According to https://developer.github.com/v3/guides/best-practices-for-integrators/#dealing-with-abuse-rate-limits
-                        //If you're making a large number of POST, PATCH, PUT, or DELETE requests for a single user or client ID, wait at least one second between each request.
-                        System.Threading.Thread.Sleep(1000);
                     }
                     catch (Exception e)
                     {
