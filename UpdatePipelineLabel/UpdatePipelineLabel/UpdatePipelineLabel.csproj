@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreApp3.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+
+    <PackageReference Include="Azure.Core" Version="1.0.2" />
+
+    <PackageReference Include="CommandLineParser" Version="2.7.82" />
+
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="3.1.3" />
+
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="3.1.3" />
+
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="3.1.3" />
+
+    <PackageReference Include="octokit" Version="0.42.0" />
+
+    <PackageReference Include="System.Data.DataSetExtensions" Version="4.6.0-preview3.19128.7" />
+
+    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+
+    <PackageReference Include="System.Net.Http" Version="4.3.4" />
+
+    <PackageReference Include="zenhub.net" Version="1.1.0" />
+
+  </ItemGroup>
+</Project>
+
