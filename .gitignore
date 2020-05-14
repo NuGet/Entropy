@@ -1,0 +1,4 @@
+nupkgs/*
+work/*
+*-ids.txt
+nuget.exe
