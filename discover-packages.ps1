@@ -1,7 +1,8 @@
 $ErrorActionPreference = "Stop"
 
-$testDir = "$PSScriptRoot\perftests\testCases"
+$testDir = "$PSScriptRoot\scripts\perftests\testCases"
 $nugetPath = "$PSScriptRoot\nuget.exe"
+$packageHelper = "$PSScriptRoot\src\PackageHelper\PackageHelper.csproj"
 $testCases = Get-ChildItem "$testDir\Test-*.ps1"
 
 # Download NuGet, if it does not exist yet.
@@ -11,6 +12,8 @@ if (!(Test-Path $nugetPath)) { Invoke-WebRequest $nugetUrl -OutFile $nugetPath }
 # Run all of the test cases, just using the warm-up
 foreach ($path in $testCases) {
     $testName = $path.Name.Split("-", 2)[1].Split(".", 2)[0]
+
+    break
 
     & $path `
         -nugetClientFilePath $nugetPath `
@@ -27,4 +30,4 @@ foreach ($path in $testCases) {
 }
 
 # Download all versions of all .nupkgs
-dotnet run --project $PSScriptRoot\PackageDownloader\PackageDownloader.csproj
+dotnet run download-packages --project $packageHelper
