@@ -28,8 +28,9 @@ namespace PackageDownloader
                 return 1;
             }
 
+            var nupkgDir = Path.Combine(rootDir, "out", "nupkgs");
             var ids = Directory
-                .EnumerateDirectories(Path.Combine(rootDir, "nupkgs"))
+                .EnumerateDirectories(nupkgDir)
                 .Select(x => Path.GetFileName(x))
                 .OrderBy(x => x, StringComparer.OrdinalIgnoreCase)
                 .ToList();
@@ -74,8 +75,7 @@ namespace PackageDownloader
                                 cacheContext.NoCache = true;
 
                                 var path = Path.Combine(
-                                    rootDir,
-                                    "nupkgs",
+                                    nupkgDir,
                                     lowerId,
                                     lowerVersion,
                                     $"{lowerId}.{lowerVersion}.nupkg");
