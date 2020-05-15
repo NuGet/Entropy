@@ -3,7 +3,10 @@
 # The format of the URL is assumed to be https://github.com/NuGet/NuGet.Client.git. The result would be NuGet-Client-git
 function GenerateNameFromGitUrl([string]$gitUrl)
 {
-    return $gitUrl.Substring($($gitUrl.LastIndexOf('/') + 1)).Replace('.','-')
+    $output = $gitUrl
+    if ($output.EndsWith(".git")) { $output = $output.Substring(0, $output.Length - 4) }
+    $output = $output.Substring($($gitUrl.LastIndexOf('/') + 1))
+    return $output
 }
 
 # Appends the log time in front of the log statement with the color specified. 

@@ -359,7 +359,5 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 
-nupkgs/*
-work/*
-*-ids.txt
+/out
 nuget.exe

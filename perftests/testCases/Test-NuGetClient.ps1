@@ -4,7 +4,7 @@ Param(
     [Parameter(Mandatory = $True)]
     [string] $sourceRootFolderPath,
     [Parameter(Mandatory = $True)]
-    [string] $resultsFolderPath,
+    [string] $resultsFilePath,
     [Parameter(Mandatory = $True)]
     [string] $logsFolderPath,
     [string] $nugetFoldersPath,
@@ -22,7 +22,6 @@ Param(
 $repoUrl = "https://github.com/NuGet/NuGet.Client.git"
 $commitHash = "788bc01a1b063a37841cdd6d035feb320e90e475"
 $repoName = GenerateNameFromGitUrl $repoUrl
-$resultsFilePath = [System.IO.Path]::Combine($resultsFolderPath, "$repoName.csv")
 $sourcePath = $([System.IO.Path]::Combine($sourceRootFolderPath, $repoName))
 $solutionFilePath = SetupGitRepository $repoUrl $commitHash $sourcePath
 # It's fine if this is run from here. It is run again the performance test script, but it'll set it to the same values.

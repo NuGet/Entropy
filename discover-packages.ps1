@@ -9,20 +9,17 @@ if (!(Test-Path $nugetPath)) {
 }
 
 $testCases = Get-ChildItem "$testDir\Test-*.ps1"
-$testOutputDir = "$PSScriptRoot\work"
-$nupkgOutputDir = "$PSScriptRoot\nupkgs"
 
 foreach ($path in $testCases) {
     $testName = $path.Name.Split("-", 2)[1].Split(".", 2)[0]
-    $outDir = "$testOutputDir\$testName"
 
     & $path `
         -nugetClientFilePath $nugetPath `
-        -sourceRootFolderPath $outDir\source `
-        -resultsFolderPath $outDir\results  `
-        -logsFolderPath $outDir\logs `
-        -nugetFoldersPath $outDir\nuget `
-        -dumpNupkgsPath $nupkgOutputDir `
+        -resultsFilePath $PSScriptRoot\out\results.csv  `
+        -logsFolderPath $PSScriptRoot\out\logs `
+        -dumpNupkgsPath $PSScriptRoot\out\nupkgs `
+        -sourceRootFolderPath $PSScriptRoot\out\_s `
+        -nugetFoldersPath $PSScriptRoot\out\_t `
         -iterationCount 1 `
         -skipCleanRestores `
         -skipColdRestores `

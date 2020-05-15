@@ -4,7 +4,7 @@ Param(
     [Parameter(Mandatory = $True)]
     [string] $sourceRootFolderPath,
     [Parameter(Mandatory = $True)]
-    [string] $resultsFolderPath,
+    [string] $resultsFilePath,
     [Parameter(Mandatory = $True)]
     [string] $logsFolderPath,
     [string] $nugetFoldersPath,
@@ -21,7 +21,6 @@ Param(
 
 $repoUrl = "https://github.com/OrchardCMS/OrchardCore.git"
 $testCaseName = GenerateNameFromGitUrl $repoUrl
-$resultsFilePath = [System.IO.Path]::Combine($resultsFolderPath, "$testCaseName.csv")
 
 RunPerformanceTestsOnGitRepository `
     -nugetClientFilePath $nugetClientFilePath `
