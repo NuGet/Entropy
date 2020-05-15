@@ -491,8 +491,17 @@ Function RunRestore(
             New-Item $dumpNupkgsPath -Type Directory | Out-Null
         }
         
+        $prefix = (Resolve-Path $Env:NUGET_PACKAGES).Path + '\'
         GetPackageFiles $Env:NUGET_PACKAGES `
-            | ForEach-Object { Copy-Item $_.FullName (Join-Path $dumpNupkgsPath $_.Name ) -Force }
+            | ForEach-Object { (Resolve-Path $_.FullName).Path } `
+            | ForEach-Object {
+                $dest = Join-Path $dumpNupkgsPath $_.Substring($prefix.Length)
+                $destDir = [IO.Path]::GetDirectoryName($dest)
+                if (!(Test-Path $destDir)) {
+                    New-Item $destDir -ItemType Directory | Out-Null
+                }
+                Copy-Item $_ $dest -Force
+            }
     }
 
     Log "Finished measuring."

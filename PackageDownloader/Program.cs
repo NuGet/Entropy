@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using NuGet.Common;
@@ -18,16 +19,18 @@ namespace PackageDownloader
 
         static async Task<int> Main(string[] args)
         {
+            ServicePointManager.MaxServicePointIdleTime = 10000;
+            ServicePointManager.DefaultConnectionLimit = 64;
+            ThreadPool.SetMinThreads(workerThreads: 64, completionPortThreads: 4);
+
             if (!TryFindRoot(out var rootDir))
             {
                 return 1;
             }
 
-            // Read IDs from *-ids.txt
             var ids = Directory
-                .EnumerateFiles(rootDir, "*-ids.txt")
-                .SelectMany(filePath => File.ReadAllLines(filePath))
-                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .EnumerateDirectories(Path.Combine(rootDir, "nupkgs"))
+                .Select(x => Path.GetFileName(x))
                 .OrderBy(x => x, StringComparer.OrdinalIgnoreCase)
                 .ToList();
             Console.WriteLine($"Found {ids.Count} package IDs in the log files.");
@@ -35,8 +38,8 @@ namespace PackageDownloader
             var sourceRepository = Repository.Factory.GetCoreV3("https://api.nuget.org/v3/index.json");
             var resource = await sourceRepository.GetResourceAsync<FindPackageByIdResource>();
 
-            var idBag = new ConcurrentBag<string>(ids);
-            var idVersionBag = new ConcurrentBag<PackageIdentity>();
+            var idBag = new ConcurrentQueue<string>(ids);
+            var idVersionBag = new ConcurrentQueue<PackageIdentity>();
 
             // Download all of the versions of every package ID
             var workers = Enumerable
@@ -45,32 +48,48 @@ namespace PackageDownloader
                 {
                     while (idBag.Count > 0 || idVersionBag.Count > 0)
                     {
-                        while (idBag.TryTake(out var id))
+                        while (idBag.TryDequeue(out var id))
                         {
                             using (var cacheContext = new SourceCacheContext())
                             {
+                                cacheContext.DirectDownload = true;
+                                cacheContext.NoCache = true;
+
                                 Console.WriteLine($"[{i,2}] Getting version list for {id}...");
-                                var versions = await resource.GetAllVersionsAsync(id, cacheContext, NullLogger.Instance, CancellationToken.None);
+                                var versions = (await resource.GetAllVersionsAsync(id, cacheContext, NullLogger.Instance, CancellationToken.None)).ToList();
                                 foreach (var version in versions)
                                 {
-                                    idVersionBag.Add(new PackageIdentity(id, version));
+                                    idVersionBag.Enqueue(new PackageIdentity(id, version));
                                 }
                             }
                         }
 
-                        while (idVersionBag.TryTake(out var identity))
+                        while (idVersionBag.TryDequeue(out var identity))
                         {
+                            var lowerId = identity.Id.ToLowerInvariant();
+                            var lowerVersion = identity.Version.ToNormalizedString().ToLowerInvariant();
                             using (var cacheContext = new SourceCacheContext())
                             {
-                                var path = Path.Combine(rootDir, "nupkgs", $"{identity.Id.ToLowerInvariant()}.{identity.Version.ToNormalizedString().ToLowerInvariant()}.nupkg");
+                                cacheContext.DirectDownload = true;
+                                cacheContext.NoCache = true;
+
+                                var path = Path.Combine(
+                                    rootDir,
+                                    "nupkgs",
+                                    lowerId,
+                                    lowerVersion,
+                                    $"{lowerId}.{lowerVersion}.nupkg");
                                 if (File.Exists(path))
                                 {
                                     continue;
                                 }
-                                Console.WriteLine($"[{i,2}] Downloading {identity.Id} {identity.Version.ToNormalizedString()}...");
+                                Console.WriteLine($"[{i,2}] [{idVersionBag.Count,6}] Downloading {identity.Id} {identity.Version.ToNormalizedString()}...");
                                 var downloader = await resource.GetPackageDownloaderAsync(identity, cacheContext, NullLogger.Instance, CancellationToken.None);
-                                await downloader.CopyNupkgFileToAsync($"{path}.download", CancellationToken.None);
-                                File.Move($"{path}.download", path);
+                                Directory.CreateDirectory(Path.GetDirectoryName(path));
+                                if (await downloader.CopyNupkgFileToAsync($"{path}.download", CancellationToken.None))
+                                {
+                                    File.Move($"{path}.download", path);
+                                }
                             }
                         }
                     }
