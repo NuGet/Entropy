@@ -2,7 +2,7 @@ Param(
     [string] $resultsName,
     [switch] $fast,
     [int] $iterationCount = 10,
-    [string[] $sources
+    [string[]] $sources
 )
 
 $testDir = Join-Path $PSScriptRoot "scripts\perftests\testCases"

@@ -24,7 +24,7 @@ if (!$skipWarmup) {
             -logsFolderPath (Join-Path $PSScriptRoot "out\logs") `
             -dumpNupkgsPath $nupkgDir `
             -sourceRootFolderPath (Join-Path $PSScriptRoot "out\_s") `
-            -nugetFoldersPath (Join-Path $PSScriptRoot "out\_t ")`
+            -nugetFoldersPath (Join-Path $PSScriptRoot "out\_t")`
             -iterationCount 1 `
             -skipCleanRestores `
             -skipColdRestores `
