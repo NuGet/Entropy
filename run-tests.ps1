@@ -6,6 +6,8 @@ Param(
     [string] $dumpNupkgsPath
 )
 
+. "$PSScriptRoot\scripts\perftests\PerformanceTestUtilities.ps1"
+
 $testDir = Join-Path $PSScriptRoot "scripts\perftests\testCases"
 $nugetPath = Join-Path $PSScriptRoot "nuget.exe"
 $testCases = Get-ChildItem (Join-Path $testDir "Test-*.ps1")
