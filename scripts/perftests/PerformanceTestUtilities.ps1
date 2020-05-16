@@ -1,6 +1,53 @@
 # Contains all the utility methods used by the performance tests.
 
-# The format of the URL is assumed to be https://github.com/NuGet/NuGet.Client.git. The result would be NuGet-Client-git
+function SetPackageSources($nugetClientFilePath, $sourcePath, $configFiles, $sources)
+{
+    $configFilePaths = $configFiles | ForEach-Object { Join-Path $sourcePath $_ }
+
+    # Reset all NuGet config files.
+    foreach ($configFile in $configFilePaths)
+    {
+        git -C $sourcePath checkout $configFile
+        if ($LASTEXITCODE) { throw "Command 'git -C $sourcePath checkout $configFile' failed." }
+    }
+
+    # Verify that the repository is clean.
+    $changes = git -C $sourcePath status --porcelain=v1    
+    if ($LASTEXITCODE) { throw "Command 'git -C $sourcePath status --porcelain=v1' failed." }
+    if ($changes) {
+        throw "The source path $sourcePath has changes:`r`n$changes"
+    }
+    
+    if ($sources)
+    {
+        $nameToSource = [ordered]@{}
+        $sources | ForEach-Object { $nameToSource[[Guid]::NewGuid().ToString()] = $_ }
+
+        foreach ($configFile in $configFilePaths)
+        {
+            # Find all enabled sources.
+            $enabledSources = & $nugetClientFilePath sources list -ConfigFile $configFile `
+                | ForEach-Object { if ($_ -match "^\s+\d+\.\s+(.+?) \[Enabled\]$") { $Matches[1] } }
+            if ($LASTEXITCODE) { throw "Command '$nugetClientFilePath sources list -ConfigFile $configFile' failed." }
+
+            # Disable all enabled sources.
+            foreach ($enabledSource in $enabledSources)
+            {
+                & $nugetClientFilePath sources disable -Name $enabledSource -ConfigFile $configFile
+                if ($LASTEXITCODE) { throw "Command '$nugetClientFilePath sources disable -Name $enabledSource -ConfigFile $configFile' failed." }
+            }
+        
+            # Add the provided sources.
+            foreach ($pair in $nameToSource.GetEnumerator())
+            {
+                & $nugetClientFilePath sources add -Name $pair.Key -Source $pair.Value -ConfigFile $configFile
+                if ($LASTEXITCODE) { throw "Command '$nugetClientFilePath sources add -Name $($pair.Key) -Source $($pair.Value) -ConfigFile $configFile' failed." }
+            }
+        }
+    }
+}
+
+# The format of the URL is assumed to be https://github.com/NuGet/NuGet.Client.git. The result would be NuGet.Client
 function GenerateNameFromGitUrl([string]$gitUrl)
 {
     $output = $gitUrl
@@ -238,9 +285,18 @@ Function RunPerformanceTestsOnGitRepository(
     [switch] $skipCleanRestores,
     [switch] $skipColdRestores,
     [switch] $skipForceRestores,
-    [switch] $skipNoOpRestores)
+    [switch] $skipNoOpRestores,
+    [string[]] $configFiles,
+    [string[]] $sources)
 {
-    $solutionFilePath = SetupGitRepository -repository $repoUrl -commitHash $commitHash -sourceFolderPath $([System.IO.Path]::Combine($sourceRootFolderPath, $testCaseName))
+    $sourceFolderPath = $([System.IO.Path]::Combine($sourceRootFolderPath, $testCaseName))
+    $solutionFilePath = SetupGitRepository -repository $repoUrl -commitHash $commitHash -sourceFolderPath $sourceFolderPath
+
+    if ($configFiles -and $sources)
+    {
+        SetPackageSources $nugetClientFilePath $sourceFolderPath $configFiles $sources
+    }
+
     SetupNuGetFolders $nugetClientFilePath $nugetFoldersPath
     . "$PSScriptRoot\RunPerformanceTests.ps1" `
         -nugetClientFilePath $nugetClientFilePath `
@@ -299,15 +355,16 @@ Function ParseElapsedTime(
     }
 }
 
-Function ExtractRestoreElapsedTime(
+Function ExtractProjectRestoreStatistics(
     [Parameter(Mandatory = $True)]
-    [string[]] $lines)
+    $lines)
 {
     # All packages listed in packages.config are already installed.
     $prefix = "Restore completed in "
 
     $lines = $lines | Where { $_.IndexOf($prefix) -gt -1 }
 
+    $elapsedTimes = @();
     ForEach ($line In $lines)
     {
         $index = $line.IndexOf($prefix)
@@ -317,15 +374,17 @@ Function ExtractRestoreElapsedTime(
         $value = [System.Double]::Parse($parts[0])
         $unit = $parts[1]
 
-        $temp = ParseElapsedTime $value $unit
-
-        If ($elapsedTime -eq $Null -Or $elapsedTime -lt $temp)
-        {
-            $elapsedTime = $temp
-        }
+        $elapsedTimes += (ParseElapsedTime $value $unit).Ticks
     }
 
-    Return $elapsedTime
+    $measurement = $elapsedTimes | Measure-Object -Maximum -Sum -Average
+    
+    return [ordered]@{
+        Count = $measurement.Count;
+        Maximum = [TimeSpan]::FromTicks($measurement.Maximum);
+        Sum = [TimeSpan]::FromTicks($measurement.Sum);
+        Average = [TimeSpan]::FromTicks($measurement.Average);
+    }
 }
 
 # Plugins cache is only available in 4.8+. We need to be careful when using that switch for older clients because it may blow up.
@@ -442,20 +501,24 @@ Function RunRestore(
 
     $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
 
-    $logs = . $nugetClientFilePath $arguments | Out-String
+    $logs = . $nugetClientFilePath $arguments
 
     $totalTime = $stopwatch.Elapsed.TotalSeconds
-    $restoreCoreTime = ExtractRestoreElapsedTime $logs
+    $restoreStatistics = ExtractProjectRestoreStatistics $logs
 
-    If ($restoreCoreTime -ne $Null)
+    If ($restoreStatistics -ne $Null)
     {
-        $restoreCoreTime = $restoreCoreTime.TotalSeconds
+        $restoreCount = $restoreStatistics.Count
+        $restoreMaxTime = $restoreStatistics.Maximum.TotalSeconds
+        $restoreSumTime = $restoreStatistics.Sum.TotalSeconds
+        $restoreAvgTime = $restoreStatistics.Average.TotalSeconds
     }
 
     if(![string]::IsNullOrEmpty($logsFolderPath))
     {
-        $logFile = [System.IO.Path]::Combine($logsFolderPath, "restoreLog-$([System.IO.Path]::GetFileNameWithoutExtension($solutionFilePath))-$(get-date -f yyyyMMddTHHmmssffff).txt")
-        OutFileWithCreateFolders $logFile $logs
+        $logFileName = "restoreLog-$([System.IO.Path]::GetFileNameWithoutExtension($solutionFilePath))-$(get-date -f yyyyMMddTHHmmssffff).txt"
+        $logFile = [System.IO.Path]::Combine($logsFolderPath, $logFileName)
+        OutFileWithCreateFolders $logFile ($logs | Out-String)
     }
 
     $folderPath = $Env:NUGET_PACKAGES
@@ -473,18 +536,18 @@ Function RunRestore(
 
     If (!(Test-Path $resultsFilePath))
     {
-        $columnHeaders = "Client Name,Client Version,Solution Name,Test Run ID,Scenario Name,Total Time (seconds),Core Restore Time (seconds),Force," + `
+        $columnHeaders = "Client Name,Client Version,Solution Name,Test Run ID,Scenario Name,Total Time (seconds),Project Restore Count,Max Project Restore Time (seconds),Sum Project Restore Time (seconds),Average Project Restore Time (seconds),Force," + `
             "Global Packages Folder .nupkg Count,Global Packages Folder .nupkg Size (MB),Global Packages Folder File Count,Global Packages Folder File Size (MB),Clean Global Packages Folder," + `
             "HTTP Cache File Count,HTTP Cache File Size (MB),Clean HTTP Cache,Plugins Cache File Count,Plugins Cache File Size (MB),Clean Plugins Cache,Kill MSBuild and dotnet Processes," + `
-            "Processor Name,Processor Physical Core Count,Processor Logical Core Count"
+            "Processor Name,Processor Physical Core Count,Processor Logical Core Count,Log File Name"
 
         OutFileWithCreateFolders $resultsFilePath $columnHeaders
     }
 
-    $data = "$clientName,$clientVersion,$solutionName,$testRunId,$scenarioName,$totalTime,$restoreCoreTime,$force," + `
+    $data = "$clientName,$clientVersion,$solutionName,$testRunId,$scenarioName,$totalTime,$restoreCount,$restoreMaxTime,$restoreSumTime,$restoreAvgTime,$force," + `
         "$($globalPackagesFolderNupkgFilesInfo.Count),$($globalPackagesFolderNupkgFilesInfo.TotalSizeInMB),$($globalPackagesFolderFilesInfo.Count),$($globalPackagesFolderFilesInfo.TotalSizeInMB),$cleanGlobalPackagesFolder," + `
         "$($httpCacheFilesInfo.Count),$($httpCacheFilesInfo.TotalSizeInMB),$cleanHttpCache,$($pluginsCacheFilesInfo.Count),$($pluginsCacheFilesInfo.TotalSizeInMB),$cleanPluginsCache,$killMsBuildAndDotnetExeProcesses," + `
-        "$($processorInfo.Name),$($processorInfo.NumberOfCores),$($processorInfo.NumberOfLogicalProcessors)"
+        "$($processorInfo.Name),$($processorInfo.NumberOfCores),$($processorInfo.NumberOfLogicalProcessors),$logFileName"
 
     Add-Content -Path $resultsFilePath -Value $data
 

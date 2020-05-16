@@ -14,7 +14,8 @@ Param(
     [switch] $skipCleanRestores,
     [switch] $skipColdRestores,
     [switch] $skipForceRestores,
-    [switch] $skipNoOpRestores
+    [switch] $skipNoOpRestores,
+    [string[]] $sources
 )
 
 . "$PSScriptRoot\..\PerformanceTestUtilities.ps1"
@@ -24,6 +25,10 @@ $commitHash = "788bc01a1b063a37841cdd6d035feb320e90e475"
 $repoName = GenerateNameFromGitUrl $repoUrl
 $sourcePath = $([System.IO.Path]::Combine($sourceRootFolderPath, $repoName))
 $solutionFilePath = SetupGitRepository $repoUrl $commitHash $sourcePath
+
+# Reset the NuGet config files
+SetPackageSources $nugetClientFilePath $sourcePath @("NuGet.Config") $sources
+
 # It's fine if this is run from here. It is run again the performance test script, but it'll set it to the same values.
 # Additionally, this will cleanup the extras from the bootstrapping which are already in the local folder, allowing us to get more accurate measurements
 SetupNuGetFolders $nugetClientFilePath $nugetFoldersPath

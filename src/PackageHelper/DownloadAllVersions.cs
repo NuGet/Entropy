@@ -28,7 +28,7 @@ namespace PackageHelper
                 .Select(x => Path.GetFileName(x))
                 .OrderBy(x => x, StringComparer.OrdinalIgnoreCase)
                 .ToList();
-            Console.WriteLine($"Found {ids.Count} package IDs in the log files.");
+            Console.WriteLine($"Found {ids.Count} package IDs in the .nupkg directory.");
 
             var sourceRepository = Repository.Factory.GetCoreV3("https://api.nuget.org/v3/index.json");
             var resource = await sourceRepository.GetResourceAsync<FindPackageByIdResource>();

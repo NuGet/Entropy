@@ -14,7 +14,8 @@ Param(
     [switch] $skipCleanRestores,
     [switch] $skipColdRestores,
     [switch] $skipForceRestores,
-    [switch] $skipNoOpRestores
+    [switch] $skipNoOpRestores,
+    [string[]] $sources
 )
 
 . "$PSScriptRoot\..\PerformanceTestUtilities.ps1"
@@ -37,4 +38,6 @@ RunPerformanceTestsOnGitRepository `
     -skipCleanRestores:$skipCleanRestores `
     -skipColdRestores:$skipColdRestores `
     -skipForceRestores:$skipForceRestores `
-    -skipNoOpRestores:$skipNoOpRestores
+    -skipNoOpRestores:$skipNoOpRestores `
+    -configFiles @("NuGet.config") `
+    -sources $sources
