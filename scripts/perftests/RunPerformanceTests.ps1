@@ -243,7 +243,7 @@ Try
         1..$iterationCount | % { RunRestore @arguments }
     }
 
-    Log "Completed the performance measurements for $solutionFilePath.  Results are in $resultsFilePath." "green"
+    Log "Completed the performance measurements for $solutionFilePath. Results are in $resultsFilePath." "green"
 }
 Finally
 {

@@ -7,14 +7,15 @@ function SetPackageSources($nugetClientFilePath, $sourcePath, $configFiles, $sou
     # Reset all NuGet config files.
     foreach ($configFile in $configFilePaths)
     {
-        git -C $sourcePath checkout $configFile
+        git -C $sourcePath checkout $configFile --quiet
         if ($LASTEXITCODE) { throw "Command 'git -C $sourcePath checkout $configFile' failed." }
     }
 
     # Verify that the repository is clean.
     $changes = git -C $sourcePath status --porcelain=v1    
     if ($LASTEXITCODE) { throw "Command 'git -C $sourcePath status --porcelain=v1' failed." }
-    if ($changes) {
+    if ($changes)
+    {
         throw "The source path $sourcePath has changes:`r`n$changes"
     }
     
@@ -31,16 +32,18 @@ function SetPackageSources($nugetClientFilePath, $sourcePath, $configFiles, $sou
             if ($LASTEXITCODE) { throw "Command '$nugetClientFilePath sources list -ConfigFile $configFile' failed." }
 
             # Disable all enabled sources.
+            Log "Disabling default sources in $configFile"
             foreach ($enabledSource in $enabledSources)
             {
-                & $nugetClientFilePath sources disable -Name $enabledSource -ConfigFile $configFile
+                & $nugetClientFilePath sources disable -Name $enabledSource -ConfigFile $configFile | Out-Null
                 if ($LASTEXITCODE) { throw "Command '$nugetClientFilePath sources disable -Name $enabledSource -ConfigFile $configFile' failed." }
             }
         
             # Add the provided sources.
             foreach ($pair in $nameToSource.GetEnumerator())
             {
-                & $nugetClientFilePath sources add -Name $pair.Key -Source $pair.Value -ConfigFile $configFile
+                Log "Enabling source '$($pair.Value)' in $configFile"
+                & $nugetClientFilePath sources add -Name $pair.Key -Source $pair.Value -ConfigFile $configFile | Out-Null
                 if ($LASTEXITCODE) { throw "Command '$nugetClientFilePath sources add -Name $($pair.Key) -Source $($pair.Value) -ConfigFile $configFile' failed." }
             }
         }
@@ -59,13 +62,14 @@ function GenerateNameFromGitUrl([string]$gitUrl)
 # Appends the log time in front of the log statement with the color specified. 
 function Log([string]$logStatement, [string]$color)
 {
+    $timestamp = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ss') + 'Z'
     if([string]::IsNullOrEmpty($color))
     {
-        Write-Host "$($(Get-Date).ToString()): $logStatement"
+        Write-Host "$($timestamp): $logStatement"
     }
     else
     { 
-        Write-Host "$($(Get-Date).ToString()): $logStatement" -ForegroundColor $color
+        Write-Host "$($timestamp): $logStatement" -ForegroundColor $color
     }
 }
 
@@ -292,10 +296,7 @@ Function RunPerformanceTestsOnGitRepository(
     $sourceFolderPath = $([System.IO.Path]::Combine($sourceRootFolderPath, $testCaseName))
     $solutionFilePath = SetupGitRepository -repository $repoUrl -commitHash $commitHash -sourceFolderPath $sourceFolderPath
 
-    if ($configFiles -and $sources)
-    {
-        SetPackageSources $nugetClientFilePath $sourceFolderPath $configFiles $sources
-    }
+    SetPackageSources $nugetClientFilePath $sourceFolderPath $configFiles $sources
 
     SetupNuGetFolders $nugetClientFilePath $nugetFoldersPath
     . "$PSScriptRoot\RunPerformanceTests.ps1" `

@@ -4,33 +4,19 @@ Param(
 
 $ErrorActionPreference = "Stop"
 
-$testDir = Join-Path $PSScriptRoot "scripts\perftests\testCases"
+. "$PSScriptRoot\scripts\perftests\PerformanceTestUtilities.ps1"
+
 $nupkgDir = Join-Path $PSScriptRoot "out\nupkgs"
-$nugetPath = Join-Path $PSScriptRoot "nuget.exe"
 $packageHelper = Join-Path $PSScriptRoot "src\PackageHelper\PackageHelper.csproj"
-$testCases = Get-ChildItem (Join-Path $testDir "Test-*.ps1")
-$extraPackages = @("Microsoft.Build.NoTargets")
+$extraPackages = @(
+    "Microsoft.Build.NoTargets" # Needed by NuGet.Client configure.ps1
+)
 
-# Download NuGet, if it does not exist yet.
-$nugetUrl = "https://dist.nuget.org/win-x86-commandline/v5.5.1/nuget.exe"
-if (!(Test-Path $nugetPath)) { Invoke-WebRequest $nugetUrl -OutFile $nugetPath }
-
-# Run all of the test cases, just using the warm-up
 if (!$skipWarmup) {
-    foreach ($path in $testCases) {
-        & $path `
-            -nugetClientFilePath $nugetPath `
-            -resultsFilePath (Join-Path $PSScriptRoot "out\results-discover-packages.csv")  `
-            -logsFolderPath (Join-Path $PSScriptRoot "out\logs") `
-            -dumpNupkgsPath $nupkgDir `
-            -sourceRootFolderPath (Join-Path $PSScriptRoot "out\_s") `
-            -nugetFoldersPath (Join-Path $PSScriptRoot "out\_t")`
-            -iterationCount 1 `
-            -skipCleanRestores `
-            -skipColdRestores `
-            -skipForceRestores `
-            -skipNoOpRestores
-    }
+    & (Join-Path $PSScriptRoot "run-tests.ps1") `
+        -resultsName "results-discover-packages" `
+        -fast `
+        -dumpNupkgsPath $nupkgDir
 }
 
 foreach ($extraPackage in $extraPackages) {
@@ -41,4 +27,6 @@ foreach ($extraPackage in $extraPackages) {
 }
 
 # Download all versions of all .nupkgs
+Log "Downloading all versions of every discovered ID" "Cyan"
 dotnet run download-all-versions --project $packageHelper
+Log "Complete." "Cyan"

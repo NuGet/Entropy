@@ -2,7 +2,8 @@ Param(
     [string] $resultsName,
     [switch] $fast,
     [int] $iterationCount = 10,
-    [string[]] $sources
+    [string[]] $sources,
+    [string] $dumpNupkgsPath
 )
 
 $testDir = Join-Path $PSScriptRoot "scripts\perftests\testCases"
@@ -17,16 +18,19 @@ if ($fast -and !$resultsName) { $resultsName = "results-fast"; }
 if (!$fast -and !$resultsName) { throw 'The -resultsName parameter is required when not using -fast.' }
 
 foreach ($testCasePath in $testCases) {
+    Log "Starting test case: $testCasePath" "Cyan"
     & $testCasePath `
         -nugetClientFilePath $nugetPath `
         -resultsFilePath (Join-Path $PSScriptRoot "out\$resultsName.csv") `
         -logsFolderPath (Join-Path $PSScriptRoot "out\logs") `
         -sourceRootFolderPath (Join-Path $PSScriptRoot "out\_s") `
         -nugetFoldersPath (Join-Path $PSScriptRoot "out\_t") `
+        -dumpNupkgsPath $dumpNupkgsPath `
         -iterationCount $iterationCount `
         -skipCleanRestores:$fast `
         -skipColdRestores `
         -skipForceRestores `
         -skipNoOpRestores `
         -sources $sources
+    Log "Finished test case: $testCasePath" "Cyan"
 }

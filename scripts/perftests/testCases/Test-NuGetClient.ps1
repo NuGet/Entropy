@@ -37,7 +37,8 @@ $currentWorkingDirectory = $pwd
 Try
 {
     Set-Location $sourcePath
-    . "$sourcePath\configure.ps1"
+    Log "Running NuGet.Client configure.ps1"
+    . "$sourcePath\configure.ps1" *>>$null
 }
 Finally
 {
