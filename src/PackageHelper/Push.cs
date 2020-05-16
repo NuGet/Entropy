@@ -1,5 +1,4 @@
 ﻿using NuGet.Common;
-using NuGet.Configuration;
 using NuGet.Packaging;
 using NuGet.Protocol;
 using NuGet.Protocol.Core.Types;
@@ -7,9 +6,10 @@ using NuGet.Versioning;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -26,21 +26,44 @@ namespace PackageHelper
                 return 1;
             }
 
+            string pushPackageSource;
             if (args.Length == 0)
             {
                 Console.WriteLine($"The {Name} command requires a package source as the argument.");
                 return 1;
             }
 
+            pushPackageSource = args[0];
+            Console.WriteLine($"Using push package source: {pushPackageSource}");
+
+            string listPackageSource;
+            if (args.Length > 1)
+            {
+                listPackageSource = args[1];
+            }
+            else
+            {
+                listPackageSource = pushPackageSource;
+            }
+
+            Console.WriteLine($"Using list package source: {listPackageSource}");
+
+            string apiKey = null;
+            if (args.Length > 2)
+            {
+                Console.WriteLine("Using an API passed as an argument.");
+                apiKey = args[2];
+            }
+
             var nupkgDir = Path.Combine(rootDir, "out", "nupkgs");
             Console.WriteLine($"Scanning {nupkgDir} for NuGet packages...");
 
-            var sourceRepository = Repository.Factory.GetCoreV3(args[0]);
-            var findPackageById = await sourceRepository.GetResourceAsync<FindPackageByIdResource>();
-            var packageUpdate = await sourceRepository.GetResourceAsync<PackageUpdateResource>();
-            var pushedVersionsLock = new SemaphoreSlim(1);
-            var pushedVersions = new Dictionary<string, HashSet<NuGetVersion>>(StringComparer.OrdinalIgnoreCase);
+            var packageUpdate = await Repository.Factory.GetCoreV3(pushPackageSource).GetResourceAsync<PackageUpdateResource>();
+            var findPackageById = await Repository.Factory.GetCoreV3(listPackageSource).GetResourceAsync<FindPackageByIdResource>();
+            var pushedVersionsLock = new object();
+            var pushedVersions = new Dictionary<string, Task<HashSet<NuGetVersion>>>(StringComparer.OrdinalIgnoreCase);
             var work = new ConcurrentQueue<string>(Directory.EnumerateFiles(nupkgDir, "*.nupkg", SearchOption.AllDirectories));
+            var consoleLock = new object();
 
             var workers = Enumerable
                 .Range(0, 8)
@@ -48,7 +71,7 @@ namespace PackageHelper
                 {
                     while (work.TryDequeue(out var nupkgPath))
                     {
-                        await PushAsync(findPackageById, packageUpdate, nupkgPath, pushedVersionsLock, pushedVersions);
+                        await PushAsync(findPackageById, packageUpdate, apiKey, nupkgPath, pushedVersionsLock, pushedVersions, consoleLock, allowRetry: true);
                     }
                 })
                 .ToList();
@@ -61,45 +84,35 @@ namespace PackageHelper
         static async Task PushAsync(
             FindPackageByIdResource findPackageById,
             PackageUpdateResource packageUpdate,
+            string apiKey,
             string nupkgPath,
-            SemaphoreSlim pushedVersionsLock,
-            Dictionary<string, HashSet<NuGetVersion>> pushedVersions)
+            object pushedVersionsLock,
+            Dictionary<string, Task<HashSet<NuGetVersion>>> pushedVersions,
+            object consoleLock,
+            bool allowRetry)
         {
             using var reader = new PackageArchiveReader(nupkgPath);
             var identity = reader.GetIdentity();
 
-            await pushedVersionsLock.WaitAsync();
-            HashSet<NuGetVersion> versions;
-            try
+            // Get the list of existing versions.
+            Task<HashSet<NuGetVersion>> versionsTask;
+            lock (pushedVersionsLock)
             {
-                if (!pushedVersions.TryGetValue(identity.Id, out versions))
+                if (!pushedVersions.TryGetValue(identity.Id, out versionsTask))
                 {
-                    Console.WriteLine($"Checking pushed versions of {identity.Id}...");
-                    using var cacheContext = new SourceCacheContext();
-                    versions = (await findPackageById.GetAllVersionsAsync(identity.Id, cacheContext, NullLogger.Instance, CancellationToken.None)).ToHashSet();
-                    pushedVersions.Add(identity.Id, versions);
+                    versionsTask = GetVersionsAsync(findPackageById, identity.Id, consoleLock);
+                    pushedVersions.Add(identity.Id, versionsTask);
                 }
+            }
 
-                if (versions.Count >= 100)
-                {
-                    Console.WriteLine($"Push of {identity.Id} {identity.Version.ToNormalizedString()} skipped due to too many versions.");
-                    return;
-                }
+            var versions = await versionsTask;
 
+            lock (pushedVersionsLock)
+            {
                 if (versions.Contains(identity.Version))
                 {
                     return;
                 }
-
-                if (new FileInfo(nupkgPath).Length > 32 * 1024 * 1024)
-                {
-                    Console.WriteLine($"Push of {identity.Id} {identity.Version.ToNormalizedString()} skipped since it's too large.");
-                    return;
-                }
-            }
-            finally
-            {
-                pushedVersionsLock.Release();
             }
 
             Console.WriteLine($"Pushing {identity.Id} {identity.Version.ToNormalizedString()}...");
@@ -110,37 +123,46 @@ namespace PackageHelper
                    symbolSource: string.Empty,
                    timeoutInSecond: 300,
                    disableBuffering: false,
-                   getApiKey: _ => null,
+                   getApiKey: _ => apiKey,
                    getSymbolApiKey: null,
                    noServiceEndpoint: false,
-                   skipDuplicate: true,
+                   skipDuplicate: false,
                    symbolPackageUpdateResource: null,
-                   log: NullLogger.Instance);
+                   log: NullLogger.Instance); // new ConsoleLogger());
 
-                await pushedVersionsLock.WaitAsync();
-                try
+                lock (pushedVersionsLock)
                 {
                     versions.Add(identity.Version);
                 }
-                finally
-                {
-                    pushedVersionsLock.Release();
-                }
+            }
+            catch (HttpRequestException ex) when (ex.Message.StartsWith("Response status code does not indicate success: 409 ") && allowRetry)
+            {
+                await PushAsync(findPackageById, packageUpdate, apiKey, nupkgPath, pushedVersionsLock, pushedVersions, consoleLock, allowRetry: false);
             }
             catch (Exception ex)
             {
-                await pushedVersionsLock.WaitAsync();
-                try
+                lock (consoleLock)
                 {
-                    Console.WriteLine($"Push of {identity.Id} {identity.Version.ToNormalizedString()} failed with exception:");
+                    Console.WriteLine($"Push of {identity.Id} {identity.Version.ToNormalizedString()} ({new FileInfo(nupkgPath).Length} bytes) failed with exception:");
                     Console.WriteLine(ex);
-                }
-                finally
-                {
-                    pushedVersionsLock.Release();
                 }
                 return;
             }
+        }
+
+        static async Task<HashSet<NuGetVersion>> GetVersionsAsync(FindPackageByIdResource findPackageById, string id, object consoleLock)
+        {
+            lock (consoleLock)
+            {
+                Console.WriteLine($"Checking pushed versions of {id}...");
+            }
+
+            using var cacheContext = Helper.GetCacheContext();
+            return (await findPackageById.GetAllVersionsAsync(
+                id,
+                cacheContext,
+                NullLogger.Instance, // new ConsoleLogger(),
+                CancellationToken.None)).ToHashSet();
         }
     }
 }
