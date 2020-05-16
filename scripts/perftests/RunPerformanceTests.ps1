@@ -96,7 +96,7 @@ Function CreateNugetClientArguments(
         testRunId = $testRunId
     }
 
-    If ($enabledSwitches -ne $Null)
+    If ($Null -ne $enabledSwitches)
     {
         ForEach ($enabledSwitch In $enabledSwitches.GetEnumerator())
         {
@@ -174,8 +174,6 @@ Try
     # Setup the NuGet folders - This includes global packages folder/http/plugin caches
     SetupNuGetFolders $nugetClientFilePath $nugetFoldersPath
 
-    $processorInfo = GetProcessorInfo
-
     Log "Measuring restore for $solutionFilePath by $nugetClientFilePath" "Green"
 
     $solutionName = [System.IO.Path]::GetFileNameWithoutExtension($solutionFilePath)
@@ -210,7 +208,7 @@ Try
             $enabledSwitches += "isPackagesConfig"
         }
         $arguments = CreateNugetClientArguments $solutionFilePath $nugetClientFilePath $resultsFilePath $logsFolderPath $dumpNupkgsPath $solutionName $testRunId "arctic" -enabledSwitches $enabledSwitches
-        1..$iterationCount | % { RunRestore @arguments }
+        1..$iterationCount | ForEach-Object { RunRestore @arguments }
     }
 
     If (!$skipColdRestores)
@@ -226,21 +224,21 @@ Try
             $enabledSwitches += "isPackagesConfig"
         }
         $arguments = CreateNugetClientArguments $solutionFilePath $nugetClientFilePath $resultsFilePath $logsFolderPath $dumpNupkgsPath $solutionName $testRunId "cold" -enabledSwitches $enabledSwitches
-        1..$iterationCount | % { RunRestore @arguments }
+        1..$iterationCount | ForEach-Object { RunRestore @arguments }
     }
 
     If (!$skipForceRestores)
     {
         Log "Running $($iterationCount)x force restores"
         $arguments = CreateNugetClientArguments $solutionFilePath $nugetClientFilePath $resultsFilePath $logsFolderPath $dumpNupkgsPath $solutionName $testRunId "force" -enabledSwitches @("force")
-        1..$iterationCount | % { RunRestore @arguments }
+        1..$iterationCount | ForEach-Object { RunRestore @arguments }
     }
 
     If (!$skipNoOpRestores)
     {
         Log "Running $($iterationCount)x no-op restores"
         $arguments = CreateNugetClientArguments $solutionFilePath $nugetClientFilePath $resultsFilePath $logsFolderPath $dumpNupkgsPath $solutionName $testRunId "noop"
-        1..$iterationCount | % { RunRestore @arguments }
+        1..$iterationCount | ForEach-Object { RunRestore @arguments }
     }
 
     Log "Completed the performance measurements for $solutionFilePath. Results are in $resultsFilePath." "green"

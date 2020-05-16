@@ -76,7 +76,7 @@ function Log([string]$logStatement, [string]$color)
 # Given a relative path, gets the absolute path from the current directory
 function GetAbsolutePath([string]$Path)
 {
-    $Path = [System.IO.Path]::Combine((pwd).Path, $Path);
+    $Path = [System.IO.Path]::Combine((Get-Location).Path, $Path);
     $Path = [System.IO.Path]::GetFullPath($Path);
     return $Path;
 }
@@ -118,7 +118,7 @@ Function GetPackageFiles(
 
 Function GetFilesInfo([System.IO.FileInfo[]] $files)
 {
-    If ($files -eq $Null)
+    If ($Null -eq $files)
     {
         $count = 0
         $totalSizeInMB = 0
@@ -330,7 +330,7 @@ Function LogDotNetSdkInfo()
     Try
     {
         $currentVersion = dotnet --version
-        $currentSdk = dotnet --list-sdks | Where { $_.StartsWith("$currentVersion ") } | Select -First 1
+        $currentSdk = dotnet --list-sdks | Where-Object { $_.StartsWith("$currentVersion ") } | Select-Object -First 1
 
         Log "Using .NET Core SDK $currentSdk."
     }
@@ -363,7 +363,7 @@ Function ExtractProjectRestoreStatistics(
     # All packages listed in packages.config are already installed.
     $prefix = "Restore completed in "
 
-    $lines = $lines | Where { $_.IndexOf($prefix) -gt -1 }
+    $lines = $lines | Where-Object { $_.IndexOf($prefix) -gt -1 }
 
     $elapsedTimes = @();
     ForEach ($line In $lines)
@@ -507,7 +507,7 @@ Function RunRestore(
     $totalTime = $stopwatch.Elapsed.TotalSeconds
     $restoreStatistics = ExtractProjectRestoreStatistics $logs
 
-    If ($restoreStatistics -ne $Null)
+    If ($Null -ne $restoreStatistics)
     {
         $restoreCount = $restoreStatistics.Count
         $restoreMaxTime = $restoreStatistics.Maximum.TotalSeconds
@@ -517,7 +517,8 @@ Function RunRestore(
 
     if(![string]::IsNullOrEmpty($logsFolderPath))
     {
-        $logFileName = "restoreLog-$([System.IO.Path]::GetFileNameWithoutExtension($solutionFilePath))-$(get-date -f yyyyMMddTHHmmssffff).txt"
+        $logDate = (Get-Date).ToUniversalTime().ToString("yyyyMMddTHHmmssffff")
+        $logFileName = "restoreLog-$([System.IO.Path]::GetFileNameWithoutExtension($solutionFilePath))-$logDate.txt"
         $logFile = [System.IO.Path]::Combine($logsFolderPath, $logFileName)
         OutFileWithCreateFolders $logFile ($logs | Out-String)
     }
@@ -537,7 +538,7 @@ Function RunRestore(
 
     If (!(Test-Path $resultsFilePath))
     {
-        $columnHeaders = "Client Name,Client Version,Solution Name,Test Run ID,Scenario Name,Total Time (seconds),Project Restore Count,Max Project Restore Time (seconds),Sum Project Restore Time (seconds),Average Project Restore Time (seconds),Force," + `
+        $columnHeaders = "Machine Name,Client Name,Client Version,Solution Name,Test Run ID,Scenario Name,Total Time (seconds),Project Restore Count,Max Project Restore Time (seconds),Sum Project Restore Time (seconds),Average Project Restore Time (seconds),Force," + `
             "Global Packages Folder .nupkg Count,Global Packages Folder .nupkg Size (MB),Global Packages Folder File Count,Global Packages Folder File Size (MB),Clean Global Packages Folder," + `
             "HTTP Cache File Count,HTTP Cache File Size (MB),Clean HTTP Cache,Plugins Cache File Count,Plugins Cache File Size (MB),Clean Plugins Cache,Kill MSBuild and dotnet Processes," + `
             "Processor Name,Processor Physical Core Count,Processor Logical Core Count,Log File Name"
@@ -545,7 +546,7 @@ Function RunRestore(
         OutFileWithCreateFolders $resultsFilePath $columnHeaders
     }
 
-    $data = "$clientName,$clientVersion,$solutionName,$testRunId,$scenarioName,$totalTime,$restoreCount,$restoreMaxTime,$restoreSumTime,$restoreAvgTime,$force," + `
+    $data = "$($Env:COMPUTERNAME),$clientName,$clientVersion,$solutionName,$testRunId,$scenarioName,$totalTime,$restoreCount,$restoreMaxTime,$restoreSumTime,$restoreAvgTime,$force," + `
         "$($globalPackagesFolderNupkgFilesInfo.Count),$($globalPackagesFolderNupkgFilesInfo.TotalSizeInMB),$($globalPackagesFolderFilesInfo.Count),$($globalPackagesFolderFilesInfo.TotalSizeInMB),$cleanGlobalPackagesFolder," + `
         "$($httpCacheFilesInfo.Count),$($httpCacheFilesInfo.TotalSizeInMB),$cleanHttpCache,$($pluginsCacheFilesInfo.Count),$($pluginsCacheFilesInfo.TotalSizeInMB),$cleanPluginsCache,$killMsBuildAndDotnetExeProcesses," + `
         "$($processorInfo.Name),$($processorInfo.NumberOfCores),$($processorInfo.NumberOfLogicalProcessors),$logFileName"

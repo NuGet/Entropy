@@ -16,14 +16,14 @@ $testCases = Get-ChildItem (Join-Path $testDir "Test-*.ps1")
 $nugetUrl = "https://dist.nuget.org/win-x86-commandline/v5.5.1/nuget.exe"
 if (!(Test-Path $nugetPath)) { Invoke-WebRequest $nugetUrl -OutFile $nugetPath }
 
-if ($fast -and !$resultsName) { $resultsName = "results-fast"; }
+if ($fast -and !$resultsName) { $resultsName = "fast"; }
 if (!$fast -and !$resultsName) { throw 'The -resultsName parameter is required when not using -fast.' }
 
 foreach ($testCasePath in $testCases) {
     Log "Starting test case: $testCasePath" "Cyan"
     & $testCasePath `
         -nugetClientFilePath $nugetPath `
-        -resultsFilePath (Join-Path $PSScriptRoot "out\$resultsName.csv") `
+        -resultsFilePath (Join-Path $PSScriptRoot "out\results-$resultsName.csv") `
         -logsFolderPath (Join-Path $PSScriptRoot "out\logs") `
         -sourceRootFolderPath (Join-Path $PSScriptRoot "out\_s") `
         -nugetFoldersPath (Join-Path $PSScriptRoot "out\_t") `

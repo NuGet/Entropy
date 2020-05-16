@@ -14,7 +14,7 @@ $extraPackages = @(
 
 if (!$skipWarmup) {
     & (Join-Path $PSScriptRoot "run-tests.ps1") `
-        -resultsName "results-discover-packages" `
+        -resultsName "discover-packages" `
         -fast `
         -dumpNupkgsPath $nupkgDir
 }
