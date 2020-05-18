@@ -21,7 +21,7 @@ These test tools can be used to compare the performance of alternate package sou
 The first step is to gather all versions of all package IDs requested in a package restore.
 
 ```powershell
-.\discovery-packages.ps1
+.\discover-packages.ps1
 ```
 
 This will run a warm-up restore on all of the test repositories. After each restore, the downloaded .nupkg files will
@@ -37,7 +37,7 @@ containing the versions actually fetched during restore.
 
 ```powershell
 dotnet run `
-    push https://my-test-source/v3/index.json `
+    push "https://my-source/v3/index.json" `
     --project .\src\PackageHelper\PackageHelper.csproj
 ```
 
@@ -48,7 +48,7 @@ If you want to use a different source URL for listing versions, pass a second so
 
 ```powershell
 dotnet run `
-    push https://my-push-source/api/v2/package https://my-list-source/v3/index.json `
+    push "https://my-push-source/api/v2/package" "https://my-source/v3/index.json" `
     --project .\src\PackageHelper\PackageHelper.csproj
 ```
 
@@ -56,7 +56,7 @@ If you want to provide an API key for pushing, provide it after a second source 
 
 ```powershell
 dotnet run `
-    push https://my-push-source/api/v2/package https://my-list-source/v3/index.json MY_API_KEY `
+    push "https://my-push-source/api/v2/package" "https://my-source/v3/index.json" "MY_API_KEY" `
     --project .\src\PackageHelper\PackageHelper.csproj
 ```
 
@@ -64,12 +64,12 @@ dotnet run `
 
 Use the `.\run-tests.ps1` script to run a series of clean restores.
 
-```
+```powershell
 .\run-tests.ps1 `
     -resultsName "combined" `
     -iterationCount 5 `
     -variantName "my-source" `
-    -sources @("https://my-list-source/v3/index.json")
+    -sources @("https://my-source/v3/index.json")
 ```
 
 The `-resultsName` parameter will be used to change the results CSV name. It is written to
@@ -85,7 +85,6 @@ The `-sources` parameter is used to specific a list of sources to use for all of
 replace the sources that are used by the test repositories by default.
 
 ## Acknowledgements 
-
 
 The perf scripts are copied and modified from the
 [NuGet/NuGet.Client](https://github.com/NuGet/NuGet.Client/tree/dev/scripts/perftests) repository. Thanks for the
