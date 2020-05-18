@@ -15,6 +15,7 @@ Param(
     [switch] $skipColdRestores,
     [switch] $skipForceRestores,
     [switch] $skipNoOpRestores,
+    [string] $variantName,
     [string[]] $sources
 )
 
@@ -58,3 +59,4 @@ Finally
     -skipColdRestores:$skipColdRestores `
     -skipForceRestores:$skipForceRestores `
     -skipNoOpRestores:$skipNoOpRestores
+    -variantName $variantName

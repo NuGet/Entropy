@@ -3,7 +3,8 @@ Param(
     [switch] $fast,
     [int] $iterationCount = 10,
     [string[]] $sources,
-    [string] $dumpNupkgsPath
+    [string] $dumpNupkgsPath,
+    [string] $variantName
 )
 
 . "$PSScriptRoot\scripts\perftests\PerformanceTestUtilities.ps1"
@@ -33,6 +34,7 @@ foreach ($testCasePath in $testCases) {
         -skipColdRestores `
         -skipForceRestores `
         -skipNoOpRestores `
+        -variantName $variantName `
         -sources $sources
     Log "Finished test case: $testCasePath" "Cyan"
 }

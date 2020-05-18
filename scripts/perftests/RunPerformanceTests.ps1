@@ -50,6 +50,9 @@ Skips force restores
 .PARAMETER skipNoOpRestores
 Skips no-op restore.
 
+.PARAMETER variantName
+The optional variant name to include in the results CSV and log file name.
+
 .EXAMPLE
 .\RunPerformanceTests.ps1 -nugetClientFilePath "C:\Program Files\dotnet\dotnet.exe" -solutionFilePath F:\NuGet.Client\NuGet.sln -resultsFilePath results.csv
 #>
@@ -69,7 +72,8 @@ Param(
     [switch] $skipCleanRestores,
     [switch] $skipColdRestores,
     [switch] $skipForceRestores,
-    [switch] $skipNoOpRestores
+    [switch] $skipNoOpRestores,
+    [string] $variantName
 )
 
 . "$PSScriptRoot\PerformanceTestUtilities.ps1"
@@ -83,6 +87,7 @@ Function CreateNugetClientArguments(
     [string] $solutionName,
     [string] $testRunId,
     [string] $scenarioName,
+    [string] $variantName,
     [string[]] $enabledSwitches)
 {
     $arguments = @{
@@ -94,6 +99,7 @@ Function CreateNugetClientArguments(
         scenarioName = $scenarioName
         solutionName = $solutionName
         testRunId = $testRunId
+        variantName = $variantName
     }
 
     If ($Null -ne $enabledSwitches)
@@ -191,7 +197,7 @@ Try
         {
             $enabledSwitches += "isPackagesConfig"
         }
-        $arguments = CreateNugetClientArguments $solutionFilePath $nugetClientFilePath $resultsFilePath $logsFolderPath $dumpNupkgsPath $solutionName $testRunId "warmup" -enabledSwitches $enabledSwitches
+        $arguments = CreateNugetClientArguments $solutionFilePath $nugetClientFilePath $resultsFilePath $logsFolderPath $dumpNupkgsPath $solutionName $testRunId "warmup" $variantName -enabledSwitches $enabledSwitches
         RunRestore @arguments
     }
 
@@ -207,7 +213,7 @@ Try
         {
             $enabledSwitches += "isPackagesConfig"
         }
-        $arguments = CreateNugetClientArguments $solutionFilePath $nugetClientFilePath $resultsFilePath $logsFolderPath $dumpNupkgsPath $solutionName $testRunId "arctic" -enabledSwitches $enabledSwitches
+        $arguments = CreateNugetClientArguments $solutionFilePath $nugetClientFilePath $resultsFilePath $logsFolderPath $dumpNupkgsPath $solutionName $testRunId "arctic" $variantName -enabledSwitches $enabledSwitches
         1..$iterationCount | ForEach-Object { RunRestore @arguments }
     }
 
@@ -223,21 +229,21 @@ Try
         {
             $enabledSwitches += "isPackagesConfig"
         }
-        $arguments = CreateNugetClientArguments $solutionFilePath $nugetClientFilePath $resultsFilePath $logsFolderPath $dumpNupkgsPath $solutionName $testRunId "cold" -enabledSwitches $enabledSwitches
+        $arguments = CreateNugetClientArguments $solutionFilePath $nugetClientFilePath $resultsFilePath $logsFolderPath $dumpNupkgsPath $solutionName $testRunId "cold" $variantName -enabledSwitches $enabledSwitches
         1..$iterationCount | ForEach-Object { RunRestore @arguments }
     }
 
     If (!$skipForceRestores)
     {
         Log "Running $($iterationCount)x force restores"
-        $arguments = CreateNugetClientArguments $solutionFilePath $nugetClientFilePath $resultsFilePath $logsFolderPath $dumpNupkgsPath $solutionName $testRunId "force" -enabledSwitches @("force")
+        $arguments = CreateNugetClientArguments $solutionFilePath $nugetClientFilePath $resultsFilePath $logsFolderPath $dumpNupkgsPath $solutionName $testRunId "force" $variantName -enabledSwitches @("force")
         1..$iterationCount | ForEach-Object { RunRestore @arguments }
     }
 
     If (!$skipNoOpRestores)
     {
         Log "Running $($iterationCount)x no-op restores"
-        $arguments = CreateNugetClientArguments $solutionFilePath $nugetClientFilePath $resultsFilePath $logsFolderPath $dumpNupkgsPath $solutionName $testRunId "noop"
+        $arguments = CreateNugetClientArguments $solutionFilePath $nugetClientFilePath $resultsFilePath $logsFolderPath $dumpNupkgsPath $solutionName $testRunId "noop" $variantName
         1..$iterationCount | ForEach-Object { RunRestore @arguments }
     }
 

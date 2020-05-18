@@ -15,6 +15,7 @@ Param(
     [switch] $skipColdRestores,
     [switch] $skipForceRestores,
     [switch] $skipNoOpRestores,
+    [string] $variantName,
     [string[]] $sources
 )
 
@@ -40,4 +41,5 @@ RunPerformanceTestsOnGitRepository `
     -skipForceRestores:$skipForceRestores `
     -skipNoOpRestores:$skipNoOpRestores `
     -configFiles @("NuGet.Config") `
+    -variantName $variantName `
     -sources $sources
