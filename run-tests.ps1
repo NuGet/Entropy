@@ -1,10 +1,10 @@
 Param(
-    [string] $resultsName,
+    [string] $variantName,
     [switch] $fast,
     [int] $iterationCount = 10,
     [string[]] $sources,
     [string] $dumpNupkgsPath,
-    [string] $variantName
+    [string] $resultsName
 )
 
 . "$PSScriptRoot\scripts\perftests\PerformanceTestUtilities.ps1"
@@ -17,8 +17,9 @@ $testCases = Get-ChildItem (Join-Path $testDir "Test-*.ps1")
 $nugetUrl = "https://dist.nuget.org/win-x86-commandline/v5.5.1/nuget.exe"
 if (!(Test-Path $nugetPath)) { Invoke-WebRequest $nugetUrl -OutFile $nugetPath }
 
-if ($fast -and !$resultsName) { $resultsName = "fast"; }
-if (!$fast -and !$resultsName) { throw 'The -resultsName parameter is required when not using -fast.' }
+if (!$resultsName -and $variantName) { $resultsName = $variantName }
+if ($fast -and !$resultsName) { $resultsName = "fast" }
+if (!$fast -and !$resultsName) { throw 'The -variantName or -resultsName parameter is required when not using -fast.' }
 
 foreach ($testCasePath in $testCases) {
     Log "Starting test case: $testCasePath" "Cyan"
