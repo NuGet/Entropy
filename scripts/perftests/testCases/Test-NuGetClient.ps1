@@ -58,5 +58,5 @@ Finally
     -skipCleanRestores:$skipCleanRestores `
     -skipColdRestores:$skipColdRestores `
     -skipForceRestores:$skipForceRestores `
-    -skipNoOpRestores:$skipNoOpRestores
+    -skipNoOpRestores:$skipNoOpRestores `
     -variantName $variantName

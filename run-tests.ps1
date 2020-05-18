@@ -17,12 +17,18 @@ $testCases = Get-ChildItem (Join-Path $testDir "Test-*.ps1")
 $nugetUrl = "https://dist.nuget.org/win-x86-commandline/v5.5.1/nuget.exe"
 if (!(Test-Path $nugetPath)) { Invoke-WebRequest $nugetUrl -OutFile $nugetPath }
 
+if ($iterationCount -lt 1) { $fast = $true }
 if (!$resultsName -and $variantName) { $resultsName = $variantName }
 if ($fast -and !$resultsName) { $resultsName = "fast" }
 if (!$fast -and !$resultsName) { throw 'The -variantName or -resultsName parameter is required when not using -fast.' }
 
 foreach ($testCasePath in $testCases) {
-    Log "Starting test case: $testCasePath" "Cyan"
+    if ($variantName) {
+        Log "Starting variant $variantName, test case $testCasePath" "Cyan"
+    } else {
+        Log "Starting test case $testCasePath" "Cyan"
+    }
+    
     & $testCasePath `
         -nugetClientFilePath $nugetPath `
         -resultsFilePath (Join-Path $PSScriptRoot "out\results-$resultsName.csv") `
@@ -37,5 +43,10 @@ foreach ($testCasePath in $testCases) {
         -skipNoOpRestores `
         -variantName $variantName `
         -sources $sources
-    Log "Finished test case: $testCasePath" "Cyan"
+
+    if ($variantName) {
+        Log "Finished variant $variantName, test case $testCasePath" "Cyan"
+    } else {
+        Log "Finished test case: $testCasePath" "Cyan"
+    }
 }
