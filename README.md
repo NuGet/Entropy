@@ -10,6 +10,10 @@ effort.
 
 These test tools can be used to compare the performance of alternate package source implementations.
 
+*Example performance comparison: 4 test solutions, 3 source configurations, 50 iterations.*
+
+![Example performance comparison](docs/img/2020-05-18-example.png)
+
 ## Instructions
 
 ### Gather all packages used by the test cases
