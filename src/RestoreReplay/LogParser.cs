@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Text.RegularExpressions;
 
 namespace RestoreReplay
@@ -12,6 +12,80 @@ namespace RestoreReplay
         private static readonly Regex StartRequestRegex = new Regex("^  (?<Method>GET) (?<Url>https?://.+)$");
         private static readonly Regex EndRequestRegex = new Regex("^  (?<StatusCode>OK|NotFound|InternalServerError) (?<Url>https?://.+?) (?<DurationMs>\\d+)ms$");
         private static readonly Regex OtherRequestRegex = new Regex("^\\s*https?://");
+
+        public static List<RequestGraphInfo> ParseGraphs(string logDir)
+        {
+            var solutionNameToSourcesToGraphInfo = new Dictionary<string, Dictionary<string, (RequestGraph Graph, Dictionary<RequestNode, RequestNode> Nodes)>>();
+            var graphToMergeCount = new Dictionary<RequestGraph, int>();
+            var stringToString = new Dictionary<string, string>();
+
+            foreach (var logPath in Directory.EnumerateFiles(logDir, "restoreLog-*-*.txt"))
+            {
+                Console.WriteLine($"Parsing {logPath}...");
+
+                // Parse the graph.
+                var newGraph = ParseGraph(logPath, stringToString);
+                var newNodes = GraphOperations.GetNodeToNode(newGraph);
+
+                // Parse the solution name out of the file name. Two formats:
+                //   1. restoreLog-{solutionName}-{timestamp}.txt
+                //   2. restoreLog-{variantName}-{solutionName}-{timestamp}.txt
+                var logFileName = Path.GetFileName(logPath);
+                var pieces = logFileName.Split(new[] { '-' });
+                var solutionName = pieces[pieces.Length - 2];
+
+                // Display statistics.
+                Console.WriteLine($"  Solution name:      {solutionName}");
+                Console.WriteLine($"  Request count:      {newGraph.Nodes.Count:n0}");
+                Console.WriteLine($"  Max concurrency:    {newGraph.MaxConcurrency:n0}");
+                Console.Write($"  Package sources:    {new Uri(newGraph.Sources[0], UriKind.Absolute).Host}");
+                if (newGraph.Sources.Count == 1)
+                {
+                    Console.WriteLine();
+                }
+                else if (newGraph.Sources.Count == 2)
+                {
+                    Console.WriteLine(" and 1 other source");
+                }
+                else
+                {
+                    Console.WriteLine($" and {newGraph.Sources.Count - 1} other sources");
+                }
+
+                // Find the existing graph with the same solution name and sources.
+                if (!solutionNameToSourcesToGraphInfo.TryGetValue(solutionName, out var sourcesToGraphInfo))
+                {
+                    sourcesToGraphInfo = new Dictionary<string, (RequestGraph Graph, Dictionary<RequestNode, RequestNode> Nodes)>();
+                    solutionNameToSourcesToGraphInfo.Add(solutionName, sourcesToGraphInfo);
+                }
+
+                var sourcesKey = string.Join(Environment.NewLine, newGraph.Sources.OrderBy(x => x, StringComparer.Ordinal));
+                if (!sourcesToGraphInfo.TryGetValue(sourcesKey, out var existingGraphInfo))
+                {
+                    sourcesToGraphInfo.Add(sourcesKey, (newGraph, newNodes));
+                    continue;
+                }
+
+                var existingGraph = existingGraphInfo.Graph;
+                var existingNodes = existingGraphInfo.Nodes;
+
+                Console.WriteLine("Merging with existing graph...");
+                GraphOperations.Merge(existingGraph, existingNodes, newGraph);
+            }
+
+            var graphInfos = solutionNameToSourcesToGraphInfo
+                .Select(p => new { SolutionName = p.Key, SourcesToGraphInfo = p.Value })
+                .SelectMany(x => x.SourcesToGraphInfo.Select(p => new RequestGraphInfo(x.SolutionName, p.Value.Graph)))
+                .ToList();
+
+            // Run consistency checks.
+            foreach (var graphInfo in graphInfos)
+            {
+                GraphOperations.ValidateReferences(graphInfo.Graph);
+            }
+
+            return graphInfos;
+        }
 
         public static RequestGraph ParseGraph(string logPath, Dictionary<string, string> stringToString)
         {
