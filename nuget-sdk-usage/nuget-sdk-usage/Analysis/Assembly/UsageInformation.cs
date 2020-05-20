@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace nuget_sdk_usage
+namespace nuget_sdk_usage.Analysis.Assembly
 {
     internal class UsageInformation
     {

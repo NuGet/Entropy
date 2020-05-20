@@ -2,9 +2,9 @@
 using System.Reflection.Metadata;
 using System.Text;
 
-namespace nuget_sdk_usage
+namespace nuget_sdk_usage.Analysis.Assembly
 {
-    internal class MethodSignatureDecoder : ISignatureTypeProvider<string, object?>
+    internal class MethodSignatureDecoder : ISignatureTypeProvider<string, object>
     {
         public static MethodSignatureDecoder Default { get; } = new MethodSignatureDecoder();
 
@@ -15,7 +15,10 @@ namespace nuget_sdk_usage
 
         public string GetByReferenceType(string elementType)
         {
-            return elementType;
+            // I think IL doesn't have a difference between what C# calls `out` and `ref`. `out` is just `ref`
+            // with the convention that it always sets a value. Currently, NuGet.Client doesn't use `ref` in
+            // public APIs, but if it does one day, then nuget-sdk-usage needs to be updated to deal with it.
+            return "out " + elementType;
         }
 
         public string GetFunctionPointerType(MethodSignature<string> signature)
@@ -108,16 +111,16 @@ namespace nuget_sdk_usage
         }
 
 #pragma warning disable CS8601 // Possible null reference assignment.
-        private static readonly string BooleanName = typeof(bool).FullName;
-        private static readonly string StringName = typeof(string).FullName;
-        private static readonly string VoidName = typeof(void).FullName;
-        private static readonly string Int32Name = typeof(int).FullName;
-        private static readonly string ByteName = typeof(byte).FullName;
-        private static readonly string ObjectName = typeof(object).FullName;
-        private static readonly string Int64Name = typeof(long).FullName;
+        private static readonly string BooleanName = "bool";
+        private static readonly string StringName = "string";
+        private static readonly string VoidName = "void";
+        private static readonly string Int32Name = "int";
+        private static readonly string ByteName = "byte";
+        private static readonly string ObjectName = "object";
+        private static readonly string Int64Name = "long";
         private static readonly string IntPtrName = typeof(System.IntPtr).FullName;
-        private static readonly string DoubleName = typeof(double).FullName;
-        private static readonly string CharName = typeof(char).FullName;
+        private static readonly string DoubleName = "double";
+        private static readonly string CharName = "char";
 #pragma warning restore CS8601 // Possible null reference assignment.
     }
 }

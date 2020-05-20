@@ -1,8 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Reflection.Metadata;
 using System.Text;
 
-namespace nuget_sdk_usage
+namespace nuget_sdk_usage.Analysis.Assembly
 {
     internal static class TypeNameGenerator
     {
@@ -17,17 +18,35 @@ namespace nuget_sdk_usage
 
         private static void BuildFullName(EntityHandle handle, MetadataReader metadata, StringBuilder sb, out string assembly)
         {
-            void BuildName(StringHandle stringHandle)
+            void BuildName(string value)
             {
-                if (!stringHandle.IsNil)
+                if (!string.IsNullOrWhiteSpace(value))
                 {
                     if (sb.Length != 0)
                     {
                         sb.Append('.');
                     }
 
-                    var value = metadata.GetString(stringHandle);
                     sb.Append(value);
+                }
+            }
+
+            void BuildNameFromHandle(StringHandle stringHandle)
+            {
+                if (!stringHandle.IsNil)
+                {
+                    var value = metadata.GetString(stringHandle);
+                    BuildName(value);
+                }
+            }
+
+            void BuildMethodNameFromHandle(MemberReference methodReference)
+            {
+                if (!methodReference.Name.IsNil)
+                {
+                    var ilName = metadata.GetString(methodReference.Name);
+                    var methodName = TransformMethodName(ilName, methodReference, metadata);
+                    BuildName(methodName);
                 }
             }
 
@@ -37,7 +56,7 @@ namespace nuget_sdk_usage
                     {
                         var memberReference = metadata.GetMemberReference((MemberReferenceHandle)handle);
                         BuildFullName(memberReference.Parent, metadata, sb, out assembly);
-                        BuildName(memberReference.Name);
+                        BuildMethodNameFromHandle(memberReference);
                     }
                     break;
 
@@ -45,8 +64,8 @@ namespace nuget_sdk_usage
                     {
                         var typeReference = metadata.GetTypeReference((TypeReferenceHandle)handle);
                         BuildFullName(typeReference.ResolutionScope, metadata, sb, out assembly);
-                        BuildName(typeReference.Namespace);
-                        BuildName(typeReference.Name);
+                        BuildNameFromHandle(typeReference.Namespace);
+                        BuildNameFromHandle(typeReference.Name);
                     }
                     break;
 
@@ -60,8 +79,8 @@ namespace nuget_sdk_usage
                 case HandleKind.TypeDefinition:
                     {
                         var typeDefinition = metadata.GetTypeDefinition((TypeDefinitionHandle)handle);
-                        BuildName(typeDefinition.Namespace);
-                        BuildName(typeDefinition.Name);
+                        BuildNameFromHandle(typeDefinition.Namespace);
+                        BuildNameFromHandle(typeDefinition.Name);
                         // I think type definitions are always defined in the containing assembly.
                         // When it appears it should belong elsewhere, I think it's an embedded (COM?) type.
                         assembly = GetCurrentAssemblyName(metadata);
@@ -89,6 +108,38 @@ namespace nuget_sdk_usage
             }
 
             return metadata.GetString(assemblyDefinition.Name);
+        }
+
+        private static readonly IReadOnlyDictionary<string, string> MethodNameStaticMapping = new Dictionary<string, string>()
+        {
+            { "op_Equality", "operator ==" },
+            { "op_Inequality", "operator !=" },
+            { "op_GreaterThan", "operator >" },
+            { "op_GreaterThanOrEqual", "operator >=" },
+            { "op_LessThan", "operator <" },
+            { "op_LessThanOrEqual", "operator <=" }
+        };
+
+        private static string TransformMethodName(string ilName, MemberReference memberReference, MetadataReader metadata)
+        {
+            if (MethodNameStaticMapping.TryGetValue(ilName, out var mappedName))
+            {
+                return mappedName;
+            }
+
+            if (ilName.Equals(".ctor"))
+            {
+                var entityHandle = memberReference.Parent;
+                if (entityHandle.Kind != HandleKind.TypeReference)
+                {
+                    throw new NotSupportedException("constructor reference was not in a type reference?");
+                }
+                var typeReference = metadata.GetTypeReference((TypeReferenceHandle)entityHandle);
+                var name = metadata.GetString(typeReference.Name);
+                return name;
+            }
+
+            return ilName;
         }
     }
 }
