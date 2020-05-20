@@ -21,10 +21,13 @@ namespace RestoreReplay
             for (int index = 0; index < graphInfos.Count; index++)
             {
                 var graphInfo = graphInfos[index];
-                GraphOperations.TransitiveReduction(graphInfo.Graph);
                 var fileName = $"{index}-{graphInfo.SolutionName}.json";
-                Console.WriteLine($"Writing {fileName}...");
-                RequestGraphSerializer.WriteToFile($"{graphInfo.SolutionName}-{index}.json", graphInfo.Graph);
+
+                Console.WriteLine($"Preparing {fileName}...");
+                GraphOperations.TransitiveReduction(graphInfo.Graph);
+
+                Console.WriteLine($"  Writing {fileName}...");
+                RequestGraphSerializer.WriteToFile(fileName, graphInfo.Graph);
             }
 
             return 0;

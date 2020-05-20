@@ -8,10 +8,10 @@ namespace RestoreReplay
     {
         public static void TransitiveReduction(RequestGraph graph)
         {
-            Console.WriteLine("Reducing transitive dependencies...");
             Console.WriteLine("  Finding dependents...");
             var nodeToDependents = GetNodeToDependents(graph);
 
+            Console.WriteLine("  Reducing transitive dependencies...");
             var beforeCount = graph.Nodes.Sum(x => x.Dependencies.Count);
             foreach (var node in graph.Nodes)
             {
