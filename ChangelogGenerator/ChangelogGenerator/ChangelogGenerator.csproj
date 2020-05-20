@@ -23,7 +23,4 @@
     <PackageReference Include="System.Net.Http" Version="4.3.4" />
     <PackageReference Include="zenhub.net" Version="1.0.0" />
   </ItemGroup>
-  <ItemGroup>
-    <Content Include="Readme.txt" />
-  </ItemGroup>
 </Project>

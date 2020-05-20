@@ -8,7 +8,7 @@ namespace ChangelogGenerator
 {
     class IssueLabels
     {
-        public static string ClosedPrefix = "ClosedAs:";
+        public static string ClosedPrefix = "Resolution:";
         public static string RegressionDuringThisVersion = "RegressionDuringThisVersion";
         public static string EngImprovement = "Category:Engineering";
         public static string Epic = "Epic";
@@ -16,6 +16,8 @@ namespace ChangelogGenerator
         public static string DCR = "Type:DCR";
         public static string Bug = "Type:Bug";
         public static string Spec = "Type:Spec";
+        public static string Test = "Type:Test";
+        public static string Docs = "Type:Docs";
 
     }
 }

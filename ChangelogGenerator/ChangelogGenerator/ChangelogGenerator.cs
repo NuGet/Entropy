@@ -27,7 +27,7 @@ namespace ChangelogGenerator
         public async Task<string> GenerateChangelog()
         {
             string releaseId = await GetReleaseId();
-            Dictionary<IssueType, List<Issue>> issues = await GetIssuesByType(releaseId);
+            SortedDictionary<IssueType, List<Issue>> issues = await GetIssuesByType(releaseId);
             return GenerateMarkdown(releaseId, issues);
         }
 
@@ -56,71 +56,85 @@ namespace ChangelogGenerator
             return releaseId;
         }
 
-        private async Task<Dictionary<IssueType, List<Issue>>> GetIssuesByType(string releaseId)
+        private async Task<SortedDictionary<IssueType, List<Issue>>> GetIssuesByType(string releaseId)
         {
-            Dictionary<IssueType, List<Issue>> issuesByType = new Dictionary<IssueType, List<Issue>>();
+            var issuesByType = new SortedDictionary<IssueType, List<Issue>>();
 
             ZenHubReleaseClient releaseClient = ZenHubClient.GetReleaseClient(releaseId);
             IssueDetails[] zenHubIssueList = (await releaseClient.GetIssuesAsync()).Value;
             string[] repoParts = Options.Repo.Split('/');
+            var primaryRepository = await GitHubClient.Repository.Get(repoParts[0], repoParts[1]);
+
             foreach (IssueDetails details in zenHubIssueList)
             {
+                if (details.RepositoryId != primaryRepository.Id)
+                {
+                    // skip all issues which aren't in our primary repo
+                    continue;
+                }
+
                 Issue issue = await GitHubClient.Issue.Get(repoParts[0], repoParts[1], details.IssueNumber);
                 bool issueFixed = true;
                 bool hidden = false;
                 IssueType issueType = IssueType.None;
                 bool epicLabel = false;
                 bool regressionDuringThisVersion = false;
-                bool engineeringImprovement = false;
+                bool engImproveOrDocs = false;
                 string requiredLabel = Options.RequiredLabel?.ToLower();
                 bool foundRequiredLabel = string.IsNullOrEmpty(requiredLabel);
-
-                foreach (var label in issue.Labels)
+                
+                if (issue.State == ItemState.Open)
                 {
-                    if (label.Name.Contains(IssueLabels.ClosedPrefix))
+                    issueType = IssueType.StillOpen;
+                }
+                else
+                {
+                    foreach (var label in issue.Labels)
                     {
-                        issueFixed = false;
-                    }
+                        if (label.Name.Contains(IssueLabels.ClosedPrefix))
+                        {
+                            issueFixed = false;
+                        }
 
-                    if (label.Name == IssueLabels.RegressionDuringThisVersion)
-                    {
-                        regressionDuringThisVersion = true;
-                        hidden = true;
-                    }
+                        if (label.Name == IssueLabels.RegressionDuringThisVersion)
+                        {
+                            regressionDuringThisVersion = true;
+                            hidden = true;
+                        }
 
-                    if (label.Name == IssueLabels.EngImprovement)
-                    {
-                        engineeringImprovement = true;
-                        hidden = true;
-                    }
+                        if (label.Name == IssueLabels.EngImprovement || label.Name == IssueLabels.Test || label.Name == IssueLabels.Docs)
+                        {
+                            engImproveOrDocs = true;
+                            hidden = true;
+                        }
 
-                    if (!foundRequiredLabel && label.Name.ToLower() == requiredLabel)
-                    {
-                        foundRequiredLabel = true;
-                    }
+                        if (!foundRequiredLabel && label.Name.ToLower() == requiredLabel)
+                        {
+                            foundRequiredLabel = true;
+                        }
 
-                    if (label.Name == IssueLabels.Epic)
-                    {
-                        epicLabel = true;
-                    }
-                    else if (label.Name == IssueLabels.Feature)
-                    {
-                        issueType = IssueType.Feature;
-                    }
-                    else if (label.Name == IssueLabels.DCR)
-                    {
-                        issueType = IssueType.DCR;
-                    }
-                    else if (label.Name == IssueLabels.Bug)
-                    {
-                        issueType = IssueType.Bug;
-                    }
-                    else if (label.Name == IssueLabels.Spec)
-                    {
-                        issueType = IssueType.Spec;
+                        if (label.Name == IssueLabels.Epic)
+                        {
+                            epicLabel = true;
+                        }
+                        else if (label.Name == IssueLabels.Feature)
+                        {
+                            issueType = IssueType.Feature;
+                        }
+                        else if (label.Name == IssueLabels.DCR)
+                        {
+                            issueType = IssueType.DCR;
+                        }
+                        else if (label.Name == IssueLabels.Bug)
+                        {
+                            issueType = IssueType.Bug;
+                        }
+                        else if (label.Name == IssueLabels.Spec)
+                        {
+                            issueType = IssueType.Spec;
+                        }
                     }
                 }
-
                 if (!foundRequiredLabel)
                 {
                     hidden = true;
@@ -141,7 +155,7 @@ namespace ChangelogGenerator
                 }
                 else if (issueType == IssueType.None)
                 {
-                    if (!(issueFixed && !regressionDuringThisVersion && !engineeringImprovement))
+                    if (!(issueFixed && !regressionDuringThisVersion && !engImproveOrDocs))
                     {
                         hidden = true;
                     }
@@ -161,23 +175,37 @@ namespace ChangelogGenerator
             return issuesByType;
         }
 
-        private string GenerateMarkdown(string releaseId, Dictionary<IssueType, List<Issue>> labelSet)
+        private string GenerateMarkdown(string releaseId, SortedDictionary<IssueType, List<Issue>> labelSet)
         {
             StringBuilder builder = new StringBuilder();
-            builder.AppendLine("# " + Options.Release + (!string.IsNullOrEmpty(Options.RequiredLabel) ? "-" + Options.RequiredLabel.ToLower() : "") + " Release Notes");
+            builder.AppendLine("---");
+            builder.AppendLine(string.Format("title: NuGet {0} Release Notes", Options.Release));
+            builder.AppendLine(string.Format("description: Release notes for NuGet {0} including new features, bug fixes, and DCRs.", Options.Release));
+            builder.AppendLine("author: <GithubAlias>");
+            builder.AppendLine("ms.author: <MicrosoftAlias>");
+            builder.AppendLine(string.Format("ms.date: {0}", DateTime.Now.ToString("d", System.Globalization.CultureInfo.GetCultureInfo("en-US"))));
+            builder.AppendLine("ms.topic: conceptual");
+            builder.AppendLine("---");
             builder.AppendLine();
-            builder.AppendLine("[Full Changelog]" + "(\"\")");
+            builder.AppendLine(string.Format("# NuGet {0} Release Notes", Options.Release));
             builder.AppendLine();
-            builder.AppendLine("[Issues List]"
-                + "("
-                + "https://app.zenhub.com/workspaces/nuget-client-team-55aec9a240305cf007585881/reports/release?release="
-                + releaseId
-                + ")");
+            builder.AppendLine("NuGet distribution vehicles:");
+            builder.AppendLine();
+            builder.AppendLine("| NuGet version | Available in Visual Studio version | Available in .NET SDK(s) |");
+            builder.AppendLine("|:---|:---|:---|");
+            builder.AppendLine("| [**<NuGetVersion>**](https://nuget.org/downloads) | [Visual Studio <VSYear> version <VSVersion>](https://visualstudio.microsoft.com/downloads/) | [<SDKVersion>](https://dotnet.microsoft.com/download/dotnet-core/<SDKMajorMinorVersionOnly>)<sup>1</sup> |");
+            builder.AppendLine();
+            builder.AppendLine("<sup>1</sup> Installed with Visual Studio <VSYear> with.NET Core workload");
+            builder.AppendLine();
+            builder.AppendLine(string.Format("## Summary: What's New in {0}", Options.Release));
+            builder.AppendLine("<FEATURES AND OTHER SIGNIFICANT WORK GOES IN THIS SECTION>");
+            builder.AppendLine();
+            builder.AppendLine("### Issues fixed in this release");
             builder.AppendLine();
             foreach (var key in labelSet.Keys)
             {
                 var issueTypeString = key.ToString();
-                builder.AppendLine("**" + issueTypeString + ":**");
+                builder.AppendLine(string.Format("**{0}s:**", issueTypeString));
                 builder.AppendLine();
                 foreach (var issue in labelSet[key])
                 {
@@ -186,9 +214,13 @@ namespace ChangelogGenerator
                 }
             }
 
+            builder.AppendLine("**[List of all issues fixed in this release - " + Options.Release + "]"
+            + "("
+            + "https://app.zenhub.com/workspaces/nuget-client-team-55aec9a240305cf007585881/reports/release?release="
+            + releaseId
+            + ")**");
+
             return builder.ToString();
-
-
         }
     }
 }
