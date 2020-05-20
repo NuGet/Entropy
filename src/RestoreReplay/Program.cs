@@ -24,7 +24,7 @@ namespace RestoreReplay
                 var fileName = $"{index}-{graphInfo.SolutionName}.json";
 
                 Console.WriteLine($"Preparing {fileName}...");
-                GraphOperations.TransitiveReduction(graphInfo.Graph);
+                GraphOperations.LazyTransitiveReduction(graphInfo.Graph);
 
                 Console.WriteLine($"  Writing {fileName}...");
                 RequestGraphSerializer.WriteToFile(fileName, graphInfo.Graph);

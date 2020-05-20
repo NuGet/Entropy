@@ -6,8 +6,12 @@ namespace RestoreReplay
 {
     public class GraphOperations
     {
-        public static void TransitiveReduction(RequestGraph graph)
+        public static void LazyTransitiveReduction(RequestGraph graph)
         {
+            // Note that this is a partial implementation of transitive reduction. For the request graph generated from
+            // logs, transitive dependencies are always lifted to all dependents. This means at any given node, you
+            // only need to inspec the direct dependents' dependencies (non-recursively). A more thorough implementation
+            // would perform a depth-first search at each node to determine the reduction.
             Console.WriteLine("  Finding dependents...");
             var nodeToDependents = GetNodeToDependents(graph);
 
