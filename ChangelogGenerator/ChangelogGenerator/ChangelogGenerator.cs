@@ -27,7 +27,7 @@ namespace ChangelogGenerator
         public async Task<string> GenerateChangelog()
         {
             string releaseId = await GetReleaseId();
-            SortedDictionary<IssueType, List<Issue>> issues = await GetIssuesByType(releaseId);
+            Dictionary<IssueType, List<Issue>> issues = await GetIssuesByType(releaseId);
             return GenerateMarkdown(releaseId, issues);
         }
 
@@ -56,9 +56,9 @@ namespace ChangelogGenerator
             return releaseId;
         }
 
-        private async Task<SortedDictionary<IssueType, List<Issue>>> GetIssuesByType(string releaseId)
+        private async Task<Dictionary<IssueType, List<Issue>>> GetIssuesByType(string releaseId)
         {
-            var issuesByType = new SortedDictionary<IssueType, List<Issue>>();
+            var issuesByType = new Dictionary<IssueType, List<Issue>>();
 
             ZenHubReleaseClient releaseClient = ZenHubClient.GetReleaseClient(releaseId);
             IssueDetails[] zenHubIssueList = (await releaseClient.GetIssuesAsync()).Value;
@@ -175,7 +175,7 @@ namespace ChangelogGenerator
             return issuesByType;
         }
 
-        private string GenerateMarkdown(string releaseId, SortedDictionary<IssueType, List<Issue>> labelSet)
+        private string GenerateMarkdown(string releaseId, Dictionary<IssueType, List<Issue>> labelSet)
         {
             StringBuilder builder = new StringBuilder();
             builder.AppendLine("---");
@@ -198,19 +198,19 @@ namespace ChangelogGenerator
             builder.AppendLine("<sup>1</sup> Installed with Visual Studio <VSYear> with.NET Core workload");
             builder.AppendLine();
             builder.AppendLine(string.Format("## Summary: What's New in {0}", Options.Release));
-            builder.AppendLine("<FEATURES AND OTHER SIGNIFICANT WORK GOES IN THIS SECTION>");
             builder.AppendLine();
+            OutputSection(labelSet, builder, IssueType.Feature, includeHeader:false);
             builder.AppendLine("### Issues fixed in this release");
             builder.AppendLine();
+            OutputSection(labelSet, builder, IssueType.DCR);
+            OutputSection(labelSet, builder, IssueType.Bug);
+            
             foreach (var key in labelSet.Keys)
             {
-                var issueTypeString = key.ToString();
-                builder.AppendLine(string.Format("**{0}s:**", issueTypeString));
-                builder.AppendLine();
-                foreach (var issue in labelSet[key])
+                if (key != IssueType.Feature && key != IssueType.DCR && key != IssueType.Bug)
                 {
-                    builder.AppendLine("* " + issue.Title + " - " + "[#" + issue.Number + "](" + issue.HtmlUrl + ")");
-                    builder.AppendLine();
+                    // these sections shouldn't exist. tweak the issues in github until these issues move to Feature, Bug, DCR, or go away.
+                    OutputSection(labelSet, builder, key, problem:true);
                 }
             }
 
@@ -221,6 +221,34 @@ namespace ChangelogGenerator
             + ")**");
 
             return builder.ToString();
+        }
+
+        private static void OutputSection(
+            Dictionary<IssueType, List<Issue>> labelSet,
+            StringBuilder builder,
+            IssueType key,
+            bool includeHeader = true,
+            bool problem = false)
+        {
+            
+            List<Issue> issues = null;
+            bool hasIssues = labelSet.TryGetValue(key, out issues);
+
+            if (hasIssues)
+            {
+                if (includeHeader)
+                {
+                    var issueTypeString = key.ToString();
+                    builder.AppendLine(string.Format("**{0}s:**", issueTypeString));
+                    builder.AppendLine();
+                }
+
+                foreach (var issue in labelSet[key])
+                {
+                    builder.AppendLine("* " + issue.Title + " - " + "[#" + issue.Number + "](" + issue.HtmlUrl + ")");
+                    builder.AppendLine();
+                }
+            }
         }
     }
 }
