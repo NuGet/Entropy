@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
-namespace RestoreReplay
+namespace PackageHelper.RestoreReplay
 {
-    public class HitIndexAndUrlComparer : IEqualityComparer<RequestNode>
+    class HitIndexAndUrlComparer : IEqualityComparer<RequestNode>
     {
         public static HitIndexAndUrlComparer Instance { get; } = new HitIndexAndUrlComparer();
 

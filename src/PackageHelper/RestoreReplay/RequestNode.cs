@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
 
-namespace RestoreReplay
+namespace PackageHelper.RestoreReplay
 {
     [DebuggerDisplay("{HitIndex}: {StartRequest.Url,nq}")]
-    public class RequestNode
+    class RequestNode
     {
         public RequestNode(int hitIndex, StartRequest startRequest, HashSet<RequestNode> dependsOn)
         {

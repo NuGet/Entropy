@@ -9,7 +9,7 @@ using NuGet.Packaging.Core;
 using NuGet.Protocol;
 using NuGet.Protocol.Core.Types;
 
-namespace PackageHelper
+namespace PackageHelper.Commands
 {
     static class DownloadAllVersions
     {

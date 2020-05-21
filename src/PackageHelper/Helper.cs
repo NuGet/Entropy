@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace PackageHelper
 {
-    public static class Helper
+    static class Helper
     {
         private const string RootMarker = "discover-packages.ps1";
 

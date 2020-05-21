@@ -13,7 +13,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace PackageHelper
+namespace PackageHelper.Commands
 {
     class Push
     {

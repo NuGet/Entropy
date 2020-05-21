@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace RestoreReplay
+namespace PackageHelper.RestoreReplay
 {
-    public class GraphOperations
+    class GraphOperations
     {
         public static void LazyTransitiveReduction(RequestGraph graph)
         {
@@ -111,9 +111,6 @@ namespace RestoreReplay
             var totalDependenciesAfter = existingGraph.Nodes.Sum(x => x.Dependencies.Count);
             Console.WriteLine($"  New responses:      {addedEndRequests:n0}");
             Console.WriteLine($"  Dependencies delta: {totalDependenciesBefore:n0} => {totalDependenciesAfter:n0} ({totalDependenciesAfter - totalDependenciesBefore:n0})");
-
-            // Use the greater of the two max concurrencies.
-            existingGraph.MaxConcurrency = Math.Max(existingGraph.MaxConcurrency, newGraph.MaxConcurrency);
         }
 
         public static List<RequestNode> TopologicalSort(RequestGraph graph)

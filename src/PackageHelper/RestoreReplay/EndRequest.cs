@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Net;
 
-namespace RestoreReplay
+namespace PackageHelper.RestoreReplay
 {
-    public class EndRequest
+    class EndRequest
     {
         public EndRequest(HttpStatusCode statusCode, string url, TimeSpan duration)
         {

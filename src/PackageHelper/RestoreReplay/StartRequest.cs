@@ -1,8 +1,8 @@
 ﻿using System.Net.Http;
 
-namespace RestoreReplay
+namespace PackageHelper.RestoreReplay
 {
-    public class StartRequest
+    class StartRequest
     {
         public StartRequest(string method, string url)
         {

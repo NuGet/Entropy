@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace PackageHelper
 {
-    public class ConsoleLogger : LoggerBase
+    class ConsoleLogger : LoggerBase
     {
         public override void Log(ILogMessage message)
         {

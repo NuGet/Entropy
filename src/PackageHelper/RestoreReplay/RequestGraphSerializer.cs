@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using Newtonsoft.Json;
 
-namespace RestoreReplay
+namespace PackageHelper.RestoreReplay
 {
-    public static class RequestGraphSerializer
+    static class RequestGraphSerializer
     {
         public static void WriteToFile(string path, RequestGraph graph)
         {
@@ -17,20 +18,11 @@ namespace RestoreReplay
                 .ToDictionary(x => x.Node, x => x.Index);
 
             using (var stream = new FileStream(path, FileMode.Create))
-            using (var writer = new StreamWriter(stream))
+            using (var gzipStream = new GZipStream(stream, CompressionLevel.Optimal))
+            using (var writer = new StreamWriter(gzipStream))
             using (var j = new JsonTextWriter(writer))
             {
                 j.WriteStartObject();
-
-                j.WritePropertyName("p");
-                j.WriteValue(graph.MaxConcurrency);
-                j.WritePropertyName("s");
-                j.WriteStartArray();
-                foreach (var source in graph.Sources)
-                {
-                    j.WriteValue(source);
-                }
-                j.WriteEndArray();
 
                 j.WritePropertyName("n");
 
@@ -90,8 +82,6 @@ namespace RestoreReplay
 
         public static RequestGraph ReadFromFile(string path)
         {
-            var maxConcurrency = default(int);
-            var sources = new List<string>();
             var nodes = new List<RequestNode>();
             var indexToNode = new Dictionary<int, RequestNode>();
             var nodeToDependencyIndexes = new Dictionary<RequestNode, List<int>>();
@@ -99,7 +89,8 @@ namespace RestoreReplay
             var serializer = new JsonSerializer();
 
             using (var stream = File.OpenRead(path))
-            using (var textReader = new StreamReader(stream))
+            using (var gzipStream = new GZipStream(stream, CompressionMode.Decompress))
+            using (var textReader = new StreamReader(gzipStream))
             using (var j = new JsonTextReader(textReader))
             {
                 j.Read();
@@ -109,13 +100,6 @@ namespace RestoreReplay
                 {
                     switch ((string)j.Value)
                     {
-                        case "p":
-                            maxConcurrency = j.ReadAsInt32().Value;
-                            break;
-                        case "s":
-                            j.Read();
-                            sources = serializer.Deserialize<List<string>>(j);
-                            break;
                         case "n":
                             j.Read();
                             Assert(j.TokenType == JsonToken.StartArray, "The first token of the 'n' property should be the start of an array.");
@@ -150,7 +134,7 @@ namespace RestoreReplay
                 }
             }
 
-            return new RequestGraph(nodes, sources, maxConcurrency);
+            return new RequestGraph(nodes);
         }
 
         private static RequestNode ReadRequestNode(JsonSerializer serializer, JsonReader j, out List<int> dependencyIndexes)
