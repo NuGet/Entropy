@@ -26,8 +26,11 @@ namespace RestoreReplay
                 Console.WriteLine($"Preparing {fileName}...");
                 GraphOperations.LazyTransitiveReduction(graphInfo.Graph);
 
-                Console.WriteLine($"  Writing {fileName}...");
-                RequestGraphSerializer.WriteToFile(fileName, graphInfo.Graph);
+                var filePath = Path.Combine(rootDir, "out", "request-graphs", fileName);
+                var outDir = Path.GetDirectoryName(filePath);
+                Directory.CreateDirectory(outDir);
+                Console.WriteLine($"  Writing {filePath}...");
+                RequestGraphSerializer.WriteToFile(filePath, graphInfo.Graph);
             }
 
             return 0;
