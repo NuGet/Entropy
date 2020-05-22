@@ -147,6 +147,11 @@ dotnet run `
 This example command will replay the request graph for the `mysource` variant name, `OrchardCore` solution name. It 
 will perform 20 iterations (via the `20` argument).
 
+**Note:** there are some known caveats to this replay approach. Most notably, any request that is cancelled by NuGet
+restore (perhaps because a package is found on one feed before the other requests complete) will be fully skipped
+during the replay. Another caveat is that this idea of replaying requests from parsed logs may be completely ludicrous.
+There's always that. It seems fine on paper... but... maybe I'm missing something?
+
 ## Acknowledgements 
 
 The perf scripts are copied and modified from the
