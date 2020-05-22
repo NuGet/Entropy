@@ -9,6 +9,7 @@ namespace PackageHelper.Commands
     static class ParseRestoreLogs
     {
         public const string Name = "parse-restore-logs";
+        private const int DefaultMaxLogsPerGraph = int.MaxValue;
 
         public static Task<int> ExecuteAsync(string[] args)
         {
@@ -17,8 +18,26 @@ namespace PackageHelper.Commands
                 return Task.FromResult(1);
             }
 
+            var maxLogsPerGraph = DefaultMaxLogsPerGraph;
+            if (args.Length > 0)
+            {
+                if (!int.TryParse(args[0], out maxLogsPerGraph))
+                {
+                    maxLogsPerGraph = DefaultMaxLogsPerGraph;
+                    Console.WriteLine($"The second argument for the {Name} command was ignored because it's not an integer.");
+                }
+                else
+                {
+                    Console.WriteLine($"The max logs-per-graph argument of {maxLogsPerGraph} will be used.");
+                }
+            }
+            else
+            {
+                Console.WriteLine($"No max logs-per-graph restriction will be applied.");
+            }
+
             var logDir = Path.Combine(rootDir, "out", "logs");
-            var graphs = LogParser.ParseAndMergeRestoreRequestGraphs(logDir);
+            var graphs = LogParser.ParseAndMergeRestoreRequestGraphs(logDir, maxLogsPerGraph);
             var writtenNames = new HashSet<string>();
             for (int index = 0; index < graphs.Count; index++)
             {

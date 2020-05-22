@@ -14,25 +14,44 @@ namespace PackageHelper.Commands
     static class ReplayRequestGraph
     {
         public const string Name = "replay-request-graph";
+        private const int DefaultIterationCount = 5;
 
         public static async Task<int> ExecuteAsync(string[] args)
         {
             if (args.Length == 0)
             {
-                Console.WriteLine($"The {Name} command requires a request graph (e.g. a requestGraph-*.json.gz file) as the argument.");
+                Console.WriteLine($"The {Name} command requires a request graph (e.g. a requestGraph-*.json.gz file) as the first argument.");
                 return 1;
             }
 
             var path = args[0];
+
+            var iterations = DefaultIterationCount;
+            if (args.Length > 1)
+            {
+                if (!int.TryParse(args[1], out iterations))
+                {
+                    iterations = DefaultIterationCount;
+                    Console.WriteLine($"The second argument for the {Name} command was ignored because it's not an integer.");
+                }
+                else
+                {
+                    Console.WriteLine($"The iteration count argument of {iterations} will be used.");
+                }
+            }
+            else
+            {
+                Console.WriteLine($"Using the default iteration count of {iterations} will be used.");
+            }
+
             Console.WriteLine($"Reading {path}...");
             var graph = RequestGraphSerializer.ReadFromFile(path);
+            Console.WriteLine($"There are {graph.Nodes.Count} requests in the graph.");
 
             using (var handler = new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip })
             using (var httpClient = new HttpClient(handler))
             {
                 var maxConcurrency = 64;
-                var iterations = 1;
-
                 await ExecuteRequestsAsync(graph, httpClient, maxConcurrency, iterations);
             }
 
@@ -45,9 +64,10 @@ namespace PackageHelper.Commands
             var topologicalOrder = GraphOperations.TopologicalSort(graph);
             topologicalOrder.Reverse();
 
-            for (var i = 0; i < iterations; i++)
+            for (var i = 0; i <= iterations; i++)
             {
-                Console.WriteLine($"[{i}/{iterations}] Starting {topologicalOrder.Count} requests...");
+                var logPrefix = $"[{i}/{iterations}{(i == 0 ? " (warm-up)" : string.Empty)}]";
+                Console.WriteLine($"{logPrefix} Starting...");
                 var stopwatch = Stopwatch.StartNew();
                 var nodeToTask = new Dictionary<RequestNode, Task>();
                 var throttle = new SemaphoreSlim(maxConcurrency);
@@ -68,7 +88,7 @@ namespace PackageHelper.Commands
                     Console.WriteLine(ex.ToString());
                 }
 
-                Console.WriteLine($"[{i}/{iterations}] Completed {topologicalOrder.Count} requests in {stopwatch.ElapsedMilliseconds}ms.");
+                Console.WriteLine($"{logPrefix} Completed in {stopwatch.ElapsedMilliseconds}ms.");
             }
         }
 
@@ -84,6 +104,11 @@ namespace PackageHelper.Commands
             await throttle.WaitAsync();
             try
             {
+                if (node.EndRequest == null)
+                {
+                    return;
+                }
+
                 if (node.StartRequest.Method != "GET")
                 {
                     throw new InvalidOperationException("Only GET requests are supported.");
@@ -96,10 +121,8 @@ namespace PackageHelper.Commands
                     var stopwatch = Stopwatch.StartNew();
                     try
                     {
-                        Console.WriteLine($"  {node.StartRequest.Method} {node.StartRequest.Url}");
                         using (var response = await httpClient.GetAsync(node.StartRequest.Url, HttpCompletionOption.ResponseHeadersRead))
                         {
-                            Console.WriteLine($"  HEADERS {response.StatusCode} {node.StartRequest.Url} {stopwatch.ElapsedMilliseconds}ms");
                             using (var stream = await response.Content.ReadAsStreamAsync())
                             {
                                 int read;
@@ -109,8 +132,6 @@ namespace PackageHelper.Commands
                                 }
                                 while (read > 0);
                             }
-
-                            Console.WriteLine($"  BODY {response.StatusCode} {node.StartRequest.Url} {stopwatch.ElapsedMilliseconds}ms");
                         }
                     }
                     catch (Exception ex) when (i < maxAttempts - 1)

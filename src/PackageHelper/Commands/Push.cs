@@ -29,7 +29,7 @@ namespace PackageHelper.Commands
             string pushPackageSource;
             if (args.Length == 0)
             {
-                Console.WriteLine($"The {Name} command requires a package source as the argument.");
+                Console.WriteLine($"The {Name} command requires a package source as the first argument.");
                 return 1;
             }
 

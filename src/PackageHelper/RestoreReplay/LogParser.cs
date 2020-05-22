@@ -13,11 +13,12 @@ namespace PackageHelper.RestoreReplay
         private static readonly Regex EndRequestRegex = new Regex("^  (?<StatusCode>OK|NotFound|InternalServerError) (?<Url>https?://.+?) (?<DurationMs>\\d+)ms$");
         private static readonly Regex OtherRequestRegex = new Regex("^\\s*https?://");
 
-        public static List<RestoreRequestGraph> ParseAndMergeRestoreRequestGraphs(string logDir)
+        public static List<RestoreRequestGraph> ParseAndMergeRestoreRequestGraphs(string logDir, int maxLogsPerGraph)
         {
             var graphs = new Dictionary<
                 (string VariantName, string SolutionName, string SourcesKey),
                 (List<string> Sources, RequestGraph Graph, Dictionary<RequestNode, RequestNode> Nodes)>();
+            var graphToLogCount = new Dictionary<RequestGraph, int>();
             var stringToString = new Dictionary<string, string>();
 
             foreach (var logPath in Directory.EnumerateFiles(logDir, "restoreLog-*-*.txt"))
@@ -71,6 +72,13 @@ namespace PackageHelper.RestoreReplay
                 if (!graphs.TryGetValue(graphKey, out var existingGraphInfo))
                 {
                     graphs.Add(graphKey, (newGraphInfo.Sources, newGraph, newNodes));
+                    graphToLogCount.Add(newGraph, 1);
+                    continue;
+                }
+
+                if (graphToLogCount[existingGraphInfo.Graph] >= maxLogsPerGraph)
+                {
+                    Console.WriteLine($"Skipping due to max merge registration ({maxLogsPerGraph}).");
                     continue;
                 }
 
@@ -79,6 +87,7 @@ namespace PackageHelper.RestoreReplay
 
                 Console.WriteLine("Merging with existing graph...");
                 GraphOperations.Merge(existingGraph, existingNodes, newGraph);
+                graphToLogCount[existingGraphInfo.Graph]++;
             }
 
             var graphInfos = graphs
