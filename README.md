@@ -62,13 +62,14 @@ dotnet run `
 
 ### Run the tests
 
-Use the `.\run-tests.ps1` script to run a series of clean restores.
+Use the `.\run-tests.ps1` script to run a series of clean restores on the Git repositories checked in to
+`.\scripts\perftests\testCases`.
 
 ```powershell
 .\run-tests.ps1 `
     -resultsName "combined" `
     -iterationCount 5 `
-    -variantName "my-source" `
+    -variantName "mysource" `
     -sources @("https://my-source/v3/index.json")
 ```
 
@@ -78,11 +79,73 @@ value for this parameter acrosss all invocations so all of the data goes into on
 
 The `-variantName` parameter will be used to mark each row written to the results CSV. It will also be included in the
 restore log file name: `.\out\logs\restoreLog-{variantName}-{solutionFileName}-{timestamp}.txt`. If you are comparing
-multiple sets of sources, it's best to have one variant name for set of sources, e.g. `my-test-source-1` and
-`my-test-source-2`.
+multiple sets of sources, it's best to have one variant name for set of sources, e.g. `mytestsource1` and
+`mytestsource2`.
 
 The `-sources` parameter is used to specific a list of sources to use for all of the restores. These sources will
 replace the sources that are used by the test repositories by default.
+
+### Parse the logs
+
+In order to eliminate overhead in a NuGet restore from sources other than HTTP requests (such as disk, memory, or CPU
+bottlenecks), you can parse the restore logs to generate a dependency graph of HTTP requests. This graph can be used
+to replay all of the requests needed for a restore outside of the context of a real restore operation.
+
+Use the following command to parse all of the restore logs generating when running the tests (via `.\run-tests.ps1`,
+described above). The logs that will be parsed are in `.\out\logs`.
+
+```powershell
+dotnet run `
+    parse-restore-logs `
+    --project .\src\PackageHelper\PackageHelper.csproj
+```
+
+All graphs generated from logs with same  **solution name**, **variant name**, and **set of sources** will be merged.
+Merging multiple logs allows the HTTP request dependency graph to be closer to reality (i.e. the HTTP requests resulting
+from the real graph known by NuGet restore). In other words, the more logs you parse, the more accurate your simulated
+request graph will be.
+
+This command will produce serialized request graphs in the `.\out\request-graphs` directory. The file name format is:
+
+```
+.\out\request-graphs\requestGraph-{variantName}-{solutionName}.json.gz
+```
+
+Note that the set of sources is not encoded into the file name. It's best to use the variant name to distinguish between
+different sets of sources so that request graphs with the same variant name and solution name but different sources
+don't overwrite each other.
+
+#### How many request logs should I parse?
+
+Well, from my experimentation, 10 logs looks like enough and 20 is more than sufficient. The following script
+incrementally tests merging more and more request logs and then tests the time it takes to replay the request graph.
+
+```powershell
+.\test-log-merge-asymptote.ps1 `
+    -iterationCount 20 `
+    -variantName "mysource" `
+    -solutionName "OrchardCore"
+```
+
+Unsurprisingly, the average time to replay the request graph is asymtotal with respect to the number of logs merged.
+This picture below went up to 70 request logs merged. Very quickly, the total request duration approached just over
+6 seconds.
+
+![Asymptotal simulated restore duration](docs/img/2020-05-22-logs-per-graph.png)
+
+### Replay a request graph
+
+After you have parsed a request graph from the restore logs, you can replay it to test the raw HTTP time spent on the
+restore.
+
+```powershell
+dotnet run `
+    replay-request-graph ".\out\request-graphs\requestGraph-mysource-OrchardCore.json.gz" 20 `
+    --project .\src\PackageHelper\PackageHelper.csproj
+```
+
+This example command will replay the request graph for the `mysource` variant name, `OrchardCore` solution name. It 
+will perform 20 iterations (via the `20` argument).
 
 ## Acknowledgements 
 
