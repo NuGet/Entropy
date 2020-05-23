@@ -10,10 +10,10 @@ Param(
 . "$PSScriptRoot\scripts\perftests\PerformanceTestUtilities.ps1"
 
 $testDir = Join-Path $PSScriptRoot "scripts\perftests\testCases"
-$nugetPath = Join-Path $PSScriptRoot "nuget.exe"
 $testCases = Get-ChildItem (Join-Path $testDir "Test-*.ps1")
 
 # Download NuGet, if it does not exist yet.
+$nugetPath = Join-Path $PSScriptRoot "nuget.exe"
 $nugetUrl = "https://dist.nuget.org/win-x86-commandline/v5.5.1/nuget.exe"
 if (!(Test-Path $nugetPath)) { Invoke-WebRequest $nugetUrl -OutFile $nugetPath }
 

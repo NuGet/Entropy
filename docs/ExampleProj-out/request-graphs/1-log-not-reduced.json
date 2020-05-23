@@ -1,0 +1,52 @@
+{
+  "n": [
+    {
+      "u": "https://api.nuget.org/v3-flatcontainer/nuget.configuration/index.json",
+      "d": 2360000
+    },
+    {
+      "u": "https://api.nuget.org/v3-flatcontainer/nuget.packaging/index.json",
+      "d": 2060000
+    },
+    {
+      "u": "https://api.nuget.org/v3-flatcontainer/nuget.packaging/5.6.0/nuget.packaging.5.6.0.nupkg",
+      "d": 360000,
+      "e": [0, 1]
+    },
+    {
+      "u": "https://api.nuget.org/v3-flatcontainer/nuget.configuration/5.6.0/nuget.configuration.5.6.0.nupkg",
+      "d": 410000,
+      "e": [0, 1]
+    },
+    {
+      "u": "https://api.nuget.org/v3-flatcontainer/nuget.common/index.json",
+      "d": 2240000,
+      "e": [0, 1, 2, 3]
+    },
+    {
+      "u": "https://api.nuget.org/v3-flatcontainer/nuget.versioning/index.json",
+      "d": 2160000,
+      "e": [0, 1, 2, 3]
+    },
+    {
+      "u": "https://api.nuget.org/v3-flatcontainer/nuget.common/5.6.0/nuget.common.5.6.0.nupkg",
+      "d": 350000,
+      "e": [0, 1, 2, 3, 4]
+    },
+    {
+      "u": "https://api.nuget.org/v3-flatcontainer/nuget.versioning/5.6.0/nuget.versioning.5.6.0.nupkg",
+      "d": 360000,
+      "e": [0, 1, 2, 3, 4, 5]
+    },
+    {
+      "u": "https://api.nuget.org/v3-flatcontainer/nuget.frameworks/index.json",
+      "d": 1030000,
+      "e": [0, 1, 2, 3, 4, 5, 6, 7]
+    },
+    {
+      "u": "https://api.nuget.org/v3-flatcontainer/nuget.frameworks/5.6.0/nuget.frameworks.5.6.0.nupkg",
+      "d": 320000,
+      "e": [0, 1, 2, 3, 4, 5, 6, 7, 8]
+    }
+  ]
+}

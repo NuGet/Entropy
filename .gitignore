@@ -361,3 +361,4 @@ FodyWeavers.xsd
 
 /out
 nuget.exe
+!/docs/ExampleProj-out/logs

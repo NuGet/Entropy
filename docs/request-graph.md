@@ -160,3 +160,12 @@ This picture below went up to 70 request logs merged. Very quickly, the total re
 6 seconds.
 
 ![Asymptotal simulated restore duration](img/2020-05-22-logs-per-graph.png)
+
+## Example data
+
+The example data is available in this repository:
+
+- [ExampleProj.csproj](ExampleProj/ExampleProj.csproj)
+- Example restore logs, for example: [restoreLog-nuget-ExampleProj-20200522T2242473395.txt](ExampleProj-out/logs/restoreLog-nuget-ExampleProj-20200522T2242473395.txt)
+- Graphviz files, for example: [20-logs.gv](Exampleproj-out/request-graphs/20-logs.gv)
+- Restore graph JSON, for example: [20-logs.gv](Exampleproj-out/request-graphs/20-logs.json)

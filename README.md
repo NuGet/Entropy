@@ -16,7 +16,8 @@ These test tools can be used to compare the performance of alternate package sou
 
 ## More reading
 
-- [Request graph](docs/request-graph.md) - how and why
+- [Request graph](docs/request-graph.md) - the idea behind improving test reproducability
+- [Example request graph](docs/ExampleProj-out/request-graphs/20-logs.json) - a serialized dependency graph of HTTP requests
 
 ## Instructions
 
