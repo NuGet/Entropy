@@ -125,14 +125,14 @@ example. Notably:
   - `nuget.versioning/index.json` is only hit after `nuget.packaging.5.6.0.nupkg` is downloaded
   - `nuget.frameworks/index.json` is only hit after `nuget.common.5.6.0.nupkg` is downloaded
 
-In short, we the generated dependency graph roughly corresponds to what HTTP requests we would expect to see NuGet
+In short, the generated dependency graph roughly corresponds to what HTTP requests we would expect to see NuGet
 perform during a restore.
 
 ## Why is this interesting?
 
 Well, you're the one that read this far, you tell me! Just kidding. This is interesting because it's a general purpose
 approach to create an HTTP request plan from an output log that roughly respects the concurrency constraints of the
-domain 🤓. 
+tool that produced the log 🤓. 
 
 Not all HTTP requests take the same time (there are fast and slow endpoints, typically) so if there is an HTTP request
 this is blocking the rest of work from happening and it's a very slow request, the entire operation is slowed down.
@@ -167,5 +167,5 @@ The example data is available in this repository:
 
 - [ExampleProj.csproj](ExampleProj/ExampleProj.csproj)
 - Example restore logs, for example: [restoreLog-nuget-ExampleProj-20200522T2242473395.txt](ExampleProj-out/logs/restoreLog-nuget-ExampleProj-20200522T2242473395.txt)
-- Graphviz files, for example: [20-logs.gv](Exampleproj-out/request-graphs/20-logs.gv)
-- Restore graph JSON, for example: [20-logs.gv](Exampleproj-out/request-graphs/20-logs.json)
+- Graphviz files, for example: [20-logs.gv](ExampleProj-out/request-graphs/20-logs.gv)
+- Restore graph JSON, for example: [20-logs.gv](ExampleProj-out/request-graphs/20-logs.json)
