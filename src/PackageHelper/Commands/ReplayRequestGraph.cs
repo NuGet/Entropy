@@ -3,11 +3,15 @@ using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.Diagnostics;
+using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using CsvHelper;
+using CsvHelper.Configuration;
 using NuGet.Common;
 using PackageHelper.RestoreReplay;
 
@@ -46,20 +50,71 @@ namespace PackageHelper.Commands
 
         static async Task<int> ExecuteAsync(string path, int iterations, int maxConcurrency)
         {
+            if (!Helper.TryFindRoot(out var rootDir))
+            {
+                return 1;
+            }
+
+            Console.WriteLine("Parsing the file name...");
+            var fileName = Path.GetFileNameWithoutExtension(path);
+            if (fileName.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
+            {
+                fileName = fileName.Substring(0, fileName.Length - 5);
+            }
+            var pieces = fileName.Split('-');
+
+            string variantName;
+            string solutionName;
+            if (pieces.Length == 2)
+            {
+                variantName = null;
+                solutionName = pieces[1];
+            }
+            else if (pieces.Length >= 3)
+            {
+                variantName = pieces[1];
+                solutionName = pieces[2];
+            }
+            else
+            {
+                variantName = null;
+                solutionName = null;
+            }
+
+            Console.WriteLine($"  Variant name:  {variantName ?? "(none)"}");
+            Console.WriteLine($"  Solution name: {solutionName ?? "(none)"}");
+
             Console.WriteLine($"Reading {path}...");
             var graph = RequestGraphSerializer.ReadFromFile(path);
             Console.WriteLine($"There are {graph.Nodes.Count} requests in the graph.");
 
+            var resultsPath = Path.Combine(rootDir, "out", "replay-results.csv");
+            Console.WriteLine($"Results will be writen to {resultsPath}.");
+
             using (var handler = new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip })
             using (var httpClient = new HttpClient(handler))
             {
-                await ExecuteRequestsAsync(graph, httpClient, iterations, maxConcurrency);
+                await ExecuteRequestsAsync(
+                    resultsPath,
+                    graph,
+                    variantName,
+                    solutionName,
+                    httpClient,
+                    iterations,
+                    maxConcurrency);
             }
 
             return 0;
         }
 
-        private static async Task ExecuteRequestsAsync(RequestGraph graph, HttpClient httpClient, int iterations, int maxConcurrency)
+        private static async Task ExecuteRequestsAsync(
+            string resultsPath,
+            RequestGraph graph,
+            string variantName,
+            string solutionName,
+            HttpClient httpClient,
+            int iterations,
+            int maxConcurrency)
         {
             Console.WriteLine("Sorting the requests in topological order...");
             var topologicalOrder = GraphOperations.TopologicalSort(graph);
@@ -89,7 +144,19 @@ namespace PackageHelper.Commands
                     Console.WriteLine(ex.ToString());
                 }
 
+                stopwatch.Stop();
+
                 Console.WriteLine($"{logPrefix} Completed in {stopwatch.ElapsedMilliseconds}ms.");
+
+                AppendResult(
+                    resultsPath,
+                    i,
+                    iterations,
+                    variantName,
+                    solutionName,
+                    topologicalOrder.Count,
+                    stopwatch.Elapsed,
+                    maxConcurrency);
             }
         }
 
@@ -149,6 +216,58 @@ namespace PackageHelper.Commands
             {
                 throttle.Release();
             }
+        }
+
+        private static void AppendResult(
+            string resultsPath,
+            int iteration,
+            int iterations,
+            string variantName,
+            string solutionName,
+            int requestCount,
+            TimeSpan duration,
+            int maxConcurrency)
+        {
+            var csvConfig = new CsvConfiguration(CultureInfo.InvariantCulture)
+            {
+                HasHeaderRecord = !File.Exists(resultsPath),
+            };
+
+            using (var fileStream = new FileStream(resultsPath, FileMode.Append))
+            using (var writer = new StreamWriter(fileStream))
+            using (var csv = new CsvWriter(writer, csvConfig))
+            {
+                csv.WriteRecords(new[]
+                {
+                    new CsvRecord
+                    {
+                        TimestampUtc = DateTimeOffset.UtcNow.ToString("yyyy-MM-dd HH:mm:ss"),
+                        MachineName = Environment.MachineName,
+                        Iteration = iteration,
+                        IsWarmUp = iteration == 0,
+                        Iterations = iterations,
+                        VariantName = variantName,
+                        SolutionName = solutionName,
+                        RequestCount = requestCount,
+                        DurationMs = duration.TotalMilliseconds,
+                        MaxConcurrency = maxConcurrency,
+                    }
+                });
+            }
+        }
+
+        private class CsvRecord
+        {
+            public string TimestampUtc { get; set; }
+            public string MachineName { get; set; }
+            public int Iteration { get; set; }
+            public bool IsWarmUp { get; set; }
+            public int Iterations { get; set; }
+            public string VariantName { get; set; }
+            public string SolutionName { get; set; }
+            public object RequestCount { get; set; }
+            public double DurationMs { get; set; }
+            public int MaxConcurrency { get; set; }
         }
     }
 }

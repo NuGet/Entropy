@@ -74,9 +74,15 @@ namespace PackageHelper.Commands
                 var filePath = Path.Combine(rootDir, "out", "request-graphs", fileName);
                 var outDir = Path.GetDirectoryName(filePath);
                 Directory.CreateDirectory(outDir);
-                Console.WriteLine($"  Writing {filePath}...");
-                RequestGraphSerializer.WriteToGraphvizFile(Path.Combine(rootDir, "out", "request-graphs", $"{fileName}.gv"), graph.Graph);
-                RequestGraphSerializer.WriteToFile($"{filePath}.json.gz", graph.Graph);
+
+                var gvPath = $"{filePath}.gv";
+                Console.WriteLine($"  Writing {gvPath}...");
+                RequestGraphSerializer.WriteToGraphvizFile(gvPath, graph.Graph);
+
+                var jsonGzPath = $"{filePath}.json.gz";
+                Console.WriteLine($"  Writing {jsonGzPath}...");
+                RequestGraphSerializer.WriteToFile(jsonGzPath, graph.Graph);
+
                 writtenNames.Add(fileName);
             }
 
