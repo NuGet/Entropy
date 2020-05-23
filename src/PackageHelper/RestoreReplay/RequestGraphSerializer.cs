@@ -16,6 +16,7 @@ namespace PackageHelper.RestoreReplay
             using (var writer = new StreamWriter(stream))
             {
                 writer.WriteLine("digraph G {");
+                writer.WriteLine("  node [fontsize=16];");
                 var roots = new List<RequestNode>();
 
                 foreach (var node in graph.Nodes.OrderBy(x => x.StartRequest.Url, StringComparer.Ordinal))

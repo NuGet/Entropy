@@ -14,6 +14,10 @@ These test tools can be used to compare the performance of alternate package sou
 
 ![Example performance comparison](docs/img/2020-05-18-example.png)
 
+## More reading
+
+- [Request graph](docs/request-graph.md) - how and why
+
 ## Instructions
 
 ### Gather all packages used by the test cases
