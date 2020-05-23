@@ -42,8 +42,7 @@ containing the versions actually fetched during restore.
 
 ```powershell
 dotnet run `
-    push `
-    --push-source "https://my-source/v3/index.json" `
+    push "https://my-source/v3/index.json" `
     --project .\src\PackageHelper\PackageHelper.csproj
 ```
 
@@ -54,8 +53,7 @@ If you want to use a different source URL for listing versions, pass a second so
 
 ```powershell
 dotnet run `
-    push `
-    --push-source "https://my-push-source/api/v2/package" `
+    push "https://my-push-source/api/v2/package" `
     --list-source "https://my-source/v3/index.json" `
     --project .\src\PackageHelper\PackageHelper.csproj
 ```
@@ -64,8 +62,7 @@ If you want to provide an API key for pushing, provide it after a second source 
 
 ```powershell
 dotnet run `
-    push `
-    --push-source "https://my-push-source/api/v2/package" `
+    push "https://my-push-source/api/v2/package" `
     --list-source "https://my-source/v3/index.json" `
     --api-key "MY_API_KEY" `
     --project .\src\PackageHelper\PackageHelper.csproj

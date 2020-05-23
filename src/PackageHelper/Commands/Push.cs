@@ -25,10 +25,9 @@ namespace PackageHelper.Commands
                 Description = "Push all downloaded packages to the provided source",
             };
 
-            command.Add(new Option<string>("--push-source")
+            command.Add(new Argument<string>("push-source")
             {
                 Description = "Package source to push to",
-                Required = true,
             });
             command.Add(new Option<string>("--list-source")
             {
