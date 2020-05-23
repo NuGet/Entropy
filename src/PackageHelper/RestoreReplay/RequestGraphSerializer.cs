@@ -10,6 +10,68 @@ namespace PackageHelper.RestoreReplay
 {
     static class RequestGraphSerializer
     {
+        public static void WriteToGraphvizFile(string path, RequestGraph graph)
+        {
+            using (var stream = new FileStream(path, FileMode.Create))
+            using (var writer = new StreamWriter(stream))
+            {
+                writer.WriteLine("digraph G {");
+                var roots = new List<RequestNode>();
+
+                foreach (var node in graph.Nodes.OrderBy(x => x.StartRequest.Url, StringComparer.Ordinal))
+                {
+                    foreach (var dependency in node.Dependencies.OrderBy(x => x.StartRequest.Url, StringComparer.Ordinal))
+                    {
+                        writer.Write("  ");
+                        WriteGraphvizNode(writer, dependency);
+                        writer.Write(" -> ");
+                        WriteGraphvizNode(writer, node);
+                        writer.WriteLine(" [dir=back];");
+                    }
+
+                    if (node.Dependencies.Count == 0)
+                    {
+                        roots.Add(node);
+                    }
+                }
+
+                writer.WriteLine("  {");
+                writer.WriteLine("    rank=same;");
+                foreach (var node in roots.OrderBy(x => x.StartRequest.Url, StringComparer.Ordinal))
+                {
+                    writer.Write("    ");
+                    WriteGraphvizNode(writer, node);
+                    writer.WriteLine(";");
+                }
+                writer.WriteLine("  }");
+
+                writer.WriteLine("}");
+            }
+        }
+
+        private static void WriteGraphvizNode(TextWriter writer, RequestNode node)
+        {
+            writer.Write("\"");
+
+            if (node.HitIndex != 0)
+            {
+                writer.Write($"({node.HitIndex}) ");
+            }
+
+            var label = node.StartRequest.Url;
+            if (label.EndsWith("/index.json"))
+            {
+                label = string.Join('/', label.Split('/').Reverse().Take(2).Reverse());
+            }
+            else if (label.EndsWith(".nupkg"))
+            {
+                label = label.Split('/').Last();
+            }
+
+            writer.Write(label);
+            writer.Write("\"");
+        }
+
         public static void WriteToFile(string path, RequestGraph graph)
         {
             var nodeToIndex = graph

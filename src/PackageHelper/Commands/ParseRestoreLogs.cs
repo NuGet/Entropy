@@ -46,11 +46,11 @@ namespace PackageHelper.Commands
                 string fileName;
                 if (graph.VariantName != null)
                 {
-                    fileName = $"requestGraph-{graph.VariantName}-{graph.SolutionName}.json.gz";
+                    fileName = $"requestGraph-{graph.VariantName}-{graph.SolutionName}";
                 }
                 else
                 {
-                    fileName = $"requestGraph-{graph.SolutionName}.json.gz";
+                    fileName = $"requestGraph-{graph.SolutionName}";
                 }
 
                 if (writtenNames.Contains(fileName))
@@ -67,7 +67,8 @@ namespace PackageHelper.Commands
                 var outDir = Path.GetDirectoryName(filePath);
                 Directory.CreateDirectory(outDir);
                 Console.WriteLine($"  Writing {filePath}...");
-                RequestGraphSerializer.WriteToFile(filePath, graph.Graph);
+                RequestGraphSerializer.WriteToGraphvizFile(Path.Combine(rootDir, "out", "request-graphs", $"{fileName}.gv"), graph.Graph);
+                RequestGraphSerializer.WriteToFile($"{filePath}.json.gz", graph.Graph);
                 writtenNames.Add(fileName);
             }
 

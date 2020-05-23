@@ -115,24 +115,6 @@ Note that the set of sources is not encoded into the file name. It's best to use
 different sets of sources so that request graphs with the same variant name and solution name but different sources
 don't overwrite each other.
 
-#### How many request logs should I parse?
-
-Well, from my experimentation, 10 logs looks like enough and 20 is more than sufficient. The following script
-incrementally tests merging more and more request logs and then tests the time it takes to replay the request graph.
-
-```powershell
-.\test-log-merge-asymptote.ps1 `
-    -iterationCount 20 `
-    -variantName "mysource" `
-    -solutionName "OrchardCore"
-```
-
-Unsurprisingly, the average time to replay the request graph is asymtotal with respect to the number of logs merged.
-This picture below went up to 70 request logs merged. Very quickly, the total request duration approached just over
-6 seconds.
-
-![Asymptotal simulated restore duration](docs/img/2020-05-22-logs-per-graph.png)
-
 ### Replay a request graph
 
 After you have parsed a request graph from the restore logs, you can replay it to test the raw HTTP time spent on the
