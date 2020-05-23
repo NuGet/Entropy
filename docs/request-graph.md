@@ -168,4 +168,4 @@ The example data is available in this repository:
 - [ExampleProj.csproj](ExampleProj/ExampleProj.csproj)
 - Example restore logs, for example: [restoreLog-nuget-ExampleProj-20200522T2242473395.txt](ExampleProj-out/logs/restoreLog-nuget-ExampleProj-20200522T2242473395.txt)
 - Graphviz files, for example: [20-logs.gv](ExampleProj-out/request-graphs/20-logs.gv)
-- Restore graph JSON, for example: [20-logs.gv](ExampleProj-out/request-graphs/20-logs.json)
+- Restore graph JSON, for example: [20-logs.json](ExampleProj-out/request-graphs/20-logs.json)
