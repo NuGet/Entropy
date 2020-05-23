@@ -42,7 +42,8 @@ containing the versions actually fetched during restore.
 
 ```powershell
 dotnet run `
-    push "https://my-source/v3/index.json" `
+    push `
+    --push-source "https://my-source/v3/index.json" `
     --project .\src\PackageHelper\PackageHelper.csproj
 ```
 
@@ -53,7 +54,9 @@ If you want to use a different source URL for listing versions, pass a second so
 
 ```powershell
 dotnet run `
-    push "https://my-push-source/api/v2/package" "https://my-source/v3/index.json" `
+    push `
+    --push-source "https://my-push-source/api/v2/package" `
+    --list-source "https://my-source/v3/index.json" `
     --project .\src\PackageHelper\PackageHelper.csproj
 ```
 
@@ -61,7 +64,10 @@ If you want to provide an API key for pushing, provide it after a second source 
 
 ```powershell
 dotnet run `
-    push "https://my-push-source/api/v2/package" "https://my-source/v3/index.json" "MY_API_KEY" `
+    push `
+    --push-source "https://my-push-source/api/v2/package" `
+    --list-source "https://my-source/v3/index.json" `
+    --api-key "MY_API_KEY" `
     --project .\src\PackageHelper\PackageHelper.csproj
 ```
 
@@ -127,12 +133,12 @@ restore.
 
 ```powershell
 dotnet run `
-    replay-request-graph ".\out\request-graphs\requestGraph-mysource-OrchardCore.json.gz" 20 `
+    replay-request-graph ".\out\request-graphs\requestGraph-mysource-OrchardCore.json.gz" `
+    --iterations 20 `
     --project .\src\PackageHelper\PackageHelper.csproj
 ```
 
-This example command will replay the request graph for the `mysource` variant name, `OrchardCore` solution name. It 
-will perform 20 iterations (via the `20` argument).
+This example command will replay the request graph for the `mysource` variant name, `OrchardCore` solution name.
 
 **Note:** there are some known caveats to this replay approach. Most notably, any request that is cancelled by NuGet
 restore (perhaps because a package is found on one feed before the other requests complete) will be fully skipped

@@ -1,59 +1,64 @@
-﻿using NuGet.Common;
-using NuGet.Packaging;
-using NuGet.Protocol;
-using NuGet.Protocol.Core.Types;
-using NuGet.Versioning;
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.CommandLine;
+using System.CommandLine.Invocation;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using NuGet.Common;
+using NuGet.Packaging;
+using NuGet.Protocol;
+using NuGet.Protocol.Core.Types;
+using NuGet.Versioning;
 
 namespace PackageHelper.Commands
 {
     class Push
     {
-        public const string Name = "push";
+        public static Command GetCommand()
+        {
+            var command = new Command("push")
+            {
+                Description = "Push all downloaded packages to the provided source",
+            };
 
-        public static async Task<int> ExecuteAsync(string[] args)
+            command.Add(new Option<string>("--push-source")
+            {
+                Description = "Package source to push to",
+                Required = true,
+            });
+            command.Add(new Option<string>("--list-source")
+            {
+                Description = "Package source to list versions from, to avoid pushing duplicates",
+            });
+            command.Add(new Option<string>("--api-key")
+            {
+                Description = "API key to use when pushing packages",
+            });
+
+            command.Handler = CommandHandler.Create<string, string, string>(ExecuteAsync);
+
+            return command;
+        }
+
+        static async Task<int> ExecuteAsync(string pushPackageSource, string listPackageSource, string apiKey)
         {
             if (!Helper.TryFindRoot(out var rootDir))
             {
                 return 1;
             }
 
-            string pushPackageSource;
-            if (args.Length == 0)
-            {
-                Console.WriteLine($"The {Name} command requires a package source as the first argument.");
-                return 1;
-            }
-
-            pushPackageSource = args[0];
             Console.WriteLine($"Using push package source: {pushPackageSource}");
 
-            string listPackageSource;
-            if (args.Length > 1)
-            {
-                listPackageSource = args[1];
-            }
-            else
+            if (string.IsNullOrWhiteSpace(listPackageSource))
             {
                 listPackageSource = pushPackageSource;
             }
 
             Console.WriteLine($"Using list package source: {listPackageSource}");
-
-            string apiKey = null;
-            if (args.Length > 2)
-            {
-                Console.WriteLine("Using an API passed as an argument.");
-                apiKey = args[2];
-            }
 
             var nupkgDir = Path.Combine(rootDir, "out", "nupkgs");
             Console.WriteLine($"Scanning {nupkgDir} for NuGet packages...");

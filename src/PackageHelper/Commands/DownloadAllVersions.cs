@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.CommandLine;
+using System.CommandLine.Invocation;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -13,9 +15,19 @@ namespace PackageHelper.Commands
 {
     static class DownloadAllVersions
     {
-        public const string Name = "download-all-versions";
+        public static Command GetCommand()
+        {
+            var command = new Command("download-all-versions")
+            {
+                Description = "Download all versions of the discovered package IDs",
+            };
 
-        public static async Task<int> ExecuteAsync(string[] args)
+            command.Handler = CommandHandler.Create(ExecuteAsync);
+
+            return command;
+        }
+
+        static async Task<int> ExecuteAsync()
         {
             if (!Helper.TryFindRoot(out var rootDir))
             {

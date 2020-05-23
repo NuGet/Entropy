@@ -1,5 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.CommandLine;
+using System.CommandLine.Invocation;
 using System.Linq;
 using System.Net;
 using System.Threading;
@@ -15,31 +15,14 @@ namespace PackageHelper
             ServicePointManager.DefaultConnectionLimit = 64;
             ThreadPool.SetMinThreads(workerThreads: 64, completionPortThreads: 4);
 
-            var commands = new SortedDictionary<string, Func<string[], Task<int>>>(StringComparer.OrdinalIgnoreCase)
-            {
-                { DownloadAllVersions.Name, DownloadAllVersions.ExecuteAsync },
-                { ParseRestoreLogs.Name, ParseRestoreLogs.ExecuteAsync },
-                { Push.Name, Push.ExecuteAsync },
-                { ReplayRequestGraph.Name, ReplayRequestGraph.ExecuteAsync },
-            };
+            var rootCommand = new RootCommand();
 
-            if (args.Length > 0 && commands.TryGetValue(args[0], out var command))
-            {
-                try
-                {
-                    return await command(args.Skip(1).ToArray());
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"An exception was thrown by command {command}.");
-                    Console.WriteLine(ex.ToString());
-                    return 1;
-                }
-            }
+            rootCommand.Add(DownloadAllVersions.GetCommand());
+            rootCommand.Add(Push.GetCommand());
+            rootCommand.Add(ParseRestoreLogs.GetCommand());
+            rootCommand.Add(ReplayRequestGraph.GetCommand());
 
-            Console.WriteLine("The first argument must be a supported command: ");
-            Console.WriteLine($"  {string.Join(" | ", commands.Keys)}");
-            return 1;
+            return await rootCommand.InvokeAsync(args);
         }
 
     }

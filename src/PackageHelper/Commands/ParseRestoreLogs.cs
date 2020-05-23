@@ -1,39 +1,47 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.CommandLine;
+using System.CommandLine.Invocation;
 using System.IO;
-using System.Threading.Tasks;
 using PackageHelper.RestoreReplay;
 
 namespace PackageHelper.Commands
 {
     static class ParseRestoreLogs
     {
-        public const string Name = "parse-restore-logs";
-        private const int DefaultMaxLogsPerGraph = int.MaxValue;
+        public static Command GetCommand()
+        {
+            var command = new Command("parse-restore-logs")
+            {
+                Description = "Parse restore logs into serialized request graphs",
+            };
 
-        public static Task<int> ExecuteAsync(string[] args)
+            command.Add(new Option<int>(
+                "--max-logs-per-graph",
+                getDefaultValue: () => int.MaxValue)
+            {
+                Description = "Max number of restore logs that will be merged into a single request graph"
+            });
+
+            command.Handler = CommandHandler.Create<int>(Execute);
+
+            return command;
+        }
+
+        static int Execute(int maxLogsPerGraph)
         {
             if (!Helper.TryFindRoot(out var rootDir))
             {
-                return Task.FromResult(1);
+                return 1;
             }
 
-            var maxLogsPerGraph = DefaultMaxLogsPerGraph;
-            if (args.Length > 0)
+            if (maxLogsPerGraph == int.MaxValue)
             {
-                if (!int.TryParse(args[0], out maxLogsPerGraph))
-                {
-                    maxLogsPerGraph = DefaultMaxLogsPerGraph;
-                    Console.WriteLine($"The second argument for the {Name} command was ignored because it's not an integer.");
-                }
-                else
-                {
-                    Console.WriteLine($"The max logs-per-graph argument of {maxLogsPerGraph} will be used.");
-                }
+                Console.WriteLine($"The first {maxLogsPerGraph} restore logs will be used per request graph.");
             }
             else
             {
-                Console.WriteLine($"No max logs-per-graph restriction will be applied.");
+                Console.WriteLine($"No limit will be applied to the number of restore logs per request graph.");
             }
 
             var logDir = Path.Combine(rootDir, "out", "logs");
@@ -72,7 +80,7 @@ namespace PackageHelper.Commands
                 writtenNames.Add(fileName);
             }
 
-            return Task.FromResult(0);
+            return 0;
         }
     }
 }

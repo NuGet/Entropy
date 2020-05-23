@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.CommandLine;
+using System.CommandLine.Invocation;
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
@@ -13,37 +15,37 @@ namespace PackageHelper.Commands
 {
     static class ReplayRequestGraph
     {
-        public const string Name = "replay-request-graph";
-        private const int DefaultIterationCount = 5;
-
-        public static async Task<int> ExecuteAsync(string[] args)
+        public static Command GetCommand()
         {
-            if (args.Length == 0)
+            var command = new Command("replay-request-graph")
             {
-                Console.WriteLine($"The {Name} command requires a request graph (e.g. a requestGraph-*.json.gz file) as the first argument.");
-                return 1;
-            }
+                Description = "Replay a specified request graph to measure performance",
+            };
 
-            var path = args[0];
-
-            var iterations = DefaultIterationCount;
-            if (args.Length > 1)
+            command.Add(new Argument<string>("path")
             {
-                if (!int.TryParse(args[1], out iterations))
-                {
-                    iterations = DefaultIterationCount;
-                    Console.WriteLine($"The second argument for the {Name} command was ignored because it's not an integer.");
-                }
-                else
-                {
-                    Console.WriteLine($"The iteration count argument of {iterations} will be used.");
-                }
-            }
-            else
+                Description = "Path to a serialized request graph (a requestGraph-*.json.gz file) to replay",
+            });
+            command.Add(new Option<int>(
+                "--iterations",
+                getDefaultValue: () => 20)
             {
-                Console.WriteLine($"Using the default iteration count of {iterations} will be used.");
-            }
+                Description = "Number of times to replay the request graph before terminating"
+            });
+            command.Add(new Option<int>(
+                "--max-concurrency",
+                getDefaultValue: () => 64)
+            {
+                Description = "Maximum concurrency for HTTP requests"
+            });
 
+            command.Handler = CommandHandler.Create<string, int, int>(ExecuteAsync);
+
+            return command;
+        }
+
+        static async Task<int> ExecuteAsync(string path, int iterations, int maxConcurrency)
+        {
             Console.WriteLine($"Reading {path}...");
             var graph = RequestGraphSerializer.ReadFromFile(path);
             Console.WriteLine($"There are {graph.Nodes.Count} requests in the graph.");
@@ -51,14 +53,13 @@ namespace PackageHelper.Commands
             using (var handler = new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip })
             using (var httpClient = new HttpClient(handler))
             {
-                var maxConcurrency = 64;
-                await ExecuteRequestsAsync(graph, httpClient, maxConcurrency, iterations);
+                await ExecuteRequestsAsync(graph, httpClient, iterations, maxConcurrency);
             }
 
             return 0;
         }
 
-        private static async Task ExecuteRequestsAsync(RequestGraph graph, HttpClient httpClient, int maxConcurrency, int iterations)
+        private static async Task ExecuteRequestsAsync(RequestGraph graph, HttpClient httpClient, int iterations, int maxConcurrency)
         {
             Console.WriteLine("Sorting the requests in topological order...");
             var topologicalOrder = GraphOperations.TopologicalSort(graph);
