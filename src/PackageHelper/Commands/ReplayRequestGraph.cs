@@ -24,7 +24,7 @@ namespace PackageHelper.Commands
 
             command.Add(new Argument<string>("path")
             {
-                Description = "Path to a serialized request graph (a requestGraph-*.json.gz file) to replay",
+                Description = "Path to a serialized request graph (requestGraph-*-*.json.gz file) to replay",
             });
             command.Add(new Option<int>(
                 "--iterations",
@@ -36,7 +36,7 @@ namespace PackageHelper.Commands
                 "--max-concurrency",
                 getDefaultValue: () => 64)
             {
-                Description = "Maximum concurrency for HTTP requests"
+                Description = "Max concurrency for HTTP requests"
             });
 
             command.Handler = CommandHandler.Create<string, int, int>(ExecuteAsync);

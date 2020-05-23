@@ -1,6 +1,4 @@
 ﻿using System.CommandLine;
-using System.CommandLine.Invocation;
-using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
