@@ -23,12 +23,17 @@ namespace PackageHelper.Commands
                 Description = "Max number of restore logs that will be merged into a single request graph"
             });
 
-            command.Handler = CommandHandler.Create<int>(Execute);
+            command.Add(new Option<int>("--write-graphviz")
+            {
+                Description = "Output Graphviz DOT files (.gv) in addtion to request graphs"
+            });
+
+            command.Handler = CommandHandler.Create<int, bool>(Execute);
 
             return command;
         }
 
-        static int Execute(int maxLogsPerGraph)
+        static int Execute(int maxLogsPerGraph, bool writeGraphviz)
         {
             if (!Helper.TryFindRoot(out var rootDir))
             {
@@ -75,9 +80,12 @@ namespace PackageHelper.Commands
                 var outDir = Path.GetDirectoryName(filePath);
                 Directory.CreateDirectory(outDir);
 
-                var gvPath = $"{filePath}.gv";
-                Console.WriteLine($"  Writing {gvPath}...");
-                RequestGraphSerializer.WriteToGraphvizFile(gvPath, graph.Graph);
+                if (writeGraphviz)
+                {
+                    var gvPath = $"{filePath}.gv";
+                    Console.WriteLine($"  Writing {gvPath}...");
+                    RequestGraphSerializer.WriteToGraphvizFile(gvPath, graph.Graph);
+                }
 
                 var jsonGzPath = $"{filePath}.json.gz";
                 Console.WriteLine($"  Writing {jsonGzPath}...");
