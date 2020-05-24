@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Net;
 
-namespace PackageHelper.RestoreReplay
+namespace PackageHelper.Replay
 {
     class EndRequest
     {

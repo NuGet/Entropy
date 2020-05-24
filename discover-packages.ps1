@@ -28,5 +28,10 @@ foreach ($extraPackage in $extraPackages) {
 
 # Download all versions of all .nupkgs
 Log "Downloading all versions of every discovered ID" "Cyan"
-dotnet run download-all-versions --project $packageHelper
+dotnet run `
+    --configuration Release `
+    --framework netcoreapp3.1 `
+    --project $packageHelper `
+    -- `
+    download-all-versions
 Log "Complete." "Cyan"

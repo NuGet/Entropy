@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace PackageHelper.RestoreReplay
+namespace PackageHelper.Replay
 {
     class HitIndexAndUrlComparer : IEqualityComparer<RequestNode>
     {

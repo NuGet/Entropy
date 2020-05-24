@@ -1,5 +1,5 @@
 Param(
-    [int] $iterationCount = 20,
+    [int] $iterations = 20,
     [string] $variantName,
     [string] $solutionName
 )
@@ -8,6 +8,16 @@ Param(
 
 if ($variantName -and !$solutionName) {
     throw "The -solutionName parameter is required when using the -variantName parameter."
+}
+
+$logsDir = Join-Path $PSScriptRoot "out\logs"
+if (Test-Path $logsDir) {
+    Remove-Item $logsDir -Force -Recurse -Confirm
+}
+
+$requestGraphsDir = Join-Path $PSScriptRoot "out\request-graphs"
+if (Test-Path $requestGraphsDir) {
+    Remove-Item $requestGraphsDir -Force -Recurse -Confirm
 }
 
 if ($solutionName) {
@@ -33,18 +43,8 @@ foreach ($log in $allLogs) {
     Log "- $($log.FullName)"
 }
 
-$logsDir = Join-Path $PSScriptRoot "out\logs"
-if (Test-Path $logsDir) {
-    Remove-Item $logsDir -Force -Recurse -Confirm
-}
-
-$requestGraphsDir = Join-Path $PSScriptRoot "out\request-graphs"
-if (Test-Path $requestGraphsDir) {
-    Remove-Item $requestGraphsDir -Force -Recurse -Confirm
-}
-
 for ($logCount = 1; $logCount -le $allLogs.Count; $logCount++) {
-    Log "Starting the test with $logCount log(s), $iterationCount iteration(s)" "Cyan"
+    Log "Starting the test with $logCount log(s), $iterations iteration(s)" "Cyan"
 
     if (Test-Path $logsDir) {
         Remove-Item $logsDir -Force -Recurse
@@ -57,8 +57,12 @@ for ($logCount = 1; $logCount -le $allLogs.Count; $logCount++) {
         | ForEach-Object { Copy-Item $_ (Join-Path $logsDir $_.Name) }
     
     Log "Parsing the restore log(s)." "Green"
-    dotnet run parse-restore-logs `
-        --project (Join-Path $PSScriptRoot "src\PackageHelper\PackageHelper.csproj")
+    dotnet run `
+        --configuration Release `
+        --framework netcoreapp3.1 `
+        --project (Join-Path $PSScriptRoot "src\PackageHelper\PackageHelper.csproj") `
+        -- `
+        parse-restore-logs
     
     if ($solutionName) {
         if ($variantName) {
@@ -73,9 +77,14 @@ for ($logCount = 1; $logCount -le $allLogs.Count; $logCount++) {
     }
 
     Log "Replaying the request graph." "Green"
-    dotnet run replay-request-graph `
-        $requestGraphPath.FullName $iterationCount `
-        --project (Join-Path $PSScriptRoot "src\PackageHelper\PackageHelper.csproj")
+    dotnet run `
+        --configuration Release `
+        --framework netcoreapp3.1 `
+        --project (Join-Path $PSScriptRoot "src\PackageHelper\PackageHelper.csproj") `
+        -- `
+        replay-request-graph `
+        $requestGraphPath.FullName `
+        --iterations $iterations
 
-    Log "Finished the test with $logCount log(s), $iterationCount iteration(s)" "Cyan"
+    Log "Finished the test with $logCount log(s), $iterations iteration(s)" "Cyan"
 }

@@ -43,6 +43,7 @@ containing the versions actually fetched during restore.
 ```powershell
 dotnet run `
     push "https://my-source/v3/index.json" `
+    --framework netcoreapp3.1 `
     --project .\src\PackageHelper\PackageHelper.csproj
 ```
 
@@ -55,6 +56,7 @@ If you want to use a different source URL for listing versions, pass a second so
 dotnet run `
     push "https://my-push-source/api/v2/package" `
     --list-source "https://my-source/v3/index.json" `
+    --framework netcoreapp3.1 `
     --project .\src\PackageHelper\PackageHelper.csproj
 ```
 
@@ -65,6 +67,7 @@ dotnet run `
     push "https://my-push-source/api/v2/package" `
     --list-source "https://my-source/v3/index.json" `
     --api-key "MY_API_KEY" `
+    --framework netcoreapp3.1 `
     --project .\src\PackageHelper\PackageHelper.csproj
 ```
 
@@ -76,7 +79,7 @@ Use the `.\run-tests.ps1` script to run a series of clean restores on the Git re
 ```powershell
 .\run-tests.ps1 `
     -resultsName "combined" `
-    -iterationCount 5 `
+    -iterations 5 `
     -variantName "mysource" `
     -sources @("https://my-source/v3/index.json")
 ```
@@ -105,6 +108,7 @@ described above). The logs that will be parsed are in `.\out\logs`.
 ```powershell
 dotnet run `
     parse-restore-logs `
+    --framework netcoreapp3.1 `
     --project .\src\PackageHelper\PackageHelper.csproj
 ```
 
@@ -132,6 +136,7 @@ restore.
 dotnet run `
     replay-request-graph ".\out\request-graphs\requestGraph-mysource-OrchardCore.json.gz" `
     --iterations 20 `
+    --framework netcoreapp3.1 `
     --project .\src\PackageHelper\PackageHelper.csproj
 ```
 

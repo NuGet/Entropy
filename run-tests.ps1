@@ -1,7 +1,7 @@
 Param(
     [string] $variantName,
     [switch] $fast,
-    [int] $iterationCount = 10,
+    [int] $iterations = 10,
     [string[]] $sources,
     [string] $dumpNupkgsPath,
     [string] $resultsName
@@ -17,7 +17,7 @@ $nugetPath = Join-Path $PSScriptRoot "nuget.exe"
 $nugetUrl = "https://dist.nuget.org/win-x86-commandline/v5.5.1/nuget.exe"
 if (!(Test-Path $nugetPath)) { Invoke-WebRequest $nugetUrl -OutFile $nugetPath }
 
-if ($iterationCount -lt 1) { $fast = $true }
+if ($iterations -lt 1) { $fast = $true }
 if (!$resultsName -and $variantName) { $resultsName = $variantName }
 if ($fast -and !$resultsName) { $resultsName = "fast" }
 if (!$fast -and !$resultsName) { throw 'The -variantName or -resultsName parameter is required when not using -fast.' }
@@ -36,7 +36,7 @@ foreach ($testCasePath in $testCases) {
         -sourceRootFolderPath (Join-Path $PSScriptRoot "out\_s") `
         -nugetFoldersPath (Join-Path $PSScriptRoot "out\_t") `
         -dumpNupkgsPath $dumpNupkgsPath `
-        -iterationCount $iterationCount `
+        -iterationCount $iterations `
         -skipCleanRestores:$fast `
         -skipColdRestores `
         -skipForceRestores `

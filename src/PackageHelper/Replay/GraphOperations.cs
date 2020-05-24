@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace PackageHelper.RestoreReplay
+namespace PackageHelper.Replay
 {
     class GraphOperations
     {

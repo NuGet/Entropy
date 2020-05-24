@@ -150,7 +150,7 @@ tests merging more and more request logs and then tests the time it takes to rep
 
 ```powershell
 .\test-log-merge-asymptote.ps1 `
-    -iterationCount 20 `
+    -iterations 20 `
     -variantName "mysource" `
     -solutionName "OrchardCore"
 ```

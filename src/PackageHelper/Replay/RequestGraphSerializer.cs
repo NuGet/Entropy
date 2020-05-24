@@ -6,7 +6,7 @@ using System.Linq;
 using System.Net;
 using Newtonsoft.Json;
 
-namespace PackageHelper.RestoreReplay
+namespace PackageHelper.Replay
 {
     static class RequestGraphSerializer
     {

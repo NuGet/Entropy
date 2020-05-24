@@ -29,6 +29,7 @@ while ($maxConcurrency -ge 1) {
 
         dotnet run `
             --configuration Release `
+            --framework netcoreapp3.1 `
             --project $packageHelper `
             -- `
             replay-request-graph $requestGraph `

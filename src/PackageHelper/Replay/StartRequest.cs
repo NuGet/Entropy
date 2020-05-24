@@ -1,4 +1,4 @@
-﻿namespace PackageHelper.RestoreReplay
+﻿namespace PackageHelper.Replay
 {
     class StartRequest
     {

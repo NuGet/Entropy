@@ -5,7 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Text.RegularExpressions;
 
-namespace PackageHelper.RestoreReplay
+namespace PackageHelper.Replay
 {
     static class LogParser
     {

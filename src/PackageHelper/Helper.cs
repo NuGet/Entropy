@@ -1,6 +1,9 @@
-﻿using NuGet.Protocol.Core.Types;
+﻿using CsvHelper;
+using CsvHelper.Configuration;
+using NuGet.Protocol.Core.Types;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 
@@ -9,6 +12,31 @@ namespace PackageHelper
     static class Helper
     {
         private const string RootMarker = "discover-packages.ps1";
+
+        public static void AppendCsv<T>(string resultsPath, T record)
+        {
+            var csvConfig = new CsvConfiguration(CultureInfo.InvariantCulture)
+            {
+                HasHeaderRecord = !File.Exists(resultsPath),
+            };
+
+            using (var fileStream = new FileStream(resultsPath, FileMode.Append))
+            using (var writer = new StreamWriter(fileStream))
+            using (var csv = new CsvWriter(writer, csvConfig))
+            {
+                csv.WriteRecords(new[] { record });
+            }
+        }
+
+        public static string GetLogTimestamp()
+        {
+            return DateTimeOffset.UtcNow.ToString("yyyyMMddTHHmmssffff");
+        }
+
+        public static string GetExcelTimestamp(DateTimeOffset input)
+        {
+            return input.ToUniversalTime().ToString("yyyy-MM-dd HH:mm:ss");
+        }
 
         public static SourceCacheContext GetCacheContext()
         {

@@ -3,17 +3,14 @@ using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using CsvHelper;
-using CsvHelper.Configuration;
 using NuGet.Common;
-using PackageHelper.RestoreReplay;
+using PackageHelper.Replay;
 
 namespace PackageHelper.Commands
 {
@@ -94,44 +91,64 @@ namespace PackageHelper.Commands
             using (var handler = new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip })
             using (var httpClient = new HttpClient(handler))
             {
-                await ExecuteRequestsAsync(
-                    resultsPath,
-                    graph,
-                    variantName,
-                    solutionName,
-                    httpClient,
-                    iterations,
-                    maxConcurrency);
+                Console.WriteLine("Sorting the requests in topological order...");
+                var topologicalOrder = GraphOperations.TopologicalSort(graph);
+                topologicalOrder.Reverse();
+
+                for (var iteration = 0; iteration <= iterations; iteration++)
+                {
+                    await ExecuteIterationAsync(
+                        rootDir,
+                        resultsPath,
+                        variantName,
+                        solutionName,
+                        httpClient,
+                        iterations,
+                        maxConcurrency,
+                        topologicalOrder,
+                        iteration);
+                }
             }
 
             return 0;
         }
 
-        private static async Task ExecuteRequestsAsync(
+        private static async Task ExecuteIterationAsync(
+            string rootDir,
             string resultsPath,
-            RequestGraph graph,
             string variantName,
             string solutionName,
             HttpClient httpClient,
             int iterations,
-            int maxConcurrency)
+            int maxConcurrency,
+            List<RequestNode> topologicalOrder,
+            int iteration)
         {
-            Console.WriteLine("Sorting the requests in topological order...");
-            var topologicalOrder = GraphOperations.TopologicalSort(graph);
-            topologicalOrder.Reverse();
+            var logPrefix = $"[{iteration}/{iterations}{(iteration == 0 ? " (warm-up)" : string.Empty)}]";
 
-            for (var i = 0; i <= iterations; i++)
+            string requestsFileName;
+            if (variantName == null)
             {
-                var logPrefix = $"[{i}/{iterations}{(i == 0 ? " (warm-up)" : string.Empty)}]";
-                Console.WriteLine($"{logPrefix} Starting...");
-                var stopwatch = Stopwatch.StartNew();
-                var nodeToTask = new Dictionary<RequestNode, Task>();
-                var throttle = new SemaphoreSlim(maxConcurrency);
-                var consoleLock = new object();
+                requestsFileName = $"replayLog-{solutionName}-{Helper.GetLogTimestamp()}.csv";
+            }
+            else
+            {
+                requestsFileName = $"replayLog-{variantName}-{solutionName}-{Helper.GetLogTimestamp()}.csv";
+            }
 
+            var requestsPath = Path.Combine(rootDir, "out", "logs", requestsFileName);
+
+            Console.WriteLine($"{logPrefix} Starting...");
+            var stopwatch = Stopwatch.StartNew();
+            var nodeToTask = new Dictionary<RequestNode, Task>();
+            var throttle = new SemaphoreSlim(maxConcurrency);
+            var consoleLock = new object();
+
+            using (var writer = new RequestResultWriter(requestsPath))
+            {
                 foreach (var node in topologicalOrder)
                 {
-                    nodeToTask.Add(node, GetRequestTask(nodeToTask, throttle, consoleLock, httpClient, node));
+                    nodeToTask.Add(node, GetRequestTask(nodeToTask, throttle, consoleLock, httpClient, node, writer));
                 }
 
                 try
@@ -147,17 +164,22 @@ namespace PackageHelper.Commands
                 stopwatch.Stop();
 
                 Console.WriteLine($"{logPrefix} Completed in {stopwatch.ElapsedMilliseconds}ms.");
-
-                AppendResult(
-                    resultsPath,
-                    i,
-                    iterations,
-                    variantName,
-                    solutionName,
-                    topologicalOrder.Count,
-                    stopwatch.Elapsed,
-                    maxConcurrency);
             }
+
+            Helper.AppendCsv(resultsPath, new CsvRecord
+            {
+                TimestampUtc = Helper.GetExcelTimestamp(DateTimeOffset.UtcNow),
+                MachineName = Environment.MachineName,
+                Iteration = iteration,
+                IsWarmUp = iteration == 0,
+                Iterations = iterations,
+                VariantName = variantName,
+                SolutionName = solutionName,
+                RequestCount = topologicalOrder.Count,
+                DurationMs = stopwatch.Elapsed.TotalMilliseconds,
+                MaxConcurrency = maxConcurrency,
+                LogFileName = requestsFileName,
+            });
         }
 
         private static async Task GetRequestTask(
@@ -165,7 +187,8 @@ namespace PackageHelper.Commands
             SemaphoreSlim throttle,
             object consoleLock,
             HttpClient httpClient,
-            RequestNode node)
+            RequestNode node,
+            IRequestResultWriter writer)
         {
             await Task.WhenAll(node.Dependencies.Select(n => nodeToTask[n]).ToList());
 
@@ -191,6 +214,8 @@ namespace PackageHelper.Commands
                     {
                         using (var response = await httpClient.GetAsync(node.StartRequest.Url, HttpCompletionOption.ResponseHeadersRead))
                         {
+                            var headerDuration = stopwatch.Elapsed;
+
                             using (var stream = await response.Content.ReadAsStreamAsync())
                             {
                                 int read;
@@ -200,6 +225,9 @@ namespace PackageHelper.Commands
                                 }
                                 while (read > 0);
                             }
+
+                            writer.OnResponse(node, response.StatusCode, headerDuration, stopwatch.Elapsed - headerDuration);
+                            break;
                         }
                     }
                     catch (Exception ex) when (i < maxAttempts - 1)
@@ -218,44 +246,6 @@ namespace PackageHelper.Commands
             }
         }
 
-        private static void AppendResult(
-            string resultsPath,
-            int iteration,
-            int iterations,
-            string variantName,
-            string solutionName,
-            int requestCount,
-            TimeSpan duration,
-            int maxConcurrency)
-        {
-            var csvConfig = new CsvConfiguration(CultureInfo.InvariantCulture)
-            {
-                HasHeaderRecord = !File.Exists(resultsPath),
-            };
-
-            using (var fileStream = new FileStream(resultsPath, FileMode.Append))
-            using (var writer = new StreamWriter(fileStream))
-            using (var csv = new CsvWriter(writer, csvConfig))
-            {
-                csv.WriteRecords(new[]
-                {
-                    new CsvRecord
-                    {
-                        TimestampUtc = DateTimeOffset.UtcNow.ToString("yyyy-MM-dd HH:mm:ss"),
-                        MachineName = Environment.MachineName,
-                        Iteration = iteration,
-                        IsWarmUp = iteration == 0,
-                        Iterations = iterations,
-                        VariantName = variantName,
-                        SolutionName = solutionName,
-                        RequestCount = requestCount,
-                        DurationMs = duration.TotalMilliseconds,
-                        MaxConcurrency = maxConcurrency,
-                    }
-                });
-            }
-        }
-
         private class CsvRecord
         {
             public string TimestampUtc { get; set; }
@@ -268,6 +258,7 @@ namespace PackageHelper.Commands
             public object RequestCount { get; set; }
             public double DurationMs { get; set; }
             public int MaxConcurrency { get; set; }
+            public string LogFileName { get; set; }
         }
     }
 }

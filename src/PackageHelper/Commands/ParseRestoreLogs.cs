@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.IO;
-using PackageHelper.RestoreReplay;
+using PackageHelper.Replay;
 
 namespace PackageHelper.Commands
 {
