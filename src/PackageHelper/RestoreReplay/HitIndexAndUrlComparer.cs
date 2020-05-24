@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 
 namespace PackageHelper.RestoreReplay
 {
@@ -8,7 +7,7 @@ namespace PackageHelper.RestoreReplay
     {
         public static HitIndexAndUrlComparer Instance { get; } = new HitIndexAndUrlComparer();
 
-        public bool Equals([AllowNull] RequestNode x, [AllowNull] RequestNode y)
+        public bool Equals(RequestNode x, RequestNode y)
         {
             if (ReferenceEquals(x, y))
             {
@@ -29,9 +28,16 @@ namespace PackageHelper.RestoreReplay
                 && x.StartRequest.Url == y.StartRequest.Url;
         }
 
-        public int GetHashCode([DisallowNull] RequestNode obj)
+        public int GetHashCode(RequestNode obj)
         {
+#if NETCOREAPP
             return HashCode.Combine(obj.HitIndex, obj.StartRequest.Url);
+#else
+            var hasCode = 17;
+            hasCode = hasCode * 31 + obj.HitIndex.GetHashCode();
+            hasCode = hasCode * 31 + obj.StartRequest.Url.GetHashCode();
+            return hasCode;
+#endif
         }
     }
 }

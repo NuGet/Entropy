@@ -62,7 +62,7 @@ namespace PackageHelper.RestoreReplay
             var label = node.StartRequest.Url;
             if (label.EndsWith("/index.json"))
             {
-                label = string.Join('/', label.Split('/').Reverse().Take(2).Reverse());
+                label = string.Join("/", label.Split('/').Reverse().Take(2).Reverse());
             }
             else if (label.EndsWith(".nupkg"))
             {
