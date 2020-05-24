@@ -554,7 +554,7 @@ Function RunRestore(
         OutFileWithCreateFolders $resultsFilePath $columnHeaders
     }
 
-    $data = "$($Env:COMPUTERNAME),$clientName,$clientVersion,$solutionName,$testRunId,$scenarioName,$variantName,$totalTime,$restoreCount,$restoreMaxTime,$restoreSumTime,$restoreAvgTime,$force," + `
+    $data = "$($Env:COMPUTERNAME),$clientName,$clientVersion,$solutionName,$variantName,$testRunId,$scenarioName,$totalTime,$restoreCount,$restoreMaxTime,$restoreSumTime,$restoreAvgTime,$force," + `
         "$($globalPackagesFolderNupkgFilesInfo.Count),$($globalPackagesFolderNupkgFilesInfo.TotalSizeInMB),$($globalPackagesFolderFilesInfo.Count),$($globalPackagesFolderFilesInfo.TotalSizeInMB),$cleanGlobalPackagesFolder," + `
         "$($httpCacheFilesInfo.Count),$($httpCacheFilesInfo.TotalSizeInMB),$cleanHttpCache,$($pluginsCacheFilesInfo.Count),$($pluginsCacheFilesInfo.TotalSizeInMB),$cleanPluginsCache,$killMsBuildAndDotnetExeProcesses," + `
         "$($processorInfo.Name),$($processorInfo.NumberOfCores),$($processorInfo.NumberOfLogicalProcessors),$logFileName"
