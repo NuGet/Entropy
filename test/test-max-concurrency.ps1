@@ -1,7 +1,8 @@
 Param(
     [Parameter(Mandatory = $true)]
     [string[]] $variantNames,
-    [int] $iterations = 20
+    [int] $iterations = 20,
+    [int] $initialMaxConcurrency = 64
 )
 
 . "$PSScriptRoot\..\scripts\perftests\PerformanceTestUtilities.ps1"
@@ -21,7 +22,7 @@ foreach ($requestGraph in $requestGraphs) {
 
 $packageHelper = Join-Path $PSScriptRoot "..\src\PackageHelper\PackageHelper.csproj"
 
-$maxConcurrency = 64
+$maxConcurrency = $initialMaxConcurrency
 while ($maxConcurrency -ge 1) {
     Log "Using $iterations iterations and max concurrency of $maxConcurrency" "Green"
 

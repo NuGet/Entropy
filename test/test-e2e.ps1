@@ -4,6 +4,7 @@ $testDir = Join-Path $PSScriptRoot "testCases"
 $testCases = Get-ChildItem (Join-Path $testDir "Test-*.ps1")
 $variantName = "teste2e"
 $solutionName = "ExampleProj"
+$requestGraphPath = Join-Path $PSScriptRoot "..\out\graphs\requestGraph-$variantName-$solutionName.json.gz"
 $packageHelper = Join-Path $PSScriptRoot "..\src\PackageHelper\PackageHelper.csproj"
 $dockerName = "nuget-server"
 $dockerDataDir = Join-Path $PSScriptRoot "..\out\baget-data"
@@ -83,15 +84,26 @@ dotnet run `
 
 # Replay request graph
 dotnet run `
-    replay-request-graph (Join-Path $PSScriptRoot "..\out\graphs\requestGraph-$variantName-$solutionName.json.gz") `
-    --iterations 2 `
+    replay-request-graph $requestGraphPath `
     --framework netcoreapp3.1 `
-    --project .\src\PackageHelper\PackageHelper.csproj
+    --project .\src\PackageHelper\PackageHelper.csproj `
+    -- `
+    --iterations 2
+
+# Convert request graph to operation graph
+dotnet run `
+    convert-graph $requestGraphPath `
+    --framework netcoreapp3.1 `
+    --project .\src\PackageHelper\PackageHelper.csproj `
+    -- `
+    --sources @($source) `
+    --write-graphviz
 
 # Test max concurrency
 & (Join-Path $PSScriptRoot "test-max-concurrency.ps1") `
     -variantNames $variantName `
-    -iterations 2
+    -iterations 2 `
+    -initialMaxConcurrency 4
 
 # Test log merge asymptote
 Move-Item (Join-Path $PSScriptRoot "..\out\logs") (Join-Path $PSScriptRoot "..\out\all-logs")
