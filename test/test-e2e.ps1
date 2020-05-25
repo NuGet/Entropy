@@ -23,7 +23,7 @@ if ($ps.Length -gt 1) {
 Log "Starting docker container..."
 docker run `
     --name $dockerName `
-    --rm -d -P `
+    -d -P `
     --env "ApiKey=$apiKey" `
     --env "Storage__Type=FileSystem" `
     --env "Storage__Path=/var/baget/packages" `
