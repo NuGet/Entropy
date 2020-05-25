@@ -4,6 +4,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net;
+using System.Text;
 using Newtonsoft.Json;
 
 namespace PackageHelper.Replay.Requests
@@ -12,51 +13,20 @@ namespace PackageHelper.Replay.Requests
     {
         public static void WriteToGraphvizFile(string path, RequestGraph graph)
         {
-            using (var stream = new FileStream(path, FileMode.Create))
-            using (var writer = new StreamWriter(stream))
-            {
-                writer.WriteLine("digraph G {");
-                writer.WriteLine("  node [fontsize=16];");
-                var roots = new List<RequestNode>();
-
-                foreach (var node in graph.Nodes.OrderBy(x => x.StartRequest.Url, StringComparer.Ordinal))
-                {
-                    foreach (var dependency in node.Dependencies.OrderBy(x => x.StartRequest.Url, StringComparer.Ordinal))
-                    {
-                        writer.Write("  ");
-                        WriteGraphvizNode(writer, dependency);
-                        writer.Write(" -> ");
-                        WriteGraphvizNode(writer, node);
-                        writer.WriteLine(" [dir=back];");
-                    }
-
-                    if (node.Dependencies.Count == 0)
-                    {
-                        roots.Add(node);
-                    }
-                }
-
-                writer.WriteLine("  {");
-                writer.WriteLine("    rank=same;");
-                foreach (var node in roots.OrderBy(x => x.StartRequest.Url, StringComparer.Ordinal))
-                {
-                    writer.Write("    ");
-                    WriteGraphvizNode(writer, node);
-                    writer.WriteLine(";");
-                }
-                writer.WriteLine("  }");
-
-                writer.WriteLine("}");
-            }
+            var builder = new StringBuilder();
+            GraphSerializer.WriteToGraphvizFile(
+                path,
+                graph,
+                n => GetNodeLabel(builder, n));
         }
 
-        private static void WriteGraphvizNode(TextWriter writer, RequestNode node)
+        private static string GetNodeLabel(StringBuilder builder, RequestNode node)
         {
-            writer.Write("\"");
+            builder.Clear();
 
             if (node.HitIndex != 0)
             {
-                writer.Write($"({node.HitIndex}) ");
+                builder.AppendFormat("({0}) ", node.HitIndex);
             }
 
             var label = node.StartRequest.Url;
@@ -69,52 +39,17 @@ namespace PackageHelper.Replay.Requests
                 label = label.Split('/').Last();
             }
 
-            writer.Write(label);
-            writer.Write("\"");
+            builder.Append(label);
+
+            return builder.ToString();
         }
 
         public static void WriteToFile(string path, RequestGraph graph)
         {
-            var nodeToIndex = graph
-                .Nodes
-                .Select((n, i) => new { Node = n, Index = i })
-                .ToDictionary(x => x.Node, x => x.Index);
-
-            using (var stream = new FileStream(path, FileMode.Create))
-            using (var gzipStream = new GZipStream(stream, CompressionLevel.Optimal))
-            using (var writer = new StreamWriter(gzipStream))
-            using (var j = new JsonTextWriter(writer))
-            {
-                j.WriteStartObject();
-                j.WritePropertyName("n");
-                j.WriteStartArray();
-
-                foreach (var node in graph.Nodes)
-                {
-                    j.WriteStartObject();
-
-                    WriteRequestNode(j, node);
-                    if (node.Dependencies.Count > 0)
-                    {
-                        j.WritePropertyName("e");
-                        j.WriteStartArray();
-                        var indexes = node.Dependencies.Select(x => nodeToIndex[x]).OrderBy(x => x);
-                        foreach (var index in indexes)
-                        {
-                            j.WriteValue(index);
-                        }
-                        j.WriteEndArray();
-                    }
-
-                    j.WriteEndObject();
-                }
-
-                j.WriteEndArray();
-                j.WriteEndObject();
-            }
+            GraphSerializer.WriteToFile(path, graph, WriteNode);
         }
 
-        private static void WriteRequestNode(JsonTextWriter j, RequestNode node)
+        private static void WriteNode(JsonTextWriter j, RequestNode node)
         {
             if (node.HitIndex != default)
             {
@@ -146,69 +81,18 @@ namespace PackageHelper.Replay.Requests
 
         public static RequestGraph ReadFromFile(string path)
         {
-            var nodes = new List<RequestNode>();
-            var indexToNode = new Dictionary<int, RequestNode>();
-            var nodeToDependencyIndexes = new Dictionary<RequestNode, List<int>>();
-
-            var serializer = new JsonSerializer();
-
-            using (var stream = File.OpenRead(path))
-            using (var gzipStream = new GZipStream(stream, CompressionMode.Decompress))
-            using (var textReader = new StreamReader(gzipStream))
-            using (var j = new JsonTextReader(textReader))
-            {
-                j.Read();
-                Assert(j.TokenType == JsonToken.StartObject, "The first token should be the start of an object.");
-                j.Read();
-                while (j.TokenType == JsonToken.PropertyName)
-                {
-                    switch ((string)j.Value)
-                    {
-                        case "n":
-                            j.Read();
-                            Assert(j.TokenType == JsonToken.StartArray, "The first token of the 'n' property should be the start of an array.");
-                            j.Read();
-                            while (j.TokenType == JsonToken.StartObject)
-                            {
-                                var node = ReadRequestNode(serializer, j, out var dependencyIndexes);
-                                nodes.Add(node);
-                                indexToNode.Add(indexToNode.Count, node);
-                                nodeToDependencyIndexes.Add(node, dependencyIndexes);
-
-                                Assert(j.TokenType == JsonToken.EndObject, "The last token the request node shoudl be the end of an array.");
-                                j.Read();
-                            }
-                            Assert(j.TokenType == JsonToken.EndArray, "The last token of the 'n' property should be the end of an array.");
-                            break;
-
-                    }
-
-                    j.Read();
-                }
-                while (j.TokenType == JsonToken.PropertyName);
-
-                Assert(j.TokenType == JsonToken.EndObject, "The last token should be the end of an object.");
-            }
-
-            foreach (var node in nodes)
-            {
-                foreach (var index in nodeToDependencyIndexes[node])
-                {
-                    node.Dependencies.Add(indexToNode[index]);
-                }
-            }
-
-            return new RequestGraph(nodes);
+            var graph = new RequestGraph();
+            GraphSerializer.ReadFromFile(path, graph, ReadNode);
+            return graph;
         }
 
-        private static RequestNode ReadRequestNode(JsonSerializer serializer, JsonReader j, out List<int> dependencyIndexes)
+        private static RequestNode ReadNode(JsonSerializer serializer, JsonReader j, List<int> dependencyIndexes)
         {
             var hitIndex = default(int);
             var method = "GET";
             string url = null;
             var statusCode = HttpStatusCode.OK;
             TimeSpan? duration = null;
-            dependencyIndexes = new List<int>();
 
             j.Read();
             while (j.TokenType == JsonToken.PropertyName)
@@ -229,22 +113,19 @@ namespace PackageHelper.Replay.Requests
                         break;
                     case "d":
                         j.Read();
-                        Assert(j.TokenType == JsonToken.Integer, "The 'd' property should be an integer.");
+                        Helper.Assert(j.TokenType == JsonToken.Integer, "The 'd' property should be an integer.");
                         duration = TimeSpan.FromTicks((long)j.Value);
                         break;
                     case "e":
                         j.Read();
-                        dependencyIndexes = serializer.Deserialize<List<int>>(j);
+                        dependencyIndexes.AddRange(serializer.Deserialize<List<int>>(j));
                         break;
                 }
 
                 j.Read();
             }
 
-            var node = new RequestNode(
-                hitIndex,
-                new StartRequest(method, url),
-                new HashSet<RequestNode>(CompareByHitIndexAndRequest.Instance));
+            var node = new RequestNode(hitIndex, new StartRequest(method, url));
 
             if (duration != null)
             {
@@ -252,14 +133,6 @@ namespace PackageHelper.Replay.Requests
             }
 
             return node;
-        }
-
-        private static void Assert(bool assertion, string message)
-        {
-            if (!assertion)
-            {
-                throw new InvalidOperationException(message);
-            }
         }
     }
 }

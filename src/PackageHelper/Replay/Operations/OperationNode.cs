@@ -5,8 +5,13 @@ using PackageHelper.Parse;
 namespace PackageHelper.Replay.Operations
 {
     [DebuggerDisplay("{HitIndex}: {Operation,nq}")]
-    class OperationNode
+    class OperationNode : INode<OperationNode>
     {
+        public OperationNode(int hitIndex, Operation operation)
+            : this(hitIndex, operation, new HashSet<OperationNode>())
+        {
+        }
+
         public OperationNode(int hitIndex, Operation operation, HashSet<OperationNode> dependencies)
         {
             HitIndex = hitIndex;

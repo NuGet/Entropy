@@ -2,8 +2,14 @@
 
 namespace PackageHelper.Replay.Requests
 {
-    class RequestGraph
+    class RequestGraph : IGraph<RequestNode>
     {
+        public const string Type = "requestGraph";
+
+        public RequestGraph() : this(new List<RequestNode>())
+        {
+        }
+
         public RequestGraph(List<RequestNode> nodes)
         {
             Nodes = nodes;

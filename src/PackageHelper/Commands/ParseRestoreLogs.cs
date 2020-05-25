@@ -24,7 +24,7 @@ namespace PackageHelper.Commands
                 Description = "Max number of restore logs that will be merged into a single request graph"
             });
 
-            command.Add(new Option<int>("--write-graphviz")
+            command.Add(new Option<bool>("--write-graphviz")
             {
                 Description = "Output Graphviz DOT files (.gv) in addtion to request graphs"
             });
@@ -57,15 +57,7 @@ namespace PackageHelper.Commands
             {
                 var graph = graphs[index];
 
-                string fileName;
-                if (graph.VariantName != null)
-                {
-                    fileName = $"requestGraph-{graph.VariantName}-{graph.SolutionName}";
-                }
-                else
-                {
-                    fileName = $"requestGraph-{graph.SolutionName}";
-                }
+                string fileName = Helper.GetGraphFileName(RequestGraph.Type, graph.VariantName, graph.SolutionName);
 
                 if (writtenNames.Contains(fileName))
                 {
@@ -77,7 +69,7 @@ namespace PackageHelper.Commands
                 Console.WriteLine($"Preparing {fileName}...");
                 GraphOperations.LazyTransitiveReduction(graph.Graph);
 
-                var filePath = Path.Combine(rootDir, "out", "request-graphs", fileName);
+                var filePath = Path.Combine(rootDir, "out", "graphs", fileName);
                 var outDir = Path.GetDirectoryName(filePath);
                 Directory.CreateDirectory(outDir);
 

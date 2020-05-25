@@ -17,7 +17,7 @@ These test tools can be used to compare the performance of alternate package sou
 ## More reading
 
 - [Request graph](docs/request-graph.md) - the idea behind improving test reproducability
-- [Example request graph](docs/ExampleProj-out/request-graphs/20-logs.json) - a serialized dependency graph of HTTP requests
+- [Example request graph](docs/ExampleProj-out/graphs/20-logs.json) - a serialized dependency graph of HTTP requests
 
 ## Instructions
 
@@ -117,10 +117,10 @@ Merging multiple logs allows the HTTP request dependency graph to be closer to r
 from the real graph known by NuGet restore). In other words, the more logs you parse, the more accurate your simulated
 request graph will be.
 
-This command will produce serialized request graphs in the `.\out\request-graphs` directory. The file name format is:
+This command will produce serialized request graphs in the `.\out\graphs` directory. The file name format is:
 
 ```
-.\out\request-graphs\requestGraph-{variantName}-{solutionName}.json.gz
+.\out\graphs\requestGraph-{variantName}-{solutionName}.json.gz
 ```
 
 Note that the set of sources is not encoded into the file name. It's best to use the variant name to distinguish between
@@ -134,7 +134,7 @@ restore.
 
 ```powershell
 dotnet run `
-    replay-request-graph ".\out\request-graphs\requestGraph-mysource-OrchardCore.json.gz" `
+    replay-request-graph ".\out\graphs\requestGraph-mysource-OrchardCore.json.gz" `
     --iterations 20 `
     --framework netcoreapp3.1 `
     --project .\src\PackageHelper\PackageHelper.csproj

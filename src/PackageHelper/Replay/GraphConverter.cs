@@ -25,6 +25,7 @@ namespace PackageHelper.Replay
             if (unknownOperations.Any())
             {
                 var builder = new StringBuilder();
+                builder.AppendLine("Ensure the provided package sources are correct.");
                 builder.AppendFormat("There are {0} unknown operations:", unknownOperations.Count);
                 foreach (var operation in unknownOperations)
                 {
@@ -42,8 +43,7 @@ namespace PackageHelper.Replay
             {
                 var operation = new OperationNode(
                     request.HitIndex,
-                    requestToParsedOperation[request.StartRequest],
-                    new HashSet<OperationNode>());
+                    requestToParsedOperation[request.StartRequest]);
 
                 operations.Add(operation);
                 requestToOperation.Add(request, operation);

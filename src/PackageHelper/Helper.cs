@@ -28,6 +28,83 @@ namespace PackageHelper
             }
         }
 
+        public static string GetGraphFileName(string graphType, string variantName, string solutionName)
+        {
+            if (graphType == null)
+            {
+                throw new ArgumentNullException(nameof(graphType));
+            }
+
+            if (solutionName == null)
+            {
+                throw new ArgumentNullException(nameof(solutionName));
+            }
+
+            if (graphType.Contains('-'))
+            {
+                throw new ArgumentException("The graph type cannot contain hyphens.", nameof(graphType));
+            }
+
+            if (solutionName.Contains('-'))
+            {
+                throw new ArgumentException("The solution name cannot contain hyphens.", nameof(solutionName));
+            }
+
+            if (variantName != null && variantName.Contains('-'))
+            {
+                throw new ArgumentException("The variant name cannot contain hyphens.", nameof(variantName));
+            }
+
+            if (variantName != null)
+            {
+                return $"{graphType}-{variantName}-{solutionName}";
+            }
+            else
+            {
+                return $"{graphType}-{solutionName}";
+            }
+        }
+
+        public static bool TryParseGraphFileName(string path, out string graphType, out string variantName, out string solutionName)
+        {
+            var fileName = Path.GetFileNameWithoutExtension(path);
+            if (fileName.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
+            {
+                fileName = fileName.Substring(0, fileName.Length - 5);
+            }
+            var pieces = fileName.Split('-');
+
+            if (pieces.Length == 2)
+            {
+                graphType = pieces[0];
+                variantName = null;
+                solutionName = pieces[1];
+                return true;
+            }
+            else if (pieces.Length >= 3)
+            {
+                graphType = pieces[0];
+                variantName = pieces[1];
+                solutionName = pieces[2];
+                return true;
+            }
+            else
+            {
+                graphType = null;
+                variantName = null;
+                solutionName = null;
+                return false;
+            }
+        }
+
+        public static void Assert(bool assertion, string message)
+        {
+            if (!assertion)
+            {
+                throw new InvalidOperationException(message);
+            }
+        }
+
         public static string GetLogTimestamp()
         {
             return DateTimeOffset.UtcNow.ToString("yyyyMMddTHHmmssffff");

@@ -4,8 +4,13 @@ using System.Diagnostics;
 namespace PackageHelper.Replay.Requests
 {
     [DebuggerDisplay("{HitIndex}: {StartRequest,nq}")]
-    class RequestNode
+    class RequestNode : INode<RequestNode>
     {
+        public RequestNode(int hitIndex, StartRequest startRequest)
+            : this(hitIndex, startRequest, new HashSet<RequestNode>())
+        {
+        }
+
         public RequestNode(int hitIndex, StartRequest startRequest, HashSet<RequestNode> dependencies)
         {
             HitIndex = hitIndex;

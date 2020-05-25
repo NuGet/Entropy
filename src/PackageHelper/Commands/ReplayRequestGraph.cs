@@ -53,34 +53,29 @@ namespace PackageHelper.Commands
                 return 1;
             }
 
-            Console.WriteLine("Parsing the file name...");
-            var fileName = Path.GetFileNameWithoutExtension(path);
-            if (fileName.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
+            if (!path.EndsWith(GraphSerializer.FileExtension, StringComparison.OrdinalIgnoreCase))
             {
-                fileName = fileName.Substring(0, fileName.Length - 5);
+                Console.WriteLine($"The serialized graph must have the extension {GraphSerializer.FileExtension}");
+                return 1;
             }
-            var pieces = fileName.Split('-');
 
-            string variantName;
-            string solutionName;
-            if (pieces.Length == 2)
+            Console.WriteLine("Parsing the file name...");
+            if (!Helper.TryParseGraphFileName(path, out var graphType, out var variantName, out var solutionName))
             {
-                variantName = null;
-                solutionName = pieces[1];
-            }
-            else if (pieces.Length >= 3)
-            {
-                variantName = pieces[1];
-                solutionName = pieces[2];
-            }
-            else
-            {
+                graphType = null;
                 variantName = null;
                 solutionName = null;
             }
 
+            Console.WriteLine($"  Graph type:    {graphType ?? "(none)"}");
             Console.WriteLine($"  Variant name:  {variantName ?? "(none)"}");
             Console.WriteLine($"  Solution name: {solutionName ?? "(none)"}");
+
+            if (graphType != RequestGraph.Type)
+            {
+                Console.WriteLine($"The input graph type must be {RequestGraph.Type}.");
+                return 1;
+            }
 
             Console.WriteLine($"Reading {path}...");
             var graph = RequestGraphSerializer.ReadFromFile(path);

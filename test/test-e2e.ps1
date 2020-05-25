@@ -8,7 +8,7 @@ $packageHelper = Join-Path $PSScriptRoot "..\src\PackageHelper\PackageHelper.csp
 $dockerName = "nuget-server"
 $dockerDataDir = Join-Path $PSScriptRoot "..\out\baget-data"
 
-$imageName = "loicsharma/baget:5cd32c168b23a29ee0e6a16d69eeddbbab932808"
+$imageName = "loicsharma/baget:26b871f70f849457c4de4032ddeabb06c09dad81"
 $apiKey = [Guid]::NewGuid().ToString()
 
 # 0. Start up the test package source
@@ -78,11 +78,12 @@ dotnet run `
     --framework netcoreapp3.1 `
     --project $packageHelper `
     -- `
-    parse-restore-logs
+    parse-restore-logs `
+    --write-graphviz
 
 # Replay request graph
 dotnet run `
-    replay-request-graph (Join-Path $PSScriptRoot "..\out\request-graphs\requestGraph-$variantName-$solutionName.json.gz") `
+    replay-request-graph (Join-Path $PSScriptRoot "..\out\graphs\requestGraph-$variantName-$solutionName.json.gz") `
     --iterations 2 `
     --framework netcoreapp3.1 `
     --project .\src\PackageHelper\PackageHelper.csproj

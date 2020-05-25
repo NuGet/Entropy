@@ -18,9 +18,9 @@ if (Test-Path $logsDir) {
     Remove-Item $logsDir -Force -Recurse -Confirm:(!$noConfirm)
 }
 
-$requestGraphsDir = Join-Path $PSScriptRoot "..\out\request-graphs"
-if (Test-Path $requestGraphsDir) {
-    Remove-Item $requestGraphsDir -Force -Recurse -Confirm:(!$noConfirm)
+$graphsDir = Join-Path $PSScriptRoot "..\out\graphs"
+if (Test-Path $graphsDir) {
+    Remove-Item $graphsDir -Force -Recurse -Confirm:(!$noConfirm)
 }
 
 if ($solutionName) {
@@ -69,12 +69,12 @@ for ($logCount = 1; $logCount -le $allLogs.Count; $logCount++) {
     
     if ($solutionName) {
         if ($variantName) {
-            $requestGraphPath = Join-Path $requestGraphsDir "requestGraph-$variantName-$solutionName.json.gz"
+            $requestGraphPath = Join-Path $graphsDir "requestGraph-$variantName-$solutionName.json.gz"
         } else {
-            $requestGraphPath = Join-Path $requestGraphsDir "requestGraph-$solutionName.json.gz"
+            $requestGraphPath = Join-Path $graphsDir "requestGraph-$solutionName.json.gz"
         }
     } else {
-        $requestGraphPath = Get-ChildItem (Join-Path $requestGraphsDir "requestGraph-*.json.gz") `
+        $requestGraphPath = Get-ChildItem (Join-Path $graphsDir "requestGraph-*.json.gz") `
             | Sort-Object -Property Name `
             | Select-Object -First 1 -Property FullName
     }
