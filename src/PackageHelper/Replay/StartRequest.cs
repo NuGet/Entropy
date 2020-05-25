@@ -1,6 +1,6 @@
 ﻿namespace PackageHelper.Replay
 {
-    class StartRequest
+    public class StartRequest
     {
         public StartRequest(string method, string url)
         {
