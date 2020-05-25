@@ -14,7 +14,7 @@ $apiKey = [Guid]::NewGuid().ToString()
 $ps = @(docker ps --filter "name=$dockerName")
 if ($ps.Length -gt 1) {
     Log "Stopping docker container..."
-    docker stop $dockerName | Out-Null
+    docker stop $dockerName
 }
 
 Log "Starting docker container..."
@@ -28,7 +28,7 @@ docker run `
     --env "Database__ConnectionString=Data Source=/var/baget/baget.db" `
     --env "Search__Type=Database" `
     --volume "$($dockerDataDir):/var/baget" `
-    loicsharma/baget:5cd32c168b23a29ee0e6a16d69eeddbbab932808 | Out-Null
+    loicsharma/baget:5cd32c168b23a29ee0e6a16d69eeddbbab932808
 
 Log "Determining port..."
 $port = docker port $dockerName `
@@ -95,4 +95,8 @@ Move-Item (Join-Path $PSScriptRoot "..\out\logs") (Join-Path $PSScriptRoot "..\o
 
 # Stop the docker container
 Log "Stopping docker container..."
-docker stop $dockerName | Out-Null
+docker stop $dockerName
+
+# Removing the docker container
+Log "Removing docker container..."
+docker rm $dockerName --force
