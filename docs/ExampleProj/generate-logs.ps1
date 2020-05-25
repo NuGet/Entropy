@@ -7,7 +7,9 @@ Param(
 # Download NuGet, if it does not exist yet.
 $nugetPath = Join-Path $PSScriptRoot "nuget.exe"
 $nugetUrl = "https://dist.nuget.org/win-x86-commandline/v5.5.1/nuget.exe"
+$ProgressPreference = 'SilentlyContinue'  
 if (!(Test-Path $nugetPath)) { Invoke-WebRequest $nugetUrl -OutFile $nugetPath }
+$ProgressPreference = 'Continue' 
 
 $objDir = (Join-Path $PSScriptRoot "obj")
 $env:NUGET_PACKAGES=(Join-Path $objDir "upf")
