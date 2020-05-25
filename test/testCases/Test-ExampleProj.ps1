@@ -19,7 +19,7 @@ Param(
     [string[]] $sources
 )
 
-$scriptsDir = Join-Path $PSScriptRoot "..\scripts\perftests"
+$scriptsDir = Join-Path $PSScriptRoot "..\..\scripts\perftests"
 
 . (Join-Path $scriptsDir "PerformanceTestUtilities.ps1")
 

@@ -1,11 +1,12 @@
-. (Join-Path $PSScriptRoot "scripts\perftests\PerformanceTestUtilities.ps1")
+. (Join-Path $PSScriptRoot "..\scripts\perftests\PerformanceTestUtilities.ps1")
 
-$testCase = Join-Path $PSScriptRoot "test\Test-ExampleProj.ps1"
+$testDir = Join-Path $PSScriptRoot "testCases"
+$testCases = Get-ChildItem (Join-Path $testDir "Test-*.ps1")
 $variantName = "teste2e"
 $solutionName = "ExampleProj"
-$packageHelper = Join-Path $PSScriptRoot "src\PackageHelper\PackageHelper.csproj"
+$packageHelper = Join-Path $PSScriptRoot "..\src\PackageHelper\PackageHelper.csproj"
 $dockerName = "nuget-server"
-$dockerDataDir = Join-Path $PSScriptRoot "out\baget-data"
+$dockerDataDir = Join-Path $PSScriptRoot "..\out\baget-data"
 
 $apiKey = [Guid]::NewGuid().ToString()
 
@@ -40,9 +41,9 @@ $source = "http://localhost:$port/v3/index.json"
 Log "The package source is $source"
 
 # Discover packages
-& (Join-Path $PSScriptRoot "discover-packages.ps1") `
+& (Join-Path $PSScriptRoot "..\discover-packages.ps1") `
     -variantName $variantName `
-    -testCases $testCase
+    -testCases $testCases
 
 # Push all packages
 dotnet run `
@@ -53,14 +54,14 @@ dotnet run `
     --api-key $apiKey
 
 # Run the tests with the custom source
-& (Join-Path $PSScriptRoot "run-tests.ps1") `
+& (Join-Path $PSScriptRoot "..\run-tests.ps1") `
     -variantName $variantName `
     -iterations 2 `
     -sources @($source) `
     -testCases $testCase
 
 # Run the tests with the default sources
-& (Join-Path $PSScriptRoot "run-tests.ps1") `
+& (Join-Path $PSScriptRoot "..\run-tests.ps1") `
     -variantName "default" `
     -fast `
     -testCases $testCase
@@ -74,7 +75,7 @@ dotnet run `
 
 # Replay request graph
 dotnet run `
-    replay-request-graph (Join-Path $PSScriptRoot "out\request-graphs\requestGraph-$variantName-$solutionName.json.gz") `
+    replay-request-graph (Join-Path $PSScriptRoot "..\out\request-graphs\requestGraph-$variantName-$solutionName.json.gz") `
     --iterations 2 `
     --framework netcoreapp3.1 `
     --project .\src\PackageHelper\PackageHelper.csproj
@@ -85,7 +86,7 @@ dotnet run `
     -iterations 2
 
 # Test log merge asymptote
-Move-Item (Join-Path $PSScriptRoot "out\logs") (Join-Path $PSScriptRoot "out\all-logs")
+Move-Item (Join-Path $PSScriptRoot "..\out\logs") (Join-Path $PSScriptRoot "..\out\all-logs")
 & (Join-Path $PSScriptRoot "test-log-merge-asymptote.ps1") `
     -variantName $variantName `
     -solutionName $solutionName `

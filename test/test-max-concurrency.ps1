@@ -4,13 +4,13 @@ Param(
     [int] $iterations = 20
 )
 
-. "$PSScriptRoot\scripts\perftests\PerformanceTestUtilities.ps1"
+. "$PSScriptRoot\..\scripts\perftests\PerformanceTestUtilities.ps1"
 
 $requestGraphs = @()
 
 foreach ($variantName in $variantNames) {
     ValidateVariantName $variantName
-    $pathPattern = Join-Path $PSScriptRoot "out/request-graphs/requestGraph-$variantName-*.json.gz"
+    $pathPattern = Join-Path $PSScriptRoot "..\out\request-graphs\requestGraph-$variantName-*.json.gz"
     $requestGraphs += Get-ChildItem $pathPattern
 }
 
@@ -19,7 +19,7 @@ foreach ($requestGraph in $requestGraphs) {
     Log "- $requestGraph"
 }
 
-$packageHelper = Join-Path $PSScriptRoot "src\PackageHelper\PackageHelper.csproj"
+$packageHelper = Join-Path $PSScriptRoot "..\src\PackageHelper\PackageHelper.csproj"
 
 $maxConcurrency = 64
 while ($maxConcurrency -ge 1) {

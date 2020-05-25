@@ -5,7 +5,7 @@ Param(
     [switch] $noConfirm
 )
 
-. "$PSScriptRoot\scripts\perftests\PerformanceTestUtilities.ps1"
+. "$PSScriptRoot\..\scripts\perftests\PerformanceTestUtilities.ps1"
 
 if ($variantName -and !$solutionName) {
     throw "The -solutionName parameter is required when using the -variantName parameter."
@@ -13,12 +13,12 @@ if ($variantName -and !$solutionName) {
 
 ValidateVariantName $variantName
 
-$logsDir = Join-Path $PSScriptRoot "out\logs"
+$logsDir = Join-Path $PSScriptRoot "..\out\logs"
 if (Test-Path $logsDir) {
     Remove-Item $logsDir -Force -Recurse -Confirm:(!$noConfirm)
 }
 
-$requestGraphsDir = Join-Path $PSScriptRoot "out\request-graphs"
+$requestGraphsDir = Join-Path $PSScriptRoot "..\out\request-graphs"
 if (Test-Path $requestGraphsDir) {
     Remove-Item $requestGraphsDir -Force -Recurse -Confirm:(!$noConfirm)
 }
@@ -33,7 +33,7 @@ if ($solutionName) {
     $restoreLogPattern = "restoreLog-*-*.txt"
 }
 
-$restoreLogPattern = Join-Path $PSScriptRoot "out\all-logs\$restoreLogPattern"
+$restoreLogPattern = Join-Path $PSScriptRoot "..\out\all-logs\$restoreLogPattern"
 $allLogs = Get-ChildItem $restoreLogPattern `
     | Sort-Object -Property Name
 
@@ -63,7 +63,7 @@ for ($logCount = 1; $logCount -le $allLogs.Count; $logCount++) {
     dotnet run `
         --configuration Release `
         --framework netcoreapp3.1 `
-        --project (Join-Path $PSScriptRoot "src\PackageHelper\PackageHelper.csproj") `
+        --project (Join-Path $PSScriptRoot "..\src\PackageHelper\PackageHelper.csproj") `
         -- `
         parse-restore-logs
     
@@ -83,7 +83,7 @@ for ($logCount = 1; $logCount -le $allLogs.Count; $logCount++) {
     dotnet run `
         --configuration Release `
         --framework netcoreapp3.1 `
-        --project (Join-Path $PSScriptRoot "src\PackageHelper\PackageHelper.csproj") `
+        --project (Join-Path $PSScriptRoot "..\src\PackageHelper\PackageHelper.csproj") `
         -- `
         replay-request-graph `
         $requestGraphPath `
