@@ -11,42 +11,27 @@ namespace PackageHelper.Replay.Requests
 {
     static class RequestGraphSerializer
     {
-        public static void WriteToGraphvizFile(string path, RequestGraph graph)
-        {
-            var builder = new StringBuilder();
-            GraphSerializer.WriteToGraphvizFile(
-                path,
-                graph,
-                n => GetNodeLabel(builder, n));
-        }
-
-        private static string GetNodeLabel(StringBuilder builder, RequestNode node)
-        {
-            builder.Clear();
-
-            if (node.HitIndex != 0)
-            {
-                builder.AppendFormat("({0}) ", node.HitIndex);
-            }
-
-            var label = node.StartRequest.Url;
-            if (label.EndsWith("/index.json"))
-            {
-                label = string.Join("/", label.Split('/').Reverse().Take(2).Reverse());
-            }
-            else if (label.EndsWith(".nupkg"))
-            {
-                label = label.Split('/').Last();
-            }
-
-            builder.Append(label);
-
-            return builder.ToString();
-        }
-
         public static void WriteToFile(string path, RequestGraph graph)
         {
-            GraphSerializer.WriteToFile(path, graph, WriteNode);
+            GraphSerializer.WriteToFile<RequestGraph, RequestNode>(
+                path,
+                graph,
+                WriteGraphProperties,
+                WriteNode);
+        }
+
+        private static void WriteGraphProperties(JsonTextWriter j, RequestGraph graph)
+        {
+            if (graph.Sources.Any())
+            {
+                j.WritePropertyName("s");
+                j.WriteStartArray();
+                foreach (var source in graph.Sources)
+                {
+                    j.WriteValue(source);
+                }
+                j.WriteEndArray();
+            }
         }
 
         private static void WriteNode(JsonTextWriter j, RequestNode node)
@@ -81,9 +66,22 @@ namespace PackageHelper.Replay.Requests
 
         public static RequestGraph ReadFromFile(string path)
         {
-            var graph = new RequestGraph();
-            GraphSerializer.ReadFromFile(path, graph, ReadNode);
-            return graph;
+            return GraphSerializer.ReadFromFile(
+                path,
+                new RequestGraph(),
+                ReadGraphProperty,
+                ReadNode);
+        }
+
+        private static void ReadGraphProperty(JsonSerializer serializer, JsonReader j, RequestGraph graph)
+        {
+            switch ((string)j.Value)
+            {
+                case "s":
+                    j.Read();
+                    graph.Sources.AddRange(serializer.Deserialize<List<string>>(j));
+                    break;
+            }
         }
 
         private static RequestNode ReadNode(JsonSerializer serializer, JsonReader j, List<int> dependencyIndexes)
@@ -134,5 +132,39 @@ namespace PackageHelper.Replay.Requests
 
             return node;
         }
+
+        public static void WriteToGraphvizFile(string path, RequestGraph graph)
+        {
+            var builder = new StringBuilder();
+            GraphSerializer.WriteToGraphvizFile(
+                path,
+                graph,
+                n => GetNodeLabel(builder, n));
+        }
+
+        private static string GetNodeLabel(StringBuilder builder, RequestNode node)
+        {
+            builder.Clear();
+
+            if (node.HitIndex != 0)
+            {
+                builder.AppendFormat("({0}) ", node.HitIndex);
+            }
+
+            var label = node.StartRequest.Url;
+            if (label.EndsWith("/index.json"))
+            {
+                label = string.Join("/", label.Split('/').Reverse().Take(2).Reverse());
+            }
+            else if (label.EndsWith(".nupkg"))
+            {
+                label = label.Split('/').Last();
+            }
+
+            builder.Append(label);
+
+            return builder.ToString();
+        }
+
     }
 }

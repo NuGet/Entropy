@@ -8,39 +8,13 @@ namespace PackageHelper.Replay.Operations
 {
     static class OperationGraphSerializer
     {
-        public static void WriteToGraphvizFile(string path, OperationGraph graph)
-        {
-            var builder = new StringBuilder();
-            GraphSerializer.WriteToGraphvizFile(
-                path,
-                graph,
-                n => GetNodeLabel(builder, n));
-        }
-
-        private static string GetNodeLabel(StringBuilder builder, OperationNode node)
-        {
-            builder.Clear();
-
-            switch (node.Operation.Type)
-            {
-                case OperationType.PackageBaseAddressIndex:
-                    var packageBaseAddressIndex = (OperationWithId)node.Operation;
-                    builder.AppendFormat("{0}/index.json", packageBaseAddressIndex.Id);
-                    break;
-                case OperationType.PackageBaseAddressNupkg:
-                    var packageBaseAddressNupkg = (OperationWithIdVersion)node.Operation;
-                    builder.AppendFormat("{0}.{1}.nupkg", packageBaseAddressNupkg.Id, packageBaseAddressNupkg.Version);
-                    break;
-                default:
-                    throw new NotImplementedException($"Operation type {node.Operation.Type} is not supported for serialization.");
-            }
-
-            return builder.ToString();
-        }
-
         public static void WriteToFile(string path, OperationGraph graph)
         {
-            GraphSerializer.WriteToFile(path, graph, WriteNode);
+            GraphSerializer.WriteToFile<OperationGraph, OperationNode>(
+                path,
+                graph,
+                (h, g) => { },
+                WriteNode);
         }
 
         private static void WriteNode(JsonTextWriter j, OperationNode node)
@@ -73,9 +47,11 @@ namespace PackageHelper.Replay.Operations
 
         public static OperationGraph ReadFromFile(string path)
         {
-            var graph = new OperationGraph();
-            GraphSerializer.ReadFromFile(path, graph, ReadNode);
-            return graph;
+            return GraphSerializer.ReadFromFile(
+                path,
+                new OperationGraph(),
+                (s, j, g) => { },
+                ReadNode);
         }
 
         private static OperationNode ReadNode(JsonSerializer serializer, JsonReader j, List<int> dependencyIndexes)
@@ -130,6 +106,36 @@ namespace PackageHelper.Replay.Operations
             }
 
             return new OperationNode(hitIndex, operation);
+        }
+
+        public static void WriteToGraphvizFile(string path, OperationGraph graph)
+        {
+            var builder = new StringBuilder();
+            GraphSerializer.WriteToGraphvizFile(
+                path,
+                graph,
+                n => GetNodeLabel(builder, n));
+        }
+
+        private static string GetNodeLabel(StringBuilder builder, OperationNode node)
+        {
+            builder.Clear();
+
+            switch (node.Operation.Type)
+            {
+                case OperationType.PackageBaseAddressIndex:
+                    var packageBaseAddressIndex = (OperationWithId)node.Operation;
+                    builder.AppendFormat("{0}/index.json", packageBaseAddressIndex.Id);
+                    break;
+                case OperationType.PackageBaseAddressNupkg:
+                    var packageBaseAddressNupkg = (OperationWithIdVersion)node.Operation;
+                    builder.AppendFormat("{0}.{1}.nupkg", packageBaseAddressNupkg.Id, packageBaseAddressNupkg.Version);
+                    break;
+                default:
+                    throw new NotImplementedException($"Operation type {node.Operation.Type} is not supported for serialization.");
+            }
+
+            return builder.ToString();
         }
     }
 }

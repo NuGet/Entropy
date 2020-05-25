@@ -18,7 +18,7 @@ namespace PackageHelper.Replay
         {
             var graphs = new Dictionary<
                 (string VariantName, string SolutionName, string SourcesKey),
-                (List<string> Sources, RequestGraph Graph, Dictionary<RequestNode, RequestNode> Nodes)>();
+                (RequestGraph Graph, Dictionary<RequestNode, RequestNode> Nodes)>();
             var graphToLogCount = new Dictionary<RequestGraph, int>();
             var stringToString = new Dictionary<string, string>();
 
@@ -27,8 +27,7 @@ namespace PackageHelper.Replay
                 Console.WriteLine($"Parsing {logPath}...");
 
                 // Parse the graph.
-                var newGraphInfo = ParseGraph(logPath, stringToString);
-                var newGraph = newGraphInfo.Graph;
+                var newGraph = ParseGraph(logPath, stringToString);
                 var newNodes = GraphOperations.GetNodeToNode(newGraph);
 
                 // Parse the solution name out of the file name.
@@ -62,17 +61,17 @@ namespace PackageHelper.Replay
                 Console.WriteLine($"  Solution name:      {solutionName}");
                 Console.WriteLine($"  Request count:      {newGraph.Nodes.Count:n0}");
                 Console.WriteLine($"  Package sources:");
-                foreach (var source in newGraphInfo.Sources)
+                foreach (var source in newGraph.Sources)
                 {
                     Console.WriteLine($"  - {source}");
                 }
 
                 // Find the existing graph with the same solution name and sources.
-                var sourcesKey = string.Join(Environment.NewLine, newGraphInfo.Sources.OrderBy(x => x, StringComparer.Ordinal));
+                var sourcesKey = string.Join(Environment.NewLine, newGraph.Sources.OrderBy(x => x, StringComparer.Ordinal));
                 var graphKey = (variantName, solutionName, sourcesKey);
                 if (!graphs.TryGetValue(graphKey, out var existingGraphInfo))
                 {
-                    graphs.Add(graphKey, (newGraphInfo.Sources, newGraph, newNodes));
+                    graphs.Add(graphKey, (newGraph, newNodes));
                     graphToLogCount.Add(newGraph, 1);
                     continue;
                 }
@@ -92,7 +91,7 @@ namespace PackageHelper.Replay
             }
 
             var graphInfos = graphs
-                .Select(x => new RestoreRequestGraph(x.Key.VariantName, x.Key.SolutionName, x.Value.Sources, x.Value.Graph))
+                .Select(x => new RestoreRequestGraph(x.Key.VariantName, x.Key.SolutionName, x.Value.Graph))
                 .ToList();
 
             // Run consistency checks.
@@ -104,7 +103,7 @@ namespace PackageHelper.Replay
             return graphInfos;
         }
 
-        public static RestoreRequestGraph ParseGraph(string logPath, Dictionary<string, string> stringToString)
+        public static RequestGraph ParseGraph(string logPath, Dictionary<string, string> stringToString)
         {
             var pendingRequests = new Dictionary<string, Queue<RequestNode>>();
             var urlToCount = new Dictionary<string, int>();
@@ -169,7 +168,7 @@ namespace PackageHelper.Replay
                 throw new InvalidDataException("No sources were found.");
             }
 
-            return new RestoreRequestGraph(null, null, sources, new RequestGraph(startedRequests));
+            return new RequestGraph(startedRequests, sources);
         }
 
         private static void Parse(
