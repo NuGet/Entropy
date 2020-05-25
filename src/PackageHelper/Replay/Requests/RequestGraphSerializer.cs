@@ -86,42 +86,14 @@ namespace PackageHelper.Replay.Requests
             using (var j = new JsonTextWriter(writer))
             {
                 j.WriteStartObject();
-
                 j.WritePropertyName("n");
-
                 j.WriteStartArray();
 
                 foreach (var node in graph.Nodes)
                 {
                     j.WriteStartObject();
 
-                    if (node.HitIndex != default)
-                    {
-                        j.WritePropertyName("h");
-                        j.WriteValue(node.HitIndex);
-                    }
-
-                    if (node.StartRequest.Method != "GET")
-                    {
-                        j.WritePropertyName("m");
-                        j.WriteValue(node.StartRequest.Method);
-                    }
-
-                    j.WritePropertyName("u");
-                    j.WriteValue(node.StartRequest.Url);
-
-                    if (node.EndRequest != null)
-                    {
-                        if (node.EndRequest.StatusCode != HttpStatusCode.OK)
-                        {
-                            j.WritePropertyName("c");
-                            j.WriteValue((int)node.EndRequest.StatusCode);
-                        }
-
-                        j.WritePropertyName("d");
-                        j.WriteValue(node.EndRequest.Duration.Ticks);
-                    }
-
+                    WriteRequestNode(j, node);
                     if (node.Dependencies.Count > 0)
                     {
                         j.WritePropertyName("e");
@@ -138,8 +110,37 @@ namespace PackageHelper.Replay.Requests
                 }
 
                 j.WriteEndArray();
-
                 j.WriteEndObject();
+            }
+        }
+
+        private static void WriteRequestNode(JsonTextWriter j, RequestNode node)
+        {
+            if (node.HitIndex != default)
+            {
+                j.WritePropertyName("h");
+                j.WriteValue(node.HitIndex);
+            }
+
+            if (node.StartRequest.Method != "GET")
+            {
+                j.WritePropertyName("m");
+                j.WriteValue(node.StartRequest.Method);
+            }
+
+            j.WritePropertyName("u");
+            j.WriteValue(node.StartRequest.Url);
+
+            if (node.EndRequest != null)
+            {
+                if (node.EndRequest.StatusCode != HttpStatusCode.OK)
+                {
+                    j.WritePropertyName("c");
+                    j.WriteValue((int)node.EndRequest.StatusCode);
+                }
+
+                j.WritePropertyName("d");
+                j.WriteValue(node.EndRequest.Duration.Ticks);
             }
         }
 
