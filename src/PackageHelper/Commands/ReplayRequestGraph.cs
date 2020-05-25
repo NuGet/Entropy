@@ -227,6 +227,12 @@ namespace PackageHelper.Commands
                             }
 
                             writer.OnResponse(node, response.StatusCode, headerDuration, stopwatch.Elapsed - headerDuration);
+
+                            if (!response.IsSuccessStatusCode && response.StatusCode != HttpStatusCode.NotFound)
+                            {
+                                response.EnsureSuccessStatusCode();
+                            }
+
                             break;
                         }
                     }
