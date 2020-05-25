@@ -8,6 +8,7 @@ $packageHelper = Join-Path $PSScriptRoot "..\src\PackageHelper\PackageHelper.csp
 $dockerName = "nuget-server"
 $dockerDataDir = Join-Path $PSScriptRoot "..\out\baget-data"
 
+$imageName = "loicsharma/baget:5cd32c168b23a29ee0e6a16d69eeddbbab932808"
 $apiKey = [Guid]::NewGuid().ToString()
 
 # 0. Start up the test package source
@@ -20,6 +21,9 @@ if ($ps.Length -gt 1) {
     docker rm $dockerName --force
 }
 
+Log "Fetching docker image..."
+docker pull $imageName
+
 Log "Starting docker container..."
 docker run `
     --name $dockerName `
@@ -31,7 +35,7 @@ docker run `
     --env "Database__ConnectionString=Data Source=/var/baget/baget.db" `
     --env "Search__Type=Database" `
     --volume "$($dockerDataDir):/var/baget" `
-    loicsharma/baget:5cd32c168b23a29ee0e6a16d69eeddbbab932808
+    $imageName
 
 Log "Determining port..."
 $port = docker port $dockerName `
