@@ -50,7 +50,7 @@ namespace PackageHelper.Replay
             }
 
             // Ensure that each node is unique per hit index + URL combination.
-            var unique = new HashSet<RequestNode>(graph.Nodes, HitIndexAndUrlComparer.Instance);
+            var unique = new HashSet<RequestNode>(graph.Nodes, HitIndexAndRequestComparer.Instance);
             if (unique.Count != references.Count)
             {
                 throw new InvalidOperationException("There are duplicate nodes in the graph, by hit index and URL.");
@@ -65,7 +65,7 @@ namespace PackageHelper.Replay
 
         public static Dictionary<RequestNode, RequestNode> GetNodeToNode(RequestGraph graph)
         {
-            return graph.Nodes.ToDictionary(x => x, HitIndexAndUrlComparer.Instance);
+            return graph.Nodes.ToDictionary(x => x, HitIndexAndRequestComparer.Instance);
         }
 
         public static void Merge(RequestGraph existingGraph, Dictionary<RequestNode, RequestNode> existingNodes, RequestGraph newGraph)
@@ -88,7 +88,7 @@ namespace PackageHelper.Replay
                 addedNode.Dependencies = addedNode
                     .Dependencies
                     .Select(x => existingNodes[x])
-                    .ToHashSet(HitIndexAndUrlComparer.Instance);
+                    .ToHashSet(HitIndexAndRequestComparer.Instance);
             }
             Console.WriteLine($"  New requests:       {addedNodes.Count:n0}");
 

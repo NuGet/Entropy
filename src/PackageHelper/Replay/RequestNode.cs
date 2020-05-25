@@ -10,7 +10,7 @@ namespace PackageHelper.Replay
         {
             HitIndex = hitIndex;
             StartRequest = startRequest;
-            Dependencies = new HashSet<RequestNode>(dependsOn, HitIndexAndUrlComparer.Instance);
+            Dependencies = new HashSet<RequestNode>(dependsOn, HitIndexAndRequestComparer.Instance);
         }
 
         public int HitIndex { get; }
