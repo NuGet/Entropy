@@ -15,6 +15,9 @@ $ps = @(docker ps --filter "name=$dockerName")
 if ($ps.Length -gt 1) {
     Log "Stopping docker container..."
     docker stop $dockerName
+    
+    Log "Removing docker container..."
+    docker rm $dockerName --force
 }
 
 Log "Starting docker container..."

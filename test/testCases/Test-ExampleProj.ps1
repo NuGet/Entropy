@@ -23,7 +23,7 @@ $scriptsDir = Join-Path $PSScriptRoot "..\..\scripts\perftests"
 
 . (Join-Path $scriptsDir "PerformanceTestUtilities.ps1")
 
-$sourceFolderPath = Join-Path $PSScriptRoot "..\docs\ExampleProj"
+$sourceFolderPath = Join-Path $PSScriptRoot "..\..\docs\ExampleProj"
 $configFiles = @("NuGet.Config")
 $solutionFilePath = Join-Path $sourceFolderPath "ExampleProj.csproj"
 
