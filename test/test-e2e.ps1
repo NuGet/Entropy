@@ -61,13 +61,13 @@ dotnet run `
     -variantName $variantName `
     -iterations 2 `
     -sources @($source) `
-    -testCases $testCase
+    -testCases $testCases
 
 # Run the tests with the default sources
 & (Join-Path $PSScriptRoot "..\run-tests.ps1") `
     -variantName "default" `
     -fast `
-    -testCases $testCase
+    -testCases $testCases
 
 # Parse the logs
 dotnet run `
