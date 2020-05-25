@@ -1,7 +1,8 @@
 Param(
     [int] $iterations = 20,
     [string] $variantName,
-    [string] $solutionName
+    [string] $solutionName,
+    [switch] $noConfirm
 )
 
 . "$PSScriptRoot\scripts\perftests\PerformanceTestUtilities.ps1"
@@ -10,14 +11,16 @@ if ($variantName -and !$solutionName) {
     throw "The -solutionName parameter is required when using the -variantName parameter."
 }
 
+ValidateVariantName $variantName
+
 $logsDir = Join-Path $PSScriptRoot "out\logs"
 if (Test-Path $logsDir) {
-    Remove-Item $logsDir -Force -Recurse -Confirm
+    Remove-Item $logsDir -Force -Recurse -Confirm:(!$noConfirm)
 }
 
 $requestGraphsDir = Join-Path $PSScriptRoot "out\request-graphs"
 if (Test-Path $requestGraphsDir) {
-    Remove-Item $requestGraphsDir -Force -Recurse -Confirm
+    Remove-Item $requestGraphsDir -Force -Recurse -Confirm:(!$noConfirm)
 }
 
 if ($solutionName) {
@@ -83,7 +86,7 @@ for ($logCount = 1; $logCount -le $allLogs.Count; $logCount++) {
         --project (Join-Path $PSScriptRoot "src\PackageHelper\PackageHelper.csproj") `
         -- `
         replay-request-graph `
-        $requestGraphPath.FullName `
+        $requestGraphPath `
         --iterations $iterations
 
     Log "Finished the test with $logCount log(s), $iterations iteration(s)" "Cyan"

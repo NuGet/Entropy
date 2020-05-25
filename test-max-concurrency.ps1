@@ -9,6 +9,7 @@ Param(
 $requestGraphs = @()
 
 foreach ($variantName in $variantNames) {
+    ValidateVariantName $variantName
     $pathPattern = Join-Path $PSScriptRoot "out/request-graphs/requestGraph-$variantName-*.json.gz"
     $requestGraphs += Get-ChildItem $pathPattern
 }

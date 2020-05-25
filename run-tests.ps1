@@ -4,18 +4,23 @@ Param(
     [int] $iterations = 10,
     [string[]] $sources,
     [string] $dumpNupkgsPath,
-    [string] $resultsName
+    [string] $resultsName,
+    [string[]] $testCases
 )
 
 . "$PSScriptRoot\scripts\perftests\PerformanceTestUtilities.ps1"
 
-$testDir = Join-Path $PSScriptRoot "scripts\perftests\testCases"
-$testCases = Get-ChildItem (Join-Path $testDir "Test-*.ps1")
+if (!$testCases) {
+    $testDir = Join-Path $PSScriptRoot "scripts\perftests\testCases"
+    $testCases = Get-ChildItem (Join-Path $testDir "Test-*.ps1")
+}
 
 # Download NuGet, if it does not exist yet.
 $nugetPath = Join-Path $PSScriptRoot "nuget.exe"
 $nugetUrl = "https://dist.nuget.org/win-x86-commandline/v5.5.1/nuget.exe"
 if (!(Test-Path $nugetPath)) { Invoke-WebRequest $nugetUrl -OutFile $nugetPath }
+
+ValidateVariantName $variantName
 
 if ($iterations -lt 1) { $fast = $true }
 if (!$resultsName -and $variantName) { $resultsName = $variantName }

@@ -1,5 +1,13 @@
 # Contains all the utility methods used by the performance tests.
 
+function ValidateVariantName($variantName)
+{
+    if ($variantName -and $variantName.Contains("-"))
+    {
+        throw "Variant name '$variantName' must not contain hyphens."
+    }
+}
+
 function SetPackageSources($nugetClientFilePath, $sourcePath, $configFiles, $sources)
 {
     $configFilePaths = $configFiles | ForEach-Object { Join-Path $sourcePath $_ }

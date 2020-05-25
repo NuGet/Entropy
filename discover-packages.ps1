@@ -1,5 +1,6 @@
 Param(
-    [switch] $skipWarmup
+    [switch] $skipWarmup,
+    [string[]] $testCases
 )
 
 $ErrorActionPreference = "Stop"
@@ -14,9 +15,10 @@ $extraPackages = @(
 
 if (!$skipWarmup) {
     & (Join-Path $PSScriptRoot "run-tests.ps1") `
-        -resultsName "discover-packages" `
+        -variantName "discoverpackages" `
         -fast `
-        -dumpNupkgsPath $nupkgDir
+        -dumpNupkgsPath $nupkgDir `
+        -testCases $testCases
 }
 
 foreach ($extraPackage in $extraPackages) {

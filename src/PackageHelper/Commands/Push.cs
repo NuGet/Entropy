@@ -43,27 +43,27 @@ namespace PackageHelper.Commands
             return command;
         }
 
-        static async Task<int> ExecuteAsync(string pushPackageSource, string listPackageSource, string apiKey)
+        static async Task<int> ExecuteAsync(string pushSource, string listSource, string apiKey)
         {
             if (!Helper.TryFindRoot(out var rootDir))
             {
                 return 1;
             }
 
-            Console.WriteLine($"Using push package source: {pushPackageSource}");
+            Console.WriteLine($"Using push package source: {pushSource}");
 
-            if (string.IsNullOrWhiteSpace(listPackageSource))
+            if (string.IsNullOrWhiteSpace(listSource))
             {
-                listPackageSource = pushPackageSource;
+                listSource = pushSource;
             }
 
-            Console.WriteLine($"Using list package source: {listPackageSource}");
+            Console.WriteLine($"Using list package source: {listSource}");
 
             var nupkgDir = Path.Combine(rootDir, "out", "nupkgs");
             Console.WriteLine($"Scanning {nupkgDir} for NuGet packages...");
 
-            var packageUpdate = await Repository.Factory.GetCoreV3(pushPackageSource).GetResourceAsync<PackageUpdateResource>();
-            var findPackageById = await Repository.Factory.GetCoreV3(listPackageSource).GetResourceAsync<FindPackageByIdResource>();
+            var packageUpdate = await Repository.Factory.GetCoreV3(pushSource).GetResourceAsync<PackageUpdateResource>();
+            var findPackageById = await Repository.Factory.GetCoreV3(listSource).GetResourceAsync<FindPackageByIdResource>();
             var pushedVersionsLock = new object();
             var pushedVersions = new Dictionary<string, Task<HashSet<NuGetVersion>>>(StringComparer.OrdinalIgnoreCase);
             var work = new ConcurrentQueue<string>(Directory.EnumerateFiles(nupkgDir, "*.nupkg", SearchOption.AllDirectories));
