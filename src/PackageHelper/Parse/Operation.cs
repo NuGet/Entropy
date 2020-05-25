@@ -4,26 +4,26 @@ using System.Diagnostics;
 namespace PackageHelper.Parse
 {
     [DebuggerDisplay("{Type,nq}")]
-    public class NuGetOperation : IEquatable<NuGetOperation>
+    public class Operation : IEquatable<Operation>
     {
-        public NuGetOperation(NuGetOperationType type)
+        public Operation(OperationType type)
         {
             Type = type;
         }
 
-        public NuGetOperationType Type { get; }
+        public OperationType Type { get; }
 
-        public static NuGetOperation Unknown()
+        public static Operation Unknown()
         {
-            return new NuGetOperation(NuGetOperationType.Unknown);
+            return new Operation(OperationType.Unknown);
         }
 
         public override bool Equals(object obj)
         {
-            return Equals(obj as NuGetOperation);
+            return Equals(obj as Operation);
         }
 
-        public bool Equals(NuGetOperation other)
+        public bool Equals(Operation other)
         {
             return other != null &&
                    Type == other.Type;

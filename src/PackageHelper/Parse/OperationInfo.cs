@@ -6,10 +6,10 @@ using PackageHelper.Replay.Requests;
 namespace PackageHelper.Parse
 {
     [DebuggerDisplay("{Request,nq} -> {Operation,nq}")]
-    public class NuGetOperationInfo
+    public class OperationInfo
     {
-        public NuGetOperationInfo(
-            NuGetOperation operation,
+        public OperationInfo(
+            Operation operation,
             StartRequest request,
             IReadOnlyList<KeyValuePair<string, Uri>> sourceResourceUris)
         {
@@ -18,7 +18,7 @@ namespace PackageHelper.Parse
             SourceResourceUris = sourceResourceUris;
         }
 
-        public NuGetOperation Operation { get; }
+        public Operation Operation { get; }
         public StartRequest Request { get; }
         public IReadOnlyList<KeyValuePair<string, Uri>> SourceResourceUris { get; }
     }

@@ -29,7 +29,7 @@ namespace PackageHelper.Commands
         {
             var requestGraph = RequestGraphSerializer.ReadFromFile(path);
             var sources = new[] { "https://api.nuget.org/v3/index.json" };
-            var nuGetOperationGraph = await GraphConverter.ToNuGetOperationGraphAsync(sources, requestGraph);
+            var operationGraph = await GraphConverter.ToOperationGraphAsync(sources, requestGraph);
         }
     }
 }

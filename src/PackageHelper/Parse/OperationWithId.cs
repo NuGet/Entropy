@@ -4,9 +4,9 @@ using System.Diagnostics;
 namespace PackageHelper.Parse
 {
     [DebuggerDisplay("{Type,nq} (Id: {Id,nq})")]
-    public class NuGetOperationWithId : NuGetOperation, IEquatable<NuGetOperationWithId>
+    public class OperationWithId : Operation, IEquatable<OperationWithId>
     {
-        public NuGetOperationWithId(NuGetOperationType type, string id)
+        public OperationWithId(OperationType type, string id)
             : base(type)
         {
             Id = id;
@@ -16,10 +16,10 @@ namespace PackageHelper.Parse
 
         public override bool Equals(object obj)
         {
-            return Equals(obj as NuGetOperationWithId);
+            return Equals(obj as OperationWithId);
         }
 
-        public bool Equals(NuGetOperationWithId other)
+        public bool Equals(OperationWithId other)
         {
             return other != null &&
                    Type == other.Type &&

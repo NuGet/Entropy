@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace PackageHelper.Replay.NuGetOperations
+namespace PackageHelper.Replay.Operations
 {
-    class CompareByHitIndexAndOperation : IEqualityComparer<NuGetOperationNode>
+    class CompareByHitIndexAndOperation : IEqualityComparer<OperationNode>
     {
         public static CompareByHitIndexAndOperation Instance { get; } = new CompareByHitIndexAndOperation();
 
-        public bool Equals(NuGetOperationNode x, NuGetOperationNode y)
+        public bool Equals(OperationNode x, OperationNode y)
         {
             if (ReferenceEquals(x, y))
             {
@@ -28,7 +28,7 @@ namespace PackageHelper.Replay.NuGetOperations
                 && x.Operation.Equals(y.Operation);
         }
 
-        public int GetHashCode(NuGetOperationNode obj)
+        public int GetHashCode(OperationNode obj)
         {
 #if NETCOREAPP
             return HashCode.Combine(obj.HitIndex, obj.Operation);

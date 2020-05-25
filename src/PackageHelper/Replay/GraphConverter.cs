@@ -4,21 +4,21 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using PackageHelper.Parse;
-using PackageHelper.Replay.NuGetOperations;
+using PackageHelper.Replay.Operations;
 using PackageHelper.Replay.Requests;
 
 namespace PackageHelper.Replay
 {
     static class GraphConverter
     {
-        public static async Task<NuGetOperationGraph> ToNuGetOperationGraphAsync(IReadOnlyList<string> sources, RequestGraph graph)
+        public static async Task<OperationGraph> ToOperationGraphAsync(IReadOnlyList<string> sources, RequestGraph graph)
         {
             // Parse the request graph nodes.
             var uniqueRequests = graph.Nodes.Select(x => x.StartRequest).Distinct();
-            var parsedOperations = await NuGetOperationParser.ParseAsync(sources, uniqueRequests);
+            var parsedOperations = await OperationParser.ParseAsync(sources, uniqueRequests);
 
             var unknownOperations = parsedOperations
-                .Where(x => x.Operation.Type == NuGetOperationType.Unknown)
+                .Where(x => x.Operation.Type == OperationType.Unknown)
                 .OrderBy(x => x.Request.Method, StringComparer.Ordinal)
                 .ThenBy(x => x.Request.Url, StringComparer.Ordinal)
                 .ToList();
@@ -36,14 +36,14 @@ namespace PackageHelper.Replay
 
             // Initialize all of the NuGet operation nodes.
             var requestToParsedOperation = parsedOperations.ToDictionary(x => x.Request, x => x.Operation);
-            var operations = new List<NuGetOperationNode>();
-            var requestToOperation = new Dictionary<RequestNode, NuGetOperationNode>();
+            var operations = new List<OperationNode>();
+            var requestToOperation = new Dictionary<RequestNode, OperationNode>();
             foreach (var request in graph.Nodes)
             {
-                var operation = new NuGetOperationNode(
+                var operation = new OperationNode(
                     request.HitIndex,
                     requestToParsedOperation[request.StartRequest],
-                    new HashSet<NuGetOperationNode>());
+                    new HashSet<OperationNode>());
 
                 operations.Add(operation);
                 requestToOperation.Add(request, operation);
@@ -59,7 +59,7 @@ namespace PackageHelper.Replay
                 }
             }
 
-            return new NuGetOperationGraph(operations);
+            return new OperationGraph(operations);
         }
     }
 }

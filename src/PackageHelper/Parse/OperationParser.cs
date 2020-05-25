@@ -11,9 +11,9 @@ using PackageHelper.Replay.Requests;
 
 namespace PackageHelper.Parse
 {
-    public static class NuGetOperationParser
+    public static class OperationParser
     {
-        public static async Task<List<NuGetOperationInfo>> ParseAsync(IReadOnlyList<string> sources, IEnumerable<StartRequest> requests)
+        public static async Task<List<OperationInfo>> ParseAsync(IReadOnlyList<string> sources, IEnumerable<StartRequest> requests)
         {
             var sourceToRepository = sources.ToDictionary(x => x, x => Repository.Factory.GetCoreV3(x));
 
@@ -35,7 +35,7 @@ namespace PackageHelper.Parse
                     .Select(y => new KeyValuePair<string, Uri>(y.Source, y.ResourceUri))
                     .ToList());
 
-            var output = new List<NuGetOperationInfo>();
+            var output = new List<OperationInfo>();
 
             foreach (var request in requests)
             {
@@ -51,9 +51,9 @@ namespace PackageHelper.Parse
                 if (TryParsePackageBaseAddressIndex(uri, out var packageBaseAddressIndex)
                     && packageBaseAddressMapping.TryGetValue(packageBaseAddressIndex.packageBaseAddress, out pairs))
                 {
-                    output.Add(new NuGetOperationInfo(
-                        new NuGetOperationWithId(
-                            NuGetOperationType.PackageBaseAddressIndex,
+                    output.Add(new OperationInfo(
+                        new OperationWithId(
+                            OperationType.PackageBaseAddressIndex,
                             packageBaseAddressIndex.id),
                         request,
                         pairs));
@@ -64,9 +64,9 @@ namespace PackageHelper.Parse
                 if (TryParsePackageBaseAddressNupkg(uri, out var packageBaseAddressNupkg)
                     && packageBaseAddressMapping.TryGetValue(packageBaseAddressNupkg.packageBaseAddress, out pairs))
                 {
-                    output.Add(new NuGetOperationInfo(
-                        new NuGetOperationWithIdVersion(
-                            NuGetOperationType.PackageBaseAddressNupkg,
+                    output.Add(new OperationInfo(
+                        new OperationWithIdVersion(
+                            OperationType.PackageBaseAddressNupkg,
                             packageBaseAddressNupkg.id,
                             packageBaseAddressNupkg.version),
                         request,
@@ -80,10 +80,10 @@ namespace PackageHelper.Parse
             return output;
         }
 
-        private static NuGetOperationInfo Unknown(StartRequest request)
+        private static OperationInfo Unknown(StartRequest request)
         {
-            return new NuGetOperationInfo(
-                NuGetOperation.Unknown(),
+            return new OperationInfo(
+                Operation.Unknown(),
                 request,
                 Array.Empty<KeyValuePair<string, Uri>>());
         }
