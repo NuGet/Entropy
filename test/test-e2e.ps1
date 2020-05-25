@@ -51,7 +51,8 @@ Log "The package source is $source"
 # Discover packages
 & (Join-Path $PSScriptRoot "..\discover-packages.ps1") `
     -variantName $variantName `
-    -testCases $testCases
+    -testCases $testCases `
+    -maxDownloadsPerId 2
 
 # Push all packages
 dotnet run `
@@ -105,8 +106,11 @@ dotnet run `
     -iterations 2 `
     -initialMaxConcurrency 4
 
-# Test log merge asymptote
+# Move test data in preparation for the next script
 Move-Item (Join-Path $PSScriptRoot "..\out\logs") (Join-Path $PSScriptRoot "..\out\all-logs")
+Move-Item (Join-Path $PSScriptRoot "..\out\graphs") (Join-Path $PSScriptRoot "..\out\all-graphs")
+
+# Test log merge asymptote
 & (Join-Path $PSScriptRoot "test-log-merge-asymptote.ps1") `
     -variantName $variantName `
     -solutionName $solutionName `

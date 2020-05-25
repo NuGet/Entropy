@@ -1,6 +1,7 @@
 Param(
     [switch] $skipWarmup,
-    [string[]] $testCases
+    [string[]] $testCases,
+    [int] $maxDownloadsPerId = [int]::MaxValue
 )
 
 $ErrorActionPreference = "Stop"
@@ -29,11 +30,13 @@ foreach ($extraPackage in $extraPackages) {
 }
 
 # Download all versions of all .nupkgs
-Log "Downloading all versions of every discovered ID" "Cyan"
+$maxDownloadsPerIdStr = if ($maxDownloadsPerId -lt [int]::MaxValue) { $maxDownloadsPerId } else { "all" }
+Log "Downloading $maxDownloadsPerIdStr versions of every discovered ID" "Cyan"
 dotnet run `
     --configuration Release `
     --framework netcoreapp3.1 `
     --project $packageHelper `
     -- `
-    download-all-versions
+    download-all-versions `
+    --max-downloads-per-id $maxDownloadsPerId
 Log "Complete." "Cyan"

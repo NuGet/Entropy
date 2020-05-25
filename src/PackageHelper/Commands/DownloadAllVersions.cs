@@ -22,12 +22,19 @@ namespace PackageHelper.Commands
                 Description = "Download all versions of the discovered package IDs",
             };
 
-            command.Handler = CommandHandler.Create(ExecuteAsync);
+            command.Add(new Option<int>(
+                "--max-downloads-per-id",
+                getDefaultValue: () => int.MaxValue)
+            {
+                Description = "Max number of additional versions to download per package ID"
+            });
+
+            command.Handler = CommandHandler.Create<int>(ExecuteAsync);
 
             return command;
         }
 
-        static async Task<int> ExecuteAsync()
+        static async Task<int> ExecuteAsync(int maxDownloadsPerId)
         {
             if (!Helper.TryFindRoot(out var rootDir))
             {
@@ -47,6 +54,7 @@ namespace PackageHelper.Commands
 
             var idBag = new ConcurrentQueue<string>(ids);
             var idVersionBag = new ConcurrentQueue<PackageIdentity>();
+            var idToVersionsDownloaded = new ConcurrentDictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 
             // Download all of the versions of every package ID
             var workers = Enumerable
@@ -81,6 +89,12 @@ namespace PackageHelper.Commands
                                 continue;
                             }
 
+                            var versionsDownloaded = idToVersionsDownloaded.AddOrUpdate(identity.Id, 1, (_, c) => c + 1);
+                            if (versionsDownloaded > maxDownloadsPerId)
+                            {
+                                continue;
+                            }
+
                             Console.WriteLine($"[{i,2}] [{idVersionBag.Count,6}] Downloading {identity.Id} {identity.Version.ToNormalizedString()}...");
                             using var cacheContext = Helper.GetCacheContext();
                             var downloader = await resource.GetPackageDownloaderAsync(identity, cacheContext, NullLogger.Instance, CancellationToken.None);
@@ -89,7 +103,6 @@ namespace PackageHelper.Commands
                             {
                                 File.Move($"{path}.download", path);
                             }
-
                         }
                     }
                 })
