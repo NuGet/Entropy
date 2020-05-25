@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
 
-namespace PackageHelper.Replay
+namespace PackageHelper.Replay.Requests
 {
     [DebuggerDisplay("{HitIndex}: {StartRequest,nq}")]
     class RequestNode

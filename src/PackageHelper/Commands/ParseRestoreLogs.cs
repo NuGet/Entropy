@@ -4,6 +4,7 @@ using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.IO;
 using PackageHelper.Replay;
+using PackageHelper.Replay.Requests;
 
 namespace PackageHelper.Commands
 {

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace PackageHelper.Replay
+namespace PackageHelper.Replay.Requests
 {
     class CompareByHitIndexAndRequest : IEqualityComparer<RequestNode>
     {

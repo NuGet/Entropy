@@ -6,9 +6,8 @@ using System.Net;
 using System.Threading;
 using CsvHelper;
 
-namespace PackageHelper.Replay
+namespace PackageHelper.Replay.Requests
 {
-
     class RequestResultWriter : IRequestResultWriter, IDisposable
     {
         private readonly BlockingCollection<CsvRecord> _records = new BlockingCollection<CsvRecord>();

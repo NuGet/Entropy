@@ -11,6 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using NuGet.Common;
 using PackageHelper.Replay;
+using PackageHelper.Replay.Requests;
 
 namespace PackageHelper.Commands
 {

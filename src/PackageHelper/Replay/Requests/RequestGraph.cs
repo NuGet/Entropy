@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace PackageHelper.Replay
+namespace PackageHelper.Replay.Requests
 {
     class RequestGraph
     {

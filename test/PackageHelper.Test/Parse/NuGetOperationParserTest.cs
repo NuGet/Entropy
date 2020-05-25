@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using PackageHelper.Replay;
+using PackageHelper.Replay.Requests;
 using Xunit;
 
 namespace PackageHelper.Parse

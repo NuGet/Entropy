@@ -1,8 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 
-namespace PackageHelper.Replay
+namespace PackageHelper.Replay.Requests
 {
     [DebuggerDisplay("{Method,nq} {Url,nq}")]
     public class StartRequest : IEquatable<StartRequest>

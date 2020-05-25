@@ -7,7 +7,7 @@ using NuGet.Packaging;
 using NuGet.Protocol;
 using NuGet.Protocol.Core.Types;
 using NuGet.Versioning;
-using PackageHelper.Replay;
+using PackageHelper.Replay.Requests;
 
 namespace PackageHelper.Parse
 {

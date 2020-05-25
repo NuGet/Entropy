@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using PackageHelper.Replay;
+using PackageHelper.Replay.Requests;
 
 namespace PackageHelper.Parse
 {

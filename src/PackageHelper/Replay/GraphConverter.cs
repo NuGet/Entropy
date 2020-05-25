@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using PackageHelper.Parse;
 using PackageHelper.Replay.NuGetOperations;
+using PackageHelper.Replay.Requests;
 
 namespace PackageHelper.Replay
 {
