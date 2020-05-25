@@ -3,14 +3,14 @@ using System.Diagnostics;
 
 namespace PackageHelper.Replay
 {
-    [DebuggerDisplay("{HitIndex}: {StartRequest.Url,nq}")]
+    [DebuggerDisplay("{HitIndex}: {StartRequest,nq}")]
     class RequestNode
     {
-        public RequestNode(int hitIndex, StartRequest startRequest, HashSet<RequestNode> dependsOn)
+        public RequestNode(int hitIndex, StartRequest startRequest, HashSet<RequestNode> dependencies)
         {
             HitIndex = hitIndex;
             StartRequest = startRequest;
-            Dependencies = new HashSet<RequestNode>(dependsOn, HitIndexAndRequestComparer.Instance);
+            Dependencies = new HashSet<RequestNode>(dependencies, CompareByHitIndexAndRequest.Instance);
         }
 
         public int HitIndex { get; }

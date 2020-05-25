@@ -1,6 +1,6 @@
 ﻿namespace PackageHelper.Parse
 {
-    public enum ParsedUrlType
+    public enum NuGetOperationType
     {
         Unknown,
         PackageBaseAddressIndex,

@@ -3,9 +3,9 @@ using System.Collections.Generic;
 
 namespace PackageHelper.Replay
 {
-    class HitIndexAndRequestComparer : IEqualityComparer<RequestNode>
+    class CompareByHitIndexAndRequest : IEqualityComparer<RequestNode>
     {
-        public static HitIndexAndRequestComparer Instance { get; } = new HitIndexAndRequestComparer();
+        public static CompareByHitIndexAndRequest Instance { get; } = new CompareByHitIndexAndRequest();
 
         public bool Equals(RequestNode x, RequestNode y)
         {

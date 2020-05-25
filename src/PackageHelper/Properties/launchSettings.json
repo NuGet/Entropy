@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "PackageHelper": {
+      "commandName": "Project",
+      "commandLineArgs": "convert-graph \"C:\\Users\\joelv\\Desktop\\RestorePerf\\out\\request-graphs\\requestGraph-default-ExampleProj.json.gz\""
+    }
+  }
+}

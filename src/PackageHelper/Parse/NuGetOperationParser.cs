@@ -11,9 +11,9 @@ using PackageHelper.Replay;
 
 namespace PackageHelper.Parse
 {
-    public static class NuGetUrlParser
+    public static class NuGetOperationParser
     {
-        public static async Task<List<ParsedUrlAndResources>> ParseUrlsAsync(List<string> sources, IEnumerable<StartRequest> requests)
+        public static async Task<List<NuGetOperationInfo>> ParseAsync(IReadOnlyList<string> sources, IEnumerable<StartRequest> requests)
         {
             var sourceToRepository = sources.ToDictionary(x => x, x => Repository.Factory.GetCoreV3(x));
 
@@ -35,7 +35,7 @@ namespace PackageHelper.Parse
                     .Select(y => new KeyValuePair<string, Uri>(y.Source, y.ResourceUri))
                     .ToList());
 
-            var output = new List<ParsedUrlAndResources>();
+            var output = new List<NuGetOperationInfo>();
 
             foreach (var request in requests)
             {
@@ -51,11 +51,11 @@ namespace PackageHelper.Parse
                 if (TryParsePackageBaseAddressIndex(uri, out var packageBaseAddressIndex)
                     && packageBaseAddressMapping.TryGetValue(packageBaseAddressIndex.packageBaseAddress, out pairs))
                 {
-                    output.Add(new ParsedUrlAndResources(
-                        new ParsedUrlWithId(
-                            ParsedUrlType.PackageBaseAddressIndex,
-                            request,
+                    output.Add(new NuGetOperationInfo(
+                        new NuGetOperationWithId(
+                            NuGetOperationType.PackageBaseAddressIndex,
                             packageBaseAddressIndex.id),
+                        request,
                         pairs));
                     continue;
                 }
@@ -64,12 +64,12 @@ namespace PackageHelper.Parse
                 if (TryParsePackageBaseAddressNupkg(uri, out var packageBaseAddressNupkg)
                     && packageBaseAddressMapping.TryGetValue(packageBaseAddressNupkg.packageBaseAddress, out pairs))
                 {
-                    output.Add(new ParsedUrlAndResources(
-                        new ParsedUrlWithIdVersion(
-                            ParsedUrlType.PackageBaseAddressNupkg,
-                            request,
+                    output.Add(new NuGetOperationInfo(
+                        new NuGetOperationWithIdVersion(
+                            NuGetOperationType.PackageBaseAddressNupkg,
                             packageBaseAddressNupkg.id,
                             packageBaseAddressNupkg.version),
+                        request,
                         pairs));
                     continue;
                 }
@@ -80,9 +80,12 @@ namespace PackageHelper.Parse
             return output;
         }
 
-        private static ParsedUrlAndResources Unknown(StartRequest request)
+        private static NuGetOperationInfo Unknown(StartRequest request)
         {
-            return new ParsedUrlAndResources(ParsedUrl.Unknown(request), Array.Empty<KeyValuePair<string, Uri>>());
+            return new NuGetOperationInfo(
+                NuGetOperation.Unknown(),
+                request,
+                Array.Empty<KeyValuePair<string, Uri>>());
         }
 
         private static async Task<Dictionary<string, FeedType>> GetSourceToFeedTypeAsync(Dictionary<string, SourceRepository> sourceToRepository)

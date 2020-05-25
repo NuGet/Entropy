@@ -243,7 +243,7 @@ namespace PackageHelper.Replay
             var node = new RequestNode(
                 hitIndex,
                 new StartRequest(method, url),
-                new HashSet<RequestNode>(HitIndexAndRequestComparer.Instance));
+                new HashSet<RequestNode>(CompareByHitIndexAndRequest.Instance));
 
             if (duration != null)
             {

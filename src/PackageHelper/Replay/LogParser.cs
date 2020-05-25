@@ -108,7 +108,7 @@ namespace PackageHelper.Replay
             var pendingRequests = new Dictionary<string, Queue<RequestNode>>();
             var urlToCount = new Dictionary<string, int>();
             var startedRequests = new List<RequestNode>();
-            var completedRequests = new HashSet<RequestNode>(HitIndexAndRequestComparer.Instance);
+            var completedRequests = new HashSet<RequestNode>(CompareByHitIndexAndRequest.Instance);
             var currentConcurrency = 0;
             var maxConcurrency = 0;
             List<string> sources = null;
