@@ -7,9 +7,10 @@ using NuGet.Packaging;
 using NuGet.Protocol;
 using NuGet.Protocol.Core.Types;
 using NuGet.Versioning;
+using PackageHelper.Replay.Operations;
 using PackageHelper.Replay.Requests;
 
-namespace PackageHelper.Parse
+namespace PackageHelper.Replay
 {
     public static class OperationParser
     {
@@ -82,10 +83,7 @@ namespace PackageHelper.Parse
 
         private static OperationInfo Unknown(StartRequest request)
         {
-            return new OperationInfo(
-                Operation.Unknown(),
-                request,
-                Array.Empty<KeyValuePair<string, Uri>>());
+            return new OperationInfo(null, request, Array.Empty<KeyValuePair<string, Uri>>());
         }
 
         private static async Task<Dictionary<string, FeedType>> GetSourceToFeedTypeAsync(Dictionary<string, SourceRepository> sourceToRepository)

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 
-namespace PackageHelper.Parse
+namespace PackageHelper.Replay.Operations
 {
     [DebuggerDisplay("{Type,nq} (Id: {Id,nq})")]
     public class OperationWithId : Operation, IEquatable<OperationWithId>

@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using Newtonsoft.Json;
-using PackageHelper.Parse;
 
 namespace PackageHelper.Replay.Operations
 {
@@ -81,7 +81,7 @@ namespace PackageHelper.Replay.Operations
         private static OperationNode ReadNode(JsonSerializer serializer, JsonReader j, List<int> dependencyIndexes)
         {
             var hitIndex = default(int);
-            var type = OperationType.Unknown;
+            OperationType? type = null;
             string id = null;
             string version = null;
 
@@ -111,14 +111,19 @@ namespace PackageHelper.Replay.Operations
                 j.Read();
             }
 
+            if (!type.HasValue)
+            {
+                throw new InvalidDataException("The 't' property is required for operation nodes.");
+            }
+
             Operation operation;
             switch (type)
             {
                 case OperationType.PackageBaseAddressIndex:
-                    operation = new OperationWithId(type, id);
+                    operation = new OperationWithId(type.Value, id);
                     break;
                 case OperationType.PackageBaseAddressNupkg:
-                    operation = new OperationWithIdVersion(type, id, version);
+                    operation = new OperationWithIdVersion(type.Value, id, version);
                     break;
                 default:
                     throw new NotImplementedException($"Operation type {type} is not supported for deserialization.");

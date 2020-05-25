@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using PackageHelper.Parse;
 using PackageHelper.Replay.Operations;
 using PackageHelper.Replay.Requests;
 
@@ -18,7 +17,7 @@ namespace PackageHelper.Replay
             var parsedOperations = await OperationParser.ParseAsync(sources, uniqueRequests);
 
             var unknownOperations = parsedOperations
-                .Where(x => x.Operation.Type == OperationType.Unknown)
+                .Where(x => x.Operation == null)
                 .OrderBy(x => x.Request.Method, StringComparer.Ordinal)
                 .ThenBy(x => x.Request.Url, StringComparer.Ordinal)
                 .ToList();

@@ -1,8 +1,7 @@
-﻿namespace PackageHelper.Parse
+﻿namespace PackageHelper.Replay.Operations
 {
     public enum OperationType
     {
-        Unknown,
         PackageBaseAddressIndex,
         PackageBaseAddressNupkg,
     }

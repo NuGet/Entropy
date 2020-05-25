@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 
-namespace PackageHelper.Parse
+namespace PackageHelper.Replay.Operations
 {
     [DebuggerDisplay("{Type,nq}")]
     public class Operation : IEquatable<Operation>
@@ -12,11 +12,6 @@ namespace PackageHelper.Parse
         }
 
         public OperationType Type { get; }
-
-        public static Operation Unknown()
-        {
-            return new Operation(OperationType.Unknown);
-        }
 
         public override bool Equals(object obj)
         {

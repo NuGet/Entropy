@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using PackageHelper.Replay;
+using PackageHelper.Replay.Operations;
 using PackageHelper.Replay.Requests;
 using Xunit;
 
@@ -14,16 +16,16 @@ namespace PackageHelper.Parse
         [Theory]
         [InlineData("GET", NuGetPackageBaseAddress + "newtonsoft.json/index.json", OperationType.PackageBaseAddressIndex)]
         [InlineData("GET", NuGetPackageBaseAddress + "newtonsoft.json/9.0.1-beta/newtonsoft.json.9.0.1-beta.nupkg", OperationType.PackageBaseAddressNupkg)]
-        [InlineData("GET", NuGetPackageBaseAddress + "newtonsoft.json/other.json", OperationType.Unknown)]
-        [InlineData("POST", NuGetPackageBaseAddress + "newtonsoft.json/index.json", OperationType.Unknown)]
-        [InlineData("GET", NuGetPackageBaseAddress + "invalid..id/index.json", OperationType.Unknown)]
-        [InlineData("GET", NuGetPackageBaseAddress + "invalid..id/9.0.1.index.json", OperationType.Unknown)]
-        [InlineData("GET", NuGetPackageBaseAddress + "Newtonsoft.Json/index.json", OperationType.Unknown)]
-        [InlineData("GET", NuGetPackageBaseAddress + "Newtonsoft.Json/9.0.1-beta/newtonsoft.json.9.0.1-beta.json", OperationType.Unknown)]
-        [InlineData("GET", NuGetPackageBaseAddress + "newtonsoft.json/9.0.1-BETA/newtonsoft.json.9.0.1-BETA.json", OperationType.Unknown)]
-        [InlineData("GET", NuGetPackageBaseAddress + "newtonsoft.json/9.0.1-beta/newtonsoft.json.0.0.0.json", OperationType.Unknown)]
-        [InlineData("GET", NuGetPackageBaseAddress + "newtonsoft.json/9.0.1.0-beta/newtonsoft.json.9.0.1.0-beta.json", OperationType.Unknown)]
-        public async Task HasExpectedType(string method, string url, OperationType type)
+        [InlineData("GET", NuGetPackageBaseAddress + "newtonsoft.json/other.json", null)]
+        [InlineData("POST", NuGetPackageBaseAddress + "newtonsoft.json/index.json", null)]
+        [InlineData("GET", NuGetPackageBaseAddress + "invalid..id/index.json", null)]
+        [InlineData("GET", NuGetPackageBaseAddress + "invalid..id/9.0.1.index.json", null)]
+        [InlineData("GET", NuGetPackageBaseAddress + "Newtonsoft.Json/index.json", null)]
+        [InlineData("GET", NuGetPackageBaseAddress + "Newtonsoft.Json/9.0.1-beta/newtonsoft.json.9.0.1-beta.json", null)]
+        [InlineData("GET", NuGetPackageBaseAddress + "newtonsoft.json/9.0.1-BETA/newtonsoft.json.9.0.1-BETA.json", null)]
+        [InlineData("GET", NuGetPackageBaseAddress + "newtonsoft.json/9.0.1-beta/newtonsoft.json.0.0.0.json", null)]
+        [InlineData("GET", NuGetPackageBaseAddress + "newtonsoft.json/9.0.1.0-beta/newtonsoft.json.9.0.1.0-beta.json", null)]
+        public async Task HasExpectedType(string method, string url, OperationType? type)
         {
             var request = new StartRequest(method, url);
             var sources = new List<string> { NuGetSourceUrl };
@@ -31,7 +33,7 @@ namespace PackageHelper.Parse
             var operationInfos = await OperationParser.ParseAsync(sources, new[] { request });
 
             var operationInfo = Assert.Single(operationInfos);
-            Assert.Equal(type, operationInfo.Operation.Type);
+            Assert.Equal(type, operationInfo.Operation?.Type);
         }
 
         [Fact]

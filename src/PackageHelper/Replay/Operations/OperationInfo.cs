@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using PackageHelper.Replay.Requests;
 
-namespace PackageHelper.Parse
+namespace PackageHelper.Replay.Operations
 {
     [DebuggerDisplay("{Request,nq} -> {Operation,nq}")]
     public class OperationInfo
