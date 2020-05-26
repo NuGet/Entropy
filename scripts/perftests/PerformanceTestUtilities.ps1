@@ -6,7 +6,7 @@ function Get-NuGetExePath()
     $path = Join-Path $outDir "nuget.exe"
     $url = "https://dist.nuget.org/win-x86-commandline/v5.5.1/nuget.exe"
     
-    if (!Test-Path $outDir)
+    if (!(Test-Path $outDir))
     {
         New-Item $outDir -Type Directory | Out-Null
     }
