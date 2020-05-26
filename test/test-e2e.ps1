@@ -2,10 +2,10 @@
 
 $testDir = Join-Path $PSScriptRoot "testCases"
 $testCases = Get-ChildItem (Join-Path $testDir "Test-*.ps1")
-$variantName = "teste2e"
+$testVariantName = "teste2e"
 $nugetOrgVariantName = "nugetorg"
 $solutionName = "ExampleProj"
-$requestGraphPath = Join-Path $PSScriptRoot "..\out\graphs\requestGraph-$variantName-$solutionName.json.gz"
+$requestGraphPath = Join-Path $PSScriptRoot "..\out\graphs\requestGraph-$testVariantName-$solutionName.json.gz"
 $operationGraphPath = Join-Path $PSScriptRoot "..\out\graphs\operationGraph-$solutionName.json.gz"
 $nugetOrgRequestGraphPath = Join-Path $PSScriptRoot "..\out\graphs\requestGraph-$nugetOrgVariantName-$solutionName.json.gz"
 $packageHelper = Join-Path $PSScriptRoot "..\src\PackageHelper\PackageHelper.csproj"
@@ -53,7 +53,7 @@ Log "The package source is $source"
 
 # Discover packages
 & (Join-Path $PSScriptRoot "..\discover-packages.ps1") `
-    -variantName $variantName `
+    -variantName $testVariantName `
     -testCases $testCases `
     -maxDownloadsPerId 2
 
@@ -67,7 +67,7 @@ dotnet run `
 
 # Run the tests with the custom source
 & (Join-Path $PSScriptRoot "..\run-tests.ps1") `
-    -variantName $variantName `
+    -variantName $testVariantName `
     -iterations 2 `
     -sources @($source) `
     -testCases $testCases
@@ -110,7 +110,7 @@ dotnet run `
     -- `
     convert-graph $operationGraphPath `
     --sources "https://api.nuget.org/v3/index.json" `
-    --variant-name $nugetOrgVariantName
+    --variant-name $nugetOrgVariantName `
     --write-graphviz
 
 # Replay generated request graph
@@ -123,7 +123,7 @@ dotnet run `
 
 # Test max concurrency
 & (Join-Path $PSScriptRoot "test-max-concurrency.ps1") `
-    -variantNames $variantName `
+    -variantNames $testVariantName `
     -iterations 2 `
     -initialMaxConcurrency 4
 
@@ -133,7 +133,7 @@ Move-Item (Join-Path $PSScriptRoot "..\out\graphs") (Join-Path $PSScriptRoot "..
 
 # Test log merge asymptote
 & (Join-Path $PSScriptRoot "test-log-merge-asymptote.ps1") `
-    -variantName $variantName `
+    -variantName $testVariantName `
     -solutionName $solutionName `
     -iterations 2 `
     -noConfirm
