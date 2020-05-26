@@ -26,11 +26,19 @@ namespace PackageHelper.Replay
                 var builder = new StringBuilder();
                 builder.AppendLine("Ensure the provided package sources are correct.");
                 builder.AppendFormat("There are {0} unknown operations:", unknownOperations.Count);
-                foreach (var operation in unknownOperations)
+                const int take = 10;
+                foreach (var operation in unknownOperations.Take(take))
                 {
                     builder.AppendLine();
                     builder.AppendFormat("- {0} {1}", operation.Request.Method, operation.Request.Url);
                 }
+
+                if (unknownOperations.Count > take)
+                {
+                    builder.AppendLine();
+                    builder.AppendFormat("... and {0} others.", unknownOperations.Count - take);
+                }
+
                 throw new ArgumentException(builder.ToString());
             }
 
