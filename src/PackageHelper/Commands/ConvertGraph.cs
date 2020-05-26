@@ -77,10 +77,10 @@ namespace PackageHelper.Commands
                 Console.WriteLine("Using no variant name because of command line switch.");
             }
 
-            var usedVariantName = parsedVariantName;
+            var actualVariantName = parsedVariantName;
             if (variantName != null)
             {
-                usedVariantName = variantName;
+                actualVariantName = variantName;
                 Console.WriteLine($"Using variant name '{variantName}' from command line option.");
             }
 
@@ -94,7 +94,7 @@ namespace PackageHelper.Commands
                 sources = sources == null || !sources.Any() ? requestGraph.Sources : sources;
                 var operationGraph = await GraphConverter.ToOperationGraphAsync(requestGraph, sources);
 
-                var filePath = Path.Combine(dir, Helper.GetGraphFileName(OperationGraph.Type, usedVariantName, solutionName));
+                var filePath = Path.Combine(dir, Helper.GetGraphFileName(OperationGraph.Type, actualVariantName, solutionName));
 
                 if (writeGraphviz)
                 {
@@ -116,7 +116,7 @@ namespace PackageHelper.Commands
                 Console.WriteLine("Converting the operation graph to request graph...");
                 var requestGraph = await GraphConverter.ToRequestGraphAsync(operationGraph, sources);
 
-                var filePath = Path.Combine(dir, Helper.GetGraphFileName(RequestGraph.Type, parsedVariantName, solutionName));
+                var filePath = Path.Combine(dir, Helper.GetGraphFileName(RequestGraph.Type, actualVariantName, solutionName));
 
                 if (writeGraphviz)
                 {
