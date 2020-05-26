@@ -2,7 +2,7 @@
 {
     public enum OperationType
     {
-        PackageBaseAddressIndex,
-        PackageBaseAddressNupkg,
+        PackageBaseAddressIndex = 1,
+        PackageBaseAddressNupkg = 2,
     }
 }

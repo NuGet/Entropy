@@ -25,8 +25,14 @@ namespace PackageHelper.Replay.Operations
                 j.WriteValue(node.HitIndex);
             }
 
+            if (node.Operation.SourceIndex != default)
+            {
+                j.WritePropertyName("s");
+                j.WriteValue(node.Operation.SourceIndex);
+            }
+
             j.WritePropertyName("t");
-            j.WriteValue(node.Operation.Type.ToString());
+            j.WriteValue((int)node.Operation.Type);
 
             switch (node.Operation)
             {
@@ -57,6 +63,7 @@ namespace PackageHelper.Replay.Operations
         private static OperationNode ReadNode(JsonSerializer serializer, JsonReader j, List<int> dependencyIndexes)
         {
             var hitIndex = default(int);
+            var sourceIndex = default(int);
             OperationType? type = null;
             string id = null;
             string version = null;
@@ -69,8 +76,11 @@ namespace PackageHelper.Replay.Operations
                     case "h":
                         hitIndex = j.ReadAsInt32().Value;
                         break;
+                    case "s":
+                        sourceIndex = j.ReadAsInt32().Value;
+                        break;
                     case "t":
-                        type = (OperationType)Enum.Parse(typeof(OperationType), j.ReadAsString());
+                        type = (OperationType)j.ReadAsInt32().Value;
                         break;
                     case "i":
                         id = j.ReadAsString();
@@ -96,10 +106,10 @@ namespace PackageHelper.Replay.Operations
             switch (type)
             {
                 case OperationType.PackageBaseAddressIndex:
-                    operation = new OperationWithId(type.Value, id);
+                    operation = new OperationWithId(sourceIndex, type.Value, id);
                     break;
                 case OperationType.PackageBaseAddressNupkg:
-                    operation = new OperationWithIdVersion(type.Value, id, version);
+                    operation = new OperationWithIdVersion(sourceIndex, type.Value, id, version);
                     break;
                 default:
                     throw new NotImplementedException($"Operation type {type} is not supported for deserialization.");

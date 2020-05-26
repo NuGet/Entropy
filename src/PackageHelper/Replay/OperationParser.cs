@@ -16,6 +16,7 @@ namespace PackageHelper.Replay
     {
         public static async Task<List<OperationInfo>> ParseAsync(IReadOnlyList<string> sources, IEnumerable<StartRequest> requests)
         {
+            var sourceToIndex = sources.Select((x, i) => new { Index = i, Source = x }).ToDictionary(x => x.Source, x => x.Index);
             var sourceToRepository = sources.ToDictionary(x => x, x => Repository.Factory.GetCoreV3(x));
 
             var sourceToFeedType = await GetSourceToFeedTypeAsync(sourceToRepository);
@@ -26,7 +27,8 @@ namespace PackageHelper.Replay
 
             var sourceToServiceIndex = await GetSourceToServiceIndexAsync(sourceToRepository);
 
-            var packageBaseAddressMapping = sourceToServiceIndex
+            // This look-up is used to quickly find if a package base address is in one of the source's service indexes.
+            var packageBaseAddressToPairs = sourceToServiceIndex
                 .SelectMany(x => x
                     .Value
                     .GetServiceEntryUris(ServiceTypes.PackageBaseAddress)
@@ -35,6 +37,11 @@ namespace PackageHelper.Replay
                 .ToDictionary(x => x.Key, x => x
                     .Select(y => new KeyValuePair<string, Uri>(y.Source, y.ResourceUri))
                     .ToList());
+
+            // This look-up is used to find all of the sources with a certain package base address. This should
+            // normally be a one-to-one mapping, but you can't be too careful...
+            var packageBaseAddressToSources = packageBaseAddressToPairs
+                .ToDictionary(x => x.Key, x => x.Value.Select(y => y.Key).Distinct().ToList());
 
             var output = new List<OperationInfo>();
 
@@ -50,10 +57,14 @@ namespace PackageHelper.Replay
                 List<KeyValuePair<string, Uri>> pairs;
 
                 if (TryParsePackageBaseAddressIndex(uri, out var packageBaseAddressIndex)
-                    && packageBaseAddressMapping.TryGetValue(packageBaseAddressIndex.packageBaseAddress, out pairs))
+                    && packageBaseAddressToPairs.TryGetValue(packageBaseAddressIndex.packageBaseAddress, out pairs))
                 {
                     output.Add(new OperationInfo(
                         new OperationWithId(
+                            GetSourceIndex(
+                                sourceToIndex,
+                                packageBaseAddressToSources,
+                                packageBaseAddressIndex.packageBaseAddress),
                             OperationType.PackageBaseAddressIndex,
                             packageBaseAddressIndex.id),
                         request,
@@ -61,12 +72,15 @@ namespace PackageHelper.Replay
                     continue;
                 }
                 
-                
                 if (TryParsePackageBaseAddressNupkg(uri, out var packageBaseAddressNupkg)
-                    && packageBaseAddressMapping.TryGetValue(packageBaseAddressNupkg.packageBaseAddress, out pairs))
+                    && packageBaseAddressToPairs.TryGetValue(packageBaseAddressNupkg.packageBaseAddress, out pairs))
                 {
                     output.Add(new OperationInfo(
                         new OperationWithIdVersion(
+                            GetSourceIndex(
+                                sourceToIndex,
+                                packageBaseAddressToSources,
+                                packageBaseAddressNupkg.packageBaseAddress),
                             OperationType.PackageBaseAddressNupkg,
                             packageBaseAddressNupkg.id,
                             packageBaseAddressNupkg.version),
@@ -79,6 +93,23 @@ namespace PackageHelper.Replay
             }
 
             return output;
+        }
+
+        private static int GetSourceIndex(
+            Dictionary<string, int> sourceToIndex,
+            Dictionary<string, List<string>> packageBaseAddressToSources,
+            string packageBaseAddress)
+        {
+            var matchedSources = packageBaseAddressToSources[packageBaseAddress];
+            if (matchedSources.Count > 1)
+            {
+                Console.WriteLine("  WARNING: There are multiple resources with package base address:");
+                Console.WriteLine("  " + packageBaseAddress);
+                Console.WriteLine("  URL to operation mapping is therefore ambiguous.");
+            }
+
+            // Arbitrarily pick the first source.
+            return sourceToIndex[matchedSources[0]];
         }
 
         private static OperationInfo Unknown(StartRequest request)

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.IO;
@@ -36,18 +37,13 @@ namespace PackageHelper.Commands
                 Description = "Output Graphviz DOT files (.gv) in addition to serialized graph"
             });
 
-            command.Handler = CommandHandler.Create<string, string[], bool>(ExecuteAsync);
+            command.Handler = CommandHandler.Create<string, List<string>, bool>(ExecuteAsync);
 
             return command;
         }
 
-        static async Task<int> ExecuteAsync(string path, string[] sources, bool writeGraphviz)
+        static async Task<int> ExecuteAsync(string path, List<string> sources, bool writeGraphviz)
         {
-            if (sources == null)
-            {
-                sources = Array.Empty<string>();
-            }
-
             Console.WriteLine("Parsing the file name...");
 
             if (!path.EndsWith(GraphSerializer.FileExtension, StringComparison.OrdinalIgnoreCase))
@@ -77,6 +73,7 @@ namespace PackageHelper.Commands
                 Console.WriteLine($"  There are {graph.Nodes.Sum(x => x.Dependencies.Count)} edges.");
 
                 Console.WriteLine("Converting the request graph to an operation graph...");
+                sources = sources == null || !sources.Any() ? graph.Sources : sources;
                 var operationGraph = await GraphConverter.ToOperationGraphAsync(sources, graph);
 
                 var filePath = Path.Combine(dir, Helper.GetGraphFileName(OperationGraph.Type, variantName, solutionName));

@@ -3,14 +3,16 @@ using System.Diagnostics;
 
 namespace PackageHelper.Replay.Operations
 {
-    [DebuggerDisplay("{Type,nq}")]
+    [DebuggerDisplay("Source {SourceIndex}: {Type,nq}")]
     public class Operation : IEquatable<Operation>
     {
-        public Operation(OperationType type)
+        public Operation(int sourceIndex, OperationType type)
         {
+            SourceIndex = sourceIndex;
             Type = type;
         }
 
+        public int SourceIndex { get; }
         public OperationType Type { get; }
 
         public override bool Equals(object obj)
@@ -21,12 +23,20 @@ namespace PackageHelper.Replay.Operations
         public bool Equals(Operation other)
         {
             return other != null &&
+                   SourceIndex == other.SourceIndex &&
                    Type == other.Type;
         }
 
         public override int GetHashCode()
         {
-            return Type.GetHashCode();
+#if NETCOREAPP
+            return HashCode.Combine(SourceIndex, Type);
+#else
+            var hashCode = 17;
+            hashCode = hashCode * 31 + SourceIndex.GetHashCode();
+            hashCode = hashCode * 31 + Type.GetHashCode();
+            return hashCode;
+#endif
         }
     }
 }
