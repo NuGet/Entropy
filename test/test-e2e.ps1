@@ -15,7 +15,7 @@ $dockerDataDir = Join-Path $PSScriptRoot "..\out\baget-data"
 $imageName = "loicsharma/baget:26b871f70f849457c4de4032ddeabb06c09dad81"
 $apiKey = [Guid]::NewGuid().ToString()
 
-# Start up the test package source
+Log "Starting test package source" "Magenta"
 $ps = @(docker ps --filter "name=$dockerName")
 if ($ps.Length -gt 1) {
     Log "Stopping docker container..."
@@ -51,13 +51,13 @@ if (!$port) {
 $source = "http://localhost:$port/v3/index.json"
 Log "The package source is $source"
 
-# Discover packages
+Log "Discovering packages" "Magenta"
 & (Join-Path $PSScriptRoot "..\discover-packages.ps1") `
     -variantName $testVariantName `
     -testCases $testCases `
     -maxDownloadsPerId 2
 
-# Push all packages
+Log "Pushing packages" "Magenta"
 dotnet run `
     --framework netcoreapp3.1 `
     --project $packageHelper `
@@ -65,20 +65,20 @@ dotnet run `
     push $source `
     --api-key $apiKey
 
-# Run the tests with the custom source
+Log "Running test restores with test package source" "Magenta"
 & (Join-Path $PSScriptRoot "..\run-tests.ps1") `
     -variantName $testVariantName `
     -iterations 2 `
     -sources @($source) `
     -testCases $testCases
 
-# Run the tests with the default sources
+Log "Running test restores with default sources" "Magenta"
 & (Join-Path $PSScriptRoot "..\run-tests.ps1") `
     -variantName "default" `
     -fast `
     -testCases $testCases
 
-# Parse the logs
+Log "Parsing restore logs" "Magenta"
 dotnet run `
     --framework netcoreapp3.1 `
     --project $packageHelper `
@@ -86,7 +86,7 @@ dotnet run `
     parse-restore-logs `
     --write-graphviz
 
-# Replay request graph
+Log "Replaying request graph" "Magenta"
 dotnet run `
     --framework netcoreapp3.1 `
     --project $packageHelper `
@@ -94,7 +94,7 @@ dotnet run `
     replay-request-graph $requestGraphPath `
     --iterations 2
 
-# Convert request graph to operation graph
+Log "Converting request graph to operation graph" "Magenta"
 dotnet run `
     --framework netcoreapp3.1 `
     --project $packageHelper `
@@ -103,7 +103,7 @@ dotnet run `
     --write-graphviz `
     --no-variant-name
 
-# Convert operation graph to request
+Log "Converting operation graph to request graph" "Magenta"
 dotnet run `
     --framework netcoreapp3.1 `
     --project $packageHelper `
@@ -113,7 +113,7 @@ dotnet run `
     --variant-name $nugetOrgVariantName `
     --write-graphviz
 
-# Replay generated request graph
+Log "Replaying generating request graph" "Magenta"
 dotnet run `
     --framework netcoreapp3.1 `
     --project $packageHelper `
@@ -121,27 +121,25 @@ dotnet run `
     replay-request-graph $nugetOrgRequestGraphPath `
     --iterations 2
 
-# Test max concurrency
+Log "Testing max concurrency" "Magenta"
 & (Join-Path $PSScriptRoot "test-max-concurrency.ps1") `
     -variantNames $testVariantName `
     -iterations 2 `
     -initialMaxConcurrency 4
 
-# Move test data in preparation for the next script
+Log "Testing log merge asymptote" "Magenta"
 Move-Item (Join-Path $PSScriptRoot "..\out\logs") (Join-Path $PSScriptRoot "..\out\all-logs")
 Move-Item (Join-Path $PSScriptRoot "..\out\graphs") (Join-Path $PSScriptRoot "..\out\all-graphs")
 
-# Test log merge asymptote
 & (Join-Path $PSScriptRoot "test-log-merge-asymptote.ps1") `
     -variantName $testVariantName `
     -solutionName $solutionName `
     -iterations 2 `
     -noConfirm
 
-# Stop the docker container
+Log "Stopping test package source" "Magenta"
 Log "Stopping docker container..."
 docker stop $dockerName
 
-# Removing the docker container
 Log "Removing docker container..."
 docker rm $dockerName --force

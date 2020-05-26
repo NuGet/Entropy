@@ -94,7 +94,7 @@ namespace PackageHelper.Commands
                 sources = sources == null || !sources.Any() ? requestGraph.Sources : sources;
                 var operationGraph = await GraphConverter.ToOperationGraphAsync(requestGraph, sources);
 
-                var filePath = Path.Combine(dir, Helper.GetGraphFileName(OperationGraph.Type, parsedVariantName, solutionName));
+                var filePath = Path.Combine(dir, Helper.GetGraphFileName(OperationGraph.Type, usedVariantName, solutionName));
 
                 if (writeGraphviz)
                 {
