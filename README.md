@@ -45,6 +45,8 @@ to fetch all versions of package IDs hit during the warm-up restores. We want al
 hit during restore have a list of all versions. We want these payloads to be the appropriate size, instead of just
 containing the versions actually fetched during restore.
 
+**Example test case:** [Test-ExampleProj.ps1](test/testCases/Test-ExampleProj.ps1)
+
 ### Push all gathered packages to the test source
 
 ```powershell
@@ -103,6 +105,8 @@ multiple sets of sources, it's best to have one variant name for set of sources,
 The `-sources` parameter is used to specific a list of sources to use for all of the restores. These sources will
 replace the sources that are used by the test repositories by default.
 
+**Example restore log:** [restoreLog-nuget-ExampleProj-20200522T2242473395.txt](docs/ExampleProj-out/logs/restoreLog-nuget-ExampleProj-20200522T2242473395.txt)
+
 ### Parse the logs
 
 In order to eliminate overhead in a NuGet restore from sources other than HTTP requests (such as disk, memory, or CPU
@@ -134,6 +138,8 @@ Note that the set of sources is not encoded into the file name. It's best to use
 different sets of sources so that request graphs with the same variant name and solution name but different sources
 don't overwrite each other.
 
+**Example request graph JSON:** [requestGraph-nuget-ExampleProj.json](docs/ExampleProj-out/graphs/requestGraph-nuget-ExampleProj.json) (gzipped, for clarity)
+
 ### Replay a request graph
 
 After you have parsed a request graph from the restore logs, you can replay it to test the raw HTTP time spent on the
@@ -148,6 +154,46 @@ dotnet run `
 ```
 
 This example command will replay the request graph for the `mysource` variant name, `OrchardCore` solution name.
+
+**Example results CSV:** [replay-results.csv](docs/ExampleProj-out/replay-results.csv)
+
+**Example log CSV:** [replayLog-nuget-ExampleProj-20200526T0451555600.csv](docs/ExampleProj-out/logs/replayLog-nuget-ExampleProj-20200526T0451555600.csv)
+
+### Generate an operation graph
+
+Once you have a request graph you're happy with, you can convert it to a generic "operation graph". A request graph
+describes the dependencies between specific HTTP requests so a (NuGet) operation graph describes the dependencies
+between parameterized NuGet HTTP API operations. A simple transformation is applied to a request graph to produce the
+operation graph so that you can easily switch the package source referred to by the graph.
+
+```powershell
+dotnet run `
+    convert-graph ".\out\graphs\requestGraph-mysource-OrchardCore.json.gz" `
+    --no-variant-name `
+    --framework netcoreapp3.1 `
+    --project .\src\PackageHelper\PackageHelper.csproj
+```
+
+This example would produce a `.\out\graphs\operationGraph-OrchardCore.json.gz` file.
+
+**Example operation graph JSON:** [operationGraph-ExampleProj.json](docs/ExampleProj-out/graphs/operationGraph-ExampleProj.json) (gzipped, for clarity)
+
+### Generate a request graph from an operation graph
+
+Once you have an operation graph, you can generate a request graph from it with any package source you want.
+
+```powershell
+dotnet run `
+    convert-graph ".\out\graphs\operationGraph-OrchardCore.json.gz" `
+    --variant-name nuget `
+    --sources "https://api.nuget.org/v3/index.json" `
+    --framework netcoreapp3.1 `
+    --project .\src\PackageHelper\PackageHelper.csproj
+```
+
+This command would generate a new request graph with the package source of nuget.org, instead of the "mysource" source
+used to generated the original request graph in the example above. From here, you can generate a request graph for as
+many sources as you want with the same operation graph.
 
 ## Caveats
 

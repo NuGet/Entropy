@@ -1,0 +1,14 @@
+{
+  "n": [
+    { "t": 1, "i": "nuget.configuration" },
+    { "t": 1, "i": "nuget.packaging" },
+    { "t": 2, "i": "nuget.packaging", "v": "5.6.0", "e": [1] },
+    { "t": 2, "i": "nuget.configuration", "v": "5.6.0", "e": [0] },
+    { "t": 1, "i": "nuget.common", "e": [3] },
+    { "t": 1, "i": "nuget.versioning", "e": [2] },
+    { "t": 2, "i": "nuget.common", "v": "5.6.0", "e": [1, 4] },
+    { "t": 2, "i": "nuget.versioning", "v": "5.6.0", "e": [3, 5] },
+    { "t": 1, "i": "nuget.frameworks", "e": [2, 6] },
+    { "t": 2, "i": "nuget.frameworks", "v": "5.6.0", "e": [5, 8] }
+  ]
+}

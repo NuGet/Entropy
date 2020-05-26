@@ -1,0 +1,11 @@
+Url,StatusCode,HeaderDurationMs,BodyDurationMs
+https://api.nuget.org/v3-flatcontainer/nuget.packaging/index.json,200,83.7582,0.0637
+https://api.nuget.org/v3-flatcontainer/nuget.configuration/index.json,200,85.7525,0.0449
+https://api.nuget.org/v3-flatcontainer/nuget.packaging/5.6.0/nuget.packaging.5.6.0.nupkg,200,33.9098,38.0294
+https://api.nuget.org/v3-flatcontainer/nuget.configuration/5.6.0/nuget.configuration.5.6.0.nupkg,200,38.242,40.1711
+https://api.nuget.org/v3-flatcontainer/nuget.versioning/index.json,200,80.4096,0.1673
+https://api.nuget.org/v3-flatcontainer/nuget.common/index.json,200,88.0985,0.1014
+https://api.nuget.org/v3-flatcontainer/nuget.versioning/5.6.0/nuget.versioning.5.6.0.nupkg,200,37.0025,2.5872
+https://api.nuget.org/v3-flatcontainer/nuget.common/5.6.0/nuget.common.5.6.0.nupkg,200,41.8815,3.8846
+https://api.nuget.org/v3-flatcontainer/nuget.frameworks/index.json,200,84.7449,0.0872
+https://api.nuget.org/v3-flatcontainer/nuget.frameworks/5.6.0/nuget.frameworks.5.6.0.nupkg,200,38.3774,31.3673
