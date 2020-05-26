@@ -1,5 +1,27 @@
 # Contains all the utility methods used by the performance tests.
 
+function Get-NuGetExePath()
+{
+    $path = Join-Path $PSScriptRoot "..\out\nuget.exe"
+    $url = "https://dist.nuget.org/win-x86-commandline/v5.5.1/nuget.exe"
+    
+    if (!(Test-Path $path))
+    {
+        $ProgressPreference = "SilentlyContinue"
+        try
+        {
+            Log "Downloading nuget.exe..."
+            Invoke-WebRequest $url -OutFile $path
+        }
+        finally
+        {
+            $ProgressPreference = "Continue"
+        }
+    }
+
+    return $path
+}
+
 function ValidateVariantName($variantName)
 {
     if ($variantName -and $variantName.Contains("-"))

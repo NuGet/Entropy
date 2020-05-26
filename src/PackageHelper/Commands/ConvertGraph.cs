@@ -17,7 +17,7 @@ namespace PackageHelper.Commands
         {
             var command = new Command("convert-graph")
             {
-                Description = "Convert a request graph to a NuGet operation graph, or vice versa",
+                Description = "Convert a request graph to an operation graph, or vice versa",
             };
 
             command.Add(new Argument<string>("path")
@@ -29,20 +29,28 @@ namespace PackageHelper.Commands
                 Description = "Package sources to use for graph conversion",
                 Argument = new Argument
                 {
-                    Arity = ArgumentArity.OneOrMore
+                    Arity = ArgumentArity.OneOrMore,
                 },
             });
             command.Add(new Option<bool>("--write-graphviz")
             {
                 Description = "Output Graphviz DOT files (.gv) in addition to serialized graph"
             });
+            command.Add(new Option<string>("--variant-name")
+            {
+                Description = "Force a specific variant name on the output file",
+            });
+            command.Add(new Option<bool>("--no-variant-name")
+            {
+                Description = "Force no variant name on the output file",
+            });
 
-            command.Handler = CommandHandler.Create<string, List<string>, bool>(ExecuteAsync);
+            command.Handler = CommandHandler.Create<string, List<string>, bool, string, bool>(ExecuteAsync);
 
             return command;
         }
 
-        static async Task<int> ExecuteAsync(string path, List<string> sources, bool writeGraphviz)
+        static async Task<int> ExecuteAsync(string path, List<string> sources, bool writeGraphviz, string variantName, bool noVariantName)
         {
             Console.WriteLine("Parsing the file name...");
 
@@ -52,31 +60,41 @@ namespace PackageHelper.Commands
                 return 1;
             }
 
-            if (!Helper.TryParseGraphFileName(path, out var graphType, out var variantName, out var solutionName))
+            if (!Helper.TryParseGraphFileName(path, out var graphType, out var parsedVariantName, out var solutionName))
             {
                 graphType = null;
-                variantName = null;
+                parsedVariantName = null;
                 solutionName = null;
             }
 
             Console.WriteLine($"  Graph type:    {graphType ?? "(none)"}");
-            Console.WriteLine($"  Variant name:  {variantName ?? "(none)"}");
+            Console.WriteLine($"  Variant name:  {parsedVariantName ?? "(none)"}");
             Console.WriteLine($"  Solution name: {solutionName ?? "(none)"}");
+
+            if (noVariantName)
+            {
+                parsedVariantName = null;
+                Console.WriteLine("Using no variant name because of command line switch.");
+            }
+
+            var usedVariantName = parsedVariantName;
+            if (variantName != null)
+            {
+                usedVariantName = variantName;
+                Console.WriteLine($"Using variant name '{variantName}' from command line option.");
+            }
 
             var dir = Path.GetDirectoryName(path);
 
             if (graphType == RequestGraph.Type)
             {
-                Console.WriteLine("Parsing the request graph...");
-                var graph = RequestGraphSerializer.ReadFromFile(path);
-                Console.WriteLine($"  There are {graph.Nodes.Count} nodes.");
-                Console.WriteLine($"  There are {graph.Nodes.Sum(x => x.Dependencies.Count)} edges.");
+                var requestGraph = ParseGraph<RequestGraph, RequestNode>(path, RequestGraphSerializer.ReadFromFile);
 
                 Console.WriteLine("Converting the request graph to an operation graph...");
-                sources = sources == null || !sources.Any() ? graph.Sources : sources;
-                var operationGraph = await GraphConverter.ToOperationGraphAsync(sources, graph);
+                sources = sources == null || !sources.Any() ? requestGraph.Sources : sources;
+                var operationGraph = await GraphConverter.ToOperationGraphAsync(requestGraph, sources);
 
-                var filePath = Path.Combine(dir, Helper.GetGraphFileName(OperationGraph.Type, variantName, solutionName));
+                var filePath = Path.Combine(dir, Helper.GetGraphFileName(OperationGraph.Type, parsedVariantName, solutionName));
 
                 if (writeGraphviz)
                 {
@@ -91,11 +109,44 @@ namespace PackageHelper.Commands
 
                 return 0;
             }
+            else if (graphType == OperationGraph.Type)
+            {
+                var operationGraph = ParseGraph<OperationGraph, OperationNode>(path, OperationGraphSerializer.ReadFromFile);
+
+                Console.WriteLine("Converting the operation graph to request graph...");
+                var requestGraph = await GraphConverter.ToRequestGraphAsync(operationGraph, sources);
+
+                var filePath = Path.Combine(dir, Helper.GetGraphFileName(RequestGraph.Type, parsedVariantName, solutionName));
+
+                if (writeGraphviz)
+                {
+                    var gvPath = $"{filePath}.gv";
+                    Console.WriteLine($"  Writing {gvPath}...");
+                    RequestGraphSerializer.WriteToGraphvizFile(gvPath, requestGraph);
+                }
+
+                var jsonGzPath = $"{filePath}{GraphSerializer.FileExtension}";
+                Console.WriteLine($"  Writing {jsonGzPath}...");
+                RequestGraphSerializer.WriteToFile(jsonGzPath, requestGraph);
+
+                return 0;
+            }
             else
             {
                 Console.WriteLine($"The input graph type '{graphType}' is not supported.");
                 return 1;
             }
+        }
+
+        private static TGraph ParseGraph<TGraph, TNode>(string path, Func<string, TGraph> readFromFile)
+            where TGraph : IGraph<TNode>
+            where TNode : INode<TNode>
+        {
+            Console.WriteLine("Parsing the graph...");
+            var graph = readFromFile(path);
+            Console.WriteLine($"  There are {graph.Nodes.Count} nodes.");
+            Console.WriteLine($"  There are {graph.Nodes.Sum(x => x.Dependencies.Count)} edges.");
+            return graph;
         }
     }
 }

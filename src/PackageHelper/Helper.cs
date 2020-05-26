@@ -30,30 +30,9 @@ namespace PackageHelper
 
         public static string GetGraphFileName(string graphType, string variantName, string solutionName)
         {
-            if (graphType == null)
-            {
-                throw new ArgumentNullException(nameof(graphType));
-            }
-
-            if (solutionName == null)
-            {
-                throw new ArgumentNullException(nameof(solutionName));
-            }
-
-            if (graphType.Contains('-'))
-            {
-                throw new ArgumentException("The graph type cannot contain hyphens.", nameof(graphType));
-            }
-
-            if (solutionName.Contains('-'))
-            {
-                throw new ArgumentException("The solution name cannot contain hyphens.", nameof(solutionName));
-            }
-
-            if (variantName != null && variantName.Contains('-'))
-            {
-                throw new ArgumentException("The variant name cannot contain hyphens.", nameof(variantName));
-            }
+            ValidateGraphType(graphType);
+            ValidateSolutionName(solutionName);
+            ValidateVariantName(variantName);
 
             if (variantName != null)
             {
@@ -62,6 +41,40 @@ namespace PackageHelper
             else
             {
                 return $"{graphType}-{solutionName}";
+            }
+        }
+
+        public static void ValidateGraphType(string graphType)
+        {
+            if (graphType == null)
+            {
+                throw new ArgumentNullException(nameof(graphType));
+            }
+
+            if (graphType.Contains('-'))
+            {
+                throw new ArgumentException("The graph type cannot contain hyphens.", nameof(graphType));
+            }
+        }
+
+        public static void ValidateSolutionName(string solutionName)
+        {
+            if (solutionName == null)
+            {
+                throw new ArgumentNullException(nameof(solutionName));
+            }
+
+            if (solutionName.Contains('-'))
+            {
+                throw new ArgumentException("The solution name cannot contain hyphens.", nameof(solutionName));
+            }
+        }
+
+        public static void ValidateVariantName(string variantName)
+        {
+            if (variantName != null && variantName.Contains('-'))
+            {
+                throw new ArgumentException("The variant name cannot contain hyphens.", nameof(variantName));
             }
         }
 

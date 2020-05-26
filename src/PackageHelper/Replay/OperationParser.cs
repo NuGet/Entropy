@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using NuGet.Packaging;
 using NuGet.Protocol;
-using NuGet.Protocol.Core.Types;
 using NuGet.Versioning;
 using PackageHelper.Replay.Operations;
 using PackageHelper.Replay.Requests;
@@ -17,15 +15,7 @@ namespace PackageHelper.Replay
         public static async Task<List<OperationInfo>> ParseAsync(IReadOnlyList<string> sources, IEnumerable<StartRequest> requests)
         {
             var sourceToIndex = sources.Select((x, i) => new { Index = i, Source = x }).ToDictionary(x => x.Source, x => x.Index);
-            var sourceToRepository = sources.ToDictionary(x => x, x => Repository.Factory.GetCoreV3(x));
-
-            var sourceToFeedType = await GetSourceToFeedTypeAsync(sourceToRepository);
-            if (sourceToFeedType.Values.Any(x => x != FeedType.HttpV3))
-            {
-                throw new ArgumentException("Only V3 HTTP sources are supported.");
-            }
-
-            var sourceToServiceIndex = await GetSourceToServiceIndexAsync(sourceToRepository);
+            var sourceToServiceIndex = await PackageSourceUtility.GetSourceToServiceIndex(sources);
 
             // This look-up is used to quickly find if a package base address is in one of the source's service indexes.
             var packageBaseAddressToPairs = sourceToServiceIndex
@@ -71,7 +61,7 @@ namespace PackageHelper.Replay
                         pairs));
                     continue;
                 }
-                
+
                 if (TryParsePackageBaseAddressNupkg(uri, out var packageBaseAddressNupkg)
                     && packageBaseAddressToPairs.TryGetValue(packageBaseAddressNupkg.packageBaseAddress, out pairs))
                 {
@@ -115,20 +105,6 @@ namespace PackageHelper.Replay
         private static OperationInfo Unknown(StartRequest request)
         {
             return new OperationInfo(null, request, Array.Empty<KeyValuePair<string, Uri>>());
-        }
-
-        private static async Task<Dictionary<string, FeedType>> GetSourceToFeedTypeAsync(Dictionary<string, SourceRepository> sourceToRepository)
-        {
-            var sourceToFeedTypeTask = sourceToRepository.ToDictionary(x => x.Key, x => x.Value.GetFeedType(CancellationToken.None));
-            await Task.WhenAll(sourceToFeedTypeTask.Values);
-            return sourceToFeedTypeTask.ToDictionary(x => x.Key, x => x.Value.Result);
-        }
-
-        private static async Task<Dictionary<string, ServiceIndexResourceV3>> GetSourceToServiceIndexAsync(Dictionary<string, SourceRepository> sourceToRepository)
-        {
-            var sourceToServiceIndexTask = sourceToRepository.ToDictionary(x => x.Key, x => x.Value.GetResourceAsync<ServiceIndexResourceV3>());
-            await Task.WhenAll(sourceToServiceIndexTask.Values);
-            return sourceToServiceIndexTask.ToDictionary(x => x.Key, x => x.Value.Result);
         }
 
         private static bool TryParsePackageBaseAddressIndex(Uri uri, out (string packageBaseAddress, string id) parsed)

@@ -3,8 +3,11 @@
 $testDir = Join-Path $PSScriptRoot "testCases"
 $testCases = Get-ChildItem (Join-Path $testDir "Test-*.ps1")
 $variantName = "teste2e"
+$nugetOrgVariantName = "nugetorg"
 $solutionName = "ExampleProj"
 $requestGraphPath = Join-Path $PSScriptRoot "..\out\graphs\requestGraph-$variantName-$solutionName.json.gz"
+$operationGraphPath = Join-Path $PSScriptRoot "..\out\graphs\operationGraph-$solutionName.json.gz"
+$nugetOrgRequestGraphPath = Join-Path $PSScriptRoot "..\out\graphs\requestGraph-$nugetOrgVariantName-$solutionName.json.gz"
 $packageHelper = Join-Path $PSScriptRoot "..\src\PackageHelper\PackageHelper.csproj"
 $dockerName = "nuget-server"
 $dockerDataDir = Join-Path $PSScriptRoot "..\out\baget-data"
@@ -12,7 +15,7 @@ $dockerDataDir = Join-Path $PSScriptRoot "..\out\baget-data"
 $imageName = "loicsharma/baget:26b871f70f849457c4de4032ddeabb06c09dad81"
 $apiKey = [Guid]::NewGuid().ToString()
 
-# 0. Start up the test package source
+# Start up the test package source
 $ps = @(docker ps --filter "name=$dockerName")
 if ($ps.Length -gt 1) {
     Log "Stopping docker container..."
@@ -85,19 +88,38 @@ dotnet run `
 
 # Replay request graph
 dotnet run `
-    replay-request-graph $requestGraphPath `
     --framework netcoreapp3.1 `
-    --project .\src\PackageHelper\PackageHelper.csproj `
+    --project $packageHelper `
     -- `
+    replay-request-graph $requestGraphPath `
     --iterations 2
 
 # Convert request graph to operation graph
 dotnet run `
-    convert-graph $requestGraphPath `
     --framework netcoreapp3.1 `
-    --project .\src\PackageHelper\PackageHelper.csproj `
+    --project $packageHelper `
     -- `
+    convert-graph $requestGraphPath `
+    --write-graphviz `
+    --no-variant-name
+
+# Convert operation graph to request
+dotnet run `
+    --framework netcoreapp3.1 `
+    --project $packageHelper `
+    -- `
+    convert-graph $operationGraphPath `
+    --sources "https://api.nuget.org/v3/index.json" `
+    --variant-name $nugetOrgVariantName
     --write-graphviz
+
+# Replay generated request graph
+dotnet run `
+    --framework netcoreapp3.1 `
+    --project $packageHelper `
+    -- `
+    replay-request-graph $nugetOrgRequestGraphPath `
+    --iterations 2
 
 # Test max concurrency
 & (Join-Path $PSScriptRoot "test-max-concurrency.ps1") `

@@ -191,11 +191,6 @@ namespace PackageHelper.Commands
             await throttle.WaitAsync();
             try
             {
-                if (node.EndRequest == null)
-                {
-                    return;
-                }
-
                 if (node.StartRequest.Method != "GET")
                 {
                     throw new InvalidOperationException("Only GET requests are supported.");

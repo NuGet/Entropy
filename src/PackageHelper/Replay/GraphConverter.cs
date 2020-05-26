@@ -10,7 +10,43 @@ namespace PackageHelper.Replay
 {
     static class GraphConverter
     {
-        public static async Task<OperationGraph> ToOperationGraphAsync(IReadOnlyList<string> sources, RequestGraph graph)
+        public static async Task<RequestGraph> ToRequestGraphAsync(OperationGraph graph, IReadOnlyList<string> sources)
+        {
+            var maxSourceIndex = graph.Nodes.Max(x => x.Operation.SourceIndex);
+            if (maxSourceIndex >= sources.Count)
+            {
+                throw new ArgumentException($"The max source index in the operation graph is {maxSourceIndex} so at least {maxSourceIndex + 1} sources are required.");
+            }
+
+            var operationToRequest = await RequestBuilder.BuildAsync(sources, graph.Nodes.Select(x => x.Operation));
+
+            // Initialize all of the request nodes.
+            var requestNodes = new List<RequestNode>();
+            var operationNodeToRequestNode = new Dictionary<OperationNode, RequestNode>();
+            foreach (var operationNode in graph.Nodes)
+            {
+                var requestNode = new RequestNode(
+                    operationNode.HitIndex,
+                    operationToRequest[operationNode.Operation]);
+
+                requestNodes.Add(requestNode);
+                operationNodeToRequestNode.Add(operationNode, requestNode);
+            }
+
+            // Initialize dependencies.
+            foreach (var operationNode in graph.Nodes)
+            {
+                var requestNode = operationNodeToRequestNode[operationNode];
+                foreach (var dependency in operationNode.Dependencies)
+                {
+                    requestNode.Dependencies.Add(operationNodeToRequestNode[dependency]);
+                }
+            }
+
+            return new RequestGraph(requestNodes, sources.ToList());
+        }
+
+        public static async Task<OperationGraph> ToOperationGraphAsync(RequestGraph graph, IReadOnlyList<string> sources)
         {
             // Parse the request graph nodes.
             var uniqueRequests = graph.Nodes.Select(x => x.StartRequest).Distinct();
@@ -44,29 +80,29 @@ namespace PackageHelper.Replay
 
             // Initialize all of the NuGet operation nodes.
             var requestToParsedOperation = parsedOperations.ToDictionary(x => x.Request, x => x.Operation);
-            var operations = new List<OperationNode>();
-            var requestToOperation = new Dictionary<RequestNode, OperationNode>();
-            foreach (var request in graph.Nodes)
+            var operationNodes = new List<OperationNode>();
+            var requestNodeToOperationNode = new Dictionary<RequestNode, OperationNode>();
+            foreach (var requestNode in graph.Nodes)
             {
-                var operation = new OperationNode(
-                    request.HitIndex,
-                    requestToParsedOperation[request.StartRequest]);
+                var operationNode = new OperationNode(
+                    requestNode.HitIndex,
+                    requestToParsedOperation[requestNode.StartRequest]);
 
-                operations.Add(operation);
-                requestToOperation.Add(request, operation);
+                operationNodes.Add(operationNode);
+                requestNodeToOperationNode.Add(requestNode, operationNode);
             }
 
             // Initialize dependencies.
-            foreach (var request in graph.Nodes)
+            foreach (var requestNode in graph.Nodes)
             {
-                var operation = requestToOperation[request];
-                foreach (var dependency in request.Dependencies)
+                var operationNode = requestNodeToOperationNode[requestNode];
+                foreach (var dependency in requestNode.Dependencies)
                 {
-                    operation.Dependencies.Add(requestToOperation[dependency]);
+                    operationNode.Dependencies.Add(requestNodeToOperationNode[dependency]);
                 }
             }
 
-            return new OperationGraph(operations);
+            return new OperationGraph(operationNodes);
         }
     }
 }
