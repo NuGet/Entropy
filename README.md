@@ -10,9 +10,16 @@ effort.
 
 These test tools can be used to compare the performance of alternate package source implementations.
 
-*Example performance comparison: 4 test solutions, 3 source configurations, 50 iterations.*
+*Example performance comparison (nuget.exe restore): 4 test solutions, 3 source configurations, 50 iterations.*
 
-![Example performance comparison](docs/img/2020-05-18-example.png)
+![Example performance comparison, nuget.exe restore](docs/img/2020-05-18-example.png)
+
+*Example performance comparison (request replay): 4 test solutions, 3 source configurations, 50 iterations.*
+
+![Example performance comparison, request replay](docs/img/2020-05-25-example-replay.png)
+
+As you can see, the slowness of the "Secret" package source is more visible when measured without the overhead of the
+rest of a NuGet restore operation.
 
 ## More reading
 
