@@ -97,7 +97,6 @@ dotnet run `
     --framework netcoreapp3.1 `
     --project .\src\PackageHelper\PackageHelper.csproj `
     -- `
-    --sources @($source) `
     --write-graphviz
 
 # Test max concurrency
