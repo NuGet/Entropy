@@ -133,15 +133,16 @@ namespace PackageHelper.Commands
             }
 
             var requestsPath = Path.Combine(rootDir, "out", "logs", requestsFileName);
-
-            Console.WriteLine($"{logPrefix} Starting...");
-            var stopwatch = Stopwatch.StartNew();
-            var nodeToTask = new Dictionary<RequestNode, Task>();
-            var throttle = new SemaphoreSlim(maxConcurrency);
-            var consoleLock = new object();
-
+            var stopwatch = new Stopwatch();
             using (var writer = new RequestResultWriter(requestsPath))
             {
+                Console.WriteLine($"{logPrefix} Starting...");
+                var nodeToTask = new Dictionary<RequestNode, Task>();
+                var throttle = new SemaphoreSlim(maxConcurrency);
+                var consoleLock = new object();
+
+                stopwatch.Start();
+
                 foreach (var node in topologicalOrder)
                 {
                     nodeToTask.Add(node, GetRequestTask(nodeToTask, throttle, consoleLock, httpClient, node, writer));
