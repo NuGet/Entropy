@@ -399,3 +399,7 @@ Microsoft.AspNet.Razor,Microsoft.AspNet.Razor,4,Microsoft.AspNetCore.Razor,3,Mic
 Google.Apis,Google.Apis,4,Google.Apis.Auth,3,Google.Apis.*,2,,,,
 REST,RestSharp,4,Microsoft.Rest.ClientRuntime,3,Microsoft.Rest.ClientRuntime.*,2,Google.Api.Gax.Rest,2,,
 Bluetooth,32feet.NET,4,,,,,,,,
+winui,Microsoft.UI.Xaml,4,,,,,,,,
+WinUI,Microsoft.UI.Xaml,4,,,,,,,,
+Windows UI,Microsoft.UI.Xaml,4,Microsoft.Toolkit.Uwp.UI,3,,,,,,
+Microsoft.WinUI,Microsoft.UI.Xaml,4,,,,,,,,

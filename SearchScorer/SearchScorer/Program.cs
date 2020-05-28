@@ -25,7 +25,7 @@ namespace SearchScorer
             var settings = new SearchScorerSettings
             {
                 ControlBaseUrl = "https://azuresearch-usnc.nuget.org/",
-                TreatmentBaseUrl = "https://azuresearch-usnc-perf.nuget.org/",
+                TreatmentBaseUrl = "https://azuresearch-usnc-preview.nuget.org/",
                 FeedbackSearchQueriesCsvPath = Path.Combine(assemblyDir, "FeedbackSearchQueries.csv"),
                 CuratedSearchQueriesCsvPath = Path.Combine(assemblyDir, "CuratedSearchQueries.csv"),
                 ClientCuratedSearchQueriesCsvPath = Path.Combine(assemblyDir, "ClientCuratedSearchQueries.csv"),

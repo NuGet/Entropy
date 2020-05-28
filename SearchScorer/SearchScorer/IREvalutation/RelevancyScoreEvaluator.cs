@@ -250,7 +250,10 @@ namespace SearchScorer.IREvalutation
             var resultsAndWeights = new List<KeyValuePair<RelevancyScoreResult<T>, int>>();
             foreach (var result in results)
             {
-                var queryCount = topQueries[result.Input.SearchQuery];
+                if (!topQueries.TryGetValue(result.Input.SearchQuery, out var queryCount))
+                {
+                    queryCount = 0;
+                }
                 resultsAndWeights.Add(new KeyValuePair<RelevancyScoreResult<T>, int>(result, queryCount));
                 totalQueryCount += queryCount;
             }
