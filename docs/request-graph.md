@@ -161,6 +161,29 @@ This picture below went up to 70 request logs merged. Very quickly, the total re
 
 ![Asymptotal simulated restore duration](img/2020-05-22-logs-per-graph.png)
 
+## What if you ignore request dependencies?
+
+Why take the time to determine dependencies between requests? Couldn't we just track the set of requests made and run
+them all in any order, maximum parallelism? This would be fine if you only care about the time spend on a per-endpoint
+basis. But as mentioned before, if a specific endpoint is slow and many steps of the user operation depend on this
+endpoint before they can continue (e.g. they need the data from the endpoint before they can do their work) then running
+this slow request in parallel with other requests may be hiding the real user impact of the slow endpoint.
+
+Consider this chart.
+
+![NuGet restore replays with and without dependencies](img/2020-05-30-no-dependencies-comparison.png)
+
+You'll see that the replay duration with and without observing dependencies is measurably different. In this particular
+case, across 50 iterations of 4 repositories, the fast variant ("NuGet") is measured to be 10% faster and the slow
+variant ("Secret") is 31% faster than it real is. Individual endpoint times are the same whether or not request
+dependencies are observed (assuming the package source can handle the load) but the user operation time (a NuGet restore
+in this example) is disproportionately affected by certain endpoints being slow.
+
+In this case the "Secret" source has a very slow implementation of the
+[Enumerate package versions](https://docs.microsoft.com/en-us/nuget/api/package-base-address-resource#enumerate-package-versions) endpoint. NuGet must enumerate versions before it can download a package via the
+[Download package content](https://docs.microsoft.com/en-us/nuget/api/package-base-address-resource#download-package-content-nupkg)
+endpoint. For a specific package ID, these two endpoints will not be hit in parallel by a NuGet restore.
+
 ## Example data
 
 The example data is available in this repository:
