@@ -13,5 +13,6 @@
         public double DurationMs { get; set; }
         public int MaxConcurrency { get; set; }
         public string LogFileName { get; set; }
+        public bool NoDependencies { get; set; }
     }
 }

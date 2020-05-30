@@ -44,13 +44,17 @@ namespace PackageHelper.Commands
             {
                 Description = "Max concurrency for HTTP requests"
             });
+            command.Add(new Option<bool>("--no-dependencies")
+            {
+                Description = "Run the requests as if they have no dependencies"
+            });
 
-            command.Handler = CommandHandler.Create<string, int, int>(ExecuteAsync);
+            command.Handler = CommandHandler.Create<string, int, int, bool>(ExecuteAsync);
 
             return command;
         }
 
-        static async Task<int> ExecuteAsync(string path, int iterations, int maxConcurrency)
+        static async Task<int> ExecuteAsync(string path, int iterations, int maxConcurrency, bool noDependencies)
         {
             if (!Helper.TryFindRoot(out var rootDir))
             {
@@ -83,7 +87,17 @@ namespace PackageHelper.Commands
 
             Console.WriteLine($"Reading {path}...");
             var graph = RequestGraphSerializer.ReadFromFile(path);
-            Console.WriteLine($"There are {graph.Nodes.Count} requests in the graph.");
+            Console.WriteLine($"There are {graph.Nodes.Count} nodes in the graph.");
+            Console.WriteLine($"There are {graph.Nodes.Sum(x => x.Dependencies.Count)} edges in the graph.");
+
+            if (noDependencies)
+            {
+                Console.WriteLine("Clearing dependencies...");
+                foreach (var node in graph.Nodes)
+                {
+                    node.Dependencies.Clear();
+                }
+            }
 
             var resultsPath = Path.Combine(rootDir, "out", ResultFileName);
             Console.WriteLine($"Results will be writen to {resultsPath}.");
@@ -106,7 +120,8 @@ namespace PackageHelper.Commands
                         iterations,
                         maxConcurrency,
                         topologicalOrder,
-                        iteration);
+                        iteration,
+                        noDependencies);
                 }
             }
 
@@ -122,7 +137,8 @@ namespace PackageHelper.Commands
             int iterations,
             int maxConcurrency,
             List<RequestNode> topologicalOrder,
-            int iteration)
+            int iteration,
+            bool noDependencies)
         {
             var logPrefix = $"[{iteration}/{iterations}{(iteration == 0 ? " (warm-up)" : string.Empty)}]";
 
@@ -180,6 +196,7 @@ namespace PackageHelper.Commands
                 DurationMs = stopwatch.Elapsed.TotalMilliseconds,
                 MaxConcurrency = maxConcurrency,
                 LogFileName = requestsFileName,
+                NoDependencies = noDependencies,
             });
         }
 
@@ -191,7 +208,10 @@ namespace PackageHelper.Commands
             RequestNode node,
             BackgroundCsvWriter<ReplayRequestRecord> writer)
         {
-            await Task.WhenAll(node.Dependencies.Select(n => nodeToTask[n]).ToList());
+            if (node.Dependencies.Any())
+            {
+                await Task.WhenAll(node.Dependencies.Select(n => nodeToTask[n]).ToList());
+            }
 
             await throttle.WaitAsync();
             try
