@@ -14,22 +14,22 @@ using PackageHelper.Replay.Requests;
 
 namespace PackageHelper.Commands
 {
-    class RequestDurationReport
+    class DumpRequestDurations
     {
         public static Command GetCommand()
         {
-            var command = new Command("request-duration-report")
+            var command = new Command("dump-request-durations")
             {
-                Description = "Parse logs for request durations and write them to a gziiped CSV",
+                Description = "Parse logs for request durations and write them to a gzipped CSV",
             };
 
             command.Add(new Option<string>("log-dir")
             {
                 Description = "The directory to scan for recognized logs",
             });
-            command.Add(new Option<string>("report-path")
+            command.Add(new Option<string>("path")
             {
-                Description = "The file path to write the report to (should end in .csv.gz)",
+                Description = "The file path to write the request durations to (should end in .csv.gz)",
             });
             command.Add(new Option<string>("machine-name", () => Environment.MachineName)
             {
@@ -64,13 +64,13 @@ namespace PackageHelper.Commands
 
         private static async Task<int> ExecuteAsync(
             string logDir,
-            string reportPath,
+            string path,
             string machineName,
             List<string> sources,
             List<string> excludeVariants,
             bool warningsAsErrors)
         {
-            var ctx = new Context(logDir, reportPath, machineName, excludeVariants, warningsAsErrors);
+            var ctx = new Context(logDir, path, machineName, excludeVariants, warningsAsErrors);
 
             if (!InitializePaths(ctx))
             {
@@ -84,7 +84,7 @@ namespace PackageHelper.Commands
 
         private static bool InitializePaths(Context ctx)
         {
-            if (string.IsNullOrWhiteSpace(ctx.LogDir) || string.IsNullOrWhiteSpace(ctx.ReportPath))
+            if (string.IsNullOrWhiteSpace(ctx.LogDir) || string.IsNullOrWhiteSpace(ctx.Path))
             {
                 if (!Helper.TryFindRoot(out var rootDir))
                 {
@@ -97,9 +97,9 @@ namespace PackageHelper.Commands
                     ctx.LogDir = Path.Combine(outDir, "logs");
                 }
 
-                if (string.IsNullOrWhiteSpace(ctx.ReportPath))
+                if (string.IsNullOrWhiteSpace(ctx.Path))
                 {
-                    ctx.ReportPath = Path.Combine(outDir, "request-durations.csv.gz");
+                    ctx.Path = Path.Combine(outDir, "request-durations.csv.gz");
                 }
 
                 if (Directory.Exists(outDir))
@@ -110,12 +110,12 @@ namespace PackageHelper.Commands
             }
 
             Console.WriteLine($"Log directory: {ctx.LogDir}");
-            Console.WriteLine($"Output path:   {ctx.ReportPath}");
+            Console.WriteLine($"Output path:   {ctx.Path}");
 
-            var reportDir = Path.GetDirectoryName(ctx.ReportPath);
-            if (!Directory.Exists(reportDir))
+            var dir = Path.GetDirectoryName(ctx.Path);
+            if (!Directory.Exists(dir))
             {
-                Directory.CreateDirectory(reportDir);
+                Directory.CreateDirectory(dir);
             }
 
             return true;
@@ -220,7 +220,7 @@ namespace PackageHelper.Commands
 
         private static async Task<int> ExecuteAsync(Context ctx)
         {
-            using (var writer = new BackgroundCsvWriter<RequestDurationReportRecord>(ctx.ReportPath, gzip: true))
+            using (var writer = new BackgroundCsvWriter<RequestDurationRecord>(ctx.Path, gzip: true))
             {
                 foreach (var graph in RestoreLogParser.ParseGraphs(ctx.LogDir, ctx.ExcludeVariants, ctx.StringToString))
                 {
@@ -238,7 +238,7 @@ namespace PackageHelper.Commands
             return ctx.WarningsAsErrors && ctx.WarningCount > 0 ? 1 : 0;
         }
 
-        private static void WriteReplayLog(Context ctx, BackgroundCsvWriter<RequestDurationReportRecord> writer, string replayLogPath)
+        private static void WriteReplayLog(Context ctx, BackgroundCsvWriter<RequestDurationRecord> writer, string replayLogPath)
         {
             var fileName = Path.GetFileName(replayLogPath);
             if (!Helper.TryParseFileName(replayLogPath, out var fileType, out var variantName, out var solutionName)
@@ -279,7 +279,7 @@ namespace PackageHelper.Commands
                     const string method = "GET";
                     var operationInfo = GetOperationInfo(ctx, new StartRequest(method, record.Url));
 
-                    writer.Add(new RequestDurationReportRecord
+                    writer.Add(new RequestDurationRecord
                     {
                         VariantName = variantName,
                         SolutionName = solutionName,
@@ -307,7 +307,7 @@ namespace PackageHelper.Commands
             ctx.LogFileIndex++;
         }
 
-        private static void WriteGraph(Context ctx, BackgroundCsvWriter<RequestDurationReportRecord> writer, RestoreRequestGraph graph)
+        private static void WriteGraph(Context ctx, BackgroundCsvWriter<RequestDurationRecord> writer, RestoreRequestGraph graph)
         {
             if (ctx.ExcludeVariants.Contains(graph.VariantName))
             {
@@ -334,7 +334,7 @@ namespace PackageHelper.Commands
 
                 var operationInfo = GetOperationInfo(ctx, node.StartRequest);
 
-                writer.Add(new RequestDurationReportRecord
+                writer.Add(new RequestDurationRecord
                 {
                     VariantName = graph.VariantName,
                     SolutionName = graph.SolutionName,
@@ -396,10 +396,10 @@ namespace PackageHelper.Commands
 
         private class Context
         {
-            public Context(string logDir, string reportPath, string machineName, IEnumerable<string> excludeVariants, bool warningsAsErrors)
+            public Context(string logDir, string path, string machineName, IEnumerable<string> excludeVariants, bool warningsAsErrors)
             {
                 LogDir = logDir;
-                ReportPath = reportPath;
+                Path = path;
                 MachineName = machineName;
                 ExcludeVariants = excludeVariants.ToHashSet();
                 WarningsAsErrors = warningsAsErrors;
@@ -413,7 +413,7 @@ namespace PackageHelper.Commands
             }
 
             public string LogDir { get; set; }
-            public string ReportPath { get; set; }
+            public string Path { get; set; }
             public string MachineName { get; set; }
             public HashSet<string> ExcludeVariants { get; }
             public bool WarningsAsErrors { get; }

@@ -121,12 +121,12 @@ dotnet run `
     replay-request-graph $nugetOrgRequestGraphPath `
     --iterations 2
 
-Log "Building the request duration report" "Magenta"
+Log "Dump request durations to CSV" "Magenta"
 dotnet run `
     --framework netcoreapp3.1 `
     --project $packageHelper `
     -- `
-    request-duration-report `
+    dump-request-durations `
     --warnings-as-errors
 
 Log "Testing max concurrency" "Magenta"

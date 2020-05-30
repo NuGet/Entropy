@@ -2,7 +2,7 @@
 
 namespace PackageHelper.Csv
 {
-    public class RequestDurationReportRecord
+    public class RequestDurationRecord
     {
         public string VariantName { get; set; }
         public string SolutionName { get; set; }
