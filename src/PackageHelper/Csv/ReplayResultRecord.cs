@@ -9,7 +9,7 @@
         public int Iterations { get; set; }
         public string VariantName { get; set; }
         public string SolutionName { get; set; }
-        public object RequestCount { get; set; }
+        public int RequestCount { get; set; }
         public double DurationMs { get; set; }
         public int MaxConcurrency { get; set; }
         public string LogFileName { get; set; }
