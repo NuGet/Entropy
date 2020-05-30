@@ -19,6 +19,12 @@ namespace PackageHelper.Csv
         [Name("Test Run ID")]
         public string TestRunID { get; set; }
 
+        [Name("Iteration")]
+        public int Iteration { get; set; }
+
+        [Name("Iteration Count")]
+        public int IterationCount { get; set; }
+
         [Name("Scenario Name")]
         public string ScenarioName { get; set; }
 

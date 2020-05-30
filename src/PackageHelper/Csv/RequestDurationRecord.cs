@@ -11,6 +11,8 @@ namespace PackageHelper.Csv
         public int LogFileIndex { get; set; }
         public int LogFileRequestIndex { get; set; }
         public bool? IsWarmUp { get; set; }
+        public int? Iteration { get; set; }
+        public int? Iterations { get; set; }
         public string Method { get; set; }
         public string Url { get; set; }
         public int StatusCode { get; set; }

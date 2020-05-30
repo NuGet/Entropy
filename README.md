@@ -194,6 +194,60 @@ This command would generate a new request graph with the package source of nuget
 used to generate the original request graph in the example above. From here, you can generate a request graph for as
 many sources as you want with the same operation graph.
 
+### Dump request durations to CSV
+
+Both the `.\run-tests.ps1` script and `replay-request-graph` output CSV files in the `.\out` directory which summarize
+the duration of entire user operations (e.g. NuGet restore). However if you are interesting in looking at individual
+request durations, you can use the `dump-request-durations` command.
+
+```
+dotnet run `
+    dump-request-durations `
+    --framework netcoreapp3.1 `
+    --project $packageHelper
+```
+
+By default, the CSV is written to `.\out\request-durations.csv.gz`. The CSV is gzipped because it can get really big
+and has a lot of repeated information (for ease of post-processing). This CSV can be easily imported into many other
+tools, such as Excel or Kusto.
+
+The CSV produced has the following columns:
+
+Column name         | Type   | Description
+------------------- | ------ | -----------
+VariantName         | string | Variant name for the test run, often used to identify the package sources used
+SolutionName        | string | Solution name restored to produce the request
+RequestType         | string | The type of test that produced the request
+MachineName         | string | Machine that executed the request
+LogFileIndex        | int    | Index per log file processed
+LogFileRequestIndex | int    | Index per request found in log file
+IsWarmUp            | bool   | True if the request was part of a warm-up iteration
+Iteration           | int    | Iteration number of the test
+Iterations          | int    | Total number of iterations for the test
+Method              | string | HTTP request method
+Url                 | string | Absolute URL for the request
+StatusCode          | int    | HTTP status code
+HeaderDurationMs    | double | Time to fetch HTTP response headers in milliseconds
+BodyDurationMs      | double | Time to fetch HTTP response body in milliseconds, not present for request type `Restore`
+OperationType       | string | Represents the specific NuGet operation
+PackageId           | string | Package ID parameter for the NuGet operation
+PackageVersion      | string | Package Version parameter for the NuGet operation
+
+The `RequestType` is an enum represented as a string with the following values.
+
+RequestType | Description
+----------- | -----------
+`Restore`   | The request was produced by a real NuGet restore
+`Replay`    | The request was produced by the `replay-request-graph` command
+
+The `OperationType` is an enum represented as a string with the following values. Each operation type corresponds to an
+individual [NuGet V3 API](https://docs.microsoft.com/en-us/nuget/api/overview) resource endpoint.
+
+OperationType             | V3 API resource | Endpoint
+------------------------- | --------------- | --------
+`PackageBaseAddressIndex` | Package content | [Enumerate package versions](https://docs.microsoft.com/en-us/nuget/api/package-base-address-resource#enumerate-package-versions)
+`PackageBaseAddressNupkg` | Package content | [Download package content (.nupkg)](https://docs.microsoft.com/en-us/nuget/api/package-base-address-resource#download-package-content-nupkg)
+
 ## Caveats
 
 There are some known caveats to this replay approach. Most notably, any request that is cancelled by NuGet
