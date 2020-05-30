@@ -129,6 +129,8 @@ dotnet run `
     dump-request-durations `
     --warnings-as-errors
 
+exit
+
 Log "Testing max concurrency" "Magenta"
 & (Join-Path $PSScriptRoot "test-max-concurrency.ps1") `
     -variantNames $testVariantName `

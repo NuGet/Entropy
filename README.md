@@ -106,6 +106,8 @@ replace the sources that are used by the test repositories by default.
 
 **Example restore log:** [restoreLog-nuget-ExampleProj-20200522T2242473395.txt](docs/ExampleProj-out/logs/restoreLog-nuget-ExampleProj-20200522T2242473395.txt)
 
+**Example results file:** [results-teste2e.csv](docs/ExampleProj-out/results-teste2e.csv)
+
 ### Parse the logs
 
 To eliminate overhead in a NuGet restore from sources other than HTTP requests (such as disk, memory, or CPU
@@ -137,7 +139,7 @@ Note that the set of sources is not encoded into the file name. It's best to use
 different sets of sources so that request graphs with the same variant name and solution name but different sources
 don't overwrite each other.
 
-**Example request graph JSON:** [requestGraph-nuget-ExampleProj.json](docs/ExampleProj-out/graphs/requestGraph-nuget-ExampleProj.json) (gzipped, for clarity)
+**Example request graph JSON:** [requestGraph-nuget-ExampleProj.json](docs/ExampleProj-out/graphs/requestGraph-nuget-ExampleProj.json) (ungzipped, for clarity)
 
 ### Replay a request graph
 
@@ -175,7 +177,7 @@ dotnet run `
 
 This example would produce a `.\out\graphs\operationGraph-OrchardCore.json.gz` file.
 
-**Example operation graph JSON:** [operationGraph-ExampleProj.json](docs/ExampleProj-out/graphs/operationGraph-ExampleProj.json) (gzipped, for clarity)
+**Example operation graph JSON:** [operationGraph-ExampleProj.json](docs/ExampleProj-out/graphs/operationGraph-ExampleProj.json) (ungzipped, for clarity)
 
 ### Generate a request graph from an operation graph
 
@@ -211,13 +213,17 @@ By default, the CSV is written to `.\out\request-durations.csv.gz`. The CSV is g
 and has a lot of repeated information (for ease of post-processing). This CSV can be easily imported into many other
 tools, such as Excel or Kusto.
 
+**Example request durations CSV:** [request-durations.csv](docs/ExampleProj-out/request-durations.csv) (ungzipped, for clarity)
+
+#### CSV format
+
 The CSV produced has the following columns:
 
 Column name         | Type   | Description
 ------------------- | ------ | -----------
 VariantName         | string | Variant name for the test run, often used to identify the package sources used
-SolutionName        | string | Solution name restored to produce the request
-RequestType         | string | The type of test that produced the request
+SolutionName        | string | Solution name used to produce the request
+RequestType         | string | The type of test that produced the request *(see below for values)*
 MachineName         | string | Machine that executed the request
 LogFileIndex        | int    | Index per log file processed
 LogFileRequestIndex | int    | Index per request found in log file
@@ -229,7 +235,7 @@ Url                 | string | Absolute URL for the request
 StatusCode          | int    | HTTP status code
 HeaderDurationMs    | double | Time to fetch HTTP response headers in milliseconds
 BodyDurationMs      | double | Time to fetch HTTP response body in milliseconds, not present for request type `Restore`
-OperationType       | string | Represents the specific NuGet operation
+OperationType       | string | Identifies the type of NuGet operation *(see below for values)*
 PackageId           | string | Package ID parameter for the NuGet operation
 PackageVersion      | string | Package Version parameter for the NuGet operation
 
