@@ -4,7 +4,7 @@ This project utilizes a potentially crazy idea of rebuilding a dependency graph 
 output log. In particular, it parses the log produced by a full NuGet restore operation and generates a graph describing
 which HTTP requests depend on each other based on the relative order of the "start" and "end" logs. I was inspired by
 some reading about [process mining](https://en.wikipedia.org/wiki/Process_mining) but my approach is much simpler than
-the novel techniques applied in that field. Also, I couldn't figure out how to discretize events like an HTTP request
+the novel techniques applied in that field. Also, I could not figure out how to discretize events like an HTTP request
 into a useful form for process mining 🤷. 
 
 The purpose of this madness is to efficiently test the performance of a NuGet package source and come up with a
@@ -14,7 +14,7 @@ client CPU, disk, memory), the HTTP requests executed by restore are replayed in
 restore, but without the gaps and pauses between said HTTP requests caused by the computational or IO effort required
 for a NuGet restore.
 
-This theoretically allows for more reproducable performance measurements for a NuGet package source. Also, test
+This theoretically allows for more reproducible performance measurements for a NuGet package source. Also, test
 run time should be shorter since we are performing less work in the "test loop".
 
 ## Example input
@@ -105,7 +105,7 @@ After removing the edges and letting Graphviz do it's magic 🤤, the graph look
 ## Transitive reduction
 
 Given these lines represent dependencies, many of them can be removed because they are redundant. The process of
-removing these extra edges is a well known process call [transitive reduction](https://en.wikipedia.org/wiki/Transitive_reduction).
+removing these extra edges is a well-known process call [transitive reduction](https://en.wikipedia.org/wiki/Transitive_reduction).
 After this is done, the graph looks much cleaner!
 
 ![Example request log dependency graph, after merging and transitive reduction](img/2020-05-22-request-graph-reduced.png)
@@ -114,13 +114,13 @@ After this is done, the graph looks much cleaner!
 
 ## Summary
 
-If we observe the remaining dependencies in the reduced graph, they rougly correspond to the expected sequence of
+If we observe the remaining dependencies in the reduced graph, they roughly correspond to the expected sequence of
 HTTP requests used to discover all direct and transitive dependencies of the `ExampleProj.csproj` project used in this
 example. Notably:
 
 - The two root nodes relate to NuGet.Configuration and NuGet.Packaging, which are direct dependencies of the project.
 - Specific NuGet package versions are only hit after the index for that ID is downloaded.
-- Direct package dependecies are only discovered after downloading a package version, for example:
+- Direct package dependencies are only discovered after downloading a package version, for example:
   - `nuget.common/index.json` is only hit after `nuget.configuration.5.6.0.nupkg` is downloaded
   - `nuget.versioning/index.json` is only hit after `nuget.packaging.5.6.0.nupkg` is downloaded
   - `nuget.frameworks/index.json` is only hit after `nuget.common.5.6.0.nupkg` is downloaded
@@ -130,22 +130,22 @@ perform during a restore.
 
 ## Why is this interesting?
 
-Well, you're the one that read this far, you tell me! Just kidding. This is interesting because it's a general purpose
+Well, you're the one that read this far, you tell me! Just kidding. This is interesting because it's a general-purpose
 approach to create an HTTP request plan from an output log that roughly respects the concurrency constraints of the
 tool that produced the log 🤓. 
 
 Not all HTTP requests take the same time (there are fast and slow endpoints, typically) so if there is an HTTP request
 this is blocking the rest of work from happening and it's a very slow request, the entire operation is slowed down.
 Consider a package dependency graph that is just a path: `A -> B -> C -> D` (i.e. no parallelism is possible) and
-downloading the NuGet package of `B` is very slow. Well, that's going to affect the entire restore time more
+downloading the NuGet package of `B` is very slow. Well, that is going to affect the entire restore time more
 dramatically than if all packages are downloaded in parallel from the beginning.
 
-Simply parallelizing all requests found in the log and measuring the time all of those requests take to complete could
-hide bottlenecks and give a falsely positive impression of how server performance is impacting users.
+Simply parallelizing all requests found in the log and measuring the time all those requests take to complete could hide
+bottlenecks and give a falsely positive impression of how server performance is impacting users.
 
 ## How many request logs should be merged?
 
-From my experimentation, 10 logs looks like enough and 20 is more than sufficient. The following script incrementally
+From my experimentation, 10 logs look like enough and 20 is more than sufficient. The following script incrementally
 tests merging more and more request logs and then tests the time it takes to replay the request graph.
 
 ```powershell
@@ -163,7 +163,7 @@ This picture below went up to 70 request logs merged. Very quickly, the total re
 
 ## What if you ignore request dependencies?
 
-Why take the time to determine dependencies between requests? Couldn't we just track the set of requests made and run
+Why take the time to determine dependencies between requests? Could we just track the set of requests made and run
 them all in any order, maximum parallelism? This would be fine if you only care about the time spend on a per-endpoint
 basis. But as mentioned before, if a specific endpoint is slow and many steps of the user operation depend on this
 endpoint before they can continue (e.g. they need the data from the endpoint before they can do their work) then running
@@ -173,11 +173,11 @@ Consider this chart.
 
 ![NuGet restore replays with and without dependencies](img/2020-05-30-no-dependencies-comparison.png)
 
-You'll see that the replay duration with and without observing dependencies is measurably different. In this particular
-case, across 50 iterations of 4 repositories, the fast variant ("NuGet") is measured to be 10% faster and the slow
-variant ("Secret") is 31% faster than it real is. Individual endpoint times are the same whether or not request
-dependencies are observed (assuming the package source can handle the load) but the user operation time (a NuGet restore
-in this example) is disproportionately affected by certain endpoints being slow.
+You see that the replay duration with and without observing dependencies is measurably different. In this case, across
+50 iterations of 4 repositories, the fast variant ("NuGet") is measured to be 10% faster and the slow variant ("Secret")
+is 31% faster than it real is. Individual endpoint times are the same whether or not request dependencies are observed
+(assuming the package source can handle the load) but the user operation time (a NuGet restore in this example) is
+disproportionately affected by certain endpoints being slow.
 
 In this case the "Secret" source has a very slow implementation of the
 [Enumerate package versions](https://docs.microsoft.com/en-us/nuget/api/package-base-address-resource#enumerate-package-versions) endpoint. NuGet must enumerate versions before it can download a package via the
