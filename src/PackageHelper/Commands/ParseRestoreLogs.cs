@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.IO;
+using System.Linq;
 using PackageHelper.Replay;
 using PackageHelper.Replay.Requests;
 
@@ -23,18 +24,25 @@ namespace PackageHelper.Commands
             {
                 Description = "Max number of restore logs that will be merged into a single request graph"
             });
-
             command.Add(new Option<bool>("--write-graphviz")
             {
                 Description = "Output Graphviz DOT files (.gv) in addtion to request graphs"
             });
+            command.Add(new Option("--exclude-variants")
+            {
+                Description = "Variants to exclude from processing",
+                Argument = new Argument
+                {
+                    Arity = ArgumentArity.OneOrMore,
+                },
+            });
 
-            command.Handler = CommandHandler.Create<int, bool>(Execute);
+            command.Handler = CommandHandler.Create<int, bool, List<string>>(Execute);
 
             return command;
         }
 
-        static int Execute(int maxLogsPerGraph, bool writeGraphviz)
+        static int Execute(int maxLogsPerGraph, bool writeGraphviz, List<string> excludeVariants)
         {
             if (!Helper.TryFindRoot(out var rootDir))
             {
@@ -51,7 +59,7 @@ namespace PackageHelper.Commands
             }
 
             var logDir = Path.Combine(rootDir, "out", "logs");
-            var graphs = LogParser.ParseAndMergeRestoreRequestGraphs(logDir, maxLogsPerGraph);
+            var graphs = RestoreLogParser.ParseAndMergeGraphs(logDir, excludeVariants.ToHashSet(), maxLogsPerGraph);
             var writtenNames = new HashSet<string>();
             for (int index = 0; index < graphs.Count; index++)
             {

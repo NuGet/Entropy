@@ -113,13 +113,21 @@ dotnet run `
     --variant-name $nugetOrgVariantName `
     --write-graphviz
 
-Log "Replaying generating request graph" "Magenta"
+Log "Replaying generated request graph" "Magenta"
 dotnet run `
     --framework netcoreapp3.1 `
     --project $packageHelper `
     -- `
     replay-request-graph $nugetOrgRequestGraphPath `
     --iterations 2
+
+Log "Building the request duration report" "Magenta"
+dotnet run `
+    --framework netcoreapp3.1 `
+    --project $packageHelper `
+    -- `
+    request-duration-report `
+    --warnings-as-errors
 
 Log "Testing max concurrency" "Magenta"
 & (Join-Path $PSScriptRoot "test-max-concurrency.ps1") `

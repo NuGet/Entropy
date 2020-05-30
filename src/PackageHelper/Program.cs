@@ -20,6 +20,7 @@ namespace PackageHelper
             rootCommand.Add(ParseRestoreLogs.GetCommand());
             rootCommand.Add(ReplayRequestGraph.GetCommand());
             rootCommand.Add(ConvertGraph.GetCommand());
+            rootCommand.Add(RequestDurationReport.GetCommand());
 
             return await rootCommand.InvokeAsync(args);
         }

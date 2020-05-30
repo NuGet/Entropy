@@ -8,13 +8,13 @@ using PackageHelper.Replay.Requests;
 
 namespace PackageHelper.Replay
 {
-    static class LogParser
+    static class RestoreLogParser
     {
         private static readonly Regex StartRequestRegex = new Regex("^  (?<Method>GET) (?<Url>https?://.+)$");
         private static readonly Regex EndRequestRegex = new Regex("^  (?<StatusCode>OK|NotFound|InternalServerError) (?<Url>https?://.+?) (?<DurationMs>\\d+)ms$");
         private static readonly Regex OtherRequestRegex = new Regex("^\\s*https?://");
 
-        public static List<RestoreRequestGraph> ParseAndMergeRestoreRequestGraphs(string logDir, int maxLogsPerGraph)
+        public static List<RestoreRequestGraph> ParseAndMergeGraphs(string logDir, HashSet<string> excludeVariants, int maxLogsPerGraph)
         {
             var graphs = new Dictionary<
                 (string VariantName, string SolutionName, string SourcesKey),
@@ -22,53 +22,14 @@ namespace PackageHelper.Replay
             var graphToLogCount = new Dictionary<RequestGraph, int>();
             var stringToString = new Dictionary<string, string>();
 
-            foreach (var logPath in Directory.EnumerateFiles(logDir, "restoreLog-*-*.txt"))
+            foreach (var restoreGraph in ParseGraphs(logDir, excludeVariants, stringToString))
             {
-                Console.WriteLine($"Parsing {logPath}...");
-
-                // Parse the graph.
-                var newGraph = ParseGraph(logPath, stringToString);
+                var newGraph = restoreGraph.Graph;
                 var newNodes = GraphOperations.GetNodeToNode(newGraph);
-
-                // Parse the solution name out of the file name.
-                var logFileName = Path.GetFileName(logPath);
-                var pieces = logFileName.Split(new[] { '-' });
-                string variantName;
-                string solutionName;
-                if (pieces.Length == 3)
-                {
-                    variantName = null;
-                    solutionName = pieces[1];
-                }
-                else if (pieces.Length == 4)
-                {
-                    variantName = pieces[1];
-                    solutionName = pieces[2];
-                }
-                else
-                {
-                    Console.WriteLine("  Skipping, because the file name should have 3 or 4 hyphen separated pieces.");
-                    Console.WriteLine("    Format #1 - restoreLog-{solutionName}-{timestamp}.txt");
-                    Console.WriteLine("    Format #2 - restoreLog-{variantName}-{solutionName}-{timestamp}.txt");
-                    continue;
-                }
-
-                // Display statistics.
-                if (variantName != null)
-                {
-                    Console.WriteLine($"  Variant name:       {variantName}");
-                }
-                Console.WriteLine($"  Solution name:      {solutionName}");
-                Console.WriteLine($"  Request count:      {newGraph.Nodes.Count:n0}");
-                Console.WriteLine($"  Package sources:");
-                foreach (var source in newGraph.Sources)
-                {
-                    Console.WriteLine($"  - {source}");
-                }
 
                 // Find the existing graph with the same solution name and sources.
                 var sourcesKey = string.Join(Environment.NewLine, newGraph.Sources.OrderBy(x => x, StringComparer.Ordinal));
-                var graphKey = (variantName, solutionName, sourcesKey);
+                var graphKey = (restoreGraph.VariantName, restoreGraph.SolutionName, sourcesKey);
                 if (!graphs.TryGetValue(graphKey, out var existingGraphInfo))
                 {
                     graphs.Add(graphKey, (newGraph, newNodes));
@@ -91,7 +52,7 @@ namespace PackageHelper.Replay
             }
 
             var graphInfos = graphs
-                .Select(x => new RestoreRequestGraph(x.Key.VariantName, x.Key.SolutionName, x.Value.Graph))
+                .Select(x => new RestoreRequestGraph(null, x.Key.VariantName, x.Key.SolutionName, x.Value.Graph))
                 .ToList();
 
             // Run consistency checks.
@@ -103,7 +64,61 @@ namespace PackageHelper.Replay
             return graphInfos;
         }
 
-        public static RequestGraph ParseGraph(string logPath, Dictionary<string, string> stringToString)
+        public static IEnumerable<RestoreRequestGraph> ParseGraphs(
+            string logDir,
+            HashSet<string> excludeVariants,
+            Dictionary<string, string> stringToString)
+        {
+            foreach (var logPath in Directory.EnumerateFiles(logDir, "restoreLog-*-*.txt"))
+            {
+                // Parse the solution name out of the file name.
+                var logFileName = Path.GetFileName(logPath);
+                var pieces = logFileName.Split(new[] { '-' });
+                string variantName;
+                string solutionName;
+                if (pieces.Length == 3)
+                {
+                    variantName = null;
+                    solutionName = pieces[1];
+                }
+                else if (pieces.Length == 4)
+                {
+                    variantName = pieces[1];
+                    solutionName = pieces[2];
+                }
+                else
+                {
+                    continue;
+                }
+
+                if (variantName != null && excludeVariants.Contains(variantName))
+                {
+                    continue;
+                }
+
+                Console.WriteLine($"Parsing {logPath}...");
+
+                // Parse the graph.
+                var graph = ParseRequestGraph(logPath, stringToString);
+
+                // Display statistics.
+                if (variantName != null)
+                {
+                    Console.WriteLine($"  Variant name:       {variantName}");
+                }
+                Console.WriteLine($"  Solution name:      {solutionName}");
+                Console.WriteLine($"  Request count:      {graph.Nodes.Count:n0}");
+                Console.WriteLine($"  Package sources:");
+                foreach (var source in graph.Sources)
+                {
+                    Console.WriteLine($"  - {source}");
+                }
+
+                yield return new RestoreRequestGraph(logFileName, variantName, solutionName, graph);
+            }
+        }
+
+        private static RequestGraph ParseRequestGraph(string logPath, Dictionary<string, string> stringToString)
         {
             var pendingRequests = new Dictionary<string, Queue<RequestNode>>();
             var urlToCount = new Dictionary<string, int>();

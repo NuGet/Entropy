@@ -29,10 +29,10 @@ namespace PackageHelper.Parse
         {
             var request = new StartRequest(method, url);
             var sources = new List<string> { NuGetSourceUrl };
+            var context = await OperationParserContext.CreateAsync(sources);
 
-            var operationInfos = await OperationParser.ParseAsync(sources, new[] { request });
+            var operationInfo = OperationParser.Parse(context, request);
 
-            var operationInfo = Assert.Single(operationInfos);
             Assert.Equal(type, operationInfo.Operation?.Type);
         }
 
@@ -41,10 +41,9 @@ namespace PackageHelper.Parse
         {
             var request = new StartRequest("GET", NuGetPackageBaseAddress + "newtonsoft.json/index.json");
             var sources = new List<string> { NuGetSourceUrl };
+            var context = await OperationParserContext.CreateAsync(sources);
 
-            var operationInfos = await OperationParser.ParseAsync(sources, new[] { request });
-
-            var operationInfo = Assert.Single(operationInfos);
+            var operationInfo = OperationParser.Parse(context, request);
 
             var pair = Assert.Single(operationInfo.SourceResourceUris);
             Assert.Equal(NuGetSourceUrl, pair.Key);
@@ -61,10 +60,9 @@ namespace PackageHelper.Parse
         {
             var request = new StartRequest("GET", NuGetPackageBaseAddress + "newtonsoft.json/9.0.1-beta/newtonsoft.json.9.0.1-beta.nupkg");
             var sources = new List<string> { NuGetSourceUrl };
+            var context = await OperationParserContext.CreateAsync(sources);
 
-            var operationInfos = await OperationParser.ParseAsync(sources, new[] { request });
-
-            var operationInfo = Assert.Single(operationInfos);
+            var operationInfo = OperationParser.Parse(context, request);
 
             var pair = Assert.Single(operationInfo.SourceResourceUris);
             Assert.Equal(NuGetSourceUrl, pair.Key);

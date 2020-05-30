@@ -10,6 +10,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using NuGet.Common;
+using PackageHelper.Csv;
 using PackageHelper.Replay;
 using PackageHelper.Replay.Requests;
 
@@ -17,6 +18,9 @@ namespace PackageHelper.Commands
 {
     static class ReplayRequestGraph
     {
+        public const string ResultFileName = "replay-results.csv";
+        public const string ReplayLogPrefix = "replayLog";
+
         public static Command GetCommand()
         {
             var command = new Command("replay-request-graph")
@@ -60,7 +64,7 @@ namespace PackageHelper.Commands
             }
 
             Console.WriteLine("Parsing the file name...");
-            if (!Helper.TryParseGraphFileName(path, out var graphType, out var variantName, out var solutionName))
+            if (!Helper.TryParseFileName(path, out var graphType, out var variantName, out var solutionName))
             {
                 graphType = null;
                 variantName = null;
@@ -81,7 +85,7 @@ namespace PackageHelper.Commands
             var graph = RequestGraphSerializer.ReadFromFile(path);
             Console.WriteLine($"There are {graph.Nodes.Count} requests in the graph.");
 
-            var resultsPath = Path.Combine(rootDir, "out", "replay-results.csv");
+            var resultsPath = Path.Combine(rootDir, "out", ResultFileName);
             Console.WriteLine($"Results will be writen to {resultsPath}.");
 
             using (var handler = new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip })
@@ -125,16 +129,16 @@ namespace PackageHelper.Commands
             string requestsFileName;
             if (variantName == null)
             {
-                requestsFileName = $"replayLog-{solutionName}-{Helper.GetLogTimestamp()}.csv";
+                requestsFileName = $"{ReplayLogPrefix}-{solutionName}-{Helper.GetLogTimestamp()}.csv";
             }
             else
             {
-                requestsFileName = $"replayLog-{variantName}-{solutionName}-{Helper.GetLogTimestamp()}.csv";
+                requestsFileName = $"{ReplayLogPrefix}-{variantName}-{solutionName}-{Helper.GetLogTimestamp()}.csv";
             }
 
             var requestsPath = Path.Combine(rootDir, "out", "logs", requestsFileName);
             var stopwatch = new Stopwatch();
-            using (var writer = new RequestResultWriter(requestsPath))
+            using (var writer = new BackgroundCsvWriter<ReplayRequestRecord>(requestsPath, gzip: false))
             {
                 Console.WriteLine($"{logPrefix} Starting...");
                 var nodeToTask = new Dictionary<RequestNode, Task>();
@@ -163,7 +167,7 @@ namespace PackageHelper.Commands
                 Console.WriteLine($"{logPrefix} Completed in {stopwatch.ElapsedMilliseconds}ms.");
             }
 
-            Helper.AppendCsv(resultsPath, new CsvRecord
+            CsvUtility.Append(resultsPath, new ReplayResultRecord
             {
                 TimestampUtc = Helper.GetExcelTimestamp(DateTimeOffset.UtcNow),
                 MachineName = Environment.MachineName,
@@ -185,7 +189,7 @@ namespace PackageHelper.Commands
             object consoleLock,
             HttpClient httpClient,
             RequestNode node,
-            IRequestResultWriter writer)
+            BackgroundCsvWriter<ReplayRequestRecord> writer)
         {
             await Task.WhenAll(node.Dependencies.Select(n => nodeToTask[n]).ToList());
 
@@ -218,7 +222,13 @@ namespace PackageHelper.Commands
                                 while (read > 0);
                             }
 
-                            writer.OnResponse(node, response.StatusCode, headerDuration, stopwatch.Elapsed - headerDuration);
+                            writer.Add(new ReplayRequestRecord
+                            {
+                                Url = node.StartRequest.Url,
+                                StatusCode = (int)response.StatusCode,
+                                HeaderDurationMs = headerDuration.TotalMilliseconds,
+                                BodyDurationMs = (stopwatch.Elapsed - headerDuration).TotalMilliseconds,
+                            });
 
                             if (!response.IsSuccessStatusCode && response.StatusCode != HttpStatusCode.NotFound)
                             {
@@ -242,21 +252,6 @@ namespace PackageHelper.Commands
             {
                 throttle.Release();
             }
-        }
-
-        private class CsvRecord
-        {
-            public string TimestampUtc { get; set; }
-            public string MachineName { get; set; }
-            public int Iteration { get; set; }
-            public bool IsWarmUp { get; set; }
-            public int Iterations { get; set; }
-            public string VariantName { get; set; }
-            public string SolutionName { get; set; }
-            public object RequestCount { get; set; }
-            public double DurationMs { get; set; }
-            public int MaxConcurrency { get; set; }
-            public string LogFileName { get; set; }
         }
     }
 }

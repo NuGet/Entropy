@@ -50,7 +50,10 @@ namespace PackageHelper.Replay
         {
             // Parse the request graph nodes.
             var uniqueRequests = graph.Nodes.Select(x => x.StartRequest).Distinct();
-            var parsedOperations = await OperationParser.ParseAsync(sources, uniqueRequests);
+            var operationParserContext = await OperationParserContext.CreateAsync(sources);
+            var parsedOperations = uniqueRequests
+                .Select(r => OperationParser.Parse(operationParserContext, r))
+                .ToList();
 
             var unknownOperations = parsedOperations
                 .Where(x => x.Operation == null)

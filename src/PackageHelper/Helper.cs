@@ -1,32 +1,15 @@
-﻿using CsvHelper;
-using CsvHelper.Configuration;
-using NuGet.Protocol.Core.Types;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
+using NuGet.Protocol.Core.Types;
 
 namespace PackageHelper
 {
     static class Helper
     {
         private const string RootMarker = "discover-packages.ps1";
-
-        public static void AppendCsv<T>(string resultsPath, T record)
-        {
-            var csvConfig = new CsvConfiguration(CultureInfo.InvariantCulture)
-            {
-                HasHeaderRecord = !File.Exists(resultsPath),
-            };
-
-            using (var fileStream = new FileStream(resultsPath, FileMode.Append))
-            using (var writer = new StreamWriter(fileStream))
-            using (var csv = new CsvWriter(writer, csvConfig))
-            {
-                csv.WriteRecords(new[] { record });
-            }
-        }
+        private static IReadOnlyList<string> ExtensionsToRemove = new List<string> { ".json", ".csv" };
 
         public static string GetGraphFileName(string graphType, string variantName, string solutionName)
         {
@@ -78,32 +61,37 @@ namespace PackageHelper
             }
         }
 
-        public static bool TryParseGraphFileName(string path, out string graphType, out string variantName, out string solutionName)
+        public static bool TryParseFileName(string path, out string fileType, out string variantName, out string solutionName)
         {
             var fileName = Path.GetFileNameWithoutExtension(path);
-            if (fileName.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
+
+            foreach (var extension in ExtensionsToRemove)
             {
-                fileName = fileName.Substring(0, fileName.Length - 5);
+                if (fileName.EndsWith(extension, StringComparison.OrdinalIgnoreCase))
+                {
+                    fileName = fileName.Substring(0, fileName.Length - extension.Length);
+                }
             }
+
             var pieces = fileName.Split('-');
 
             if (pieces.Length == 2)
             {
-                graphType = pieces[0];
+                fileType = pieces[0];
                 variantName = null;
                 solutionName = pieces[1];
                 return true;
             }
             else if (pieces.Length >= 3)
             {
-                graphType = pieces[0];
+                fileType = pieces[0];
                 variantName = pieces[1];
                 solutionName = pieces[2];
                 return true;
             }
             else
             {
-                graphType = null;
+                fileType = null;
                 variantName = null;
                 solutionName = null;
                 return false;

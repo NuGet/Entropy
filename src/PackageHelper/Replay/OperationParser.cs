@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using NuGet.Packaging;
-using NuGet.Protocol;
 using NuGet.Versioning;
 using PackageHelper.Replay.Operations;
 using PackageHelper.Replay.Requests;
@@ -12,85 +9,47 @@ namespace PackageHelper.Replay
 {
     public static class OperationParser
     {
-        public static async Task<List<OperationInfo>> ParseAsync(IReadOnlyList<string> sources, IEnumerable<StartRequest> requests)
+        public static OperationInfo Parse(OperationParserContext ctx, StartRequest request)
         {
-            var sourceToIndex = sources.Select((x, i) => new { Index = i, Source = x }).ToDictionary(x => x.Source, x => x.Index);
-            var sourceToServiceIndex = await PackageSourceUtility.GetSourceToServiceIndex(sources);
-
-            // This look-up is used to quickly find if a package base address is in one of the source's service indexes.
-            var packageBaseAddressToPairs = sourceToServiceIndex
-                .SelectMany(x => x
-                    .Value
-                    .GetServiceEntryUris(ServiceTypes.PackageBaseAddress)
-                    .Select(u => new { Source = x.Key, ResourceUri = u, PackageBaseAddress = u.AbsoluteUri.TrimEnd('/') + '/' }))
-                .GroupBy(x => x.PackageBaseAddress)
-                .ToDictionary(x => x.Key, x => x
-                    .Select(y => new KeyValuePair<string, Uri>(y.Source, y.ResourceUri))
-                    .ToList());
-
-            // This look-up is used to find all of the sources with a certain package base address. This should
-            // normally be a one-to-one mapping, but you can't be too careful...
-            var packageBaseAddressToSources = packageBaseAddressToPairs
-                .ToDictionary(x => x.Key, x => x.Value.Select(y => y.Key).Distinct().ToList());
-
-            var output = new List<OperationInfo>();
-
-            foreach (var request in requests)
+            if (request.Method != "GET")
             {
-                if (request.Method != "GET")
-                {
-                    output.Add(Unknown(request));
-                    continue;
-                }
-
-                var uri = new Uri(request.Url, UriKind.Absolute);
-                List<KeyValuePair<string, Uri>> pairs;
-
-                if (TryParsePackageBaseAddressIndex(uri, out var packageBaseAddressIndex)
-                    && packageBaseAddressToPairs.TryGetValue(packageBaseAddressIndex.packageBaseAddress, out pairs))
-                {
-                    output.Add(new OperationInfo(
-                        new OperationWithId(
-                            GetSourceIndex(
-                                sourceToIndex,
-                                packageBaseAddressToSources,
-                                packageBaseAddressIndex.packageBaseAddress),
-                            OperationType.PackageBaseAddressIndex,
-                            packageBaseAddressIndex.id),
-                        request,
-                        pairs));
-                    continue;
-                }
-
-                if (TryParsePackageBaseAddressNupkg(uri, out var packageBaseAddressNupkg)
-                    && packageBaseAddressToPairs.TryGetValue(packageBaseAddressNupkg.packageBaseAddress, out pairs))
-                {
-                    output.Add(new OperationInfo(
-                        new OperationWithIdVersion(
-                            GetSourceIndex(
-                                sourceToIndex,
-                                packageBaseAddressToSources,
-                                packageBaseAddressNupkg.packageBaseAddress),
-                            OperationType.PackageBaseAddressNupkg,
-                            packageBaseAddressNupkg.id,
-                            packageBaseAddressNupkg.version),
-                        request,
-                        pairs));
-                    continue;
-                }
-
-                output.Add(Unknown(request));
+                return Unknown(request);
             }
 
-            return output;
+            var uri = new Uri(request.Url, UriKind.Absolute);
+            IReadOnlyList<KeyValuePair<string, Uri>> pairs;
+
+            if (TryParsePackageBaseAddressIndex(uri, out var packageBaseAddressIndex)
+                && ctx.PackageBaseAddressToPairs.TryGetValue(packageBaseAddressIndex.packageBaseAddress, out pairs))
+            {
+                return new OperationInfo(
+                    new OperationWithId(
+                        GetSourceIndex(ctx, packageBaseAddressIndex.packageBaseAddress),
+                        OperationType.PackageBaseAddressIndex,
+                        packageBaseAddressIndex.id),
+                    request,
+                    pairs);
+            }
+
+            if (TryParsePackageBaseAddressNupkg(uri, out var packageBaseAddressNupkg)
+                && ctx.PackageBaseAddressToPairs.TryGetValue(packageBaseAddressNupkg.packageBaseAddress, out pairs))
+            {
+                return new OperationInfo(
+                    new OperationWithIdVersion(
+                        GetSourceIndex(ctx, packageBaseAddressNupkg.packageBaseAddress),
+                        OperationType.PackageBaseAddressNupkg,
+                        packageBaseAddressNupkg.id,
+                        packageBaseAddressNupkg.version),
+                    request,
+                    pairs);
+            }
+
+            return Unknown(request);
         }
 
-        private static int GetSourceIndex(
-            Dictionary<string, int> sourceToIndex,
-            Dictionary<string, List<string>> packageBaseAddressToSources,
-            string packageBaseAddress)
+        private static int GetSourceIndex(OperationParserContext ctx, string packageBaseAddress)
         {
-            var matchedSources = packageBaseAddressToSources[packageBaseAddress];
+            var matchedSources = ctx.PackageBaseAddressToSources[packageBaseAddress];
             if (matchedSources.Count > 1)
             {
                 Console.WriteLine("  WARNING: There are multiple resources with package base address:");
@@ -99,7 +58,7 @@ namespace PackageHelper.Replay
             }
 
             // Arbitrarily pick the first source.
-            return sourceToIndex[matchedSources[0]];
+            return ctx.SourceToIndex[matchedSources[0]];
         }
 
         private static OperationInfo Unknown(StartRequest request)

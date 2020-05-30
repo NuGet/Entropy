@@ -60,7 +60,7 @@ namespace PackageHelper.Commands
                 return 1;
             }
 
-            if (!Helper.TryParseGraphFileName(path, out var graphType, out var parsedVariantName, out var solutionName))
+            if (!Helper.TryParseFileName(path, out var graphType, out var parsedVariantName, out var solutionName))
             {
                 graphType = null;
                 parsedVariantName = null;

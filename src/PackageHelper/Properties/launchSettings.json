@@ -2,7 +2,7 @@
   "profiles": {
     "PackageHelper": {
       "commandName": "Project",
-      "commandLineArgs": "convert-graph \"C:\\Users\\joelv\\Desktop\\RestorePerf\\out\\graphs\\requestGraph-default-ExampleProj.json.gz\""
+      "commandLineArgs": "request-duration-report --exclude-variants default"
     }
   }
 }
