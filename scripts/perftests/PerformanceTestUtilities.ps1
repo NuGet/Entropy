@@ -36,7 +36,7 @@ function ValidateVariantName($variantName)
     }
 }
 
-function SetPackageSources($nugetClientFilePath, $sourcePath, $configFiles, $sources)
+function SetPackageSources($nugetClientFilePath, $sourcePath, $configFiles, $sources, [switch]$ignoreChanges)
 {
     $configFilePaths = $configFiles | ForEach-Object { Join-Path $sourcePath $_ }
 
@@ -48,11 +48,13 @@ function SetPackageSources($nugetClientFilePath, $sourcePath, $configFiles, $sou
     }
 
     # Verify that the repository is clean.
-    $changes = git -C $sourcePath status --porcelain=v1    
-    if ($LASTEXITCODE) { throw "Command 'git -C $sourcePath status --porcelain=v1' failed." }
-    if ($changes)
-    {
-        throw "The source path $sourcePath has changes:`r`n$changes"
+    if (!$ignoreChanges) {
+        $changes = git -C $sourcePath status --porcelain=v1    
+        if ($LASTEXITCODE) { throw "Command 'git -C $sourcePath status --porcelain=v1' failed." }
+        if ($changes)
+        {
+            throw "The source path $sourcePath has changes:`r`n$changes"
+        }
     }
     
     if ($sources)
@@ -456,7 +458,7 @@ Function RunRestore(
         Return
     }
 
-    Log "[$iteration/$iteractionCount] Running $nugetClientFilePath restore with cleanGlobalPackagesFolder:$cleanGlobalPackagesFolder cleanHttpCache:$cleanHttpCache cleanPluginsCache:$cleanPluginsCache killMsBuildAndDotnetExeProcesses:$killMsBuildAndDotnetExeProcesses force:$force"
+    Log "[$iteration/$iterationCount] Running $nugetClientFilePath restore with cleanGlobalPackagesFolder:$cleanGlobalPackagesFolder cleanHttpCache:$cleanHttpCache cleanPluginsCache:$cleanPluginsCache killMsBuildAndDotnetExeProcesses:$killMsBuildAndDotnetExeProcesses force:$force"
 
     $solutionPackagesFolderPath = $Env:NUGET_SOLUTION_PACKAGES_FOLDER_PATH
 

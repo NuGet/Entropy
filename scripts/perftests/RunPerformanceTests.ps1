@@ -198,7 +198,7 @@ Try
             $enabledSwitches += "isPackagesConfig"
         }
         $arguments = CreateNugetClientArguments $solutionFilePath $nugetClientFilePath $resultsFilePath $logsFolderPath $dumpNupkgsPath $solutionName $testRunId "warmup" $variantName -enabledSwitches $enabledSwitches
-        RunRestore @arguments -iteration 0 -iterationCount 0
+        RunRestore @arguments -iteration 1 -iterationCount 1
     }
 
     If (!$skipCleanRestores)

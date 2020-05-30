@@ -27,7 +27,7 @@ $sourceFolderPath = Join-Path $PSScriptRoot "..\..\docs\ExampleProj"
 $configFiles = @("NuGet.Config")
 $solutionFilePath = Join-Path $sourceFolderPath "ExampleProj.csproj"
 
-SetPackageSources $nugetClientFilePath $sourceFolderPath $configFiles $sources
+SetPackageSources $nugetClientFilePath $sourceFolderPath $configFiles $sources -ignoreChanges
 SetupNuGetFolders $nugetClientFilePath $nugetFoldersPath
 
 . (Join-Path $scriptsDir "RunPerformanceTests.ps1") `
