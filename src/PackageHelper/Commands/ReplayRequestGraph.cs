@@ -152,7 +152,14 @@ namespace PackageHelper.Commands
                 requestsFileName = $"{ReplayLogPrefix}-{variantName}-{solutionName}-{Helper.GetLogTimestamp()}.csv";
             }
 
-            var requestsPath = Path.Combine(rootDir, "out", "logs", requestsFileName);
+            var logsDir = Path.Combine(rootDir, "out", "logs");
+            if (!Directory.Exists(logsDir))
+            {
+                Directory.CreateDirectory(logsDir);
+            }
+            
+            var requestsPath = Path.Combine(logsDir, requestsFileName);
+
             var stopwatch = new Stopwatch();
             using (var writer = new BackgroundCsvWriter<ReplayRequestRecord>(requestsPath, gzip: false))
             {

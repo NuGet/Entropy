@@ -70,14 +70,14 @@ namespace PackageHelper.Csv
         public void Dispose()
         {
             _records.CompleteAdding();
-            if (_thread.IsAlive)
+            if (_thread?.IsAlive == true)
             {
                 _thread.Join();
             }
-            _csvWriter.Dispose();
-            _streamWriter.Dispose();
+            _csvWriter?.Dispose();
+            _streamWriter?.Dispose();
             _gzipStream?.Dispose();
-            _stream.Dispose();
+            _stream?.Dispose();
         }
     }
 }
