@@ -22,16 +22,19 @@ $ps = @(docker ps --filter "name=$dockerName")
 if ($ps.Length -gt 1) {
     Log "Stopping docker container..."
     docker stop $dockerName
+    if ($LASTEXITCODE) { throw "Command failed." }
     
     Log "Removing docker container..."
     docker rm $dockerName --force
+    if ($LASTEXITCODE) { throw "Command failed." }
 }
 
 Log "Deleting out directory..."
-Remove-Item (Join-Path $PSScriptRoot "..\out") -Recurse -Force -ErrorAction Continue
+Remove-Item (Join-Path $PSScriptRoot "..\out") -Recurse -Force
 
 Log "Fetching docker image..."
 docker pull $imageName
+if ($LASTEXITCODE) { throw "Command failed." }
 
 Log "Starting docker container..."
 docker run `
@@ -45,6 +48,7 @@ docker run `
     --env "Search__Type=Database" `
     --volume "$($dockerDataDir):/var/baget" `
     $imageName
+if ($LASTEXITCODE) { throw "Command failed." }
 
 Log "Determining port..."
 $port = docker port $dockerName `
@@ -69,6 +73,7 @@ dotnet run `
     -- `
     push $source `
     --api-key $apiKey
+if ($LASTEXITCODE) { throw "Command failed." }
 
 Log "Running test restores with test package source" "Magenta"
 & (Join-Path $PSScriptRoot "..\run-tests.ps1") `
