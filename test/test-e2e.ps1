@@ -1,3 +1,5 @@
+$ErrorActionPreference = "Stop"
+
 . (Join-Path $PSScriptRoot "..\scripts\perftests\PerformanceTestUtilities.ps1")
 
 $testDir = Join-Path $PSScriptRoot "testCases"
@@ -24,6 +26,9 @@ if ($ps.Length -gt 1) {
     Log "Removing docker container..."
     docker rm $dockerName --force
 }
+
+Log "Deleting out directory..."
+Remove-Item (Join-Path $PSScriptRoot "..\out") -Recurse -Force -ErrorAction Continue
 
 Log "Fetching docker image..."
 docker pull $imageName
@@ -85,6 +90,7 @@ dotnet run `
     -- `
     parse-restore-logs `
     --write-graphviz
+if ($LASTEXITCODE) { throw "Command failed." }
 
 Log "Replaying request graph" "Magenta"
 dotnet run `
@@ -93,6 +99,7 @@ dotnet run `
     -- `
     replay-request-graph $requestGraphPath `
     --iterations 2
+if ($LASTEXITCODE) { throw "Command failed." }
 
 Log "Converting request graph to operation graph" "Magenta"
 dotnet run `
@@ -102,6 +109,7 @@ dotnet run `
     convert-graph $requestGraphPath `
     --write-graphviz `
     --no-variant-name
+if ($LASTEXITCODE) { throw "Command failed." }
 
 Log "Converting operation graph to request graph" "Magenta"
 dotnet run `
@@ -112,6 +120,7 @@ dotnet run `
     --sources "https://api.nuget.org/v3/index.json" `
     --variant-name $nugetOrgVariantName `
     --write-graphviz
+if ($LASTEXITCODE) { throw "Command failed." }
 
 Log "Replaying generated request graph" "Magenta"
 dotnet run `
@@ -120,6 +129,15 @@ dotnet run `
     -- `
     replay-request-graph $nugetOrgRequestGraphPath `
     --iterations 2
+if ($LASTEXITCODE) { throw "Command failed." }
+
+Log "Merging test results to a single CSV" "Magenta"
+dotnet run `
+    --framework netcoreapp3.1 `
+    --project $packageHelper `
+    -- `
+    merge-test-results
+if ($LASTEXITCODE) { throw "Command failed." }
 
 Log "Dump request durations to CSV" "Magenta"
 dotnet run `
@@ -128,8 +146,7 @@ dotnet run `
     -- `
     dump-request-durations `
     --warnings-as-errors
-
-exit
+if ($LASTEXITCODE) { throw "Command failed." }
 
 Log "Testing max concurrency" "Magenta"
 & (Join-Path $PSScriptRoot "test-max-concurrency.ps1") `
