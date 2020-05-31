@@ -23,15 +23,15 @@ namespace PackageHelper.Commands
                 Description = "Parse logs for request durations and write them to a gzipped CSV",
             };
 
-            command.Add(new Option<string>("log-dir")
+            command.Add(new Option<string>("--input-dir")
             {
                 Description = "The directory to scan for recognized logs",
             });
-            command.Add(new Option<string>("path")
+            command.Add(new Option<string>("--output-path")
             {
                 Description = "The file path to write the request durations to (should end in .csv.gz)",
             });
-            command.Add(new Option<string>("machine-name", () => Environment.MachineName)
+            command.Add(new Option<string>("--machine-name", () => Environment.MachineName)
             {
                 Description = "The machine name to set for request logs with unknown machine name",
             });
@@ -63,14 +63,14 @@ namespace PackageHelper.Commands
 
 
         private static async Task<int> ExecuteAsync(
-            string logDir,
-            string path,
+            string inputDir,
+            string outputPath,
             string machineName,
             List<string> sources,
             List<string> excludeVariants,
             bool warningsAsErrors)
         {
-            var ctx = new Context(logDir, path, machineName, excludeVariants, warningsAsErrors);
+            var ctx = new Context(inputDir, outputPath, machineName, excludeVariants, warningsAsErrors);
 
             if (!InitializePaths(ctx))
             {
@@ -84,7 +84,7 @@ namespace PackageHelper.Commands
 
         private static bool InitializePaths(Context ctx)
         {
-            if (string.IsNullOrWhiteSpace(ctx.LogDir) || string.IsNullOrWhiteSpace(ctx.Path))
+            if (string.IsNullOrWhiteSpace(ctx.InputDir) || string.IsNullOrWhiteSpace(ctx.OutputPath))
             {
                 if (!Helper.TryFindRoot(out var rootDir))
                 {
@@ -92,14 +92,14 @@ namespace PackageHelper.Commands
                 }
 
                 var outDir = Path.Combine(rootDir, "out");
-                if (string.IsNullOrWhiteSpace(ctx.LogDir))
+                if (string.IsNullOrWhiteSpace(ctx.InputDir))
                 {
-                    ctx.LogDir = Path.Combine(outDir, "logs");
+                    ctx.InputDir = Path.Combine(outDir, "logs");
                 }
 
-                if (string.IsNullOrWhiteSpace(ctx.Path))
+                if (string.IsNullOrWhiteSpace(ctx.OutputPath))
                 {
-                    ctx.Path = Path.Combine(outDir, "request-durations.csv.gz");
+                    ctx.OutputPath = Path.Combine(outDir, "request-durations.csv.gz");
                 }
 
                 if (Directory.Exists(outDir))
@@ -109,10 +109,10 @@ namespace PackageHelper.Commands
                 }
             }
 
-            Console.WriteLine($"Log directory: {ctx.LogDir}");
-            Console.WriteLine($"Output path:   {ctx.Path}");
+            Console.WriteLine($"Log directory: {ctx.InputDir}");
+            Console.WriteLine($"Output path:   {ctx.OutputPath}");
 
-            var dir = Path.GetDirectoryName(ctx.Path);
+            var dir = Path.GetDirectoryName(ctx.OutputPath);
             if (!Directory.Exists(dir))
             {
                 Directory.CreateDirectory(dir);
@@ -141,95 +141,76 @@ namespace PackageHelper.Commands
 
         private static void PopulateReplayResultLookup(Context ctx, string outDir)
         {
-            var replayResultsPath = Path.Combine(outDir, ReplayRequestGraph.ResultFileName);
-            if (File.Exists(replayResultsPath))
+            foreach (var record in CsvUtility.EnumerateReplayResults(outDir))
             {
-                Console.WriteLine("Parsing the replay results for metadata...");
-                using (var reader = new StreamReader(replayResultsPath))
-                using (var csvReader = new CsvReader(reader, CultureInfo.InvariantCulture))
+                string variantName = null;
+                if (!string.IsNullOrWhiteSpace(record.VariantName))
                 {
-                    foreach (var record in csvReader.GetRecords<ReplayResultRecord>())
+                    variantName = record.VariantName;
+
+                    if (ctx.ExcludeVariants.Contains(variantName))
                     {
-                        string variantName = null;
-                        if (!string.IsNullOrWhiteSpace(record.VariantName))
-                        {
-                            variantName = record.VariantName;
-
-                            if (ctx.ExcludeVariants.Contains(variantName))
-                            {
-                                continue;
-                            }
-                        }
-
-                        var key = (variantName, record.SolutionName, record.LogFileName);
-                        if (ctx.ReplayResultLookup.ContainsKey(key))
-                        {
-                            ctx.WarningCount++;
-                            Console.WriteLine($"  WARNING: Duplicate replay result: {variantName}, {record.SolutionName}, {record.LogFileName}");
-                        }
-                        else
-                        {
-                            ctx.ReplayResultLookup.Add(key, record);
-                        }
+                        continue;
                     }
                 }
 
-                Console.WriteLine($"{ctx.ReplayResultLookup.Count} replay results were found.");
+                var key = (variantName, record.SolutionName, record.LogFileName);
+                if (ctx.ReplayResultLookup.ContainsKey(key))
+                {
+                    ctx.WarningCount++;
+                    Console.WriteLine($"  WARNING: Duplicate replay result: {variantName}, {record.SolutionName}, {record.LogFileName}");
+                }
+                else
+                {
+                    ctx.ReplayResultLookup.Add(key, record);
+                }
             }
+
+            Console.WriteLine($"{ctx.ReplayResultLookup.Count} replay results were found.");
         }
 
         private static void PopulateRestoreResultLookup(Context ctx, string outDir)
         {
-            Console.WriteLine("Parsing restore result files for metadata...");
-            var fileCount = 0;
-            foreach (var resultPath in Directory.EnumerateFiles(outDir, "results-*.csv"))
+            foreach (var record in CsvUtility.EnumerateRestoreResults(outDir))
             {
-                fileCount++;
-                using (var streamReader = new StreamReader(resultPath))
-                using (var csvReader = new CsvReader(streamReader, CultureInfo.InvariantCulture))
+                string variantName = null;
+                if (!string.IsNullOrWhiteSpace(record.VariantName))
                 {
-                    foreach (var record in csvReader.GetRecords<RestoreResultRecord>())
+                    variantName = record.VariantName;
+
+                    if (ctx.ExcludeVariants.Contains(variantName))
                     {
-                        string variantName = null;
-                        if (!string.IsNullOrWhiteSpace(record.VariantName))
-                        {
-                            variantName = record.VariantName;
-
-                            if (ctx.ExcludeVariants.Contains(variantName))
-                            {
-                                continue;
-                            }
-                        }
-
-                        var key = (variantName, record.SolutionName, record.LogFileName);
-                        if (ctx.RestoreResultLookup.ContainsKey(key))
-                        {
-                            ctx.WarningCount++;
-                            Console.WriteLine($"  WARNING: Duplicate restore result: {variantName}, {record.SolutionName}, {record.LogFileName}");
-                        }
-                        else
-                        {
-                            ctx.RestoreResultLookup.Add(key, record);
-                        }
+                        continue;
                     }
+                }
+
+                var key = (variantName, record.SolutionName, record.LogFileName);
+                if (ctx.RestoreResultLookup.ContainsKey(key))
+                {
+                    ctx.WarningCount++;
+                    Console.WriteLine($"  WARNING: Duplicate restore result: {variantName}, {record.SolutionName}, {record.LogFileName}");
+                }
+                else
+                {
+                    ctx.RestoreResultLookup.Add(key, record);
                 }
             }
 
-            Console.WriteLine($"{fileCount} restore result files were parsed. {ctx.RestoreResultLookup.Count} restore results were found.");
+            Console.WriteLine($"{ctx.RestoreResultLookup.Count} restore results were found.");
         }
 
         private static async Task<int> ExecuteAsync(Context ctx)
         {
-            using (var writer = new BackgroundCsvWriter<RequestDurationRecord>(ctx.Path, gzip: true))
+            using (var writer = new BackgroundCsvWriter<RequestDurationRecord>(ctx.OutputPath, gzip: true))
             {
-                foreach (var graph in RestoreLogParser.ParseGraphs(ctx.LogDir, ctx.ExcludeVariants, ctx.StringToString))
+                foreach (var graph in RestoreLogParser.ParseGraphs(ctx.InputDir, ctx.ExcludeVariants, ctx.StringToString))
                 {
                     await UpdateSources(ctx, graph.Graph.Sources);
 
                     WriteGraph(ctx, writer, graph);
                 }
 
-                foreach (var replayLogPath in Directory.EnumerateFiles(ctx.LogDir, $"{ReplayRequestGraph.ReplayLogPrefix}-*-*.csv"))
+                foreach (var replayLogPath in Directory.EnumerateFiles(ctx.InputDir, $"{ReplayRequestGraph.ReplayLogPrefix}-*-*.csv"))
                 {
                     WriteReplayLog(ctx, writer, replayLogPath);
                 }
@@ -283,7 +264,7 @@ namespace PackageHelper.Commands
                     {
                         VariantName = variantName,
                         SolutionName = solutionName,
-                        RequestType = RequestType.Replay,
+                        TestType = TestType.Replay,
                         MachineName = replayResultRecord?.MachineName ?? ctx.MachineName,
                         LogFileIndex = ctx.LogFileIndex,
                         LogFileRequestIndex = requestIndex,
@@ -340,11 +321,11 @@ namespace PackageHelper.Commands
                 {
                     VariantName = graph.VariantName,
                     SolutionName = graph.SolutionName,
-                    RequestType = RequestType.Restore,
+                    TestType = TestType.Restore,
                     MachineName = restoreResultRecord?.MachineName ?? ctx.MachineName,
                     LogFileIndex = ctx.LogFileIndex,
                     LogFileRequestIndex = requestIndex,
-                    IsWarmUp = hasRecord ? restoreResultRecord.ScenarioName == "warmup" : (bool?)null,
+                    IsWarmUp = hasRecord ? restoreResultRecord.IsWarmUp() : (bool?)null,
                     Iteration = hasRecord ? restoreResultRecord.Iteration : (int?)null,
                     Iterations = hasRecord ? restoreResultRecord.IterationCount : (int?)null,
                     Method = node.StartRequest.Method,
@@ -400,10 +381,10 @@ namespace PackageHelper.Commands
 
         private class Context
         {
-            public Context(string logDir, string path, string machineName, IEnumerable<string> excludeVariants, bool warningsAsErrors)
+            public Context(string inputDir, string outputPath, string machineName, IEnumerable<string> excludeVariants, bool warningsAsErrors)
             {
-                LogDir = logDir;
-                Path = path;
+                InputDir = inputDir;
+                OutputPath = outputPath;
                 MachineName = machineName;
                 ExcludeVariants = excludeVariants.ToHashSet();
                 WarningsAsErrors = warningsAsErrors;
@@ -416,8 +397,8 @@ namespace PackageHelper.Commands
                 RequestToOperation = new Dictionary<StartRequest, OperationInfo>();
             }
 
-            public string LogDir { get; set; }
-            public string Path { get; set; }
+            public string InputDir { get; set; }
+            public string OutputPath { get; set; }
             public string MachineName { get; set; }
             public HashSet<string> ExcludeVariants { get; }
             public bool WarningsAsErrors { get; }

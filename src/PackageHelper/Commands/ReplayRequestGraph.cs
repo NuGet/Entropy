@@ -203,7 +203,7 @@ namespace PackageHelper.Commands
                 DurationMs = stopwatch.Elapsed.TotalMilliseconds,
                 MaxConcurrency = maxConcurrency,
                 LogFileName = requestsFileName,
-                NoDependencies = noDependencies,
+                Dependencies = !noDependencies,
             });
         }
 

@@ -196,22 +196,64 @@ This command would generate a new request graph with the package source of nuget
 used to generate the original request graph in the example above. From here, you can generate a request graph for as
 many sources as you want with the same operation graph.
 
-### Dump request durations to CSV
+### Merge test results to a single CSV
 
 Both the `.\run-tests.ps1` script and `replay-request-graph` output CSV files in the `.\out` directory which summarize
-the duration of entire user operations (e.g. NuGet restore). However if you are interesting in looking at individual
-request durations, you can use the `dump-request-durations` command.
+the duration of entire user operations (e.g. NuGet restore). These output CSV files can be combined into a single CSV
+using the `merge-test-results` command.
+
+```
+dotnet run `
+    merge-test-results `
+    --framework netcoreapp3.1 `
+    --project .\src\PackageHelper\PackageHelper.csproj
+```
+
+By default, the `.\out` directory is read for result files and the output is written to `.\out\merged-test-results.csv`.
+
+**Example merged test results CSV:** [merged-test-results.csv](docs/ExampleProj-out/merged-test-results.csv)
+
+#### CSV format
+
+The CSV produced has the following columns:
+
+Column name         | Type   | Description
+------------------- | ------ | -----------
+TimestampUtc        | string | The approximate time of the test, `yyyy-MM-dd HH:mm:ss` (readable by Excel)
+VariantName         | string | Variant name for the test run, often used to identify the package sources used
+SolutionName        | string | Solution name for the test run
+TestType            | string | The type of test *(see below for values)*
+MachineName         | string | Machine that executed the request
+TestResultIndex     | int    | Index per test result in the output file
+IsWarmUp            | bool   | True if the test was a warm-up iteration
+Iteration           | int    | Iteration number of the test
+Iterations          | int    | Total number of iterations for the test
+DurationMs          | double | Duration of the test in milliseconds
+LogFileName         | string | The log file name for the test (in `.\out\logs`)
+Dependencies        | bool   | Whether request dependencies were observed, always true for test type for `Restore`
+
+The `TestType` is an enum represented as a string with the following values.
+
+TypeType  | Description
+--------- | -----------
+`Restore` | A real NuGet restore was performed
+`Replay`  | The request was produced by the `replay-request-graph` command
+
+### Dump request durations to CSV
+
+If you are interesting in looking at individual request durations, you can use the `dump-request-durations` command,
+which reads request durations from `.\out\logs`. Both the `.\run-tests.ps1` script and the `replay-request-graph`
+command write log files containing request data.
 
 ```
 dotnet run `
     dump-request-durations `
     --framework netcoreapp3.1 `
-    --project $packageHelper
+    --project .\src\PackageHelper\PackageHelper.csproj
 ```
 
 By default, the CSV is written to `.\out\request-durations.csv.gz`. The CSV is gzipped because it can get really big
-and has a lot of repeated information (for ease of post-processing). This CSV can be easily imported into many other
-tools, such as Excel or Kusto.
+and has a lot of repeated information (for ease of post-processing).
 
 **Example request durations CSV:** [request-durations.csv](docs/ExampleProj-out/request-durations.csv) (ungzipped, for clarity)
 
@@ -223,7 +265,7 @@ Column name         | Type   | Description
 ------------------- | ------ | -----------
 VariantName         | string | Variant name for the test run, often used to identify the package sources used
 SolutionName        | string | Solution name used to produce the request
-RequestType         | string | The type of test that produced the request *(see below for values)*
+TestType            | string | The type of test that produced the request *(see above for values)*
 MachineName         | string | Machine that executed the request
 LogFileIndex        | int    | Index per log file processed
 LogFileRequestIndex | int    | Index per request found in log file
@@ -234,17 +276,10 @@ Method              | string | HTTP request method
 Url                 | string | Absolute URL for the request
 StatusCode          | int    | HTTP status code
 HeaderDurationMs    | double | Time to fetch HTTP response headers in milliseconds
-BodyDurationMs      | double | Time to fetch HTTP response body in milliseconds, not present for request type `Restore`
+BodyDurationMs      | double | Time to fetch HTTP response body in milliseconds, not present for test type `Restore`
 OperationType       | string | Identifies the type of NuGet operation *(see below for values)*
 PackageId           | string | Package ID parameter for the NuGet operation
 PackageVersion      | string | Package Version parameter for the NuGet operation
-
-The `RequestType` is an enum represented as a string with the following values.
-
-RequestType | Description
------------ | -----------
-`Restore`   | The request was produced by a real NuGet restore
-`Replay`    | The request was produced by the `replay-request-graph` command
 
 The `OperationType` is an enum represented as a string with the following values. Each operation type corresponds to an
 individual [NuGet V3 API](https://docs.microsoft.com/en-us/nuget/api/overview) resource endpoint.

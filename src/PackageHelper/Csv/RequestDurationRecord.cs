@@ -6,7 +6,7 @@ namespace PackageHelper.Csv
     {
         public string VariantName { get; set; }
         public string SolutionName { get; set; }
-        public RequestType RequestType { get; set; }
+        public TestType TestType { get; set; }
         public string MachineName { get; set; }
         public int LogFileIndex { get; set; }
         public int LogFileRequestIndex { get; set; }

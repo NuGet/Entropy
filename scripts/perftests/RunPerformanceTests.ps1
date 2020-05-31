@@ -85,7 +85,7 @@ Function CreateNugetClientArguments(
     [string] $logsFolderPath,
     [string] $dumpNupkgsPath,
     [string] $solutionName,
-    [string] $testRunId,
+    [string] $timestampUtc,
     [string] $scenarioName,
     [string] $variantName,
     [string[]] $enabledSwitches)
@@ -98,7 +98,7 @@ Function CreateNugetClientArguments(
         dumpNupkgsPath = $dumpNupkgsPath
         scenarioName = $scenarioName
         solutionName = $solutionName
-        testRunId = $testRunId
+        timestampUtc = $timestampUtc
         variantName = $variantName
     }
 
@@ -183,7 +183,7 @@ Try
     Log "Measuring restore for $solutionFilePath by $nugetClientFilePath" "Green"
 
     $solutionName = [System.IO.Path]::GetFileNameWithoutExtension($solutionFilePath)
-    $testRunId = [System.DateTime]::UtcNow.ToString("O")
+    $timestampUtc = [System.DateTime]::UtcNow.ToString("O")
 
     If (!$skipWarmup)
     {
@@ -197,7 +197,7 @@ Try
         {
             $enabledSwitches += "isPackagesConfig"
         }
-        $arguments = CreateNugetClientArguments $solutionFilePath $nugetClientFilePath $resultsFilePath $logsFolderPath $dumpNupkgsPath $solutionName $testRunId "warmup" $variantName -enabledSwitches $enabledSwitches
+        $arguments = CreateNugetClientArguments $solutionFilePath $nugetClientFilePath $resultsFilePath $logsFolderPath $dumpNupkgsPath $solutionName $timestampUtc "warmup" $variantName -enabledSwitches $enabledSwitches
         RunRestore @arguments -iteration 1 -iterationCount 1
     }
 
@@ -213,7 +213,7 @@ Try
         {
             $enabledSwitches += "isPackagesConfig"
         }
-        $arguments = CreateNugetClientArguments $solutionFilePath $nugetClientFilePath $resultsFilePath $logsFolderPath $dumpNupkgsPath $solutionName $testRunId "arctic" $variantName -enabledSwitches $enabledSwitches
+        $arguments = CreateNugetClientArguments $solutionFilePath $nugetClientFilePath $resultsFilePath $logsFolderPath $dumpNupkgsPath $solutionName $timestampUtc "arctic" $variantName -enabledSwitches $enabledSwitches
         1..$iterationCount | ForEach-Object { RunRestore @arguments -iteration $_ -iterationCount $iterationCount }
     }
 
@@ -229,21 +229,21 @@ Try
         {
             $enabledSwitches += "isPackagesConfig"
         }
-        $arguments = CreateNugetClientArguments $solutionFilePath $nugetClientFilePath $resultsFilePath $logsFolderPath $dumpNupkgsPath $solutionName $testRunId "cold" $variantName -enabledSwitches $enabledSwitches
+        $arguments = CreateNugetClientArguments $solutionFilePath $nugetClientFilePath $resultsFilePath $logsFolderPath $dumpNupkgsPath $solutionName $timestampUtc "cold" $variantName -enabledSwitches $enabledSwitches
         1..$iterationCount | ForEach-Object { RunRestore @arguments -iteration $_ -iterationCount $iterationCount }
     }
 
     If (!$skipForceRestores)
     {
         Log "Running $($iterationCount)x force restores"
-        $arguments = CreateNugetClientArguments $solutionFilePath $nugetClientFilePath $resultsFilePath $logsFolderPath $dumpNupkgsPath $solutionName $testRunId "force" $variantName -enabledSwitches @("force")
+        $arguments = CreateNugetClientArguments $solutionFilePath $nugetClientFilePath $resultsFilePath $logsFolderPath $dumpNupkgsPath $solutionName $timestampUtc "force" $variantName -enabledSwitches @("force")
         1..$iterationCount | ForEach-Object { RunRestore @arguments -iteration $_ -iterationCount $iterationCount }
     }
 
     If (!$skipNoOpRestores)
     {
         Log "Running $($iterationCount)x no-op restores"
-        $arguments = CreateNugetClientArguments $solutionFilePath $nugetClientFilePath $resultsFilePath $logsFolderPath $dumpNupkgsPath $solutionName $testRunId "noop" $variantName
+        $arguments = CreateNugetClientArguments $solutionFilePath $nugetClientFilePath $resultsFilePath $logsFolderPath $dumpNupkgsPath $solutionName $timestampUtc "noop" $variantName
         1..$iterationCount | ForEach-Object { RunRestore @arguments -iteration $_ -iterationCount $iterationCount }
     }
 

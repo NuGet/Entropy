@@ -16,8 +16,8 @@ namespace PackageHelper.Csv
         [Name("Solution Name")]
         public string SolutionName { get; set; }
 
-        [Name("Test Run ID")]
-        public string TestRunID { get; set; }
+        [Name("Timestamp (UTC)")]
+        public string TimestampUtc { get; set; }
 
         [Name("Iteration")]
         public int Iteration { get; set; }

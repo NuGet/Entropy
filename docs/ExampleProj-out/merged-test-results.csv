@@ -1,0 +1,9 @@
+TimestampUtc,VariantName,SolutionName,TestType,MachineName,TestResultIndex,IsWarmUp,Iteration,Iterations,DurationMs,LogFileName,Dependencies
+2020-05-30 20:44:05,default,ExampleProj,Restore,AMARANTH,0,True,1,1,5625.982,restoreLog-default-ExampleProj-20200530T2044119430.txt,True
+2020-05-30 20:43:03,discoverpackages,ExampleProj,Restore,AMARANTH,1,True,1,1,5954.0782,restoreLog-discoverpackages-ExampleProj-20200530T2043098630.txt,True
+2020-05-30 20:44:23,teste2e,ExampleProj,Replay,AMARANTH,2,True,0,2,784.4429,replayLog-teste2e-ExampleProj-20200530T2044226545.csv,True
+2020-05-30 20:44:24,teste2e,ExampleProj,Replay,AMARANTH,3,False,1,2,757.7904,replayLog-teste2e-ExampleProj-20200530T2044235642.csv,True
+2020-05-30 20:44:25,teste2e,ExampleProj,Replay,AMARANTH,4,False,2,2,1586.1369,replayLog-teste2e-ExampleProj-20200530T2044243612.csv,True
+2020-05-30 20:44:40,nugetorg,ExampleProj,Replay,AMARANTH,5,True,0,2,1451.6304,replayLog-nugetorg-ExampleProj-20200530T2044386579.csv,True
+2020-05-30 20:44:40,nugetorg,ExampleProj,Replay,AMARANTH,6,False,1,2,433.4833,replayLog-nugetorg-ExampleProj-20200530T2044401731.csv,True
+2020-05-30 20:44:41,nugetorg,ExampleProj,Replay,AMARANTH,7,False,2,2,421.7528,replayLog-nugetorg-ExampleProj-20200530T2044406434.csv,True

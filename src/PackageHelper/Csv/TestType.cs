@@ -1,6 +1,6 @@
 ﻿namespace PackageHelper.Csv
 {
-    public enum RequestType
+    public enum TestType
     {
         Replay,
         Restore
