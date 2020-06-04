@@ -37,13 +37,21 @@ namespace PackageHelper.Commands
             {
                 Description = "API key to use when pushing packages",
             });
+            command.Add(new Option<int>("--max-concurrency", getDefaultValue: () => 8)
+            {
+                Description = "Maximum number of parallel pushes",
+            });
+            command.Add(new Option<int>("--max-id-concurrency", getDefaultValue: () => 8)
+            {
+                Description = "Maximum number of parallel pushes to a single ID",
+            });
 
-            command.Handler = CommandHandler.Create<string, string, string>(ExecuteAsync);
+            command.Handler = CommandHandler.Create<string, string, string, int, int>(ExecuteAsync);
 
             return command;
         }
 
-        static async Task<int> ExecuteAsync(string pushSource, string listSource, string apiKey)
+        static async Task<int> ExecuteAsync(string pushSource, string listSource, string apiKey, int maxConcurrency, int maxIdConcurrency)
         {
             if (!Helper.TryFindRoot(out var rootDir))
             {
@@ -65,17 +73,27 @@ namespace PackageHelper.Commands
             var packageUpdate = await Repository.Factory.GetCoreV3(pushSource).GetResourceAsync<PackageUpdateResource>();
             var findPackageById = await Repository.Factory.GetCoreV3(listSource).GetResourceAsync<FindPackageByIdResource>();
             var pushedVersionsLock = new object();
+            var idToSemaphore = new ConcurrentDictionary<string, SemaphoreSlim>(StringComparer.OrdinalIgnoreCase);
             var pushedVersions = new Dictionary<string, Task<HashSet<NuGetVersion>>>(StringComparer.OrdinalIgnoreCase);
             var work = new ConcurrentQueue<string>(Directory.EnumerateFiles(nupkgDir, "*.nupkg", SearchOption.AllDirectories));
             var consoleLock = new object();
 
             var workers = Enumerable
-                .Range(0, 8)
+                .Range(0, maxConcurrency)
                 .Select(async i =>
                 {
                     while (work.TryDequeue(out var nupkgPath))
                     {
-                        await PushAsync(findPackageById, packageUpdate, apiKey, nupkgPath, pushedVersionsLock, pushedVersions, consoleLock, allowRetry: true);
+                        await PushAsync(
+                            findPackageById,
+                            packageUpdate,
+                            apiKey,
+                            nupkgPath,
+                            pushedVersionsLock,
+                            id => idToSemaphore.GetOrAdd(id, _ => new SemaphoreSlim(maxIdConcurrency)),
+                            pushedVersions,
+                            consoleLock,
+                            allowRetry: true);
                     }
                 })
                 .ToList();
@@ -91,6 +109,7 @@ namespace PackageHelper.Commands
             string apiKey,
             string nupkgPath,
             object pushedVersionsLock,
+            Func<string, SemaphoreSlim> getIdSemaphore,
             Dictionary<string, Task<HashSet<NuGetVersion>>> pushedVersions,
             object consoleLock,
             bool allowRetry)
@@ -122,17 +141,26 @@ namespace PackageHelper.Commands
             Console.WriteLine($"Pushing {identity.Id} {identity.Version.ToNormalizedString()}...");
             try
             {
-                await packageUpdate.Push(
-                   nupkgPath,
-                   symbolSource: string.Empty,
-                   timeoutInSecond: 300,
-                   disableBuffering: false,
-                   getApiKey: _ => apiKey,
-                   getSymbolApiKey: null,
-                   noServiceEndpoint: false,
-                   skipDuplicate: false,
-                   symbolPackageUpdateResource: null,
-                   log: NullLogger.Instance); // new ConsoleLogger());
+                var idSemaphore = getIdSemaphore(identity.Id);
+                await idSemaphore.WaitAsync();
+                try
+                {
+                    await packageUpdate.Push(
+                       nupkgPath,
+                       symbolSource: string.Empty,
+                       timeoutInSecond: 300,
+                       disableBuffering: false,
+                       getApiKey: _ => apiKey,
+                       getSymbolApiKey: null,
+                       noServiceEndpoint: false,
+                       skipDuplicate: false,
+                       symbolPackageUpdateResource: null,
+                       log: NullLogger.Instance); // new ConsoleLogger());
+                }
+                finally
+                {
+                    idSemaphore.Release();
+                }
 
                 lock (pushedVersionsLock)
                 {
@@ -141,7 +169,16 @@ namespace PackageHelper.Commands
             }
             catch (HttpRequestException ex) when (ex.Message.StartsWith("Response status code does not indicate success: 409 ") && allowRetry)
             {
-                await PushAsync(findPackageById, packageUpdate, apiKey, nupkgPath, pushedVersionsLock, pushedVersions, consoleLock, allowRetry: false);
+                await PushAsync(
+                    findPackageById,
+                    packageUpdate,
+                    apiKey,
+                    nupkgPath,
+                    pushedVersionsLock,
+                    getIdSemaphore,
+                    pushedVersions,
+                    consoleLock,
+                    allowRetry: false);
             }
             catch (Exception ex)
             {
