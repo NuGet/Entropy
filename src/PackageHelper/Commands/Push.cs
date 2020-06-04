@@ -75,14 +75,16 @@ namespace PackageHelper.Commands
             var pushedVersionsLock = new object();
             var idToSemaphore = new ConcurrentDictionary<string, SemaphoreSlim>(StringComparer.OrdinalIgnoreCase);
             var pushedVersions = new Dictionary<string, Task<HashSet<NuGetVersion>>>(StringComparer.OrdinalIgnoreCase);
-            var work = new ConcurrentQueue<string>(Directory.EnumerateFiles(nupkgDir, "*.nupkg", SearchOption.AllDirectories));
+            var work = new ConcurrentBag<string>(Directory
+                .EnumerateFiles(nupkgDir, "*.nupkg", SearchOption.AllDirectories)
+                .OrderBy(x => Guid.NewGuid()));
             var consoleLock = new object();
 
             var workers = Enumerable
                 .Range(0, maxConcurrency)
                 .Select(async i =>
                 {
-                    while (work.TryDequeue(out var nupkgPath))
+                    while (work.TryTake(out var nupkgPath))
                     {
                         await PushAsync(
                             findPackageById,
