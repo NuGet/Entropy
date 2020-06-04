@@ -86,6 +86,7 @@ namespace PackageHelper.Commands
                 {
                     while (work.TryTake(out var nupkgPath))
                     {
+                        Console.WriteLine($"[{work.Count} remaining] Processing {nupkgPath}...");
                         await PushAsync(
                             findPackageById,
                             packageUpdate,
