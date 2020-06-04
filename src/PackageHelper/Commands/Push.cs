@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using NuGet.Common;
 using NuGet.Packaging;
+using NuGet.Packaging.Core;
 using NuGet.Protocol;
 using NuGet.Protocol.Core.Types;
 using NuGet.Versioning;
@@ -86,11 +87,14 @@ namespace PackageHelper.Commands
                 {
                     while (work.TryTake(out var nupkgPath))
                     {
-                        Console.WriteLine($"[{work.Count} remaining] Processing {nupkgPath}...");
+                        using var reader = new PackageArchiveReader(nupkgPath);
+                        var identity = reader.GetIdentity();
+                        Console.WriteLine($"[{work.Count} remaining] Processing {identity.Id} {identity.Version}...");
                         await PushAsync(
                             findPackageById,
                             packageUpdate,
                             apiKey,
+                            identity,
                             nupkgPath,
                             pushedVersionsLock,
                             id => idToSemaphore.GetOrAdd(id, _ => new SemaphoreSlim(maxIdConcurrency)),
@@ -110,6 +114,7 @@ namespace PackageHelper.Commands
             FindPackageByIdResource findPackageById,
             PackageUpdateResource packageUpdate,
             string apiKey,
+            PackageIdentity identity,
             string nupkgPath,
             object pushedVersionsLock,
             Func<string, SemaphoreSlim> getIdSemaphore,
@@ -117,9 +122,6 @@ namespace PackageHelper.Commands
             object consoleLock,
             bool allowRetry)
         {
-            using var reader = new PackageArchiveReader(nupkgPath);
-            var identity = reader.GetIdentity();
-
             // Get the list of existing versions.
             Task<HashSet<NuGetVersion>> versionsTask;
             lock (pushedVersionsLock)
@@ -141,7 +143,7 @@ namespace PackageHelper.Commands
                 }
             }
 
-            Console.WriteLine($"Pushing {identity.Id} {identity.Version.ToNormalizedString()}...");
+            Console.WriteLine($"  Pushing {identity.Id} {identity.Version.ToNormalizedString()}...");
             try
             {
                 var idSemaphore = getIdSemaphore(identity.Id);
@@ -176,6 +178,7 @@ namespace PackageHelper.Commands
                     findPackageById,
                     packageUpdate,
                     apiKey,
+                    identity,
                     nupkgPath,
                     pushedVersionsLock,
                     getIdSemaphore,
@@ -187,7 +190,7 @@ namespace PackageHelper.Commands
             {
                 lock (consoleLock)
                 {
-                    Console.WriteLine($"Push of {identity.Id} {identity.Version.ToNormalizedString()} ({new FileInfo(nupkgPath).Length} bytes) failed with exception:");
+                    Console.WriteLine($"  Push of {identity.Id} {identity.Version.ToNormalizedString()} ({new FileInfo(nupkgPath).Length} bytes) failed with exception:");
                     Console.WriteLine(ex);
                 }
                 return;
@@ -198,7 +201,7 @@ namespace PackageHelper.Commands
         {
             lock (consoleLock)
             {
-                Console.WriteLine($"Checking pushed versions of {id}...");
+                Console.WriteLine($"  Checking pushed versions of {id}...");
             }
 
             using var cacheContext = Helper.GetCacheContext();
