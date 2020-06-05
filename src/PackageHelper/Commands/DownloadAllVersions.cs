@@ -15,6 +15,8 @@ namespace PackageHelper.Commands
 {
     static class DownloadAllVersions
     {
+        public const string NuGetOrg = "https://api.nuget.org/v3/index.json";
+
         public static Command GetCommand()
         {
             var command = new Command("download-all-versions")
@@ -49,7 +51,7 @@ namespace PackageHelper.Commands
                 .ToList();
             Console.WriteLine($"Found {ids.Count} package IDs in the .nupkg directory.");
 
-            var sourceRepository = Repository.Factory.GetCoreV3("https://api.nuget.org/v3/index.json");
+            var sourceRepository = Repository.Factory.GetCoreV3(NuGetOrg);
             var resource = await sourceRepository.GetResourceAsync<FindPackageByIdResource>();
 
             var idBag = new ConcurrentQueue<string>(ids);

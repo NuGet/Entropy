@@ -16,6 +16,7 @@ namespace PackageHelper
             var rootCommand = new RootCommand();
 
             rootCommand.Add(DownloadAllVersions.GetCommand());
+            rootCommand.Add(DownloadPackage.GetCommand());
             rootCommand.Add(Push.GetCommand());
             rootCommand.Add(ParseRestoreLogs.GetCommand());
             rootCommand.Add(ReplayRequestGraph.GetCommand());
