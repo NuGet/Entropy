@@ -52,7 +52,7 @@ namespace PackageHelper.Commands
 
             var nupkgDir = Path.Combine(rootDir, "out", "nupkgs");
 
-            var sourceRepository = Repository.Factory.GetCoreV3("https://api.nuget.org/v3/index.json");
+            var sourceRepository = Repository.Factory.GetCoreV3(source);
             var resource = await sourceRepository.GetResourceAsync<FindPackageByIdResource>();
 
             var lowerId = id.ToLowerInvariant();
