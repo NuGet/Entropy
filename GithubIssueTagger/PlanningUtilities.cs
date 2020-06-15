@@ -25,9 +25,9 @@ namespace GithubIssueTagger
         {
             Predicate<Issue> isRelevant = (Issue x) => IsPerformance(x);
             // 108 is Sprint 171
-            var homeIssues = await IssueUtilities.GetIssuesForMilestone(client, "nuget", "home", "108", isRelevant);
+            var homeIssues = await IssueUtilities.GetIssuesForMilestone(client, "nuget", "home", "110", isRelevant);
             // 13 is Sprint 171
-            var clientEngineeringIssues = await IssueUtilities.GetIssuesForMilestone(client, "nuget", "client.engineering", "13", isRelevant);
+            var clientEngineeringIssues = await IssueUtilities.GetIssuesForMilestone(client, "nuget", "client.engineering", "14", isRelevant);
             var issues = homeIssues.Union(clientEngineeringIssues);
 
             return issues;

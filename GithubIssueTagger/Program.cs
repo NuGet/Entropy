@@ -1,7 +1,5 @@
 ﻿using Octokit;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace GithubIssueTagger
@@ -21,11 +19,7 @@ namespace GithubIssueTagger
                 Credentials = new Credentials(args[0])
             };
 
-            var unprocessedIssues = await IssueUtilities.GetUnprocessedIssues(client, "nuget", "home");
-            foreach(var issue in unprocessedIssues)
-            {
-                Console.WriteLine(issue.HtmlUrl);
-            }
+            await PlanningUtilities.RunPlanningAsync(client);
         }
     }
 }
