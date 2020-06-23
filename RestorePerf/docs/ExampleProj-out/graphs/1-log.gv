@@ -1,0 +1,21 @@
+digraph G {
+  "nuget.packaging/index.json" -> "nuget.packaging.5.6.0.nupkg" [dir=back];
+  "nuget.configuration/index.json" -> "nuget.packaging.5.6.0.nupkg" [dir=back];
+  "nuget.packaging/index.json" -> "nuget.configuration.5.6.0.nupkg" [dir=back];
+  "nuget.configuration/index.json" -> "nuget.configuration.5.6.0.nupkg" [dir=back];
+  "nuget.packaging.5.6.0.nupkg" -> "nuget.common/index.json" [dir=back];
+  "nuget.configuration.5.6.0.nupkg" -> "nuget.common/index.json" [dir=back];
+  "nuget.packaging.5.6.0.nupkg" -> "nuget.versioning/index.json" [dir=back];
+  "nuget.configuration.5.6.0.nupkg" -> "nuget.versioning/index.json" [dir=back];
+  "nuget.common/index.json" -> "nuget.common.5.6.0.nupkg" [dir=back];
+  "nuget.common/index.json" -> "nuget.versioning.5.6.0.nupkg" [dir=back];
+  "nuget.versioning/index.json" -> "nuget.versioning.5.6.0.nupkg" [dir=back];
+  "nuget.common.5.6.0.nupkg" -> "nuget.frameworks/index.json" [dir=back];
+  "nuget.versioning.5.6.0.nupkg" -> "nuget.frameworks/index.json" [dir=back];
+  "nuget.frameworks/index.json" -> "nuget.frameworks.5.6.0.nupkg" [dir=back];
+  {
+    rank=same;
+    "nuget.configuration/index.json";
+    "nuget.packaging/index.json";
+  }
+}

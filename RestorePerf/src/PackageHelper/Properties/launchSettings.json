@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "PackageHelper": {
+      "commandName": "Project",
+      "commandLineArgs": "request-duration-report --exclude-variants default"
+    }
+  }
+}

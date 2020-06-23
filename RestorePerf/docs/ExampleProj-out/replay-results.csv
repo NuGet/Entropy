@@ -1,0 +1,7 @@
+TimestampUtc,MachineName,Iteration,IsWarmUp,Iterations,VariantName,SolutionName,RequestCount,DurationMs,MaxConcurrency,LogFileName,Dependencies
+2020-05-26 04:51:56,AMARANTH,0,True,5,nuget,ExampleProj,10,1014.6786,64,replayLog-nuget-ExampleProj-20200526T0451555600.csv,True
+2020-05-26 04:51:57,AMARANTH,1,False,5,nuget,ExampleProj,10,425.0586,64,replayLog-nuget-ExampleProj-20200526T0451566200.csv,True
+2020-05-26 04:51:57,AMARANTH,2,False,5,nuget,ExampleProj,10,414.9615,64,replayLog-nuget-ExampleProj-20200526T0451570706.csv,True
+2020-05-26 04:51:58,AMARANTH,3,False,5,nuget,ExampleProj,10,509.8195,64,replayLog-nuget-ExampleProj-20200526T0451575147.csv,True
+2020-05-26 04:51:58,AMARANTH,4,False,5,nuget,ExampleProj,10,472.5276,64,replayLog-nuget-ExampleProj-20200526T0451580497.csv,True
+2020-05-26 04:51:59,AMARANTH,5,False,5,nuget,ExampleProj,10,455.3934,64,replayLog-nuget-ExampleProj-20200526T0451585493.csv,True
