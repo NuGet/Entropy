@@ -24,8 +24,6 @@ namespace ChangelogGenerator
         [Option('v', "verbose", HelpText = "Print details during execution.")]
         public bool Verbose { get; set; }
 
-        [Option('o', "include-open", HelpText = "Include open issues.")]
-        public bool IncludeOpen { get; set; }
 
         [Usage(ApplicationAlias = "changelog-generator")]
         public static IEnumerable<Example> Examples

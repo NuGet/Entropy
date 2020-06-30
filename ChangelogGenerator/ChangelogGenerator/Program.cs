@@ -18,7 +18,7 @@ namespace ChangelogGenerator
                     {
                         try
                         {
-                            var fileName = "Changelog-" + options.Release
+                            var fileName = "NuGet-" + options.Release
                                 + (string.IsNullOrEmpty(options.RequiredLabel) ? "" : options.RequiredLabel) + ".md";
 
                             File.WriteAllText(fileName, await new ChangelogGenerator(options).GenerateChangelog());
