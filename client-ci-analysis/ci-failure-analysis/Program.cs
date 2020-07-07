@@ -82,7 +82,7 @@ namespace ci_failure_analysis
 
         private static bool IsUserFailure(string reason)
         {
-            return reason == "cancelled by user" || reason == "needs work";
+            return reason == "cancelled by user" || reason == "needs work" || reason == "force push before build";
         }
 
         public class BuildInfo

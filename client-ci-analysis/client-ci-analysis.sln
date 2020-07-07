@@ -3,16 +3,17 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30128.36
 MinimumVisualStudioVersion = 15.0.26124.0
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "find-buids-in-sprint", "find-buids-in-sprint\find-buids-in-sprint.csproj", "{77967AEE-1BE6-4424-AB78-27484B0FF578}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "find-buids-in-sprint", "find-buids-in-sprint\find-buids-in-sprint.csproj", "{77967AEE-1BE6-4424-AB78-27484B0FF578}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{AD93E837-5968-4485-8F25-125F19E5DE2B}"
 	ProjectSection(SolutionItems) = preProject
+		.gitignore = .gitignore
 		readme.md = readme.md
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ci-failure-analysis", "ci-failure-analysis\ci-failure-analysis.csproj", "{6E95E9D8-643B-433A-A4C0-D5635033EA99}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ci-failure-analysis", "ci-failure-analysis\ci-failure-analysis.csproj", "{6E95E9D8-643B-433A-A4C0-D5635033EA99}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "find-incomplete-tests", "find-incomplete-tests\find-incomplete-tests.csproj", "{107574C5-102F-4511-A56B-F47B4B82A3C9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "find-incomplete-tests", "find-incomplete-tests\find-incomplete-tests.csproj", "{107574C5-102F-4511-A56B-F47B4B82A3C9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

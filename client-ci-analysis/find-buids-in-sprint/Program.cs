@@ -11,79 +11,91 @@ namespace find_buids_in_sprint
 {
     class Program
     {
-        // todo: read this from somewhere, not in code, to minimise risk of accidentally commiting secrets
-        private const string accountName = "";
-        private const string personalAccessToken = "";
-
         static async Task Main(string[] args)
         {
-            var startTime = new DateTimeOffset(2020, 05, 23, 0, 0, 0, TimeSpan.FromHours(-7));
-            var endTime = new DateTimeOffset(2020, 06, 12, 0, 0, 0, TimeSpan.FromHours(-7));
+            var startTime = new DateTimeOffset(2020, 06, 13, 0, 0, 0, TimeSpan.FromHours(-7));
+            var endTime = new DateTimeOffset(2020, 07, 05, 0, 0, 0, TimeSpan.FromHours(-7));
+
+            var accountName = Environment.GetEnvironmentVariable("AzDO_ACCOUNT");
+            var personalAccessToken = Environment.GetEnvironmentVariable("AzDO_PAT");
 
             if (string.IsNullOrWhiteSpace(accountName) || string.IsNullOrWhiteSpace(personalAccessToken))
             {
-                Console.WriteLine("Set account name and PAT");
+                Console.WriteLine("Set AzDO_ACCOUNT and AzDO_PAT environment variables.");
+                Console.WriteLine("Project properties -> Debug in VS");
+                Console.WriteLine("launchSettings.json in VSCode");
                 return;
             }
 
             using var client = new HttpClient();
             client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("BASIC", Convert.ToBase64String(System.Text.Encoding.ASCII.GetBytes(accountName + ":" + personalAccessToken)));
 
-            //using var request = new HttpRequestMessage(HttpMethod.Get, "https://dev.azure.com/devdiv/devdiv/_apis/build/builds?definitions=8117&api-version=5.1"); // Official build
-            using var request = new HttpRequestMessage(HttpMethod.Get, "https://dev.azure.com/devdiv/devdiv/_apis/build/builds?definitions=8118&api-version=5.1"); // Private build
-
-            var response = await client.SendAsync(request).ConfigureAwait(false);
-            response.EnsureSuccessStatusCode();
-            using (Stream stream = await response.Content.ReadAsStreamAsync())
+            Dictionary<string, int> buildDefinitions = new Dictionary<string, int>()
             {
-                var result = await System.Text.Json.JsonSerializer.DeserializeAsync<BuildList>(stream);
+                { "official", 8117 },
+                { "private", 8118 }
+            };
 
-                var builds = result.value
-                    .Where(b => b.finishTime >= startTime && b.finishTime <= endTime)
-                    .Where(b => b.result == "failed" || b.result == "canceled")
-                    .ToList();
+            foreach ((string name, int buildId) in buildDefinitions)
+            {
+                using var request = new HttpRequestMessage(HttpMethod.Get, $"https://dev.azure.com/devdiv/devdiv/_apis/build/builds?definitions={buildId}&api-version=5.1"); // Private build
 
-                var summary = builds.Select(b => new
+                var response = await client.SendAsync(request).ConfigureAwait(false);
+                response.EnsureSuccessStatusCode();
+                using (Stream stream = await response.Content.ReadAsStreamAsync())
                 {
-                    buildId = b.id,
-                    buildVersion = b.buildNumber,
-                    url = b.links["web"].href,
-                    result = b.result,
-                    date = b.finishTime,
-                    issues = new List<string>()
-                })
-                    .ToList();
+                    var result = await System.Text.Json.JsonSerializer.DeserializeAsync<BuildList>(stream);
 
-                var options = new JsonSerializerOptions()
-                {
-                    WriteIndented = true
-                };
+                    var builds = result.value
+                        .Where(b => b.finishTime >= startTime && b.finishTime <= endTime)
+                        .Where(b => b.result == "failed" || b.result == "canceled")
+                        .ToList();
 
-
-                var json = JsonSerializer.Serialize(summary, options);
-                Console.WriteLine(json);
-
-
-                var rates = result.value
-                    .Where(b => b.finishTime >= startTime && b.finishTime <= endTime)
-                    .Aggregate<BuildInfo, Dictionary<string, int>>(
-                    seed: new Dictionary<string, int>(),
-                    func: (dict, build) =>
+                    var summary = builds.Select(b => new
                     {
-                        var key = build.result;
-                        if (!dict.TryGetValue(key, out int count))
-                        {
-                            count = 0;
-                        }
-                        count++;
-                        dict[key] = count;
-                        return dict;
-                    });
+                        buildId = b.id,
+                        buildVersion = b.buildNumber,
+                        url = b.links["web"].href,
+                        result = b.result,
+                        date = b.finishTime,
+                        issues = new List<string>()
+                    })
+                        .ToList();
 
-                var totalBuilds = rates.Sum(r => r.Value);
-                foreach (var kvp in rates)
-                {
-                    Console.WriteLine($"{kvp.Key}: {kvp.Value}/{totalBuilds} ({kvp.Value * 100.0 / totalBuilds}");
+                    var options = new JsonSerializerOptions()
+                    {
+                        WriteIndented = true
+                    };
+
+                    using (var fileStream = File.OpenWrite($"{name}_builds.json"))
+                    {
+                        await JsonSerializer.SerializeAsync(fileStream, summary, options);
+                    }
+
+
+                    var rates = result.value
+                        .Where(b => b.finishTime >= startTime && b.finishTime <= endTime)
+                        .Aggregate<BuildInfo, Dictionary<string, int>>(
+                        seed: new Dictionary<string, int>(),
+                        func: (dict, build) =>
+                        {
+                            var key = build.result;
+                            if (!dict.TryGetValue(key, out int count))
+                            {
+                                count = 0;
+                            }
+                            count++;
+                            dict[key] = count;
+                            return dict;
+                        });
+
+                    Console.WriteLine(name + ":");
+                    var totalBuilds = rates.Sum(r => r.Value);
+                    foreach (var kvp in rates)
+                    {
+                        Console.WriteLine($"{kvp.Key}: {kvp.Value}/{totalBuilds} ({kvp.Value * 100.0 / totalBuilds})");
+                    }
+                    Console.WriteLine();
                 }
             }
         }
