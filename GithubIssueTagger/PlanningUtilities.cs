@@ -24,10 +24,10 @@ namespace GithubIssueTagger
         public static async Task<IEnumerable<Issue>> GetPerformanceIssuesForSprint(GitHubClient client)
         {
             Predicate<Issue> isRelevant = (Issue x) => IsPerformance(x);
-            // 108 is Sprint 171
-            var homeIssues = await IssueUtilities.GetIssuesForMilestone(client, "nuget", "home", "110", isRelevant);
-            // 13 is Sprint 171
-            var clientEngineeringIssues = await IssueUtilities.GetIssuesForMilestone(client, "nuget", "client.engineering", "14", isRelevant);
+            // 111 is Sprint 173
+            var homeIssues = await IssueUtilities.GetIssuesForMilestone(client, "nuget", "home", "111", isRelevant);
+            // 15 is Sprint 173
+            var clientEngineeringIssues = await IssueUtilities.GetIssuesForMilestone(client, "nuget", "client.engineering", "15", isRelevant);
             var issues = homeIssues.Union(clientEngineeringIssues);
 
             return issues;
