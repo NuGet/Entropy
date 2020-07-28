@@ -4,7 +4,7 @@ function Get-NuGetExePath()
 {
     $outDir = Join-Path $PSScriptRoot "..\..\out"
     $path = Join-Path $outDir "nuget.exe"
-    $url = "https://dist.nuget.org/win-x86-commandline/v5.5.1/nuget.exe"
+    $url = "https://dist.nuget.org/win-x86-commandline/v5.6.0/nuget.exe"
     
     if (!(Test-Path $outDir))
     {
