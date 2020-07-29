@@ -170,7 +170,18 @@ Try
         $nugetFoldersPath = GetNuGetFoldersPath $default
     }
 
-    LogDotNetSdkInfo
+    If (IsClientDotnetExe $nugetClientFilePath)
+    {
+        Push-Location -Path ([System.IO.Path]::GetDirectoryName($solutionFilePath))
+        try
+        {
+            LogDotNetSdkInfo $nugetClientFilePath
+        }
+        Finally
+        {
+            Pop-Location   
+        }
+    }
 
     if(Test-Path $resultsFilePath)
     {

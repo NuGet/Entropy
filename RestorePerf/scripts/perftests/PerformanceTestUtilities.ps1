@@ -65,24 +65,41 @@ function SetPackageSources($nugetClientFilePath, $sourcePath, $configFiles, $sou
         foreach ($configFile in $configFilePaths)
         {
             # Find all enabled sources.
-            $enabledSources = & $nugetClientFilePath sources list -ConfigFile $configFile `
-                | ForEach-Object { if ($_ -match "^\s+\d+\.\s+(.+?) \[Enabled\]$") { $Matches[1] } }
-            if ($LASTEXITCODE) { throw "Command '$nugetClientFilePath sources list -ConfigFile $configFile' failed." }
+            if (IsClientDotnetExe $nugetClientFilePath) {
+                $allSources = & $nugetClientFilePath nuget list source --configfile $configFile
+                if ($LASTEXITCODE) { throw "Command '$nugetClientFilePath nuget list source --configfile $configFil' failed." }
+            } else {
+                $allSources = & $nugetClientFilePath sources list -ConfigFile $configFile
+                if ($LASTEXITCODE) { throw "Command '$nugetClientFilePath sources list -ConfigFile $configFile' failed." }
+            }
+
+            $enabledSources = $allSources | ForEach-Object { if ($_ -match "^\s+\d+\.\s+(.+?) \[Enabled\]$") { $Matches[1] } }
 
             # Disable all enabled sources.
             Log "Disabling default sources in $configFile"
             foreach ($enabledSource in $enabledSources)
             {
-                & $nugetClientFilePath sources disable -Name $enabledSource -ConfigFile $configFile | Out-Null
-                if ($LASTEXITCODE) { throw "Command '$nugetClientFilePath sources disable -Name $enabledSource -ConfigFile $configFile' failed." }
+                if (IsClientDotnetExe $nugetClientFilePath) {
+                    & $nugetClientFilePath nuget disable source $enabledSource --configfile $configFile | Out-Null
+                    if ($LASTEXITCODE) { throw "Command '$nugetClientFilePath nuget disable source $enabledSource --configfile $configFile' failed." }
+                } else {
+                    & $nugetClientFilePath sources disable -Name $enabledSource -ConfigFile $configFile | Out-Null
+                    if ($LASTEXITCODE) { throw "Command '$nugetClientFilePath sources disable -Name $enabledSource -ConfigFile $configFile' failed." }
+                }
             }
         
             # Add the provided sources.
             foreach ($pair in $nameToSource.GetEnumerator())
             {
                 Log "Enabling source '$($pair.Value)' in $configFile"
-                & $nugetClientFilePath sources add -Name $pair.Key -Source $pair.Value -ConfigFile $configFile | Out-Null
-                if ($LASTEXITCODE) { throw "Command '$nugetClientFilePath sources add -Name $($pair.Key) -Source $($pair.Value) -ConfigFile $configFile' failed." }
+                
+                if (IsClientDotnetExe $nugetClientFilePath) {
+                    & $nugetClientFilePath nuget add source $pair.Value --name $pair.Key --configfile $configFile | Out-Null
+                    if ($LASTEXITCODE) { throw "Command '$nugetClientFilePath nuget add source $pair.Value --name $pair.Key --configfile $configFile' failed." }
+                } else {
+                    & $nugetClientFilePath sources add -Name $pair.Key -Source $pair.Value -ConfigFile $configFile | Out-Null
+                    if ($LASTEXITCODE) { throw "Command '$nugetClientFilePath sources add -Name $($pair.Key) -Source $($pair.Value) -ConfigFile $configFile' failed." }
+                }
             }
         }
     }
@@ -365,12 +382,12 @@ Function GetProcessorInfo()
     }
 }
 
-Function LogDotNetSdkInfo()
+Function LogDotNetSdkInfo($nugetClientFilePath)
 {
     Try
     {
-        $currentVersion = dotnet --version
-        $currentSdk = dotnet --list-sdks | Where-Object { $_.StartsWith("$currentVersion ") } | Select-Object -First 1
+        $currentVersion = & $nugetClientFilePath --version
+        $currentSdk = & $nugetClientFilePath --list-sdks | Where-Object { $_.StartsWith("$currentVersion ") } | Select-Object -First 1
 
         Log "Using .NET Core SDK $currentSdk."
     }
@@ -542,8 +559,14 @@ Function RunRestore(
     {
         $arguments.Add("-NonInteractive")
     }
+    else
+    {
+        $arguments.Add("--verbosity")
+        $arguments.Add("normal")
+    }
 
     $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
+    $iterationTimestampUtc = [System.DateTime]::UtcNow.ToString("O")
 
     $logs = . $nugetClientFilePath $arguments
 
@@ -586,7 +609,7 @@ Function RunRestore(
 
     If (!(Test-Path $resultsFilePath))
     {
-        $columnHeaders = "Machine Name,Client Name,Client Version,Solution Name,Timestamp (UTC),Iteration,Iteration Count,Scenario Name,Variant Name,Total Time (seconds),Project Restore Count,Max Project Restore Time (seconds),Sum Project Restore Time (seconds),Average Project Restore Time (seconds),Force," + `
+        $columnHeaders = "Machine Name,Client Name,Client Version,Solution Name,Group Timestamp (UTC),Iteration Timestamp (UTC),Iteration,Iteration Count,Scenario Name,Variant Name,Total Time (seconds),Project Restore Count,Max Project Restore Time (seconds),Sum Project Restore Time (seconds),Average Project Restore Time (seconds),Force," + `
             "Global Packages Folder .nupkg Count,Global Packages Folder .nupkg Size (MB),Global Packages Folder File Count,Global Packages Folder File Size (MB),Clean Global Packages Folder," + `
             "HTTP Cache File Count,HTTP Cache File Size (MB),Clean HTTP Cache,Plugins Cache File Count,Plugins Cache File Size (MB),Clean Plugins Cache,Kill MSBuild and dotnet Processes," + `
             "Processor Name,Processor Physical Core Count,Processor Logical Core Count,Log File Name"
@@ -594,7 +617,7 @@ Function RunRestore(
         OutFileWithCreateFolders $resultsFilePath $columnHeaders
     }
 
-    $data = "$($Env:COMPUTERNAME),$clientName,$clientVersion,$solutionName,$timestampUtc,$iteration,$iterationCount,$scenarioName,$variantName,$totalTime,$restoreCount,$restoreMaxTime,$restoreSumTime,$restoreAvgTime,$force," + `
+    $data = "$($Env:COMPUTERNAME),$clientName,$clientVersion,$solutionName,$timestampUtc,$iterationTimestampUtc,$iteration,$iterationCount,$scenarioName,$variantName,$totalTime,$restoreCount,$restoreMaxTime,$restoreSumTime,$restoreAvgTime,$force," + `
         "$($globalPackagesFolderNupkgFilesInfo.Count),$($globalPackagesFolderNupkgFilesInfo.TotalSizeInMB),$($globalPackagesFolderFilesInfo.Count),$($globalPackagesFolderFilesInfo.TotalSizeInMB),$cleanGlobalPackagesFolder," + `
         "$($httpCacheFilesInfo.Count),$($httpCacheFilesInfo.TotalSizeInMB),$cleanHttpCache,$($pluginsCacheFilesInfo.Count),$($pluginsCacheFilesInfo.TotalSizeInMB),$cleanPluginsCache,$killMsBuildAndDotnetExeProcesses," + `
         "$($processorInfo.Name),$($processorInfo.NumberOfCores),$($processorInfo.NumberOfLogicalProcessors),$logFileName"
