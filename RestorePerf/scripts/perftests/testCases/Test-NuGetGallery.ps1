@@ -40,6 +40,6 @@ RunPerformanceTestsOnGitRepository `
     -skipColdRestores:$skipColdRestores `
     -skipForceRestores:$skipForceRestores `
     -skipNoOpRestores:$skipNoOpRestores `
-    -configFiles @("NuGet.config") `
+    -configFiles @("NuGet.config", "tests\NuGet.Config") `
     -variantName $variantName `
     -sources $sources

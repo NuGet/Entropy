@@ -575,7 +575,6 @@ Function RunRestore(
     }
 
     $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
-    $iterationTimestampUtc = [System.DateTime]::UtcNow.ToString("O")
 
     $logs = . $nugetClientFilePath $arguments
 
@@ -618,7 +617,7 @@ Function RunRestore(
 
     If (!(Test-Path $resultsFilePath))
     {
-        $columnHeaders = "Machine Name,Client Name,Client Version,Solution Name,Group Timestamp (UTC),Iteration Timestamp (UTC),Iteration,Iteration Count,Scenario Name,Variant Name,Total Time (seconds),Project Restore Count,Max Project Restore Time (seconds),Sum Project Restore Time (seconds),Average Project Restore Time (seconds),Force," + `
+        $columnHeaders = "Machine Name,Client Name,Client Version,Solution Name,Timestamp (UTC),Iteration,Iteration Count,Scenario Name,Variant Name,Total Time (seconds),Project Restore Count,Max Project Restore Time (seconds),Sum Project Restore Time (seconds),Average Project Restore Time (seconds),Force," + `
             "Global Packages Folder .nupkg Count,Global Packages Folder .nupkg Size (MB),Global Packages Folder File Count,Global Packages Folder File Size (MB),Clean Global Packages Folder," + `
             "HTTP Cache File Count,HTTP Cache File Size (MB),Clean HTTP Cache,Plugins Cache File Count,Plugins Cache File Size (MB),Clean Plugins Cache,Kill MSBuild and dotnet Processes," + `
             "Processor Name,Processor Physical Core Count,Processor Logical Core Count,Log File Name"
@@ -626,7 +625,7 @@ Function RunRestore(
         OutFileWithCreateFolders $resultsFilePath $columnHeaders
     }
 
-    $data = "$($Env:COMPUTERNAME),$clientName,$clientVersion,$solutionName,$timestampUtc,$iterationTimestampUtc,$iteration,$iterationCount,$scenarioName,$variantName,$totalTime,$restoreCount,$restoreMaxTime,$restoreSumTime,$restoreAvgTime,$force," + `
+    $data = "$($Env:COMPUTERNAME),$clientName,$clientVersion,$solutionName,$timestampUtc,$iteration,$iterationCount,$scenarioName,$variantName,$totalTime,$restoreCount,$restoreMaxTime,$restoreSumTime,$restoreAvgTime,$force," + `
         "$($globalPackagesFolderNupkgFilesInfo.Count),$($globalPackagesFolderNupkgFilesInfo.TotalSizeInMB),$($globalPackagesFolderFilesInfo.Count),$($globalPackagesFolderFilesInfo.TotalSizeInMB),$cleanGlobalPackagesFolder," + `
         "$($httpCacheFilesInfo.Count),$($httpCacheFilesInfo.TotalSizeInMB),$cleanHttpCache,$($pluginsCacheFilesInfo.Count),$($pluginsCacheFilesInfo.TotalSizeInMB),$cleanPluginsCache,$killMsBuildAndDotnetExeProcesses," + `
         "$($processorInfo.Name),$($processorInfo.NumberOfCores),$($processorInfo.NumberOfLogicalProcessors),$logFileName"

@@ -10,8 +10,8 @@ namespace PackageHelper.Replay
 {
     static class RestoreLogParser
     {
-        private static readonly Regex StartRequestRegex = new Regex("^  (?<Method>GET) (?<Url>https?://.+)$");
-        private static readonly Regex EndRequestRegex = new Regex("^  (?<StatusCode>OK|NotFound|InternalServerError) (?<Url>https?://.+?) (?<DurationMs>\\d+)ms$");
+        private static readonly Regex StartRequestRegex = new Regex("^( {2}| {11})(?<Method>GET) (?<Url>https?://.+)$");
+        private static readonly Regex EndRequestRegex = new Regex("^( {2}| {11})(?<StatusCode>OK|NotFound|InternalServerError) (?<Url>https?://.+?) (?<DurationMs>\\d+)ms$");
         private static readonly Regex OtherRequestRegex = new Regex("^\\s*https?://");
 
         public static List<RestoreRequestGraph> ParseAndMergeGraphs(string logDir, HashSet<string> excludeVariants, int maxLogsPerGraph)
@@ -203,7 +203,7 @@ namespace PackageHelper.Replay
                 {
                     if (inSourceList)
                     {
-                        if (!line.StartsWith("    "))
+                        if (!line.StartsWith("    ") || string.IsNullOrWhiteSpace(line))
                         {
                             onSources(sources);
                             inSourceList = false;
@@ -221,7 +221,7 @@ namespace PackageHelper.Replay
                     {
                         onEndRequest(endRequest);
                     }
-                    else if (line == "Feeds used:")
+                    else if (line.Trim() == "Feeds used:")
                     {
                         inSourceList = true;
                     }
