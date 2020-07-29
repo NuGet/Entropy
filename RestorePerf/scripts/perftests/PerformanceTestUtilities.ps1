@@ -215,6 +215,15 @@ Function DownloadRepository([string] $repository, [string] $commitHash, [string]
     }
 }
 
+# Write a global.json file with the specified .NET Core SDK version
+Function WriteGlobalJson($path, $version) {
+    @{
+        "sdk" = @{
+            "version" = $version
+        }
+    } | ConvertTo-Json | Out-File $path -Encoding UTF8
+}
+
 # Find the appropriate solution file for the repository. Looks for a solution file matching the repo name, 
 # if not it takes the first available sln file in the repo. 
 Function GetSolutionFilePath([string] $repository, [string] $sourceFolderPath)

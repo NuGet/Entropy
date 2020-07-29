@@ -5,7 +5,9 @@ Param(
     [string[]] $sources,
     [string] $dumpNupkgsPath,
     [string] $resultsName,
-    [string[]] $testCases
+    [string[]] $testCases,
+    [string] $nugetPath,
+    [string] $sdkVersion
 )
 
 . "$PSScriptRoot\scripts\perftests\PerformanceTestUtilities.ps1"
@@ -15,7 +17,15 @@ if (!$testCases) {
     $testCases = Get-ChildItem (Join-Path $testDir "Test-*.ps1")
 }
 
-$nugetPath = Get-NuGetExePath
+if (!$nugetPath) {
+    $nugetPath = Get-NuGetExePath
+}
+
+if ($sdkVersion) {
+    $globalJson = Join-Path $PSScriptRoot "out\_s\global.json"
+    Log "Writing global.json to $globalJson with SDK version $sdkVersion."
+    WriteGlobalJson $globalJson $sdkVersion
+}
 
 ValidateVariantName $variantName
 
