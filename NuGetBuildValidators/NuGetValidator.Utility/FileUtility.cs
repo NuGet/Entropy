@@ -7,7 +7,7 @@ namespace NuGetValidator.Utility
 {
     public class FileUtility
     {
-        public static string[] GetDlls(string root, bool isArtifacts = false)
+        public static string[] GetDlls(string root, bool isArtifacts = false, string skipPathsContaining = null)
         {
             if (isArtifacts)
             {
@@ -29,6 +29,7 @@ namespace NuGetValidator.Utility
                     var englishDlls = Directory.GetFiles(dir, expectedDllName, SearchOption.AllDirectories)
                         .Where(p => p.Contains("bin") || (Path.GetFileName(dir).StartsWith("Microsoft", StringComparison.OrdinalIgnoreCase) && p.Contains("lib")))
                         .Where(p => !p.Contains("ilmerge"))
+                        .Where(p => skipPathsContaining == null || !p.Contains(skipPathsContaining))
                         .OrderBy(p => p);
 
                     if (englishDlls.Any())

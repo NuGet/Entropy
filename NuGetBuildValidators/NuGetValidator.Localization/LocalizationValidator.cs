@@ -140,7 +140,9 @@ namespace NuGetValidator.Localization
 
             WarnIfNoLciDirectory(lciCommentsDirPath);
 
-            var englishDlls = FileUtility.GetDlls(artifactsPath, isArtifacts: true);
+            var englishDlls = FileUtility.GetDlls(artifactsPath,
+                                                  isArtifacts: true,
+                                                  skipPathsContaining: "net45"); // net45 assemblies aren't localized, ignore them
 
             Execute(lciCommentsDirPath, englishDlls);
 
