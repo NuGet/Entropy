@@ -125,7 +125,7 @@ namespace NuGetValidator.Localization
             return exitCode;
         }
 
-        public static int ExecuteForArtifacts(string ArtifactsPath, string OutputPath, string CommentsPath)
+        public static int ExecuteForArtifacts(string ArtifactsPath, string OutputPath, string CommentsPath, string filterPathsContaining)
         {
             var artifactsPath = ArtifactsPath;
             var logPath = OutputPath;
@@ -142,7 +142,7 @@ namespace NuGetValidator.Localization
 
             var englishDlls = FileUtility.GetDlls(artifactsPath,
                                                   isArtifacts: true,
-                                                  skipPathsContaining: "net45"); // net45 assemblies aren't localized, ignore them
+                                                  filterPathsContaining: filterPathsContaining);
 
             Execute(lciCommentsDirPath, englishDlls);
 
