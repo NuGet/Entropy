@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net461</TargetFramework>
+    <TargetFramework>net462</TargetFramework>
     <RootNamespace>NuGetValidator</RootNamespace>
     <AssemblyName>NuGetValidator</AssemblyName>
     <IsTool>true</IsTool>
@@ -13,13 +13,12 @@
     <AssemblyVersion>$(Version)</AssemblyVersion>
     <PackageVersion>$(Version)</PackageVersion>
     <PackageVersion Condition=" '$(ReleaseLabel)'!=''">$(Version)-$(ReleaseLabel)</PackageVersion>
-    <GeneratePackageOnBuild Condition=" '$(pack)'=='true'">true</GeneratePackageOnBuild>
     <Authors>Ankit Mishra</Authors>
     <Description>Package used internally in NuGet team's localization validation pipeline.</Description>
     <RepositoryUrl>https://github.com/mishra14/NuGetBuildValidators</RepositoryUrl>
     <PackageProjectUrl>https://github.com/mishra14/NuGetBuildValidators</PackageProjectUrl>
     <RepositoryType>git</RepositoryType>
-    <BeforePack>PublishAndIlMerge</BeforePack>
+
   </PropertyGroup>
 
   <ItemGroup>

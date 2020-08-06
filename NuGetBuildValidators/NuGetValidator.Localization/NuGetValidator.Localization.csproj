@@ -2,7 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>library</OutputType>
-    <TargetFramework>net451</TargetFramework>
+    <TargetFramework>net462</TargetFramework>
     <RootNamespace>NuGetValidator.Localization</RootNamespace>
     <AssemblyName>NuGetValidator.Localization</AssemblyName>
   </PropertyGroup>
