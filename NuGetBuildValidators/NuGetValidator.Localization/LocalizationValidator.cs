@@ -125,7 +125,7 @@ namespace NuGetValidator.Localization
             return exitCode;
         }
 
-        public static int ExecuteForArtifacts(string ArtifactsPath, string OutputPath, string CommentsPath)
+        public static int ExecuteForArtifacts(string ArtifactsPath, string OutputPath, string CommentsPath, string filterPathsContaining)
         {
             var artifactsPath = ArtifactsPath;
             var logPath = OutputPath;
@@ -140,7 +140,9 @@ namespace NuGetValidator.Localization
 
             WarnIfNoLciDirectory(lciCommentsDirPath);
 
-            var englishDlls = FileUtility.GetDlls(artifactsPath, isArtifacts: true);
+            var englishDlls = FileUtility.GetDlls(artifactsPath,
+                                                  isArtifacts: true,
+                                                  filterPathsContaining: filterPathsContaining);
 
             Execute(lciCommentsDirPath, englishDlls);
 

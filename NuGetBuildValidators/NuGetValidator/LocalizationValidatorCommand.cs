@@ -18,6 +18,7 @@ namespace NuGetValidator
         private static readonly string OutputPathDescription = "Path to the directory for writing errors. File need not be present, but Program should have write access to the location.";
         private static readonly string CommentsPathDescription = "Path to the local NuGet localization repository. e.g. - <repo_root>\\Main\\localize\\comments\\15";
         private static readonly string ArtifactsPathDescription = "Path to the local NuGet artifacts folder. This option is used to validate a locally built NuGet repository.";
+        private static readonly string FilterPathsContainingDescription = "Filter out any artifacts containing this value in its path.";
 
 
         public static void Register(CommandLineApplication app)
@@ -57,6 +58,11 @@ namespace NuGetValidator
                     ArtifactsPathDescription,
                     CommandOptionType.SingleValue);
 
+                var filterPathsContaining = localizationValidator.Option(
+                    "--filter-paths-containing",
+                    FilterPathsContainingDescription,
+                    CommandOptionType.SingleValue);
+
                 localizationValidator.OnExecute(() =>
                 {
                     var exitCode = 0;
@@ -87,7 +93,7 @@ namespace NuGetValidator
                         }
                         else
                         {
-                            exitCode = LocalizationValidator.ExecuteForArtifacts(artifactsPath.Value(), outputPath.Value(), commentsPath.Value());
+                            exitCode = LocalizationValidator.ExecuteForArtifacts(artifactsPath.Value(), outputPath.Value(), commentsPath.Value(), filterPathsContaining.Value());
                         }
                     }
 
