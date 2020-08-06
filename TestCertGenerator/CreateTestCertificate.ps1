@@ -8,7 +8,9 @@ Param(
     [string] $Password,
     [switch] $AddAsTrustedRootAuthority,
     [switch] $AlternateSignatureAlgorithm,
-    [string] $Type = "CodeSigningCert"
+    [string] $Type = "CodeSigningCert",
+    [switch] $GenerateCerFile
+
 )
 
 $friendlyName = "5914c830-f5c7-4dae-aeed-86566bbf213a"
@@ -34,7 +36,8 @@ If ($AlternateSignatureAlgorithm) {
         -KeySpec Signature `
         -NotBefore $NotBefore `
         -NotAfter $NotAfter `
-        -AlternateSignatureAlgorithm
+        -AlternateSignatureAlgorithm `
+        -KeyUsage CertSign, CRLSign
 } Else {
     $certificate = New-SelfSignedCertificate `
         -Type $Type `
@@ -47,7 +50,8 @@ If ($AlternateSignatureAlgorithm) {
         -Provider "Microsoft Enhanced RSA and AES Cryptographic Provider" `
         -KeySpec Signature `
         -NotBefore $NotBefore `
-        -NotAfter $NotAfter
+        -NotAfter $NotAfter `
+        -KeyUsage CertSign, CRLSign
 }
 
 $thumbprint = $certificate.Thumbprint
@@ -66,6 +70,11 @@ If ([string]::IsNullOrEmpty($Password)) {
     $output = Export-PfxCertificate -Cert "Cert:\$certificateStoreLocation\My\$thumbprint" -Password $PasswordSecureString -FilePath $PfxFilePath
 }
 
+if ($GenerateCerFile) {
+    $CertFilePath=".\$thumbprint.cer"
+    $outputCert = Export-Certificate -Cert "Cert:\$certificateStoreLocation\My\$thumbprint" -Type CERT -FilePath $CertFilePath
+}
+
 If ($AddAsTrustedRootAuthority) {
     Get-ChildItem "Cert:\$certificateStoreLocation\My\$thumbprint" | Remove-Item
 
@@ -82,3 +91,7 @@ If ($AddAsTrustedRootAuthority) {
 
 Write-Host "Certificate added to certificate store:  ${certificateStoreLocation}\${certificateStoreName}"
 Write-Host "Certificate exported to:  ${PfxFilePath}"
+
+if ($GenerateCerFile) {
+    "Certificate exported to:  ${CertFilePath}"
+}
