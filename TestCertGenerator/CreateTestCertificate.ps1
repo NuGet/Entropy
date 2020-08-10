@@ -10,7 +10,6 @@ Param(
     [switch] $AlternateSignatureAlgorithm,
     [string] $Type = "CodeSigningCert",
     [switch] $GenerateCerFile
-
 )
 
 $friendlyName = "5914c830-f5c7-4dae-aeed-86566bbf213a"
