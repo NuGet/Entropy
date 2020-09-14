@@ -13,8 +13,8 @@ namespace find_buids_in_sprint
     {
         static async Task Main(string[] args)
         {
-            var startTime = new DateTimeOffset(2020, 06, 13, 0, 0, 0, TimeSpan.FromHours(-7));
-            var endTime = new DateTimeOffset(2020, 07, 05, 0, 0, 0, TimeSpan.FromHours(-7));
+            var startTime = new DateTimeOffset(2020, 08, 17, 0, 0, 0, TimeSpan.FromHours(-7));
+            var endTime = new DateTimeOffset(2020, 09, 06, 0, 0, 0, TimeSpan.FromHours(-7));
 
             var accountName = Environment.GetEnvironmentVariable("AzDO_ACCOUNT");
             var personalAccessToken = Environment.GetEnvironmentVariable("AzDO_PAT");
@@ -71,7 +71,6 @@ namespace find_buids_in_sprint
                     {
                         await JsonSerializer.SerializeAsync(fileStream, summary, options);
                     }
-
 
                     var rates = result.value
                         .Where(b => b.finishTime >= startTime && b.finishTime <= endTime)

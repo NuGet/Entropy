@@ -26,6 +26,17 @@ namespace ci_failure_analysis
                 var totalFailures = builds.SelectMany(b => b.issues).Count();
                 var infrastructureFailures = builds.Where(b => b.issues.Any(r => !IsUserFailure(r))).SelectMany(b => b.issues).Count();
 
+                bool foundFailedBuildMissingReason = false;
+                foreach (var failedBuildsMissingReason in builds.Where(b=> b.result == "failed" && b.issues.Count == 0))
+                {
+                    foundFailedBuildMissingReason = true;
+                    Console.WriteLine($"Warning: build {failedBuildsMissingReason.buildId} does not have a failed reason");
+                }
+                if (foundFailedBuildMissingReason)
+                {
+                    Console.WriteLine();
+                }
+
                 Console.WriteLine("Failed builds: " + totalBuilds);
                 Console.WriteLine("Failure reasons: " + totalFailures);
                 Console.WriteLine("Infrastructure failures: " + infrastructureFailures);
