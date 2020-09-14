@@ -6,4 +6,8 @@
     <RootNamespace>find_incomplete_tests</RootNamespace>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\NetworkManager\NetworkManager.csproj" />
+  </ItemGroup>
+
 </Project>

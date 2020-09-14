@@ -1,9 +1,13 @@
-﻿using find_buids_in_sprint.Models;
+﻿using find_buids_in_sprint.Models.AzDO;
+using find_buids_in_sprint.Models.ClientCiAnalysis;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -13,8 +17,19 @@ namespace find_buids_in_sprint
     {
         static async Task Main(string[] args)
         {
-            var startTime = new DateTimeOffset(2020, 06, 13, 0, 0, 0, TimeSpan.FromHours(-7));
-            var endTime = new DateTimeOffset(2020, 07, 05, 0, 0, 0, TimeSpan.FromHours(-7));
+            if (args.Length != 1)
+            {
+                Console.WriteLine("Expected 1 argument, got " + args.Length);
+                return;
+            }
+
+            if (File.Exists(args[0]))
+            {
+                Console.WriteLine("Expected '{0}' to be a directory, but found a file", args[0]);
+                return;
+            }
+
+            var sprintEpoch = new DateTimeOffset(2010, 07, 26, 0, 0, 0, TimeSpan.FromHours(-7));
 
             var accountName = Environment.GetEnvironmentVariable("AzDO_ACCOUNT");
             var personalAccessToken = Environment.GetEnvironmentVariable("AzDO_PAT");
@@ -27,76 +42,78 @@ namespace find_buids_in_sprint
                 return;
             }
 
-            using var client = new HttpClient();
-            client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("BASIC", Convert.ToBase64String(System.Text.Encoding.ASCII.GetBytes(accountName + ":" + personalAccessToken)));
+            var httpClient = CreateAzureDevOpsClient(accountName, personalAccessToken);
 
-            Dictionary<string, int> buildDefinitions = new Dictionary<string, int>()
+            var cache = new DirectoryInfo(args[0]);
+            if (!cache.Exists)
             {
-                { "official", 8117 },
-                { "private", 8118 }
-            };
+                cache.Create();
+            }
 
-            foreach ((string name, int buildId) in buildDefinitions)
+            await BuildFetcher.DownloadBuildsAsync(cache, httpClient);
+
+            Console.WriteLine();
+
+            await AnalyzeBuildsAsync(cache);
+        }
+
+        private static HttpClient CreateAzureDevOpsClient(string accountName, string personalAccessToken)
+        {
+            using var httpClient = new HttpClient();
+
+            var cred = new AuthenticationHeaderValue("BASIC", Convert.ToBase64String(Encoding.ASCII.GetBytes(accountName + ":" + personalAccessToken)));
+            httpClient.DefaultRequestHeaders.Authorization = cred;
+
+            var userAgent = new ProductInfoHeaderValue("NugetClientCiAnalysis", "0.1");
+            httpClient.DefaultRequestHeaders.UserAgent.Add(userAgent);
+
+            return httpClient;
+        }
+
+
+        public static async Task AnalyzeBuildsAsync(DirectoryInfo cache)
+        {
+            Dictionary<Week, WeekBuilds> buildsByWeek = new();
+
+            foreach (var zip in cache.GetFiles("*.build.zip"))
             {
-                using var request = new HttpRequestMessage(HttpMethod.Get, $"https://dev.azure.com/devdiv/devdiv/_apis/build/builds?definitions={buildId}&api-version=5.1"); // Private build
-
-                var response = await client.SendAsync(request).ConfigureAwait(false);
-                response.EnsureSuccessStatusCode();
-                using (Stream stream = await response.Content.ReadAsStreamAsync())
+                BuildInfo buildInfo;
+                using (var stream = zip.OpenRead())
+                using (ZipArchive archive = new(stream, ZipArchiveMode.Read))
                 {
-                    var result = await System.Text.Json.JsonSerializer.DeserializeAsync<BuildList>(stream);
-
-                    var builds = result.value
-                        .Where(b => b.finishTime >= startTime && b.finishTime <= endTime)
-                        .Where(b => b.result == "failed" || b.result == "canceled")
-                        .ToList();
-
-                    var summary = builds.Select(b => new
+                    var entry = archive.GetEntry("build.json");
+                    using (var entryStream = entry.Open())
                     {
-                        buildId = b.id,
-                        buildVersion = b.buildNumber,
-                        url = b.links["web"].href,
-                        result = b.result,
-                        date = b.finishTime,
-                        issues = new List<string>()
-                    })
-                        .ToList();
-
-                    var options = new JsonSerializerOptions()
-                    {
-                        WriteIndented = true
-                    };
-
-                    using (var fileStream = File.OpenWrite($"{name}_builds.json"))
-                    {
-                        await JsonSerializer.SerializeAsync(fileStream, summary, options);
+                        buildInfo = await JsonSerializer.DeserializeAsync<BuildInfo>(entryStream);
                     }
 
-
-                    var rates = result.value
-                        .Where(b => b.finishTime >= startTime && b.finishTime <= endTime)
-                        .Aggregate<BuildInfo, Dictionary<string, int>>(
-                        seed: new Dictionary<string, int>(),
-                        func: (dict, build) =>
-                        {
-                            var key = build.result;
-                            if (!dict.TryGetValue(key, out int count))
-                            {
-                                count = 0;
-                            }
-                            count++;
-                            dict[key] = count;
-                            return dict;
-                        });
-
-                    Console.WriteLine(name + ":");
-                    var totalBuilds = rates.Sum(r => r.Value);
-                    foreach (var kvp in rates)
+                    var sprint = Week.FromDate(buildInfo.finishTime);
+                    if (!buildsByWeek.TryGetValue(sprint, out var buildInWeek))
                     {
-                        Console.WriteLine($"{kvp.Key}: {kvp.Value}/{totalBuilds} ({kvp.Value * 100.0 / totalBuilds})");
+                        buildInWeek = new WeekBuilds();
+                        buildsByWeek.Add(sprint, buildInWeek);
                     }
-                    Console.WriteLine();
+                    var official = buildInfo.sourceBranch == "refs/heads/dev" && buildInfo.definition.id == 8117;
+                    if (official)
+                    {
+                        buildInWeek.Official.Add(buildInfo);
+                    }
+                    else
+                    {
+                        buildInWeek.PullRequest.Add(buildInfo);
+                    }
                 }
+            }
+
+            foreach (var week in buildsByWeek.OrderBy(b => b.Key.sprint).ThenBy(b => b.Key.week))
+            {
+                var officialCounts = week.Value.Official.GroupBy(b => b.result).ToDictionary(b => b.Key, b => b.Count());
+                var prCounts = week.Value.PullRequest.GroupBy(b => b.result).ToDictionary(b => b.Key, b => b.Count());
+
+                Console.WriteLine("{0}.{1}", week.Key.sprint, week.Key.week);
+                Console.WriteLine("  Official: " + string.Join(", ", officialCounts.OrderBy(b => b.Key).Select(b => $"{b.Key}({b.Value})")));
+                Console.WriteLine("  PRs     :" + string.Join(", ", prCounts.OrderBy(b => b.Key).Select(b => $"{b.Key}({b.Value})")));
+                Console.WriteLine();
             }
         }
     }
