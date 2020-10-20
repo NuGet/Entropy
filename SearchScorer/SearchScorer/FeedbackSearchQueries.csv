@@ -183,7 +183,6 @@ V2Internal,OldIsBetter,newtonsoft json,MultiTerm,Newtonsoft.Json
 V2Internal,OldIsBetter,ORM,Tags,Dapper
 V2Internal,OldIsBetter,razor,PartialId,Microsoft.AspNet.Razor
 V2Internal,OldIsBetter,wilderness labs,Author,Netduino.Foundation
-V3Internal,NeitherIsBetter,Blazor,PartialId,Microsoft.AspNetCore.Blazor | Microsoft.AspNetCore.Blazor.Browser | Microsoft.AspNetCore.Blazor.Analyzers
 V3Internal,NeitherIsBetter,markdown,Prefix,MarkdownSharp
 V3Internal,NeitherIsBetter,markdown,Tags,Markdig
 V3Internal,NewIsBetterButNeedsWork,cosmos,PartialId,Microsoft.Azure.Cosmos

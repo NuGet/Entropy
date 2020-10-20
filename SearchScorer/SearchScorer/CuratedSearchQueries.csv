@@ -44,7 +44,7 @@ skin,MaterialSkin,2,Fozzy.Skin,2,,,,,,
 selenium,Selenium.WebDriver,4,Selenium.WebDriver.ChromeDriver,4,Selenium.WebDriverBackedSelenium,4,Selenium.Support,4,Selenium.*,3
 System.Net.Http.Formatting,Microsoft.AspNet.WebApi.Client,4,System.Net.Http.Formatting.Extension,1,,,,,,
 autofac,Autofac,4,Autofac.Extensions.DependencyInjection,4,autofac.configuration,4,autofac.webapi2,3,Autofac.*,3
-npoi,NPOI,4,DotNetCore.NPOI,4,NPOI.Excel,3,CZD.NPOI,1,NPOI.Mapper,3
+npoi,NPOI,4,NPOI.Excel,3,CZD.NPOI,1,NPOI.Mapper,3,,
 "Tags:""Excel""",EPPlus,4,ExcelDataReader,4,NPOI,4,Aspose.Cells,3,,
 Microsoft.AspNetCore,Microsoft.AspNetCore.App,4,Microsoft.AspNetCore.Mvc,4,Microsoft.AspNetCore.All,4,Microsoft.AspNetCore.*,2,,
 System.Drawing,System.Drawing.Common,4,System.Drawing.Primitives,3,,,,,,
@@ -105,7 +105,7 @@ opencv,OpenCV,4,OpenCV.Net,4,,,,,,
 cefsharp,CefSharp.WinForms,4,CefSharp.Wpf,4,CefSharp.OffScreen,4,CefSharp.Common,3,,
 DotNetty,DotNetty.Handlers,4,DotNetty.Common,4,DotNetty.Transport,4,DotNetty.Codecs,4,DotNetty.Codecs.Mqtt,4
 Microsoft.AspNetCore.Razor.Design,Microsoft.AspNetCore.Razor.Design,4,Microsoft.AspNet.Razor,3,Microsoft.AspNetCore.Razor,3,Microsoft.AspNetCore.Mvc.Razor,3,Microsoft.AspNetCore.Mvc.Razor.Extensions,3
-NPOI,NPOI,4,DotNetCore.NPOI,4,Npoi.Mapper,3,,,,
+NPOI,NPOI,4,Npoi.Mapper,3,,,,,,
 socket.io,Socket.IO.Client,4,SocketIoClientDotNet,4,WebSocket4Net,2,WebSocketSharp,2,Microsoft.AspNetCore.SignalR,2
 grpc,grpc,4,,,,,,,,
 owin,Owin,4,Microsoft.Owin,4,Microsoft.Owin.Host.SystemWeb,4,Microsoft.Owin.Security.*,3,,
@@ -208,7 +208,7 @@ Microsoft.CodeDom.Providers.DotNetCompilerPlatform,Microsoft.CodeDom.Providers.D
 Levenshtein,LevenshteinMinimumEditDistance,4,F23.StringSimilarity,3,String.Similarity,3,,,,
 Microsoft.EntityFrameworkCore.Tools.DotNet,Microsoft.EntityFrameworkCore.Tools.DotNet,4,Microsoft.EntityFrameworkCore,2,,,,,,
 Microsoft.AspNetCore.Identity,Microsoft.AspNetCore.Identity,4,Microsoft.AspNetCore.Http,3,,,,,,
-blazor,Microsoft.AspNetCore.Blazor,4,Microsoft.AspNetCore.Blazor.Cli,3,Blazor.Extensions.*,3,BlazorFiddle.Blazor,1,BlazorNative,1
+blazor,Microsoft.AspNetCore.Components.WebAssembly,4,Microsoft.AspNetCore.Components.WebAssembly.DevServer,3,Blazor.Extensions.*,3,BlazorFiddle.Blazor,1,BlazorNative,1
 CefSharp,CefSharp.Wpf,4,CefSharp.WinForms,4,CefSharp.*,3,,,,
 microsoft.aspnetcore.app,Microsoft.AspNetCore.App,4,Microsoft.AspNetCore.Hosting,3,Microsoft.AspNetCore.*,1,,,,
 Microsoft.AspNetCore.Identity.EntityFrameworkCore,Microsoft.AspNetCore.Identity.EntityFrameworkCore,4,Microsoft.AspNet.Identity.EntityFramework,2,Microsoft.EntityFrameworkCore,2,,,,
@@ -252,7 +252,6 @@ FluentValidation,FluentValidation,4,FluentValidation.*,3,FluentAssertions,3,,,,
 nhibernate,NHibernate,4,FluentNHibernate,3,,,,,,
 OpenStreetMap,OsmSharp,4,MapSurfer.NET.UI,3,BruTile,3,Itinero,2,,
 "Tags:""ffmpeg""",FFmpeg.AutoGen,3,Xabe.FFMpeg,4,,,,,,
-Appeon,SnapObjects.*,2,PowerBuilder.*,2,SnapDevelop.*,2,,,,
 mailkit,Mailkit,4,Sendgrid,1,,,,,,
 FluentAssertions,FluentAssertions,4,FluentAssertions.Json,2,FluentAssertions.Autofac,2,FluentValidation,1,,
 System.Web,System.Web.Providers,2,System.Web.Http.Common,2,Microsoft.AspNet.WebApi.Core,3,,,,
@@ -330,7 +329,7 @@ postgres,Npgsql,4,Npgsql.EntityFrameworkCore.PostgreSQL,4,,,,,,
 microsoft.netcore.app,Microsoft.NETCore.App,4,Microsoft.NETCore.UniversalWindowsPlatform,3,Microsoft.NetCore.Analyzers,2,,,,
 ldap,Novell.Directory.Ldap.NETStandard,4,Novell.Directory.Ldap.NETStandard2_0,3,Novell.Directory.Ldap,3,,,,
 reportviewer,Microsoft.ReportViewer.*,2,,,,,,,,
-"Tags:""Blazor""",Microsoft.AspNetCore.Blazor,4,Microsoft.AspNetCore.Blazor.Cli,3,Microsoft.AspNetCore.Blazor.Build,3,Microsoft.AspNetCore.Blazor.*,2,,
+"Tags:""Blazor""",Microsoft.AspNetCore.Components.WebAssembly,4,Microsoft.AspNetCore.Components.WebAssembly.DevServer,3,Microsoft.AspNetCore.Components.WebAssembly.Build,3,,,,
 cef,CefSharp.WinForms,4,CefSharp.Wpf,4,CefSharp.OffScreen,4,,,,
 mstest,MSTest.TestFramework,4,MSTest.TestAdapter,4,,,,,,
 System.Data,System.Data.SqlClient,3,System.Data.SQLite,3,System.Data.Common,2,,,,
