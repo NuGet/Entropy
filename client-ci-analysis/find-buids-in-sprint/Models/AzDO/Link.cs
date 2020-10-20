@@ -1,4 +1,4 @@
-﻿namespace find_buids_in_sprint.Models
+﻿namespace find_buids_in_sprint.Models.AzDO
 {
     public class Link
     {

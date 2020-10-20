@@ -23,71 +23,50 @@ namespace ci_failure_analysis
                 var builds = System.Text.Json.JsonSerializer.Deserialize<List<BuildInfo>>(jsonText);
 
                 var totalBuilds = builds.Count;
-                var totalFailures = builds.SelectMany(b => b.issues).Count();
-                var infrastructureFailures = builds.Where(b => b.issues.Any(r => !IsUserFailure(r))).SelectMany(b => b.issues).Count();
 
-                bool foundFailedBuildMissingReason = false;
-                foreach (var failedBuildsMissingReason in builds.Where(b=> b.result == "failed" && b.issues.Count == 0))
+                Console.WriteLine("  Result rates");
+                foreach (var group in builds.GroupBy(b=>b.result))
                 {
-                    foundFailedBuildMissingReason = true;
-                    Console.WriteLine($"Warning: build {failedBuildsMissingReason.buildId} does not have a failed reason");
-                }
-                if (foundFailedBuildMissingReason)
-                {
-                    Console.WriteLine();
+                    var count = group.Count();
+                    Console.WriteLine($"    {group.Key} - {count}/{totalBuilds} ({100.0 * count / totalBuilds})");
                 }
 
-                Console.WriteLine("Failed builds: " + totalBuilds);
-                Console.WriteLine("Failure reasons: " + totalFailures);
-                Console.WriteLine("Infrastructure failures: " + infrastructureFailures);
+                var eventuallySuccessful = builds.Where(b => (b.result == "succeeded" || b.result == "partiallySucceeded") && b.jobs.Any(j => j.Value.Count > 1)).ToList();
+                Console.WriteLine($"  Succeeded after retry {eventuallySuccessful.Count}");
+
+                var attempts = builds.Where(b => b.jobs?.Count > 0).SelectMany(j => j.jobs.Values).SelectMany(j => j).GroupBy(a => a.result);
+                var totalAttempts = attempts.Sum(a => a.Count());
+                Console.WriteLine($"  Job attempts");
+                Console.WriteLine("    rates");
+                foreach (var group in attempts)
+                {
+                    Console.WriteLine($"      {group.Key} - {group.Count()}/{totalAttempts} ({100.0 * group.Count() / totalAttempts})");
+                }
+
+                Console.WriteLine("    job");
+                var argh =
+                    builds.Where(b => b.jobs?.Count > 0)
+                    .SelectMany(b => b.jobs)
+                    .SelectMany(b =>
+                        b.Value.Select(a => new
+                        {
+                            Name = b.Key,
+                            Successful = a.result == "succeeded"
+                        }))
+                    .GroupBy(j => j.Name)
+                    .Select(j => new
+                    {
+                        Name = j.Key,
+                        Succeeded = j.Count(a => a.Successful),
+                        Total = j.Count()
+                    })
+                    .OrderBy(a => 100.0 * a.Succeeded / a.Total);
+                foreach (var job in argh)
+                {
+                    Console.WriteLine($"      {job.Name} {job.Succeeded}/{job.Total} ({100.0*job.Succeeded/job.Total})");
+                }
+
                 Console.WriteLine();
-
-                var buildsByFailures = builds.SelectMany(b => b.issues.Select(r => new { Build = b.issues, Reason = r })).GroupBy(b => b.Reason).ToDictionary(b => b.Key, b => b.Select(r => r.Build).ToList());
-
-                foreach (var failure in buildsByFailures.OrderByDescending(f => f.Value.Count))
-                {
-                    int count = failure.Value.Count;
-                    int failureRate = 100 * count / totalFailures;
-                    int? infraFailureRate = IsUserFailure(failure.Key)
-                        ? (int?)null
-                        : 100 * count / infrastructureFailures;
-
-                    Console.WriteLine($"{failure.Key}: {failure.Value.Count} {failureRate}% {infraFailureRate?.ToString() ?? "-"}%");
-                }
-
-                var macHangs = builds.Where(b => b.issues.Contains("mac tests hung")).ToList();
-                if (macHangs.Count > 0)
-                {
-                    Console.WriteLine();
-                    Console.WriteLine("Mac test hangs:");
-                    Console.WriteLine("|Date|Build|Agent|");
-                    Console.WriteLine("|----|----|----|");
-
-                    foreach (var b in macHangs)
-                    {
-                        Console.WriteLine($"|{b.date:yyyy-MM-dd}|[{b.buildVersion}](https://dev.azure.com/devdiv/DevDiv/_build/results?buildId={b.buildId}&view=logs&j=a1762d43-9ec6-55e8-af8b-c0d9842bd83b&t=df101a74-a91b-5951-ad8b-3bf8c87bc347)||");
-                    }
-                }
-
-                var linuxHangs = builds.Where(b => b.issues.Contains("linux tests hung")).ToList();
-                if (linuxHangs.Count > 0)
-                {
-                    Console.WriteLine();
-                    Console.WriteLine("linux test hangs:");
-                    Console.WriteLine("|Date|Build|Agent|");
-                    Console.WriteLine("|----|----|----|");
-
-                    foreach (var b in linuxHangs)
-                    {
-                        Console.WriteLine($"|{b.date:yyyy-MM-dd}|[{b.buildVersion}](https://dev.azure.com/devdiv/DevDiv/_build/results?buildId={b.buildId}&view=logs&j=bd7d45da-bd9f-59a9-6834-84d44942bc5e&t=9a50982a-6f1b-5916-658b-78b1ed438169)||");
-                    }
-                }
-
-
-                if (index != jsonFiles.Length - 1)
-                {
-                    Console.WriteLine();
-                }
             }
         }
 
@@ -98,12 +77,19 @@ namespace ci_failure_analysis
 
         public class BuildInfo
         {
-            public ulong buildId { get; set; }
-            public string buildVersion { get; set; }
+            public ulong id { get; set; }
+            public string buildNumber { get; set; }
             public string url { get; set; }
             public string result { get; set; }
-            public DateTime date { get; set; }
-            public List<string> issues { get; set; }
+            public DateTime finishTime { get; set; }
+            public Dictionary<string, List<Job>> jobs { get; set; }
+        }
+
+        public class Job
+        {
+            public string result { get; set; }
+            public string issue { get; set; }
+            public string duration { get; set; }
         }
     }
 }

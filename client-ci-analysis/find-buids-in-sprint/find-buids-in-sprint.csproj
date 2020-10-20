@@ -6,4 +6,8 @@
     <RootNamespace>find_buids_in_sprint</RootNamespace>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\NetworkManager\NetworkManager.csproj" />
+  </ItemGroup>
+
 </Project>

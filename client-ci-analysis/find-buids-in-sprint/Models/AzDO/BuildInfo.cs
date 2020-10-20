@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-namespace find_buids_in_sprint.Models
+namespace find_buids_in_sprint.Models.AzDO
 {
-    public class BuildInfo
+    internal class BuildInfo
     {
         public uint id { get; set; }
         public string buildNumber { get; set; }
@@ -18,5 +18,7 @@ namespace find_buids_in_sprint.Models
         public Dictionary<string, Link> links { get; set; }
 
         public string url { get; set; }
+
+        public List<BuildInfoValidationResult> validationResults { get; set; }
     }
 }
