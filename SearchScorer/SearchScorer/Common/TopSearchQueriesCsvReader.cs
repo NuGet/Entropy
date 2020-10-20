@@ -67,6 +67,7 @@ pageViews
             {
                 return csvReader
                     .GetRecords<Record>()
+                    .Where(x => !string.IsNullOrEmpty(x.Query))
                     .ToDictionary(x => x.Query, x => x.QueryCount);
             }
         }

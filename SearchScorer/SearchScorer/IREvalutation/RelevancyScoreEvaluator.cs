@@ -208,26 +208,6 @@ namespace SearchScorer.IREvalutation
             return WeightEvently(results);
         }
 
-        private async Task<SearchQueriesReport<SearchQueryWithSelections>> GetTopSearchSelectionsScoreAsync(
-            string baseUrl,
-            SearchScorerSettings settings,
-            IReadOnlyDictionary<string, int> topQueries)
-        {
-            var topSearchSelectionScores = RelevancyScoreBuilder.FromTopSearchSelectionsCsv(settings.TopSearchSelectionsCsvPath);
-
-            // Take the the top search selection data by query frequency.
-            var selectionsOfTopQueries = topSearchSelectionScores
-                .Where(x => topQueries.ContainsKey(x.SearchQuery))
-                .OrderByDescending(x => topQueries[x.SearchQuery])
-                .Take(1000);
-
-            var results = await ProcessAsync(
-                selectionsOfTopQueries,
-                baseUrl);
-
-            return WeightByTopQueries(topQueries, results);
-        }
-
         private static SearchQueriesReport<T> WeightEvently<T>(ConcurrentBag<RelevancyScoreResult<T>> results)
         {
             var totalCount = 1.0 * results.Count;

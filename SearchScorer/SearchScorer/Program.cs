@@ -29,27 +29,32 @@ namespace SearchScorer
                 FeedbackSearchQueriesCsvPath = Path.Combine(assemblyDir, "FeedbackSearchQueries.csv"),
                 CuratedSearchQueriesCsvPath = Path.Combine(assemblyDir, "CuratedSearchQueries.csv"),
                 ClientCuratedSearchQueriesCsvPath = Path.Combine(assemblyDir, "ClientCuratedSearchQueries.csv"),
-                TopSearchQueriesCsvPath = @"C:\Users\jver\Desktop\search-scorer\TopSearchQueries-2019-08-05.csv",
-                TopClientSearchQueriesCsvPath = @"C:\Users\jver\Desktop\search-scorer\TopClientSearchQueries-60d-2019-10-24.csv",
-                TopSearchSelectionsCsvPath = @"C:\Users\jver\Desktop\search-scorer\TopSearchSelections-2019-08-05.csv",
-                TopSearchSelectionsV2CsvPath = @"C:\Users\jver\Desktop\search-scorer\TopSearchSelectionsV2-2019-08-05.csv",
-                GoogleAnalyticsSearchReferralsCsvPath = @"C:\Users\jver\Desktop\search-scorer\GoogleAnalyticsSearchReferrals-2019-07-03-2019-08-04.csv",
-                GitHubUsageJsonPath = @"C:\Users\jver\Desktop\search-scorer\GitHubUsage.v1-2019-08-06.json",
-                GitHubUsageCsvPath = @"C:\Users\jver\Desktop\search-scorer\GitHubUsage.v1-2019-08-06.csv",
+                TopSearchQueriesCsvPath = @"C:\Users\jver\OneDrive - Microsoft\search-scorer\TopSearchQueries-90d-organic-2020-10-19.csv",
+                TopClientSearchQueriesCsvPath = @"C:\Users\jver\OneDrive - Microsoft\search-scorer\TopClientSearchQueries-45d-2020-10-19.csv",
+                GoogleAnalyticsSearchReferralsCsvPath = @"C:\Users\jver\OneDrive - Microsoft\search-scorer\GoogleAnalyticsSearchReferrals-empty.csv",
+
+                // Used for the "convert-csv" command
+                TopSearchSelectionsCsvPath = @"C:\Users\jver\OneDrive - Microsoft\search-scorer\TopSearchSelections-90d-2020-10-19.csv",
+                GitHubUsageJsonPath = @"C:\Users\jver\OneDrive - Microsoft\search-scorer\GitHubUsage.v1-2019-08-06.json",
+                GitHubUsageCsvPath = @"C:\Users\jver\OneDrive - Microsoft\search-scorer\GitHubUsage.v1-2019-08-06.csv",
+                TopSearchSelectionsV2CsvPath = @"C:\Users\jver\OneDrive - Microsoft\search-scorer\TopSearchSelectionsV2-90d-2020-10-19.csv",
+
+                // Used for the "hash-queries" command.
+                TopV3SearchQueriesPathPattern = @"C:\Users\jver\OneDrive - Microsoft\search-scorer\TopV3SearchQueries-90d-p*-2020-10-19.csv",
+                HasherKeyFile = @"C:\Users\jver\OneDrive - Microsoft\search-scorer\HasherKey.txt",
+                HashedSearchQueryLookupCsvPath = @"C:\Users\jver\OneDrive - Microsoft\search-scorer\HashedSearchQueries-2020-10-19.csv",
 
                 // The following settings are only necessary if running the "probe" command.
                 AzureSearchServiceName = "",
                 AzureSearchIndexName = "",
                 AzureSearchApiKey = "",
-                ProbeResultsCsvPath = @"C:\Users\jver\Desktop\search-scorer\ProbeResults.csv",
+                ProbeResultsCsvPath = @"C:\Users\jver\OneDrive - Microsoft\search-scorer\ProbeResults.csv",
 
                 PackageIdWeights = CreateRange(lower: 1, upper: 10, increments: 3),
                 TokenizedPackageIdWeights = CreateRange(lower: 1, upper: 10, increments: 3),
                 TagsWeights = CreateRange(lower: 1, upper: 10, increments: 3),
                 DownloadWeights = CreateRange(lower: 1000, upper: 30000, increments: 5000),
-            };
-
-            // WriteConvenientCsvs(settings);
+            }; 
 
             using (var httpClientHandler = new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip })
             using (var httpClient = new HttpClient())
@@ -63,7 +68,72 @@ namespace SearchScorer
                 {
                     await RunProbeCommandAsync(settings, httpClient);
                 }
+                else if (args[0] == "curation-coverage")
+                {
+                    ShowCurationCoverage(settings);
+                }
+                else if (args[0] == "convert-csv")
+                {
+                    WriteConvenientCsvs(settings);
+                }
+                else if (args[0] == "verify-package-ids")
+                {
+                    await VerifyPackageIdsExistAsync(settings, httpClient);
+                }
+                else if (args[0] == "hash-queries")
+                {
+                    HashQueries(settings);
+                }
             }
+        }
+
+        private static void ShowCurationCoverage(SearchScorerSettings settings)
+        {
+            Console.WriteLine("Search query curation");
+            Console.WriteLine("=====================");
+            ShowCurationCoverage(
+                TopSearchQueriesCsvReader.Read(settings.TopSearchQueriesCsvPath),
+                CuratedSearchQueriesCsvReader.Read(settings.CuratedSearchQueriesCsvPath));
+
+            Console.WriteLine();
+
+            Console.WriteLine("Client search query curation");
+            Console.WriteLine("============================");
+            ShowCurationCoverage(
+                TopClientSearchQueriesCsvReader.Read(settings.TopClientSearchQueriesCsvPath),
+                CuratedSearchQueriesCsvReader.Read(
+                    settings.ClientCuratedSearchQueriesCsvPath,
+                    settings.CuratedSearchQueriesCsvPath));
+        }
+
+        private static void ShowCurationCoverage(IReadOnlyDictionary<string, int> topSearchQueries, IReadOnlyList<CuratedSearchQuery> curatedSearchQueries)
+        {
+            var curatedSearchQueriesSet = curatedSearchQueries
+                .Select(x => x.SearchQuery)
+                .ToHashSet();
+
+            float totalCount = topSearchQueries.Sum(x => x.Value);
+            var uncurated = topSearchQueries.Where(x => !curatedSearchQueriesSet.Contains(x.Key));
+            var uncuratedCount = uncurated.Sum(x => x.Value);
+            Console.WriteLine($"Curation coverage: {(totalCount - uncuratedCount) / totalCount:P2}");
+
+            const int topN = 10;
+            var top = uncurated.OrderByDescending(x => x.Value).Take(topN).ToList();
+            Console.WriteLine($"Top {top.Count} uncurated:");
+            foreach (var query in top)
+            {
+                Console.WriteLine($"  - {query.Key} ({query.Value}, {query.Value / totalCount:P2})");
+            }
+        }
+
+        private static void HashQueries(SearchScorerSettings settings)
+        {
+            Console.WriteLine("Reading hasher key file...");
+            var hasherKey = File.ReadAllText(settings.HasherKeyFile).Trim();
+            Console.WriteLine("Reading search queries...");
+            var searchQueries = TopV3SearchQueriesCsvReader.Read(settings.TopV3SearchQueriesPathPattern);
+            Console.WriteLine("Writing hashed search queries...");
+            HashedSearchQueryCsvWriter.Write(hasherKey, settings.HashedSearchQueryLookupCsvPath, searchQueries);
         }
 
         private static async Task RunScoreCommandAsync(SearchScorerSettings settings, HttpClient httpClient)
@@ -204,4 +274,5 @@ namespace SearchScorer
             }
         }
     }
+
 }

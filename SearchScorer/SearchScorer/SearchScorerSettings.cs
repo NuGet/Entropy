@@ -18,6 +18,9 @@ namespace SearchScorer
         public string GitHubUsageJsonPath { get; set; }
         public string GitHubUsageCsvPath { get; set; }
         public string ProbeResultsCsvPath { get; set; }
+        public string TopV3SearchQueriesPathPattern { get; set; }
+        public string HashedSearchQueryLookupCsvPath { get; set; }
+        public string HasherKeyFile { get; set; }
 
         // The following settings are only necessary for the "probe" command
         public string AzureSearchServiceName { get; set; }
