@@ -288,7 +288,6 @@ Google.Apis.oauth2,Google.Apis.Oauth2.v2,4,Google.Apis.Oauth2.v1,3,Google.Apis.A
 yaml,YamlDotNet,4,SharpYaml,3,,,,,,
 google,Google.Apis,4,Google.Protobuf,3,Microsoft.Owin.Security.Google,3,Microsoft.AspNetCore.Authentication.Google,3,Google.Apis.*,3
 gpio,Enterprisecoding.RPI.GPIO,4,ReactiveGpio,3,Unidevel.Raspberry.Gpio,3,System.Device.Gpio,3,,
-"Tags:""dotnet-core""",,,,,,,,,,
 Microsoft.VisualStudio.Web.CodeGeneration.Tools,Microsoft.VisualStudio.Web.CodeGeneration.Tools,4,Microsoft.VisualStudio.Web.CodeGeneration.*,2,Microsoft.VisualStudio.Web.CodeGeneration.Design,3,,,,
 Microsoft.IdentityModel,Microsoft.IdentityModel,4,Microsoft.IdentityModel.Clients.ActiveDirectory,3,Microsoft.IdentityModel.Tokens,3,Microsoft.IdentityModel.*,2,,
 Microsoft.Owin.Host.SystemWeb,Microsoft.Owin.Host.SystemWeb,4,,,,,,,,
@@ -304,7 +303,6 @@ xml,System.Xml.Xdocument,4,System.Xml.ReaderWriter,4,,,,,,
 Quartz,Quartz,4,,,,,,,,
 beetlex,BeetleX,4,BeetleX.FastHttpApi,3,BeetleX.Bumblebee,3,BeetleX.FastHttpApi.Admin,3,BeetleX.FastHttpApi.Hosting,3
 syncfusion.ej2.blazor,Syncfusion.EJ2.Blazor,4,Syncfusion.EJ2.*,3,,,,,,
-LogicBuilder,,,,,,,,,,
 antlr,Antlr,4,Antlr4,4,Antlr3.Runtime,4,Antlr4.Runtime,4,,
 image,ImageProcessor,4,SixLabors.ImageSharp,4,System.Drawing.Common,3,Xamarin.FFImageLoading,2,ImageResizer,2
 System.Buffers,System.Buffers,4,System.Buffers.Primitives,3,System.Memory,3,System.*,2,,
@@ -402,3 +400,15 @@ winui,Microsoft.UI.Xaml,4,,,,,,,,
 WinUI,Microsoft.UI.Xaml,4,,,,,,,,
 Windows UI,Microsoft.UI.Xaml,4,Microsoft.Toolkit.Uwp.UI,3,,,,,,
 Microsoft.WinUI,Microsoft.UI.Xaml,4,,,,,,,,
+ef,EntityFramework,4,Microsoft.EntityFrameworkCore,4,dotnet-ef,4,Microsoft.EntityFrameworkCore.SqlServer,3,Microsoft.EntityFrameworkCore.Tools,3
+dotnet-ef,dotnet-ef,4,Microsoft.EntityFrameworkCore.Design,2,Microsoft.EntityFrameworkCore.Tools,2,,,,
+System.Text.Json,System.Text.Json,4,,,,,,,,
+humanizer,Humanizer,4,Humanizer.Core,4,,,,,,
+sqlserver,Microsoft.EntityFrameworkCore.SqlServer,4,EntityFramework,4,System.Data.SqlClient,3,Microsoft.Data.SqlClient,3,Dapper,2
+Antlr,Antlr,4,Antlr4,4,Antlr3.Runtime,4,Antlr4.Runtime,4,,
+Xamarin.Essentials,Xamarin.Essentials,4,Xamarin.Forms,2,,,,,,
+SignalR,Microsoft.AspNet.SignalR,4,Microsoft.AspNetCore.SignalR,4,Microsoft.AspNetCore.SignalR.Client,4,,,,
+sendgrid,Sendgrid,4,SendGrid.SmtpApi,3,SendGrid.CSharp.HTTP.Client,2,,,,
+my,MySql.Data,2,MySqlConnector,2,Pomelo.EntityFrameworkCore.MySql,2,,,,
+Microsoft.Data.SqlClient,Microsoft.Data.SqlClient,4,System.Data.SqlClient,2,,,,,,
+system.buffers,System.Buffers,4,,,,,,,,
