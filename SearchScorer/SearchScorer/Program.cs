@@ -25,7 +25,9 @@ namespace SearchScorer
             var settings = new SearchScorerSettings
             {
                 ControlBaseUrl = "https://azuresearch-usnc.nuget.org/",
-                TreatmentBaseUrl = "https://azuresearch-usnc-preview.nuget.org/",
+                TreatmentBaseUrl = "http://localhost:21751/",
+                // TreatmentBaseUrl = "https://azuresearch-usnc-perf.nuget.org/",
+
                 FeedbackSearchQueriesCsvPath = Path.Combine(assemblyDir, "FeedbackSearchQueries.csv"),
                 CuratedSearchQueriesCsvPath = Path.Combine(assemblyDir, "CuratedSearchQueries.csv"),
                 ClientCuratedSearchQueriesCsvPath = Path.Combine(assemblyDir, "ClientCuratedSearchQueries.csv"),
@@ -61,7 +63,6 @@ namespace SearchScorer
             {
                 if (args.Length == 0 || args[0] == "score")
                 {
-                    // await VerifyPackageIdsExistAsync(settings, httpClient);
                     await RunScoreCommandAsync(settings, httpClient);
                 }
                 else if (args[0] == "probe")
@@ -83,6 +84,44 @@ namespace SearchScorer
                 else if (args[0] == "hash-queries")
                 {
                     HashQueries(settings);
+                }
+                else if (args[0] == "compare")
+                {
+                    var searchTerm = string.Join(" ", args.Skip(1).ToArray());
+                    Console.WriteLine($"Search term: {searchTerm}");
+
+                    var searchClient = new SearchClient(httpClient);
+                    var take = 10;
+                    Console.WriteLine($"Searching on control {settings.ControlBaseUrl}");
+                    var control = await searchClient.SearchAsync(settings.ControlBaseUrl, searchTerm, take);
+                    Console.WriteLine($"Searching on treatment {settings.TreatmentBaseUrl}");
+                    var treatment = await searchClient.SearchAsync(settings.TreatmentBaseUrl, searchTerm, take);
+                    Console.WriteLine();
+
+                    var maxControl = control.Data.Select(x => x.Id).Concat(new[] { "Control" }).Max(x => x.Length);
+                    var maxTreatment = treatment.Data.Select(x => x.Id).Concat(new[] { "Treatment" }).Max(x => x.Length);
+
+                    Console.Write("Rank | ");
+                    Console.Write("Control".PadRight(maxControl));
+                    Console.Write(" | ");
+                    Console.Write("Treatment".PadRight(maxTreatment));
+                    Console.WriteLine();
+
+                    Console.Write("---- | ");
+                    Console.Write(new string('-', maxControl));
+                    Console.Write(" | ");
+                    Console.Write(new string('-', maxTreatment));
+                    Console.WriteLine();
+
+                    for (var i = 0; i < control.Data.Count && i < treatment.Data.Count; i++)
+                    {
+                        Console.Write((i + 1).ToString().PadRight("Rank".Length));
+                        Console.Write(" | ");
+                        Console.Write((control.Data.ElementAtOrDefault(i)?.Id ?? string.Empty).PadRight(maxControl));
+                        Console.Write(" | ");
+                        Console.Write((treatment.Data.ElementAtOrDefault(i)?.Id ?? string.Empty).PadRight(maxTreatment));
+                        Console.WriteLine();
+                    }
                 }
             }
         }

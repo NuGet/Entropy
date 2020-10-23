@@ -257,7 +257,7 @@ namespace SearchScorer.IREvalutation
             var output = new ConcurrentBag<RelevancyScoreResult<T>>();
 
             var workers = Enumerable
-                .Range(0, 16)
+                .Range(0, 8)
                 .Select(async x =>
                 {
                     await Task.Yield();

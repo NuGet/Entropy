@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -58,13 +59,21 @@ namespace SearchScorer.IREvalutation
                 {
                     // It might be that the score map contains wildcards. Let's try those. Execute them from longest to
                     // shortest. This is a hueristic to perform the most specific ones first.
+                    var match = false;
                     foreach (var pair in patternToScorePairs.OrderByDescending(x => x.Key.ToString().Length))
                     {
                         if (pair.Key.IsMatch(packageId))
                         {
                             scores.Add(pair.Value);
-                            continue;
+                            patternToScorePairs.Remove(pair);
+                            match = true;
+                            break;
                         }
+                    }
+
+                    if (match)
+                    {
+                        continue;
                     }
 
                     scores.Add(0);
@@ -80,6 +89,11 @@ namespace SearchScorer.IREvalutation
 
             // Calculate the NDCG.
             var resultScore = NDCG(scores, idealScores);
+
+            if (resultScore > 1.0)
+            {
+                throw new InvalidOperationException("An NDCG score cannot be greater than 1.0. There's a bug!");
+            }
 
             return new RelevancyScoreResult<T>(
                 resultScore,
