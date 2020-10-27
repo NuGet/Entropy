@@ -59,6 +59,8 @@
     <Compile Include="Common\PackageIdPatternValidator.cs" />
     <Compile Include="Common\SearchQuerySource.cs" />
     <Compile Include="Common\SearchProbesCsvWriter.cs" />
+    <Compile Include="Common\SearchResultDebug.cs" />
+    <Compile Include="Common\SearchResultDebugDocument.cs" />
     <Compile Include="Common\SearchServiceClientExtensions.cs" />
     <Compile Include="Common\TopClientSearchQueriesCsvReader.cs" />
     <Compile Include="Common\TopV3SearchQueriesCsvReader.cs" />

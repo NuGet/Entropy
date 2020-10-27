@@ -99,20 +99,20 @@ namespace SearchScorer
             Console.WriteLine($"Search term: {searchTerm}");
 
             var searchClient = new SearchClient(httpClient);
-            var take = 20;
+            var take = 10;
             Console.WriteLine($"Searching on control {settings.ControlBaseUrl}");
             var control = await searchClient.SearchAsync(settings.ControlBaseUrl, searchTerm, take);
             Console.WriteLine($"Searching on treatment {settings.TreatmentBaseUrl}");
             var treatment = await searchClient.SearchAsync(settings.TreatmentBaseUrl, searchTerm, take);
             Console.WriteLine();
 
-            var maxControl = control.Data.Select(x => DisplayPackage(x)).Concat(new[] { "Control" }).Max(x => x.Length);
-            var maxTreatment = treatment.Data.Select(x => DisplayPackage(x)).Concat(new[] { "Treatment" }).Max(x => x.Length);
+            var maxControl = GetColumnWidth("Control", control);
+            var maxTreatment = GetColumnWidth("Treatment", control);
 
             Console.Write("Rank | ");
-            Console.Write("Control".PadRight(maxControl));
+            Console.Write(DisplayHeading("Control", control).PadRight(maxControl));
             Console.Write(" | ");
-            Console.Write("Treatment".PadRight(maxTreatment));
+            Console.Write(DisplayHeading("Treatment", treatment).PadRight(maxTreatment));
             Console.WriteLine();
 
             Console.Write("---- | ");
@@ -134,6 +134,16 @@ namespace SearchScorer
             Console.WriteLine();
         }
 
+        private static int GetColumnWidth(string label, SearchResponse control)
+        {
+            return control.Data.Select(x => DisplayPackage(x)).Concat(new[] { DisplayHeading(label, control) }).Max(x => x.Length);
+        }
+
+        private static string DisplayHeading(string label, SearchResponse control)
+        {
+            return $"{label} ({DisplayNumber(control.TotalHits)} hits)";
+        }
+
         private static string DisplayPackage(SearchResult x)
         {
             if (x == null)
@@ -141,7 +151,12 @@ namespace SearchScorer
                 return string.Empty;
             }
 
-            return $"{x.Id} ({MetricNumeralExtensions.ToMetric(x.Debug.Document.TotalDownloadCount, decimals: 2)})";
+            return $"{x.Id} ({DisplayNumber(x.Debug.Document.TotalDownloadCount)})";
+        }
+
+        private static string DisplayNumber(double number)
+        {
+            return MetricNumeralExtensions.ToMetric(number, decimals: 2);
         }
 
         private static void ShowCurationCoverage(SearchScorerSettings settings)
