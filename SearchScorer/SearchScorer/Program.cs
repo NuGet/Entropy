@@ -7,6 +7,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.Azure.Search;
 using SearchScorer.Common;
+using Humanizer;
 
 namespace SearchScorer
 {
@@ -88,42 +89,59 @@ namespace SearchScorer
                 else if (args[0] == "compare")
                 {
                     var searchTerm = string.Join(" ", args.Skip(1).ToArray());
-                    Console.WriteLine($"Search term: {searchTerm}");
-
-                    var searchClient = new SearchClient(httpClient);
-                    var take = 10;
-                    Console.WriteLine($"Searching on control {settings.ControlBaseUrl}");
-                    var control = await searchClient.SearchAsync(settings.ControlBaseUrl, searchTerm, take);
-                    Console.WriteLine($"Searching on treatment {settings.TreatmentBaseUrl}");
-                    var treatment = await searchClient.SearchAsync(settings.TreatmentBaseUrl, searchTerm, take);
-                    Console.WriteLine();
-
-                    var maxControl = control.Data.Select(x => x.Id).Concat(new[] { "Control" }).Max(x => x.Length);
-                    var maxTreatment = treatment.Data.Select(x => x.Id).Concat(new[] { "Treatment" }).Max(x => x.Length);
-
-                    Console.Write("Rank | ");
-                    Console.Write("Control".PadRight(maxControl));
-                    Console.Write(" | ");
-                    Console.Write("Treatment".PadRight(maxTreatment));
-                    Console.WriteLine();
-
-                    Console.Write("---- | ");
-                    Console.Write(new string('-', maxControl));
-                    Console.Write(" | ");
-                    Console.Write(new string('-', maxTreatment));
-                    Console.WriteLine();
-
-                    for (var i = 0; i < control.Data.Count && i < treatment.Data.Count; i++)
-                    {
-                        Console.Write((i + 1).ToString().PadRight("Rank".Length));
-                        Console.Write(" | ");
-                        Console.Write((control.Data.ElementAtOrDefault(i)?.Id ?? string.Empty).PadRight(maxControl));
-                        Console.Write(" | ");
-                        Console.Write((treatment.Data.ElementAtOrDefault(i)?.Id ?? string.Empty).PadRight(maxTreatment));
-                        Console.WriteLine();
-                    }
+                    await CompareSearchTermAsync(settings, httpClient, searchTerm);
                 }
             }
+        }
+
+        private static async Task CompareSearchTermAsync(SearchScorerSettings settings, HttpClient httpClient, string searchTerm)
+        {
+            Console.WriteLine($"Search term: {searchTerm}");
+
+            var searchClient = new SearchClient(httpClient);
+            var take = 20;
+            Console.WriteLine($"Searching on control {settings.ControlBaseUrl}");
+            var control = await searchClient.SearchAsync(settings.ControlBaseUrl, searchTerm, take);
+            Console.WriteLine($"Searching on treatment {settings.TreatmentBaseUrl}");
+            var treatment = await searchClient.SearchAsync(settings.TreatmentBaseUrl, searchTerm, take);
+            Console.WriteLine();
+
+            var maxControl = control.Data.Select(x => DisplayPackage(x)).Concat(new[] { "Control" }).Max(x => x.Length);
+            var maxTreatment = treatment.Data.Select(x => DisplayPackage(x)).Concat(new[] { "Treatment" }).Max(x => x.Length);
+
+            Console.Write("Rank | ");
+            Console.Write("Control".PadRight(maxControl));
+            Console.Write(" | ");
+            Console.Write("Treatment".PadRight(maxTreatment));
+            Console.WriteLine();
+
+            Console.Write("---- | ");
+            Console.Write(new string('-', maxControl));
+            Console.Write(" | ");
+            Console.Write(new string('-', maxTreatment));
+            Console.WriteLine();
+
+            for (var i = 0; i < control.Data.Count || i < treatment.Data.Count; i++)
+            {
+                Console.Write((i + 1).ToString().PadRight("Rank".Length));
+                Console.Write(" | ");
+                Console.Write(DisplayPackage(control.Data.ElementAtOrDefault(i)).PadRight(maxControl));
+                Console.Write(" | ");
+                Console.Write(DisplayPackage(treatment.Data.ElementAtOrDefault(i)).PadRight(maxTreatment));
+                Console.WriteLine();
+            }
+
+            Console.WriteLine();
+        }
+
+        private static string DisplayPackage(SearchResult x)
+        {
+            if (x == null)
+            {
+                return string.Empty;
+            }
+
+            return $"{x.Id} ({MetricNumeralExtensions.ToMetric(x.Debug.Document.TotalDownloadCount, decimals: 2)})";
         }
 
         private static void ShowCurationCoverage(SearchScorerSettings settings)

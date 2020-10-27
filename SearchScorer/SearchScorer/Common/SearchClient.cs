@@ -23,6 +23,7 @@ namespace SearchScorer.Common
             queryString["q"] = query;
             queryString["prerelease"] = "true";
             queryString["semVerLevel"] = "2.0.0";
+            queryString["debug"] = "true";
             queryString["take"] = take.ToString();
 
             var uriBuilder = new UriBuilder(baseUrl)
@@ -52,7 +53,7 @@ namespace SearchScorer.Common
                         }
                         catch (Exception ex) when (attempt < 3)
                         {
-                            Console.WriteLine("[ WARN ] Search query failed: " + ex.Message);
+                            Console.WriteLine($"[ WARN ] Search query '{query}' failed: " + ex.Message);
                             await Task.Delay(TimeSpan.FromSeconds(1));
                         }
                     }
