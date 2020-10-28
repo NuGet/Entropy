@@ -75,7 +75,14 @@ namespace SearchScorer.IREvalutation
             IEnumerable<KeyValuePair<string, double>> pairs)
         {
             var pairList = pairs.ToList();
+
             ConsoleUtility.WriteHeading($"{heading} ({pairList.Count})", '-');
+            if (!pairList.Any())
+            {
+                Console.WriteLine("(none)");
+                return;
+            }
+
             var longestSearchQuery = pairList.Max(x => x.Key.Length);
             foreach (var pair in pairList)
             {
