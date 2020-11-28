@@ -18,7 +18,7 @@ namespace find_buids_in_sprint
         {
             var sprintEpoch = new DateTimeOffset(2010, 07, 26, 0, 0, 0, TimeSpan.FromHours(-7));
 
-            var sprint = 177;
+            var sprint = 179;
 
             var startTime = sprintEpoch.AddDays(7.0 * 3.0 * sprint);
             var endTime = startTime.AddDays(7.0 * 3.0);
@@ -43,6 +43,7 @@ namespace find_buids_in_sprint
             var cred = new AuthenticationHeaderValue("BASIC", Convert.ToBase64String(Encoding.ASCII.GetBytes(accountName + ":" + personalAccessToken)));
             httpManager.AddCredential("https://dev.azure.com/DevDiv/", cred);
 
+            var buildFetcher = new BuildFetcher(httpManager);
 
             Dictionary<string, int> buildDefinitions = new Dictionary<string, int>()
             {
@@ -70,7 +71,7 @@ namespace find_buids_in_sprint
                 for (int i = 0; i < builds.Count; i++)
                 {
                     var ciBuild = builds[i];
-                    var analysisBuild = await GetBuildAsync(ciBuild, httpManager);
+                    var analysisBuild = await buildFetcher.GetBuildAsync(ciBuild);
                     summary.Add(analysisBuild);
                 }
 
