@@ -3,8 +3,7 @@ using System.ComponentModel.Composition;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
-using IVsTestingExtension.Tests;
-using IVsTestingExtension.ToolWindows;
+using IVsTestingExtension.Xaml.ToolWindow;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Task = System.Threading.Tasks.Task;
@@ -18,9 +17,6 @@ namespace IVsTestingExtension
     [ProvideMenuResource("Menus.ctmenu", 1)]
     public sealed class TestingExtensionPackage : AsyncPackage
     {
-        [Import]
-        ITestMethodProvider TestMethodFactory { get; set; }
-
         protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
         {
             var componentModel = await this.GetComponentModelAsync();
@@ -42,9 +38,10 @@ namespace IVsTestingExtension
 
         protected override async Task<object> InitializeToolWindowAsync(Type toolWindowType, int id, CancellationToken cancellationToken)
         {
-            var dte = await this.GetDTEAsync();
-            var model = new ProjectCommandTestingModel(dte, TestMethodFactory.GetMethod());
-            await model.InitializeAsync();
+            await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
+
+            var vsSolution = (IVsSolution)await GetServiceAsync(typeof(SVsSolution));
+            var model = new ToolWindowControlViewModel(vsSolution, this, JoinableTaskFactory);
             return model;
         }
     }

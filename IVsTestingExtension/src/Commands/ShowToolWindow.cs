@@ -1,6 +1,5 @@
 ﻿using System;
 using System.ComponentModel.Design;
-using IVsTestingExtension.ToolWindows;
 using Microsoft;
 using Microsoft.VisualStudio.Shell;
 using Task = System.Threading.Tasks.Task;

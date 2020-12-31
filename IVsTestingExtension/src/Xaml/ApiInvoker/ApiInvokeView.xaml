@@ -1,0 +1,131 @@
+﻿<Page x:Class="IVsTestingExtension.Xaml.ApiInvoker.ApiInvokerView"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:local="clr-namespace:IVsTestingExtension.Xaml.ApiInvoker"
+      xmlns:imaging="clr-namespace:Microsoft.VisualStudio.Imaging;assembly=Microsoft.VisualStudio.Imaging"
+      xmlns:catalog="clr-namespace:Microsoft.VisualStudio.Imaging;assembly=Microsoft.VisualStudio.ImageCatalog"
+      mc:Ignorable="d" 
+      d:DesignHeight="450" d:DesignWidth="800"
+      d:DataContext="{d:DesignInstance Type=local:ApiInvokeViewModel, IsDesignTimeCreatable=False}">
+    <ScrollViewer>
+        <Grid Margin="5">
+            <Grid.RowDefinitions>
+                <!-- back button -->
+                <RowDefinition Height="auto" />
+                <!-- input -->
+                <RowDefinition Height="auto" />
+                <!-- run options -->
+                <RowDefinition Height="auto" />
+                <!-- run button -->
+                <RowDefinition Height="auto" />
+                <!-- output -->
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- back button -->
+            <Button Grid.Row="0" Click="BackButton_Click">
+                <StackPanel Orientation="Horizontal">
+                    <imaging:CrispImage Moniker="{x:Static catalog:KnownMonikers.Backwards}" />
+                    <TextBlock Text="INuGetProjectService.GetInstalledPackagesAsync" />
+                </StackPanel>
+            </Button>
+
+            <!-- input -->
+            <GroupBox Grid.Row="1" Grid.Column="1" Header="Input">
+                <GroupBox.Resources>
+                    <local:ApiInvokeDataTemplateSelector x:Key="ApiMethodTemplateSelector" />
+                    <local:FrameworkNameConverter x:Key="FrameworkNameConverter" />
+
+                    <DataTemplate x:Key="ProjectSelection">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition SharedSizeGroup="left" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="{Binding Path=Name, Mode=OneTime}" />
+                            <ComboBox Grid.Column="1" ItemsSource="{DynamicResource Projects}" DisplayMemberPath="Name" SelectedItem="{Binding Path=Value, Mode=OneWayToSource}" />
+                        </Grid>
+                    </DataTemplate>
+
+                    <DataTemplate x:Key="String">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition SharedSizeGroup="left" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="{Binding Path=Name, Mode=OneTime}" />
+                            <TextBox Grid.Column="1" Text="{Binding Path=Value, Mode=OneWayToSource}" />
+                        </Grid>
+                    </DataTemplate>
+
+                    <DataTemplate x:Key="CancellationToken">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition SharedSizeGroup="left" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="{Binding Path=Name, Mode=OneTime}" />
+                            <TextBox Grid.Column="1" Text="CancellationToken" IsEnabled="False" />
+                        </Grid>
+                    </DataTemplate>
+
+                    <DataTemplate x:Key="FrameworkName">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition SharedSizeGroup="left" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="{Binding Path=Name, Mode=OneTime}" />
+                            <TextBox Grid.Column="1" Text="{Binding Path=Value, Converter={StaticResource FrameworkNameConverter}, Mode=OneWayToSource}" />
+                        </Grid>
+                    </DataTemplate>
+
+                    <DataTemplate x:Key="NotImplemented">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition SharedSizeGroup="left" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="{Binding Path=Name, Mode=OneTime}" />
+                            <TextBox Grid.Column="1" Text="Argument type not supported" IsEnabled="False" />
+                        </Grid>
+                    </DataTemplate>
+                </GroupBox.Resources>
+                
+                <ItemsControl ItemsSource="{Binding Path=Model.Parameters}"
+                              ItemTemplateSelector="{StaticResource ApiMethodTemplateSelector}"
+                              Grid.IsSharedSizeScope="True">
+                </ItemsControl>
+            </GroupBox>
+
+            <!-- run options -->
+            <GroupBox Grid.Row="2" Header="Run Options">
+                <StackPanel>
+                    <CheckBox IsChecked="{Binding Path=RunOnUiThread}">Run on UI thread</CheckBox>
+                    <CheckBox IsChecked="{Binding Path=FreeThreadedCheck}"
+                        ToolTipService.ToolTip="If the API is free-threaded, clicking the run button will not hang Visual Studio. If the API needs the UI thread, running this API will deadlock Visual Studio's UI thread and you will need to force close Visual Studio.">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Free-threaded check " />
+                            <imaging:CrispImage Moniker="{x:Static catalog:KnownMonikers.StatusInformation}" />
+                        </StackPanel>
+                    </CheckBox>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- run button -->
+            <Button Grid.Row="3" Click="RunButton_Click">
+                <StackPanel Orientation="Horizontal">
+                    <imaging:CrispImage Moniker="{x:Static catalog:KnownMonikers.Run}" />
+                    <TextBlock Text="Run" />
+                </StackPanel>
+            </Button>
+
+            <!-- output -->
+            <GroupBox Grid.Row="4" Header="Result">
+                <TextBlock x:Name="_results" Padding="5" />
+            </GroupBox>
+        </Grid>
+    </ScrollViewer>
+</Page>

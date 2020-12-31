@@ -1,0 +1,31 @@
+﻿<Page x:Class="IVsTestingExtension.Xaml.ApiSelector.ApiSelectorView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:IVsTestingExtension.Xaml.ApiSelector"
+             xmlns:imaging="clr-namespace:Microsoft.VisualStudio.Imaging;assembly=Microsoft.VisualStudio.Imaging"
+             xmlns:catalog="clr-namespace:Microsoft.VisualStudio.Imaging;assembly=Microsoft.VisualStudio.ImageCatalog"
+             xmlns:api="clr-namespace:IVsTestingExtension.Models"
+             mc:Ignorable="d"
+             d:DesignHeight="450" d:DesignWidth="800" ShowsNavigationUI="False"
+             d:DataContext="{d:DesignInstance Type=local:ApiSelectorView, IsDesignTimeCreatable=False}" KeepAlive="True">
+    <Grid>
+        <TreeView ItemsSource="{Binding Path=Interfaces}" MouseDoubleClick="TreeView_MouseDoubleClick" x:Name="_treeView">
+            <TreeView.Resources>
+                <HierarchicalDataTemplate DataType="{x:Type api:ApiService}" ItemsSource="{Binding Path=Methods}">
+                    <StackPanel Orientation="Horizontal">
+                        <imaging:CrispImage Moniker="{x:Static catalog:KnownMonikers.CSInterface}" />
+                        <TextBlock Text="{Binding Path=Name}" />
+                    </StackPanel>
+                </HierarchicalDataTemplate>
+                <DataTemplate DataType="{x:Type api:ApiMethod}">
+                    <StackPanel Orientation="Horizontal">
+                        <imaging:CrispImage Moniker="{x:Static catalog:KnownMonikers.Method}" />
+                        <TextBlock Text="{Binding Path=MethodInfo}" />
+                    </StackPanel>
+                </DataTemplate>
+            </TreeView.Resources>
+        </TreeView>
+    </Grid>
+</Page>
