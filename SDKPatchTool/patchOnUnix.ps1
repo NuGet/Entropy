@@ -1,7 +1,11 @@
 # patchSDKFolder is the folder stores the patched SDK. It will be created if it doesn't exist.
 $patchSDKFolder = "/home/henli/patchSDK"
+
 # nupkgsPath is the nupkgs folder which contains the latest nupkgs.
 $nupkgsPath = "/home/henli/Nupkgs"
+
+# SDKVersion is the version of dotnet/sdk which NuGet is inserting into.
+$SDKVersion = "5.0.100"
 
 . "./patchUtil.ps1"
 
@@ -16,15 +20,15 @@ if (!(Test-Path $patchSDKFolder/dotnet-install.sh)) {
 }
 
 sudo chmod u+x $patchSDKFolder/dotnet-install.sh
-& $patchSDKFolder/dotnet-install.sh -i $patchSDKFolder -c master -v latest -NoPath
+& $patchSDKFolder/dotnet-install.sh -i $patchSDKFolder -c master -v $SDKVersion -NoPath
 
         
 $DOTNET = Join-Path -Path $patchSDKFolder -ChildPath 'dotnet'
 # Display current version
 & $DOTNET --version
-$SDKVersion = & $DOTNET --version
+$DownloadedSDKVersion = & $DOTNET --version
 
-$result = Patch -patchSDKFolder $patchSDKFolder -SDKVersion $SDKVersion -nupkgsPath $nupkgsPath
+$result = Patch -patchSDKFolder $patchSDKFolder -SDKVersion $DownloadedSDKVersion -nupkgsPath $nupkgsPath
 
 if ($result -eq $true)
 {
