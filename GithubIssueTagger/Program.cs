@@ -185,6 +185,7 @@ namespace GithubIssueTagger
             //263262236       Functionality:VisualStudioUI = PM UI
             Label pmuiLabel = await GetLabelById(263262236);
             IEnumerable<Issue> pmuiIssues = includedIssues.Where(issue => issue.Labels.Any(label => label.Id == pmuiLabel.Id));
+            
             Console.WriteLine("PM UI\t" + pmuiIssues.Count() + GetUntypedIssueCountString(pmuiIssues, validTypeLabels));
 
             //430506461       Product: VS.PMConsole = PMC
@@ -207,6 +208,7 @@ namespace GithubIssueTagger
             Label cliLabel2 = await GetLabelById(182924875);
             Label cliLabel3 = await GetLabelById(1048477918);
             var cliLabels = new long[] { cliLabel1.Id, cliLabel2.Id, cliLabel3.Id };
+            string issuesUrl = GetIssuesByLabelUrl(cliLabels, ignoreLabels);
             IEnumerable<Issue> cliIssues = includedIssues.Where(issue => issue.Labels.Any(label => cliLabels.Contains(label.Id)));
             Console.WriteLine("CLI\t" + cliIssues.Count() + GetUntypedIssueCountString(cliIssues, validTypeLabels));
 
@@ -272,6 +274,13 @@ namespace GithubIssueTagger
             Console.WriteLine("Core\t" + coreIssues.Count() + GetUntypedIssueCountString(coreIssues, validTypeLabels));
         }
 
+        private static string GetIssuesByLabelUrl(long[] labelsToInclude, List<Label> ignoreLabels)
+        {
+            //_allIssues[0].
+            //_client.Repository
+            throw new NotImplementedException();
+        }
+
         private static string GetUntypedIssueCountString(IEnumerable<Issue> issues, List<Label> validTypeLabels)
         {
             IEnumerable<long> validTypeLabelIds = validTypeLabels.Select(label => label.Id);
@@ -279,7 +288,7 @@ namespace GithubIssueTagger
             var unlabeledCount = unlabeledIssues.Count();
             if (unlabeledCount > 0)
             {
-                return " (Missing Types: " + unlabeledCount + ")";
+                return "\t(Missing Types: " + unlabeledCount + ")";
             }
             return string.Empty;
         }
