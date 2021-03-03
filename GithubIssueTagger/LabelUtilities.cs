@@ -128,7 +128,7 @@ namespace GithubIssueTagger
             return relevant;
         }
 
-        private static async Task<IReadOnlyList<Label>> GetLabelsForRepository(GitHubClient client, string fromOrg, string fromRepo)
+        public static async Task<IReadOnlyList<Label>> GetLabelsForRepository(GitHubClient client, string fromOrg, string fromRepo)
         {
             var repoId = await client.Repository.Get(fromOrg, fromRepo);
             return await GetAllLabels(client, repoId);
