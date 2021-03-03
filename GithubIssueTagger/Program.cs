@@ -14,10 +14,16 @@ namespace GithubIssueTagger
 
         static async Task Main(string[] args)
         {
-            if (args.Length != 1)
+            if (args.Length < 1)
             {
                 Console.Error.WriteLine("Expected 1 argument (github PAT). Found " + args.Length);
                 return;
+            }
+
+            bool prompt = false;
+            if (args.Length > 1 && args[1].Equals("prompt"))
+            {
+                prompt = true;
             }
 
             _client = new GitHubClient(new ProductHeaderValue("nuget-github-issue-tagger"))
@@ -25,7 +31,14 @@ namespace GithubIssueTagger
                 Credentials = new Credentials(args[0])
             };
 
-            await PromptForQuery();
+            if (prompt)
+            {
+                await PromptForQuery();
+            }
+            else //default
+            {
+                await AllUnprocessed();
+            }
         }
 
         private static async Task PromptForQuery()
