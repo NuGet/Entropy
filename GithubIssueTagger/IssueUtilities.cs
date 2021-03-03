@@ -25,14 +25,19 @@ namespace GithubIssueTagger
 
         public static async Task<IList<Issue>> GetIssuesForLabel(GitHubClient client, string org, string repo, string label)
         {
+            var issuesForMilestone = await GetAllIssues(client, org, repo);
+            return issuesForMilestone.Where(e => HasLabel(e, label)).ToList();
+        }
+
+        public static async Task<IEnumerable<Issue>> GetAllIssues(GitHubClient client, string org, string repo)
+        {
             var shouldPrioritize = new RepositoryIssueRequest
             {
                 Filter = IssueFilter.All
             };
 
             var issuesForMilestone = await client.Issue.GetAllForRepository(org, repo, shouldPrioritize);
-
-            return issuesForMilestone.Where(e => HasLabel(e, label)).ToList();
+            return issuesForMilestone;
         }
 
         /// <summary>
