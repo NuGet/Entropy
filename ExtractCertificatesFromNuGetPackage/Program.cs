@@ -8,6 +8,7 @@ using System.Linq;
 using System.Reflection;
 using System.Security.Cryptography.Pkcs;
 using System.Security.Cryptography.X509Certificates;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using NuGet.Packaging.Signing;
@@ -201,7 +202,6 @@ namespace ExtractCertificatesFromNuGetPackage
             for (int i = 0, iend = chain.Count - 1; i <= iend; ++i)
             {
                 X509Certificate2 certificate = chain[i];
-                var file = new FileInfo(Path.Combine(certificatesDirectory.FullName, $"{i}.cer"));
                 string level;
 
                 if (i == 0)
@@ -217,14 +217,56 @@ namespace ExtractCertificatesFromNuGetPackage
                     level = "int";
                 }
 
-                string filePath = file.FullName.Substring(rootDirectory.FullName.Length);
+                var fileName = $"{i}";
+                FileInfo derFile = WriteDerEncodedCertificateFile(certificate, certificatesDirectory, fileName);
+                FileInfo pemFile = WritePemEncodedCertificateFile(certificate, certificatesDirectory, fileName);
+                string filePath;
+                
+                if (OperatingSystem.IsWindows())
+                {
+                    filePath = derFile.FullName.Substring(rootDirectory.FullName.Length);
+                }
+                else
+                {
+                    filePath = pemFile.FullName.Substring(rootDirectory.FullName.Length);
+                }
 
                 Console.WriteLine($"  {certificate.Thumbprint.ToLowerInvariant()}  {level,-4}   .{filePath}");
-
-                File.WriteAllBytes(file.FullName, certificate.RawData);
             }
 
             Console.WriteLine();
+        }
+
+        private static FileInfo WriteDerEncodedCertificateFile(X509Certificate2 certificate, DirectoryInfo directory, string fileName)
+        {
+            var file = new FileInfo(Path.Combine(directory.FullName, $"{fileName}.cer"));
+
+            File.WriteAllBytes(file.FullName, certificate.RawData);
+
+            return file;
+        }
+
+        private static FileInfo WritePemEncodedCertificateFile(X509Certificate2 certificate, DirectoryInfo directory, string fileName)
+        {
+            var file = new FileInfo(Path.Combine(directory.FullName, $"{fileName}.pem"));
+
+            string base64 = Convert.ToBase64String(certificate.RawData);
+
+            using (var stream = new StreamWriter(file.FullName))
+            {
+                stream.WriteLine("-----BEGIN CERTIFICATE-----");
+
+                for (var i = 0; i < base64.Length; i += 64)
+                {
+                    int length = Math.Min(64, base64.Length - i);
+
+                    stream.WriteLine(base64.Substring(i, length));
+                }
+
+                stream.Write("-----END CERTIFICATE-----");
+            }
+
+            return file;
         }
 
         private static void PrintHelp()
