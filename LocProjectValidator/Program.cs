@@ -20,16 +20,19 @@ namespace LocProjectValidator
                 new Argument<string>(
                     "artifacts-dir",
                     description: "Localization Artifacts folder to validate LocProject.json file entries"),
+                new Argument<string>(
+                    "loc-repo-dir",
+                    description: "Localization repository folder to validate LocProject.json file entries"),
             };
 
             rootCommand.Description = "Verifies LocProject.json file entries againts files contained in a AzDO localization artifact";
 
-            rootCommand.Handler = CommandHandler.Create<string, string>(Run);
+            rootCommand.Handler = CommandHandler.Create<string, string, string>(Run);
 
             return await rootCommand.InvokeAsync(args);
         }
 
-        private static void Run(string locProjectFile, string artifactsDir)
+        private static void Run(string locProjectFile, string artifactsDir, string locRepoDir)
         {
             var text = File.ReadAllText(locProjectFile);
             var locProject = JsonSerializer.Deserialize<LocProject>(text);
@@ -40,8 +43,8 @@ namespace LocProjectValidator
                 {
                     ValidateFile(locItem.SourceFile, nameof(locItem.SourceFile), artifactsDir, locItem);
                     ValidateFile(locItem.LcgFile, nameof(locItem.LcgFile), artifactsDir, locItem);
-                    ValidateFile(locItem.LclFile, nameof(locItem.LclFile), artifactsDir, locItem);
-                    ValidateFile(locItem.LciFile, nameof(locItem.LciFile), artifactsDir, locItem);
+                    ValidateFile(locItem.LclFile, nameof(locItem.LclFile), locRepoDir, locItem);
+                    ValidateFile(locItem.LciFile, nameof(locItem.LciFile), locRepoDir, locItem);
                 }
             }
         }
