@@ -32,7 +32,7 @@ namespace GithubIssueTagger
             var processedCommits = new List<Commit>();
             foreach (var ghCommit in githubCommits)
             {
-                var commit = new Commit(ghCommit.Sha, ghCommit.Author.Login, ghCommit.Commit.Url, ghCommit.Commit.Message);
+                var commit = new Commit(ghCommit.Sha, ghCommit.Author.Login, $"https://github.com/{orgName}/{repoName}/commit/{ghCommit.Sha}", ghCommit.Commit.Message);
                 var id = GetPRId(ghCommit.Commit.Message);
                 string pullRequestbody = string.Empty;
                 if (id != -1)
