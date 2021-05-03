@@ -38,7 +38,7 @@ namespace GithubIssueTagger
             }
             else //default
             {
-                await InsertionChangelogGenerator.GenerateInsertionChangelog(_client);
+                await InsertionChangelogGenerator.GenerateInsertionChangelogForNuGetClient(_client);
             }
         }
 

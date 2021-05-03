@@ -10,13 +10,11 @@ namespace GithubIssueTagger
 {
     public class InsertionChangelogGenerator
     {
-        public static async Task GenerateInsertionChangelog(GitHubClient gitHubClient)
+        public static async Task GenerateInsertionChangelogForNuGetClient(GitHubClient gitHubClient, string startSha = "58795a41a3c8c9d63801fb5072a2e68e48d7507e", string branchName = "dev" )
         {
             // Adjust the sha/repo
-            var startSha = "58795a41a3c8c9d63801fb5072a2e68e48d7507e";
             var orgName = "nuget";
             var repoName = "nuget.client";
-            var branchName = "dev";
             string[] issueRepositories = new string[] { "NuGet/Home", "NuGet/Client.Engineering" };
             var resultHtmlPath = Path.Combine(Path.GetDirectoryName(typeof(InsertionChangelogGenerator).Assembly.Location), "results.html");
 
@@ -202,7 +200,6 @@ table, th, td {
                 Author = author;
                 Link = link;
                 Message = message?
-                            .Replace(",", " ")
                             .Replace("\r", " ")
                             .Replace("\n", " ");
                 Issues = new HashSet<Tuple<int, string>>();
