@@ -10,13 +10,12 @@ namespace InsertionChangeLogGenerator
 {
     public class ChangeLogGenerator
     {
-        public static async Task GenerateInsertionChangelogForNuGetClient(GitHubClient gitHubClient, string startSha, string branchName)
+        public static async Task GenerateInsertionChangelogForNuGetClient(GitHubClient gitHubClient, string startSha, string branchName, string resultHtmlPath)
         {
             // Adjust the sha/repo
             var orgName = "nuget";
             var repoName = "nuget.client";
             string[] issueRepositories = new string[] { "NuGet/Home", "NuGet/Client.Engineering" };
-            var resultHtmlPath = Path.Combine(Path.GetDirectoryName(typeof(ChangeLogGenerator).Assembly.Location), "results.html");
 
             var githubBranch = await gitHubClient.Repository.Branch.Get(orgName, repoName, branchName);
             var githubCommits = (await gitHubClient.Repository.Commit.Compare(orgName, repoName, startSha, githubBranch.Commit.Sha)).Commits.Reverse();
