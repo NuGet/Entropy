@@ -6,17 +6,17 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace GithubIssueTagger
+namespace InsertionChangeLogGenerator
 {
-    public class InsertionChangelogGenerator
+    public class ChangeLogGenerator
     {
-        public static async Task GenerateInsertionChangelogForNuGetClient(GitHubClient gitHubClient, string startSha = "58795a41a3c8c9d63801fb5072a2e68e48d7507e", string branchName = "dev" )
+        public static async Task GenerateInsertionChangelogForNuGetClient(GitHubClient gitHubClient, string startSha, string branchName)
         {
             // Adjust the sha/repo
             var orgName = "nuget";
             var repoName = "nuget.client";
             string[] issueRepositories = new string[] { "NuGet/Home", "NuGet/Client.Engineering" };
-            var resultHtmlPath = Path.Combine(Path.GetDirectoryName(typeof(InsertionChangelogGenerator).Assembly.Location), "results.html");
+            var resultHtmlPath = Path.Combine(Path.GetDirectoryName(typeof(ChangeLogGenerator).Assembly.Location), "results.html");
 
             var githubBranch = await gitHubClient.Repository.Branch.Get(orgName, repoName, branchName);
             var githubCommits = (await gitHubClient.Repository.Commit.Compare(orgName, repoName, startSha, githubBranch.Commit.Sha)).Commits.Reverse();
@@ -193,7 +193,7 @@ table, th, td {
             public ISet<Tuple<int, string>> Issues { get; }
 
             public Tuple<int, string> PR { get; set; }
-            
+
             public Commit(string sha, string author, string link, string message)
             {
                 Sha = sha;

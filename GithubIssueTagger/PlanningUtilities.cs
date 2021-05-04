@@ -9,7 +9,6 @@ namespace GithubIssueTagger
 {
     public static class PlanningUtilities
     {
-
         public static async Task RunPlanningAsync(GitHubClient client)
         {
             IEnumerable<Issue> issues = await GetPackageNamespacesIssues(client);
@@ -21,6 +20,7 @@ namespace GithubIssueTagger
             Console.WriteLine();
             Console.ReadKey();
         }
+
         public static async Task<IList<Issue>> GetPackageNamespacesIssues(GitHubClient client)
         {
             var homeIssues = await IssueUtilities.GetIssuesForLabel(client, "nuget", "home", "Area:PackageNamespaces");
