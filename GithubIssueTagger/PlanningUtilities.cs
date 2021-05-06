@@ -11,14 +11,23 @@ namespace GithubIssueTagger
     {
         public static async Task RunPlanningAsync(GitHubClient client)
         {
-            IEnumerable<Issue> issues = await GetPerformanceIssuesForSprint(client);
+            IEnumerable<Issue> issues = await GetPackageNamespacesIssues(client);
 
-            var markdownTable = issues.Select(e => new IssueModel(e)).ToMarkdownTable(GetPerformanceMapping());
+            var markdownTable = issues.Select(e => new IssueModel(e)).ToMarkdownTable(GetNamespacesMapping());
 
             Console.WriteLine();
             Console.WriteLine(markdownTable);
             Console.WriteLine();
             Console.ReadKey();
+        }
+
+        public static async Task<IList<Issue>> GetPackageNamespacesIssues(GitHubClient client)
+        {
+            var homeIssues = await IssueUtilities.GetIssuesForLabel(client, "nuget", "home", "Area:PackageNamespaces");
+            var clientEngineeringIssues = await IssueUtilities.GetIssuesForLabel(client, "nuget", "client.engineering", "Area:PackageNamespaces");
+            var issues = (homeIssues.Union(clientEngineeringIssues)).ToList();
+
+            return issues;
         }
 
         public static async Task<IEnumerable<Issue>> GetPerformanceIssuesForSprint(GitHubClient client)
@@ -65,6 +74,18 @@ namespace GithubIssueTagger
             var clientEngineeringIssues = await IssueUtilities.GetIssuesForLabel(client, "nuget", "client.engineering", "Tenet:Performance");
             var issues = homeIssues.Union(clientEngineeringIssues);
             return issues;
+        }
+
+        public static List<Tuple<string, string>> GetNamespacesMapping()
+        {
+            return new List<Tuple<string, string>>()
+                {
+                    new Tuple<string, string>("Link", "Link"),
+                    new Tuple<string, string>("Title", "Title"),
+                    new Tuple<string, string>("Assignee", "Assignee"),
+                    new Tuple<string, string>("Milestone", "Milestone"),
+                    new Tuple<string, string>("Notes", "Notes"),
+                };
         }
 
         public static List<Tuple<string, string>> GetPerformanceMapping()
@@ -187,7 +208,7 @@ namespace GithubIssueTagger
         {
             Link = e.HtmlUrl;
             Title = e.Title;
-            Assignee = e.Assignee?.Login;
+            Assignee = string.Join(",", e.Assignees.Select(e => e.Login));
             Milestone = e.Milestone?.Title;
             Release = string.Empty;
             FocusArea = string.Empty;
