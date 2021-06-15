@@ -10,7 +10,7 @@ $SDKVersion = "latest"
 # Channel name of SDK. Pls refer to https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-install-script#options
 # "Current" - Most current release (For now, it's 5.x)
 # "main" - Branch name of a preview channel (For now, it's 6.x)
-$SDKChannel = "Current"
+$SDKChannel = "main"
 
 . ".\patchUtil.ps1"
 
