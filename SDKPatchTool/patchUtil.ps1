@@ -71,7 +71,7 @@ function PatchNupkgs {
     }
     Write-host "Dll :  $patchDll will be used for patching."
 
-    #the destination of the dlls in nupkg should be dotnet/sdk/5.xx/
+    #the destination of the dlls in nupkg should be dotnet/sdk/x.yz/
     $destPath = [System.IO.Path]::Combine($patchSDKFolder, 'sdk', $SDKVersion)
     $dllName = $patchDll.Name
 
