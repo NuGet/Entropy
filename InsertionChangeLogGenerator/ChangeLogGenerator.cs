@@ -29,7 +29,8 @@ namespace InsertionChangeLogGenerator
             var processedCommits = new List<Commit>();
             foreach (var ghCommit in githubCommits)
             {
-                var commit = new Commit(ghCommit.Sha, ghCommit.Author.Login, $"https://github.com/{orgName}/{repoName}/commit/{ghCommit.Sha}", ghCommit.Commit.Message);
+                var author = ghCommit.Author?.Login ?? ghCommit.Committer?.Login ?? "";
+                var commit = new Commit(ghCommit.Sha, author, $"https://github.com/{orgName}/{repoName}/commit/{ghCommit.Sha}", ghCommit.Commit.Message);
                 var id = GetPRId(ghCommit.Commit.Message);
                 string pullRequestbody = string.Empty;
                 if (id != -1)
@@ -151,7 +152,7 @@ table, th, td {
 <th>Commit</th>
 <th>Author</th>
 <th>Commit Message</th>
-<tr>");
+</tr>");
                 foreach (var commit in commits)
                 {
                     w.WriteLine(
@@ -160,9 +161,9 @@ table, th, td {
 <td>{GetHrefOrEmpty(commit.PR)}</td>
 <td>{string.Join($"</br>", commit.Issues.Select(e => GetHrefOrEmpty(e)))}</td>
 <td><a href=""{commit.Link}"">{commit.Sha}</a></td>
-<td>{commit.Author}</ td >
-<td>{commit.Message}</ td >
-<tr> ");
+<td>{commit.Author}</td>
+<td>{commit.Message}</td>
+</tr> ");
                 }
 
                 w.WriteLine(
