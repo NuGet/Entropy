@@ -121,6 +121,8 @@ namespace InsertionChangeLogGenerator
 
         public static void SaveAsHtml(IList<Commit> commits, string path)
         {
+            Directory.CreateDirectory(Path.GetDirectoryName(path));
+
             if (File.Exists(path))
             {
                 File.Delete(path);
