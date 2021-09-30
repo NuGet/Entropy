@@ -40,6 +40,23 @@ namespace GithubIssueTagger
             return issuesForMilestone;
         }
 
+        public static async Task<IEnumerable<Issue>> GetOpenPriority1Issues(GitHubClient client, string org, string repo)
+        {
+            var nugetRepos = new RepositoryCollection();
+            nugetRepos.Add(org, repo);
+
+            var queryLabels = new string[] { "priority:1" };
+
+            var request = new SearchIssuesRequest()
+            {
+                Repos = nugetRepos,
+                State = ItemState.Open,
+                Labels = queryLabels
+            };
+            var issuesForMilestone = await client.Search.SearchIssues(request);
+            return issuesForMilestone.Items;
+        }
+
         /// <summary>
         /// Get all the issues considered unprocessed. This means that either the issue does not have any labels, or only has the pipeline labels.
         /// </summary>

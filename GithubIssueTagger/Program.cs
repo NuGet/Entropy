@@ -1,6 +1,8 @@
-﻿using Octokit;
+﻿using Newtonsoft.Json;
+using Octokit;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -9,8 +11,10 @@ namespace GithubIssueTagger
     public class Program
     {
         private static IList<Issue> _unprocessedIssues;
-        private static IReadOnlyList<Label> _allLabels;
-        private static IEnumerable<Issue> _allIssues;
+        private static IReadOnlyList<Label> _allHomeLabels;
+        private static IReadOnlyList<Label> _allClientEngineeringLabels;
+        private static IEnumerable<Issue> _allHomeIssues;
+        private static IEnumerable<Issue> _allClientEngineeringIssues;
         private static GitHubClient _client;
 
         static async Task Main(string[] args)
@@ -56,6 +60,8 @@ namespace GithubIssueTagger
                 Console.WriteLine("2: " + nameof(AllLabels));
                 Console.WriteLine("3: " + nameof(AreaLabels));
                 Console.WriteLine("4: " + nameof(AreaOwnerReport));
+                Console.WriteLine("5: " + nameof(ClientEngineeringPriority1Issues));
+                Console.WriteLine("6: " + nameof(HomePriority1Issues));
             }
             while (null != await RunQueryOrReturnUnknownInput(Console.ReadLine()));
         }
@@ -88,6 +94,16 @@ namespace GithubIssueTagger
                     Console.WriteLine(executedMethod + "***");
                     await AreaOwnerReport();
                     break;
+                case "5":
+                    executedMethod = nameof(ClientEngineeringPriority1Issues);
+                    Console.WriteLine(executedMethod + "***");
+                    await ClientEngineeringPriority1Issues();
+                    break;
+                case "6":
+                    executedMethod = nameof(HomePriority1Issues);
+                    Console.WriteLine(executedMethod + "***");
+                    await HomePriority1Issues();
+                    break;
                 case "quit":
                     return null;
                 default:
@@ -111,12 +127,12 @@ namespace GithubIssueTagger
 
         private static async Task AllLabels()
         {
-            if (_allLabels is null)
+            if (_allHomeLabels is null)
             {
-                _allLabels  = await LabelUtilities.GetLabelsForRepository(_client, "nuget", "home");
+                _allHomeLabels  = await LabelUtilities.GetLabelsForRepository(_client, "nuget", "home");
             }
             Console.WriteLine("(ID\tName)");
-            foreach (var label in _allLabels)
+            foreach (var label in _allHomeLabels)
             {
                 Console.WriteLine(label.Id + "\t" + label.Name);
             }
@@ -134,53 +150,53 @@ namespace GithubIssueTagger
 
         private static async Task AreaOwnerReport()
         {
-            if (_allIssues is null)
+            if (_allHomeIssues is null)
             {
-                _allIssues = await IssueUtilities.GetAllIssues(_client, "nuget", "home");
+                _allHomeIssues = await IssueUtilities.GetAllIssues(_client, "nuget", "home");
             }
 
-            if (_allLabels is null)
+            if (_allHomeLabels is null)
             {
-                _allLabels = await LabelUtilities.GetLabelsForRepository(_client, "nuget", "home");
+                _allHomeLabels = await LabelUtilities.GetLabelsForRepository(_client, "nuget", "home");
             }
 
             List<Label> ignoreLabels = new List<Label>()
             {
                 //2671458320      Type:Tracking
-                _allLabels.SingleOrDefault(label => label.Id == 2671458320),
+                _allHomeLabels.SingleOrDefault(label => label.Id == 2671458320),
 
                 //801160517       Type: Spec
-                _allLabels.SingleOrDefault(label => label.Id == 801160517),
+                _allHomeLabels.SingleOrDefault(label => label.Id == 801160517),
 
                 //1593926950      Type: DeveloperDocs
-                _allLabels.SingleOrDefault(label => label.Id == 1593926950),
+                _allHomeLabels.SingleOrDefault(label => label.Id == 1593926950),
 
                 //249737088       Type: Docs
-                _allLabels.SingleOrDefault(label => label.Id == 249737088),
+                _allHomeLabels.SingleOrDefault(label => label.Id == 249737088),
 
                 //180116592       Type: Feature
-                _allLabels.SingleOrDefault(label => label.Id == 180116592),
+                _allHomeLabels.SingleOrDefault(label => label.Id == 180116592),
 
                 //2185215650      Type: Learning
-                _allLabels.SingleOrDefault(label => label.Id == 2185215650),
+                _allHomeLabels.SingleOrDefault(label => label.Id == 2185215650),
             };
 
             List<Label> validTypeLabels = new List<Label>()
             {
                 //180116450       Type:Bug
-                _allLabels.SingleOrDefault(label => label.Id == 180116450),
+                _allHomeLabels.SingleOrDefault(label => label.Id == 180116450),
 
                 //386656158       Type: DataAnalysis
-                _allLabels.SingleOrDefault(label => label.Id == 386656158),
+                _allHomeLabels.SingleOrDefault(label => label.Id == 386656158),
 
                 //180970997       Type: DCR
-                _allLabels.SingleOrDefault(label => label.Id == 180970997),
+                _allHomeLabels.SingleOrDefault(label => label.Id == 180970997),
 
                 //979424473       Type: Test
-                _allLabels.SingleOrDefault(label => label.Id == 979424473),
+                _allHomeLabels.SingleOrDefault(label => label.Id == 979424473),
             };
 
-            IEnumerable<Issue> includedIssues = _allIssues.Where(issue => !issue.Labels.Any(label => ignoreLabels.Any(ignoreLabel => ignoreLabel.Id == label.Id)));
+            IEnumerable<Issue> includedIssues = _allHomeIssues.Where(issue => !issue.Labels.Any(label => ignoreLabels.Any(ignoreLabel => ignoreLabel.Id == label.Id)));
 
             //263262236       Functionality:VisualStudioUI = PM UI
             Label pmuiLabel = await GetLabelById(263262236);
@@ -272,6 +288,34 @@ namespace GithubIssueTagger
             Console.WriteLine("Core\t" + coreIssues.Count() + GetUntypedIssueCountString(coreIssues, validTypeLabels));
         }
 
+        private static async Task ClientEngineeringPriority1Issues()
+        {
+            if (_allClientEngineeringIssues is null)
+            {
+                _allClientEngineeringIssues = await IssueUtilities.GetOpenPriority1Issues(_client, "nuget", "client.engineering");
+            }
+
+            var outputFileName = "clientEngineeringIssues.json";
+            var json = JsonConvert.SerializeObject(_allClientEngineeringIssues, Formatting.Indented);
+            File.WriteAllText(outputFileName, json);
+
+            Console.WriteLine(nameof(ClientEngineeringPriority1Issues) + " wrote to " + outputFileName);
+        }
+
+        private static async Task HomePriority1Issues()
+        {
+            if (_allHomeIssues is null)
+            {
+                _allHomeIssues = await IssueUtilities.GetOpenPriority1Issues(_client, "nuget", "home");
+            }
+
+            var outputFileName = "homeIssues.json";
+            var json = JsonConvert.SerializeObject(_allHomeIssues, Formatting.Indented);
+            File.WriteAllText(outputFileName, json);
+
+            Console.WriteLine(nameof(HomePriority1Issues) + " wrote to " + outputFileName);
+        }
+
         private static string GetUntypedIssueCountString(IEnumerable<Issue> issues, List<Label> validTypeLabels)
         {
             IEnumerable<long> validTypeLabelIds = validTypeLabels.Select(label => label.Id);
@@ -288,23 +332,23 @@ namespace GithubIssueTagger
         #region Helpers
         private static async Task<IEnumerable<Label>> GetAreaLabels()
         {
-            if (_allLabels is null)
+            if (_allHomeLabels is null)
             {
-                _allLabels = await LabelUtilities.GetLabelsForRepository(_client, "nuget", "home");
+                _allHomeLabels = await LabelUtilities.GetLabelsForRepository(_client, "nuget", "home");
             }
 
-            IEnumerable<Label> areaLabels = _allLabels?.Where(l => l.Name.StartsWith("Area:", StringComparison.OrdinalIgnoreCase));
+            IEnumerable<Label> areaLabels = _allHomeLabels?.Where(l => l.Name.StartsWith("Area:", StringComparison.OrdinalIgnoreCase));
             return areaLabels;
         }
 
         private static async Task<Label> GetLabelById(long id)
         {
-            if (_allLabels is null)
+            if (_allHomeLabels is null)
             {
-                _allLabels = await LabelUtilities.GetLabelsForRepository(_client, "nuget", "home");
+                _allHomeLabels = await LabelUtilities.GetLabelsForRepository(_client, "nuget", "home");
             }
 
-            Label foundLabel = _allLabels?.SingleOrDefault(l => l.Id == id);
+            Label foundLabel = _allHomeLabels?.SingleOrDefault(l => l.Id == id);
             return foundLabel;
         }
         #endregion
