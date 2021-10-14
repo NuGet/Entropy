@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk" >
+
+  <PropertyGroup>
+    <NuGetMajorMinorVersion>6.0</NuGetMajorMinorVersion>
+    <NuGetCommonVersion>$(NuGetMajorMinorVersion).*-*</NuGetCommonVersion>
+    <SkipShared>true</SkipShared>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net5.0</TargetFramework>
+    <Description>A utility for validating that relevant NuGet documentation has been published.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NuGet.Common" Version="$(NuGetCommonVersion)" />
+  </ItemGroup>
+
+</Project>
