@@ -29,16 +29,16 @@ namespace InsertionChangeLogGenerator
             };
             var startSha = opts.StartSha;
             var branch = opts.Branch;
-            var resultHtmlPath = Path.Combine(opts.Output ?? Directory.GetCurrentDirectory(), "results.html");
+            var directory = opts.Output ?? Directory.GetCurrentDirectory();
 
             Console.WriteLine($"Generating change log for:" + Environment.NewLine +
                 $"Sha: {startSha}" + Environment.NewLine +
                 $"Branch: {branch}" + Environment.NewLine +
-                $"Output path: {resultHtmlPath}"
+                $"Output path: {directory}"
                 );
             try
             {
-                await ChangeLogGenerator.GenerateInsertionChangelogForNuGetClient(githubClient, startSha, branch, resultHtmlPath);
+                await ChangeLogGenerator.GenerateInsertionChangelogForNuGetClient(githubClient, startSha, branch, directory);
             }
             catch (Exception e)
             {
