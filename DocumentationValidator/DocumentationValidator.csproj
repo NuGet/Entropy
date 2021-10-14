@@ -1,9 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk" >
 
   <PropertyGroup>
-    <NuGetMajorMinorVersion>6.0</NuGetMajorMinorVersion>
-    <NuGetCommonVersion>$(NuGetMajorMinorVersion).*-*</NuGetCommonVersion>
-    <SkipShared>true</SkipShared>
+    <NuGetCommonVersion Condition= " '$(NuGetMajorMinorVersion)' != '' ">$(NuGetMajorMinorVersion).*-*</NuGetCommonVersion>
+    <NuGetCommonVersion Condition= " '$(NuGetCommonVersion)' == '' ">*-*</NuGetCommonVersion>
     <OutputType>Exe</OutputType>
     <TargetFramework>net5.0</TargetFramework>
     <Description>A utility for validating that relevant NuGet documentation has been published.</Description>

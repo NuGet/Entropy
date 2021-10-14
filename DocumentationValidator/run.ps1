@@ -1,8 +1,8 @@
 [CmdletBinding()]
 param (
-    [Parameter(Mandatory=$True)]
+    [Parameter]
     [string]$Version
 )
 
-dotnet build /p:NuGetMajorMinorVersion="6.0"
+dotnet build /p:NuGetMajorMinorVersion=$Version
 dotnet run
