@@ -5,4 +5,4 @@ param (
 )
 
 dotnet build /p:NuGetMajorMinorVersion=$Version
-dotnet run
+dotnet run get-undocumented-codes

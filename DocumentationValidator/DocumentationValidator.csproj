@@ -11,6 +11,7 @@
   <ItemGroup>
     <PackageReference Include="NuGet.Common" Version="$(NuGetCommonVersion)" />
     <PackageReference Include="Octokit" Version="0.50.0" />
+    <PackageReference Include="CommandLineParser" Version="2.7.82" />
   </ItemGroup>
 
 </Project>
