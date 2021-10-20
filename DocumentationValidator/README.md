@@ -15,7 +15,7 @@ or
 
 The exit code will be `1` if any codes are found to be undocumented, and `0` if all the codes are documented.
 
-The helper tool contains a capability to create issues, which can be turned out by passing arguments. 
+The helper tool contains a capability to create issues, which can be turned on by passing arguments. 
 
 ```console
 DocumentationValidator.exe 123456 true
