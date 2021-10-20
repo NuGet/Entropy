@@ -10,7 +10,7 @@ namespace InsertionChangeLogGenerator
 {
     public class ChangeLogGenerator
     {
-        public static async Task GenerateInsertionChangelogForNuGetClient(GitHubClient gitHubClient, string startSha, string branchName, string resultHtmlPath)
+        public static async Task GenerateInsertionChangelogForNuGetClient(GitHubClient gitHubClient, string startSha, string branchName, string resultPath)
         {
             // Adjust the sha/repo
             var orgName = "nuget";
@@ -21,7 +21,8 @@ namespace InsertionChangeLogGenerator
             var githubCommits = (await gitHubClient.Repository.Commit.Compare(orgName, repoName, startSha, githubBranch.Commit.Sha)).Commits.Reverse();
             List<Commit> commits = await GetCommitDetails(gitHubClient, orgName, repoName, issueRepositories, githubCommits);
 
-            SaveAsHtml(commits, resultHtmlPath);
+            SaveAsHtml(commits, resultPath);
+            SaveAsMarkdown(commits, resultPath);
         }
 
         private static async Task<List<Commit>> GetCommitDetails(GitHubClient gitHubClient, string orgName, string repoName, string[] issueRepositories, IEnumerable<GitHubCommit> githubCommits)
@@ -121,14 +122,15 @@ namespace InsertionChangeLogGenerator
 
         public static void SaveAsHtml(IList<Commit> commits, string path)
         {
-            Directory.CreateDirectory(Path.GetDirectoryName(path));
+            var resultHtmlPath = Path.Combine(path, "results.html");
+            Directory.CreateDirectory(Path.GetDirectoryName(resultHtmlPath));
 
-            if (File.Exists(path))
+            if (File.Exists(resultHtmlPath))
             {
-                File.Delete(path);
+                File.Delete(resultHtmlPath);
             }
 
-            using (var w = File.AppendText(path))
+            using (var w = File.AppendText(resultHtmlPath))
             {
                 w.WriteLine(
 @"<!DOCTYPE html>
@@ -173,7 +175,7 @@ table, th, td {
 </html>");
             }
 
-            Console.WriteLine($"Saving results file: {path}");
+            Console.WriteLine($"Saving results file: {resultHtmlPath}");
 
             static string GetHrefOrEmpty(Tuple<int, string> url)
             {
@@ -182,6 +184,55 @@ table, th, td {
                     return string.Empty;
                 }
                 return $"<a href=\"{url.Item2}\">{url.Item1}</a>";
+            }
+        }
+
+        public static void SaveAsMarkdown(IList<Commit> commits, string path)
+        {
+            var resultMarkdownPath = Path.Combine(path, "results.md");
+            Directory.CreateDirectory(Path.GetDirectoryName(resultMarkdownPath));
+
+            if (File.Exists(resultMarkdownPath))
+            {
+                File.Delete(resultMarkdownPath);
+            }
+
+            using (var w = File.AppendText(resultMarkdownPath))
+            {
+                w.WriteLine(
+                @"|Pull Request |Issue(s) |Commit |Author |Commit Message |");
+                w.WriteLine("--- | --- | --- | --- | ---");
+                foreach (var commit in commits)
+                {
+                    w.WriteLine($"| {GetMdURLOrEmpty(commit.PR)} | " +
+                        $"{string.Join($"<br />", commit.Issues.Select(e => GetMdURLOrEmpty(e)))} | " +
+                        $"{GetMdURLOrEmpty(new Tuple<string, string>(commit.Sha, commit.Link))} | " +
+                        $"{commit.Author} | " +
+                        $"{commit.Message} |");
+                }
+            }
+
+            Console.WriteLine($"Saving results file: {resultMarkdownPath}");
+
+            static string GetMdURLOrEmpty(object url)
+            {
+                Tuple<string, string> tuple = null;
+
+                if (url is Tuple<string, string> stringTuple)
+                {
+                    tuple = stringTuple;
+                }
+                else if (url is Tuple<int, string> intTuple)
+                {
+                    tuple = new Tuple<string, string>(intTuple.Item1.ToString(), intTuple.Item2);
+                }
+
+                if (tuple != null)
+                {
+                    return $"[{tuple.Item1}]({tuple.Item2})";
+                }
+
+                return string.Empty;
             }
         }
 
