@@ -1,66 +1,65 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http;
 using System.Threading.Tasks;
-using NuGet.Common;
+using CommandLine;
 
 namespace DocumentationValidator
 {
     class Program
     {
-        static readonly string LogCodeTemplate = "https://docs.microsoft.com/en-us/nuget/reference/errors-and-warnings/{0}";
-
-        static async Task<int> Main(string[] args)
+        static int Main(string[] args)
         {
-            IList<NuGetLogCode> allLogCodes = GetNuGetLogCodes();
-            List<NuGetLogCode> undocumentedLogCodes = new();
-            HttpClient httpClient = new();
-
-            Console.WriteLine($"Checking {allLogCodes.Count} log codes for documentation.");
-
-            for (int i = 0; i < allLogCodes.Count; i++)
-            {
-                if (i % 20 == 0 && i != 0) // The check will take some time, so display progress updates.
-                {
-                    Console.WriteLine($"Checked {i} of {allLogCodes.Count}");
-                }
-
-                if (!await IsLogCodeDocumentedAsync(httpClient, allLogCodes[i]))
-                {
-                    undocumentedLogCodes.Add(allLogCodes[i]);
-                }
-            }
-            Console.WriteLine("Completed checking log codes for documentation.");
-
-            Console.WriteLine($"Undocumented Log Codes Count {undocumentedLogCodes.Count}");
-
-            foreach (var logCode in undocumentedLogCodes)
-            {
-                Console.Error.WriteLine(logCode);
-            }
-
-            return undocumentedLogCodes.Any() ? 1 : 0;
+            return Parser.Default.ParseArguments<GetLogCodesOptions, GenerateIssuesOptions>(args)
+               .MapResult(
+                 (GetLogCodesOptions getLogCodesOptions) => RunGetLogCodesCommand(getLogCodesOptions),
+                 (GenerateIssuesOptions generateIssuesOptions) => GenerateIssuesCommand(generateIssuesOptions),
+                 errs => 1);
         }
 
-        private static async Task<bool> IsLogCodeDocumentedAsync(HttpClient httpClient, NuGetLogCode logCode)
+        private static int RunGetLogCodesCommand(GetLogCodesOptions opts)
         {
-            var result = await httpClient.GetAsync(string.Format(LogCodeTemplate, logCode));
-            return result.IsSuccessStatusCode;
+            return RunGetLogCodesCommandAsync(opts).GetAwaiter().GetResult();
+            async Task<int> RunGetLogCodesCommandAsync(GetLogCodesOptions opts)
+            {
+                NuGetLogCodeAnalyzer analyzer = new(pat: null, Console.Out);
+                var codes = await analyzer.GetUndocumentedLogCodesAsync();
+
+                if (codes.Any())
+                {
+                    PrintUtilities.PrintIssuesInMarkdownTableAsync(codes, Console.Error);
+                    return 1;
+                }
+                return 0;
+            }
         }
 
-        private static IList<NuGetLogCode> GetNuGetLogCodes()
+        private static int GenerateIssuesCommand(GenerateIssuesOptions opts)
         {
-            var list = GetEnumList<NuGetLogCode>(); ;
-            list.Remove(NuGetLogCode.Undefined);
-            return list;
-
-            IList<T> GetEnumList<T>()
+            return GenerateIssuesCommandAsync(opts).GetAwaiter().GetResult();
+            async Task<int> GenerateIssuesCommandAsync(GenerateIssuesOptions opts)
             {
-                T[] array = (T[])Enum.GetValues(typeof(T));
-                List<T> list = new List<T>(array);
-                return list;
+                NuGetLogCodeAnalyzer analyzer = new(pat: null, Console.Out);
+                var codes = await analyzer.GetUndocumentedLogCodesAsync();
+
+                if (codes.Any())
+                {
+                    await analyzer.CreateIssuesAsync(codes);
+                }
+                PrintUtilities.PrintIssuesInMarkdownTableAsync(codes, Console.Error);
+                return 0;
             }
+        }
+
+        [Verb("get-undocumented-codes", HelpText = "Generates a markdown table of the undocumented log codes with their relevant issues if any.")]
+        class GetLogCodesOptions
+        {
+        }
+
+        [Verb("generate-issues", HelpText = "Creates issues in the docs repo for the log codes that are undocumented.")]
+        class GenerateIssuesOptions
+        {
+            [Option("pat", Required = true, HelpText = "A Github PAT from a user with sufficient permissions to perform the invoked action.")]
+            public string PAT { get; set; }
         }
     }
 }
