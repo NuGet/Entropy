@@ -15,11 +15,69 @@ namespace DocumentationValidator
         static async Task<int> Main(string[] args)
         {
             IList<NuGetLogCode> allLogCodes = GetNuGetLogCodes();
-            List<NuGetLogCode> undocumentedLogCodes = new();
             HttpClient httpClient = new();
+            var cred = args.Length > 0 ? args[0] : "123";
+            var client = new GitHubClient(new ProductHeaderValue("nuget-documentation-validator"))
+            {
+                Credentials = new Credentials(cred)
+            };
 
+            List<NuGetLogCode> undocumentedLogCodes = await GetUndocumentedLogCodes(allLogCodes, httpClient);
+            Console.WriteLine($"Undocumented Log Codes Count {undocumentedLogCodes.Count}");
+
+            Dictionary<NuGetLogCode, List<string>> logCodeToIssue =
+                await GetIssuesForLogCodeAsync(client, undocumentedLogCodes);
+            PrintIssues(logCodeToIssue);
+
+            bool shouldCreateIssues = false;
+            _ = args.Length >= 2 ? bool.TryParse(args[1], out shouldCreateIssues) : false;
+
+            if (shouldCreateIssues)
+            {
+                Console.WriteLine($"Creating issues for log codes without one.");
+                foreach (var logCodeIssueKVP in logCodeToIssue)
+                {
+                    if (logCodeIssueKVP.Value.Count == 0)
+                    {
+                        await CreateIssueForLogCodeInDocsRepo(client, logCodeIssueKVP);
+                    }
+                }
+            }
+
+            PrintIssues(logCodeToIssue);
+
+            return shouldCreateIssues ?
+                0 :
+                undocumentedLogCodes.Any() ? 1 : 0;
+        }
+
+        private static async Task CreateIssueForLogCodeInDocsRepo(GitHubClient client, KeyValuePair<NuGetLogCode, List<string>> logCodeIssueKVP)
+        {
+            var newIssue = new NewIssue(title: $"Document NuGet Code: {logCodeIssueKVP.Key}");
+            newIssue.Body = "The NuGet Code exists in the product, but there is no documentation available";
+            newIssue.Labels.Add("Team:Client");
+            newIssue.Labels.Add("P1");
+            newIssue.Labels.Add("doc-bug");
+            var issue = await client.Issue.Create("nuget", "docs.microsoft.com-nuget", newIssue);
+            Console.WriteLine($"Created issue {issue.HtmlUrl} for log code {logCodeIssueKVP.Key}");
+            logCodeIssueKVP.Value.Add(issue.HtmlUrl);
+        }
+
+        private static void PrintIssues(Dictionary<NuGetLogCode, List<string>> issuesForLogCodes)
+        {
+            Console.Error.WriteLine("| Log Code | Potential Issues |");
+            Console.Error.WriteLine("|----------|------------------|");
+
+            foreach (var logCode in issuesForLogCodes)
+            {
+                Console.Error.WriteLine($"| {logCode.Key} | {string.Join(" ,", logCode.Value)} |");
+            }
+        }
+
+        private static async Task<List<NuGetLogCode>> GetUndocumentedLogCodes(IList<NuGetLogCode> allLogCodes, HttpClient httpClient)
+        {
             Console.WriteLine($"Checking {allLogCodes.Count} log codes for documentation.");
-
+            List<NuGetLogCode> undocumentedLogCodes = new();
             for (int i = 0; i < allLogCodes.Count; i++)
             {
                 if (i % 20 == 0 && i != 0) // The check will take some time, so display progress updates.
@@ -33,33 +91,17 @@ namespace DocumentationValidator
                 }
             }
             Console.WriteLine("Completed checking log codes for documentation.");
-
-            Console.WriteLine($"Undocumented Log Codes Count {undocumentedLogCodes.Count}");
-
-            if (undocumentedLogCodes.Count > 0)
-            {
-                var issuesForLogCodes = await GetIssuesForLogCodeAsync(undocumentedLogCodes);
-                Console.Error.WriteLine("| Log Code | Potential Issues |");
-                Console.Error.WriteLine("|----------|------------------|");
-
-                foreach (var logCode in issuesForLogCodes)
-                {
-                    Console.Error.WriteLine($"| {logCode.Key} | {string.Join(" ,", logCode.Value)} |");
-                }
-            }
-            return undocumentedLogCodes.Any() ? 1 : 0;
+            return undocumentedLogCodes;
         }
 
-        private static async Task<Dictionary<NuGetLogCode, List<string>>> GetIssuesForLogCodeAsync(List<NuGetLogCode> logCodes)
+        private static async Task<Dictionary<NuGetLogCode, List<string>>> GetIssuesForLogCodeAsync(GitHubClient client, List<NuGetLogCode> logCodes)
         {
             Dictionary<NuGetLogCode, List<string>> issues = new(logCodes.Count);
+
             foreach (var logCode in logCodes)
             {
                 issues.Add(logCode, new List<string>());
             }
-
-            var client = new GitHubClient(new ProductHeaderValue("nuget-documentation-validator"));
-
             IEnumerable<Issue> githubIssues = await GetAllIssues(client, "nuget", "docs.microsoft.com-nuget");
 
             foreach (Issue githubIssue in githubIssues)
