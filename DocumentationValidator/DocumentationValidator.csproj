@@ -1,8 +1,8 @@
-<Project Sdk="Microsoft.NET.Sdk" >
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <NuGetCommonVersion Condition= " '$(NuGetMajorMinorVersion)' != '' ">$(NuGetMajorMinorVersion).*-*</NuGetCommonVersion>
-    <NuGetCommonVersion Condition= " '$(NuGetCommonVersion)' == '' ">*-*</NuGetCommonVersion>
+    <NuGetCommonVersion Condition=" '$(NuGetMajorMinorVersion)' != '' ">$(NuGetMajorMinorVersion).*-*</NuGetCommonVersion>
+    <NuGetCommonVersion Condition=" '$(NuGetCommonVersion)' == '' ">*-*</NuGetCommonVersion>
     <OutputType>Exe</OutputType>
     <TargetFramework>net5.0</TargetFramework>
     <Description>A utility for validating that relevant NuGet documentation has been published.</Description>
@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <PackageReference Include="NuGet.Common" Version="$(NuGetCommonVersion)" />
+    <PackageReference Include="Octokit" Version="0.50.0" />
   </ItemGroup>
 
 </Project>

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using NuGet.Common;
+using Octokit;
 
 namespace DocumentationValidator
 {
@@ -35,12 +36,61 @@ namespace DocumentationValidator
 
             Console.WriteLine($"Undocumented Log Codes Count {undocumentedLogCodes.Count}");
 
-            foreach (var logCode in undocumentedLogCodes)
+            if (undocumentedLogCodes.Count > 0)
             {
-                Console.Error.WriteLine(logCode);
+                var issuesForLogCodes = await GetIssuesForLogCodeAsync(undocumentedLogCodes);
+                Console.Error.WriteLine("| Log Code | Potential Issues |");
+                Console.Error.WriteLine("|----------|------------------|");
+
+                foreach (var logCode in issuesForLogCodes)
+                {
+                    Console.Error.WriteLine($"| {logCode.Key} | {string.Join(" ,", logCode.Value)} |");
+                }
+            }
+            return undocumentedLogCodes.Any() ? 1 : 0;
+        }
+
+        private static async Task<Dictionary<NuGetLogCode, List<string>>> GetIssuesForLogCodeAsync(List<NuGetLogCode> logCodes)
+        {
+            Dictionary<NuGetLogCode, List<string>> issues = new(logCodes.Count);
+            foreach (var logCode in logCodes)
+            {
+                issues.Add(logCode, new List<string>());
             }
 
-            return undocumentedLogCodes.Any() ? 1 : 0;
+            var client = new GitHubClient(new ProductHeaderValue("nuget-documentation-validator"));
+
+            IEnumerable<Issue> githubIssues = await GetAllIssues(client, "nuget", "docs.microsoft.com-nuget");
+
+            foreach (Issue githubIssue in githubIssues)
+            {
+                foreach (var logCode in logCodes)
+                {
+                    if (IsIssueRelevantForLogCode(githubIssue, logCode))
+                    {
+                        issues[logCode].Add(githubIssue.HtmlUrl);
+                    }
+                }
+            }
+
+            return issues;
+        }
+
+        private static bool IsIssueRelevantForLogCode(Issue githubIssue, NuGetLogCode logCode)
+        {
+            return githubIssue.Title.Contains(logCode.ToString(), StringComparison.OrdinalIgnoreCase);
+        }
+
+        public static async Task<IEnumerable<Issue>> GetAllIssues(GitHubClient client, string org, string repo)
+        {
+            return await client.Issue.GetAllForRepository(
+                org,
+                repo,
+                new RepositoryIssueRequest
+                {
+                    Filter = IssueFilter.All
+                }
+                );
         }
 
         private static async Task<bool> IsLogCodeDocumentedAsync(HttpClient httpClient, NuGetLogCode logCode)
