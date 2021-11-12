@@ -1,6 +1,7 @@
 ﻿using CommandLine;
 using Octokit;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -23,10 +24,25 @@ namespace InsertionChangeLogGenerator
 
         private static async Task<int> RunGenerateCommandAsync(GenerateOptions opts)
         {
-            var githubClient = new GitHubClient(new ProductHeaderValue("nuget-github-insertion-changelog-tagger"))
+            var githubClient = new GitHubClient(new ProductHeaderValue("nuget-github-insertion-changelog-tagger"));
+
+            if (!string.IsNullOrEmpty(opts.PAT))
             {
-                Credentials = new Credentials(opts.PAT)
-            };
+                githubClient.Credentials = new Credentials(opts.PAT);
+            }
+            else
+            {
+                Dictionary<string, string> credentuals = GitCredentials.Get(new Uri("https://github.com/NuGet/Home"));
+                if (credentuals?.TryGetValue("password", out string pat) == true)
+                {
+                    githubClient.Credentials = new Credentials(pat);
+                }
+                else
+                {
+                    Console.WriteLine("Warning: Unable to get github token. Making unauthenticated HTTP requests, which has lower request limits.");
+                }
+            }
+
             var startSha = opts.StartSha;
             var branch = opts.Branch;
             var directory = opts.Output ?? Directory.GetCurrentDirectory();
@@ -51,7 +67,7 @@ namespace InsertionChangeLogGenerator
 
         class BaseOptions
         {
-            [Option("pat", Required = true, HelpText = "A Github PAT from a user with sufficient permissions to perform the invoked action.")]
+            [Option("pat", Required = false, HelpText = "A Github PAT from a user with sufficient permissions to perform the invoked action.")]
             public string PAT { get; set; }
         }
 
