@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using CommandLine;
+using Newtonsoft.Json;
 using Octokit;
 using System;
 using System.Collections.Generic;
@@ -17,26 +18,53 @@ namespace GithubIssueTagger
         private static IEnumerable<Issue> _allClientEngineeringIssues;
         private static GitHubClient _client;
 
-        static async Task Main(string[] args)
+        static int Main(string[] args)
         {
-            if (args.Length < 1)
+            return Parser.Default.ParseArguments<RunOptions>(args)
+               .MapResult(
+                 (RunOptions copyOptions) => RunCommand(copyOptions),
+                 errs => 1);
+        }
+
+        private static int RunCommand(RunOptions opts)
+        {
+            return RunCommandAsync(opts).GetAwaiter().GetResult();
+        }
+
+
+        [Verb("run", HelpText = "Generate an insertion changelog.")]
+        class RunOptions
+        {
+            [Option("pat", Required = false, HelpText = "A Github PAT from a user with sufficient permissions to perform the invoked action.")]
+            public string PAT { get; set; }
+
+            [Option("prompt", Required = false, HelpText = "Whether to go into prompt mode.")]
+            public bool Prompt { get; set; }
+        }
+
+        static async Task<int> RunCommandAsync(RunOptions opts)
+        {
+            _client = new GitHubClient(new ProductHeaderValue("nuget-github-issue-tagger"));
+
+            if (!string.IsNullOrEmpty(opts.PAT))
             {
-                Console.Error.WriteLine("Expected 1 argument (github PAT). Found " + args.Length);
-                return;
+                _client.Credentials = new Credentials(opts.PAT);
+            }
+            else
+            {
+                Dictionary<string, string> credentuals = GitCredentials.Get(new Uri("https://github.com/NuGet/Home"));
+                if (credentuals?.TryGetValue("password", out string pat) == true)
+                {
+                    _client.Credentials = new Credentials(pat);
+                }
+                else
+                {
+                    Console.WriteLine("Warning: Unable to get github token. Making unauthenticated HTTP requests, which has lower request limits.");
+                }
             }
 
-            bool prompt = false;
-            if (args.Length > 1 && args[1].Equals("prompt"))
-            {
-                prompt = true;
-            }
 
-            _client = new GitHubClient(new ProductHeaderValue("nuget-github-issue-tagger"))
-            {
-                Credentials = new Credentials(args[0])
-            };
-
-            if (prompt)
+            if (opts.Prompt)
             {
                 await PromptForQuery();
             }
@@ -44,6 +72,8 @@ namespace GithubIssueTagger
             {
                 await AllUnprocessed();
             }
+
+            return 0;
         }
 
         private static async Task PromptForQuery()
@@ -129,7 +159,7 @@ namespace GithubIssueTagger
         {
             if (_allHomeLabels is null)
             {
-                _allHomeLabels  = await LabelUtilities.GetLabelsForRepository(_client, "nuget", "home");
+                _allHomeLabels = await LabelUtilities.GetLabelsForRepository(_client, "nuget", "home");
             }
             Console.WriteLine("(ID\tName)");
             foreach (var label in _allHomeLabels)
@@ -327,7 +357,6 @@ namespace GithubIssueTagger
             }
             return string.Empty;
         }
-
 
         #region Helpers
         private static async Task<IEnumerable<Label>> GetAreaLabels()
