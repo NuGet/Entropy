@@ -9,11 +9,16 @@ namespace GithubIssueTagger
 {
     public static class PlanningUtilities
     {
+        private static readonly string SourceMappingLabel = "Area:PackageSourceMapping";
+        private static readonly string TypeDCRLabel = "Type:DCR";
+        private static readonly string TypeFeatureLabel = "Type:Feature";
+        private static readonly string TypeSpec = "Type:Spec";
+
         public static async Task RunPlanningAsync(GitHubClient client)
         {
-            IEnumerable<Issue> issues = await GetPackageNamespacesIssues(client);
+            IEnumerable<Issue> issues = await GetPackageSourceMappingDesign(client);
 
-            var markdownTable = issues.Select(e => new IssueModel(e)).ToMarkdownTable(GetNamespacesMapping());
+            var markdownTable = issues.Select(e => new IssueModel(e)).ToMarkdownTable(GetPackageSourceMapping());
 
             Console.WriteLine();
             Console.WriteLine(markdownTable);
@@ -21,10 +26,39 @@ namespace GithubIssueTagger
             Console.ReadKey();
         }
 
-        public static async Task<IList<Issue>> GetPackageNamespacesIssues(GitHubClient client)
+        public static async Task<IEnumerable<Issue>> GetPackageSourceMappingFeatureIssues(GitHubClient client)
         {
-            var homeIssues = await IssueUtilities.GetIssuesForLabel(client, "nuget", "home", "Area:PackageNamespaces");
-            var clientEngineeringIssues = await IssueUtilities.GetIssuesForLabel(client, "nuget", "client.engineering", "Area:PackageNamespaces");
+            var homeIssues = await IssueUtilities.GetIssuesForLabels(client, "nuget", "home", SourceMappingLabel, TypeFeatureLabel);
+            var clientEngineeringIssues = await IssueUtilities.GetIssuesForLabels(client, "nuget", "client.engineering", SourceMappingLabel, TypeFeatureLabel);
+            var issues = (homeIssues.Union(clientEngineeringIssues)).ToList();
+
+            return issues;
+        }
+
+        public static async Task<IEnumerable<Issue>> GetPackageSourceMappingDesign(GitHubClient client)
+        {
+            var homeIssues = await IssueUtilities.GetIssuesForLabels(client, "nuget", "home", SourceMappingLabel, TypeSpec);
+            var clientEngineeringIssues = await IssueUtilities.GetIssuesForLabels(client, "nuget", "client.engineering", SourceMappingLabel, TypeSpec);
+            var issues = (homeIssues.Union(clientEngineeringIssues)).ToList();
+
+            return issues;
+        }
+
+        public static async Task<IEnumerable<Issue>> GetPackageSourceMappingIssuesForSprint(GitHubClient client)
+        {
+            static bool isRelevant(Issue x) => IsPackageSourceMappingIssue(x);
+            var clientEngineeringIssues = await IssueUtilities.GetIssuesForMilestone(client, "nuget", "client.engineering", "34", isRelevant);
+            // 2021-11 is 131 in Home and 2021-11 is 34 on Client.Engineering
+            var homeIssues = await IssueUtilities.GetIssuesForMilestone(client, "nuget", "home", "131", isRelevant);
+            var issues = (homeIssues.Union(clientEngineeringIssues)).ToList();
+
+            return issues;
+        }
+
+        public static async Task<IList<Issue>> GetAllPackageSourceMappingIssues(GitHubClient client)
+        {
+            var homeIssues = await IssueUtilities.GetIssuesForLabel(client, "nuget", "home", SourceMappingLabel);
+            var clientEngineeringIssues = await IssueUtilities.GetIssuesForLabel(client, "nuget", "client.engineering", SourceMappingLabel);
             var issues = (homeIssues.Union(clientEngineeringIssues)).ToList();
 
             return issues;
@@ -76,7 +110,7 @@ namespace GithubIssueTagger
             return issues;
         }
 
-        public static List<Tuple<string, string>> GetNamespacesMapping()
+        public static List<Tuple<string, string>> GetPackageSourceMapping()
         {
             return new List<Tuple<string, string>>()
                 {
@@ -84,7 +118,6 @@ namespace GithubIssueTagger
                     new Tuple<string, string>("Title", "Title"),
                     new Tuple<string, string>("Assignee", "Assignee"),
                     new Tuple<string, string>("Milestone", "Milestone"),
-                    new Tuple<string, string>("Notes", "Notes"),
                 };
         }
 
@@ -113,6 +146,11 @@ namespace GithubIssueTagger
                 };
         }
 
+        private static bool IsPackageSourceMappingIssue(Issue e)
+        {
+            return e.Labels.Any(e => e.Name.Equals(SourceMappingLabel));
+        }
+
         private static string GetMapping(List<Tuple<string, string>> columnMapping, string from)
         {
             return columnMapping.FirstOrDefault(e => e.Item1.Equals(from))?.Item2 ?? from;
@@ -120,7 +158,7 @@ namespace GithubIssueTagger
 
         public static string ToMarkdownTable<T>(this IEnumerable<T> source, List<Tuple<string, string>> columnMapping)
         {
-            var properties = typeof(T).GetRuntimeProperties().OrderBy(e => columnMapping.FindIndex(c => c.Item1.Equals(e.Name)));
+            var properties = typeof(T).GetRuntimeProperties().Where(x => columnMapping.Any(e => e.Item1.Equals(x.Name))).OrderBy(e => columnMapping.FindIndex(c => c.Item1.Equals(e.Name)));
 
             var fields = typeof(T)
                 .GetRuntimeFields()
