@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <ProjectGuid>{8714DDEC-8073-4EA7-A0EA-4FB9EECA6946}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>PackageWithSymbols</RootNamespace>
+    <AssemblyName>PackageWithSymbols</AssemblyName>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PackageId>NuGet.SymbolTest</PackageId>
+    <Version>0.0.3</Version>
+    <Authors>agr</Authors>
+    <PackageDescription>Package with symbols published.</PackageDescription>
+    <Description>$(PackageDescription)</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+  </PropertyGroup>
+</Project>
