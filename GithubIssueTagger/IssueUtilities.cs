@@ -8,7 +8,88 @@ namespace GithubIssueTagger
 {
     internal partial class IssueUtilities
     {
-        private static DateTimeOffset SixMonthsFromAppStartup = new DateTimeOffset(DateTime.Now.AddDays(-180.0));
+        public static async Task GetIssuesRankedAsync(GitHubClient client, params string[] labels)
+        {
+            var issues = await GetIssuesForLabels(client, "NuGet", "Home", labels);
+            var allIssues = new List<IssueRankingModel>(issues.Count);
+
+            var internalAliases = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            {
+                "nkolev92",
+                "donnie-msft",
+                "dominofire",
+                "erdembayar",
+                "zivkan",
+                "clairernovotny",
+                "erdembayar",
+                "jeffkl",
+                "rrelyea",
+                "jebriede",
+                "dtivel",
+                "heng-liu",
+                "kartheekp-ms",
+                "aortiz-msft",
+                "zkat",
+                "emgarten",
+                "patobeltran",
+                "rohit21agrawal",
+                "zhili1208",
+                "jainaashish",
+                "cristinamanum"
+            };
+
+            foreach (var issue in issues)
+            {
+                var score = await CalculateScoreAsync(issue, client, internalAliases);
+
+                allIssues.Add(new IssueRankingModel(issue, score));
+            }
+
+            var markdownTable = allIssues.OrderByDescending(e => e.Score).ToMarkdownTable(GetModelMapping());
+
+            Console.WriteLine();
+            Console.WriteLine(markdownTable);
+            Console.WriteLine();
+            Console.ReadKey();
+
+            static List<Tuple<string, string>> GetModelMapping()
+            {
+                return new List<Tuple<string, string>>()
+                {
+                    new Tuple<string, string>("Link", "Link"),
+                    new Tuple<string, string>("Title", "Title"),
+                    new Tuple<string, string>("Assignee", "Assignee"),
+                    new Tuple<string, string>("Milestone", "Milestone"),
+                    new Tuple<string, string>("Score", "Score"),
+                };
+            }
+            static async Task<double> CalculateScoreAsync(Issue issue, GitHubClient client, HashSet<string> internalAliases)
+            {
+                int totalCommentsCount = issue.Comments;
+                int reactionCount = issue.Reactions.TotalCount;
+
+                IReadOnlyList<IssueComment> issueComments = await client.Issue.Comment.GetAllForIssue("NuGet", "Home", issue.Number);
+
+                List<string> allCommenters = issueComments.Select(e => e.User.Login).ToList();
+                List<string> uniqueCommenterList = allCommenters.Distinct<string>().Where(e => e.Equals(issue.User.Login)).ToList();
+                int uniqueCommentersCount = uniqueCommenterList.Count;
+
+                var internalCommentersCount = uniqueCommenterList.Where(e => internalAliases.Contains(e) && !internalAliases.Contains(issue.User.Login)).Count();
+
+                return uniqueCommentersCount + reactionCount - (internalCommentersCount * 0.25) + CaculateExtraCommentImpact(totalCommentsCount, uniqueCommentersCount);
+                static double CaculateExtraCommentImpact(int totalComments, int uniqueCommenters)
+                {
+                    int diff = totalComments - uniqueCommenters;
+
+                    var tens = Math.Max(Math.Min(diff - 10, 10), 0) * 0.25;
+                    var twenties = Math.Max(Math.Min(diff - 20, 10), 0) * 0.10;
+                    var thirties = Math.Max(diff - 30, 0) * 0.05;
+
+                    return tens + twenties + thirties;
+                }
+
+            }
+        }
 
         public static async Task<IList<Issue>> GetIssuesForMilestone(GitHubClient client, string org, string repo, string milestone, Predicate<Issue> predicate)
         {
@@ -80,7 +161,7 @@ namespace GithubIssueTagger
 
             static bool IsUnprocessed(Issue e)
             {
-                return e.Labels.Count == 0 || e.Labels.All(e => e.Name.StartsWith("Pipeline")); 
+                return e.Labels.Count == 0 || e.Labels.All(e => e.Name.StartsWith("Pipeline"));
             }
         }
 
@@ -136,6 +217,24 @@ namespace GithubIssueTagger
         private static bool HasLabel(Issue e, string label)
         {
             return e.Labels.Any(e => e.Name.Equals(label));
+        }
+    }
+
+    public class IssueRankingModel
+    {
+        public string Link { get; }
+        public string Title { get; }
+        public string Assignee { get; }
+        public string Milestone { get; }
+        public double Score { get; }
+
+        public IssueRankingModel(Issue e, double score)
+        {
+            Link = e.HtmlUrl;
+            Title = e.Title;
+            Assignee = string.Join(",", e.Assignees.Select(e => e.Login));
+            Milestone = e.Milestone?.Title;
+            Score = score;
         }
     }
 }
