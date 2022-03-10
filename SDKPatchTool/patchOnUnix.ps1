@@ -8,9 +8,10 @@ $nupkgsPath = "/Users/heng/Nupkgs"
 $SDKVersion = "latest"
 
 # Channel name of SDK. Pls refer to https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-install-script#options
-# "Current" - Most current release (For now, it's 5.x)
-# "main" - Branch name of a preview channel (For now, it's 6.x)
-$SDKChannel = "main"
+# Two-part version in A.B format, representing a specific release (for example, 6.0 or 7.0).
+# Three-part version in A.B.Cxx format, representing a specific SDK release (for example, 5.0.1xx or 5.0.2xx). Available since the 5.0 release.
+# If we'd like to test against lastest dotnet sdk NuGet inserted, we may refer to NuGet insertion PR to look for version number.
+$SDKChannel = "7.0"
 
 . "./patchUtil.ps1"
 
