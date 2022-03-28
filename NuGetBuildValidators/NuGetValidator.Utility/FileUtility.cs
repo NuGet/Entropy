@@ -47,10 +47,21 @@ namespace NuGetValidator.Utility
             else
             {
                 return Directory.GetFiles(root, "*.dll", SearchOption.TopDirectoryOnly)
-                    .Where(f => Path.GetFileName(f).StartsWith("NuGet", StringComparison.OrdinalIgnoreCase) ||
-                                Path.GetFileName(f).StartsWith("Microsoft", StringComparison.OrdinalIgnoreCase))
+                    .Where(ShouldIncludeDll)
                     .ToArray();
             }
+        }
+
+        public static bool ShouldIncludeDll(string filePath)
+        {
+            string fileName = Path.GetFileName(filePath);
+
+            if (fileName.StartsWith("Microsoft.Extensions.", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            return fileName.StartsWith("NuGet", StringComparison.OrdinalIgnoreCase) || fileName.StartsWith("Microsoft", StringComparison.OrdinalIgnoreCase);
         }
 
         /// <summary>
