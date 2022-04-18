@@ -10,7 +10,6 @@ namespace GithubIssueTagger
     public static class PlanningUtilities
     {
         private static readonly string SourceMappingLabel = "Area:PackageSourceMapping";
-        private static readonly string TypeDCRLabel = "Type:DCR";
         private static readonly string TypeFeatureLabel = "Type:Feature";
         private static readonly string TypeSpec = "Type:Spec";
 
