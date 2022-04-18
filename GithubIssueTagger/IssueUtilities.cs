@@ -91,6 +91,37 @@ namespace GithubIssueTagger
             }
         }
 
+        internal static async Task ReopenAutoclosedDocsRepoIssues(GitHubClient client)
+        {
+            var nugetRepos = new RepositoryCollection();
+            string owner = "nuget";
+            string repoName = "docs.microsoft.com-nuget";
+            nugetRepos.Add(owner, repoName);
+
+            var queryLabels = new string[] { "autoclose" };
+            var dateRange = DateRange.GreaterThanOrEquals(new DateTimeOffset(year: 2022, month: 4, day: 15, hour: 0, minute: 0, second: 0, TimeSpan.Zero));
+
+
+            var request = new SearchIssuesRequest()
+            {
+                Repos = nugetRepos,
+                State = ItemState.Closed,
+                Labels = queryLabels,
+                Updated = dateRange
+            };
+            var issuesForMilestone = await client.Search.SearchIssues(request);
+            var allIssues =  issuesForMilestone.Items;
+
+            foreach(var issue in allIssues)
+            {
+                var issueToUpdate = issue.ToUpdate();
+                issueToUpdate.State = ItemState.Open;
+                issueToUpdate.RemoveLabel("autoclose");
+                await client.Issue.Update(owner, repoName, issue.Number, issueToUpdate);
+                Console.WriteLine($"Reopening autoclosed issue : {issue.Url}");
+            }
+        }
+
         public static async Task<IList<Issue>> GetIssuesForMilestone(GitHubClient client, string org, string repo, string milestone, Predicate<Issue> predicate)
         {
             var shouldPrioritize = new RepositoryIssueRequest
