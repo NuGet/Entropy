@@ -1,18 +1,15 @@
-﻿using Azure;
-using Octokit;
+﻿using Octokit;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using ZenHub;
-using ZenHub.Models;
 
 namespace ChangelogGenerator
 {
     class ChangelogGenerator
     {
         private readonly GitHubClient GitHubClient;
-        private readonly ZenHubClient ZenHubClient;
         private readonly Options Options;
 
         public ChangelogGenerator(Options opts)
@@ -21,59 +18,44 @@ namespace ChangelogGenerator
             GitHubClient = new GitHubClient(new ProductHeaderValue("nuget-changelog-generator"));
             var creds = new Credentials(Options.GitHubToken);
             GitHubClient.Credentials = creds;
-            ZenHubClient = new ZenHubClient(Options.ZenHubToken);
         }
 
         public async Task<string> GenerateChangelog()
         {
-            string releaseId = await GetReleaseId();
+            string releaseId = Options.Release;
             Dictionary<IssueType, List<Issue>> issues = await GetIssuesByType(releaseId);
             return GenerateMarkdown(releaseId, issues);
         }
 
-        private async Task<string> GetReleaseId()
+        public static async Task<IList<Issue>> GetIssuesForMilestone(GitHubClient client, string org, string repo, string milestone)
         {
-            string[] repoParts = Options.Repo.Split('/');
-            Repository repo = await GitHubClient.Repository.Get(repoParts[0], repoParts[1]);
-            ZenHubRepositoryClient repoClient = ZenHubClient.GetRepositoryClient(repo.Id);
-
-            Response<ReleaseReport[]> releases = await repoClient.GetReleaseReportsAsync();
-
-            string releaseId = string.Empty;
-            foreach (var release in releases.Value)
+            var shouldPrioritize = new RepositoryIssueRequest
             {
-                if (release.Title == Options.Release)
-                {
-                    releaseId = release.ReleaseId;
-                    break;
-                }
-            }
+                Milestone = milestone,
+                Filter = IssueFilter.All,
+            };
 
-            if (releaseId == string.Empty)
-            {
-                throw new Exception($"No such release: {Options.Release}");
-            }
-            return releaseId;
+            var issuesForMilestone = await client.Issue.GetAllForRepository(org, repo, shouldPrioritize);
+
+            return issuesForMilestone.ToList();
         }
 
         private async Task<Dictionary<IssueType, List<Issue>>> GetIssuesByType(string releaseId)
         {
             var issuesByType = new Dictionary<IssueType, List<Issue>>();
 
-            ZenHubReleaseClient releaseClient = ZenHubClient.GetReleaseClient(releaseId);
-            IssueDetails[] zenHubIssueList = (await releaseClient.GetIssuesAsync()).Value;
-            string[] repoParts = Options.Repo.Split('/');
-            var primaryRepository = await GitHubClient.Repository.Get(repoParts[0], repoParts[1]);
+            var milestones = await GitHubClient.Issue.Milestone.GetAllForRepository("NuGet", "Home");
 
-            foreach (IssueDetails details in zenHubIssueList)
+            var relevantMilestone = milestones.SingleOrDefault(e => e.Title.Equals(releaseId));
+            if (relevantMilestone == null)
             {
-                if (details.RepositoryId != primaryRepository.Id)
-                {
-                    // skip all issues which aren't in our primary repo
-                    continue;
-                }
+                throw new Exception($"No such release: {Options.Release}");
+            }
 
-                Issue issue = await GitHubClient.Issue.Get(repoParts[0], repoParts[1], details.IssueNumber);
+            var issueList = await GetIssuesForMilestone(GitHubClient, "NuGet", "Home", relevantMilestone.Number.ToString());
+
+            foreach (Issue issue in issueList)
+            {
                 bool issueFixed = true;
                 bool hidden = false;
                 IssueType issueType = IssueType.None;

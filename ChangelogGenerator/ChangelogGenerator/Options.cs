@@ -15,14 +15,9 @@ namespace ChangelogGenerator
         [Option('g', "github-token", Required = true, HelpText = "GitHub Token for Auth.")]
         public string GitHubToken { get; set; }
 
-        [Option('z', "zenhub-token", Required = true, HelpText = "ZenHub Token for Auth.")]
-        public string ZenHubToken { get; set; }
 
         [Option('l', "label", HelpText = "Show only those issues from the selected release that have this label.")]
         public string RequiredLabel { get; set; }
-
-        [Option('v', "verbose", HelpText = "Print details during execution.")]
-        public bool Verbose { get; set; }
 
 
         [Usage(ApplicationAlias = "changelog-generator")]
