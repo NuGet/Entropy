@@ -148,7 +148,7 @@ namespace GithubIssueTagger
             return issuesForMilestone.Where(e => labels.All(label => HasLabel(e, label))).ToList();
         }
 
-        public static async Task<IEnumerable<Issue>> GetAllIssues(GitHubClient client, string org, string repo)
+        public static async Task<IReadOnlyList<Issue>> GetAllIssues(GitHubClient client, string org, string repo)
         {
             var shouldPrioritize = new RepositoryIssueRequest
             {
@@ -159,7 +159,7 @@ namespace GithubIssueTagger
             return issuesForMilestone;
         }
 
-        public static async Task<IEnumerable<Issue>> GetOpenPriority1Issues(GitHubClient client, string org, string repo)
+        public static async Task<IReadOnlyList<Issue>> GetOpenPriority1Issues(GitHubClient client, string org, string repo)
         {
             var nugetRepos = new RepositoryCollection();
             nugetRepos.Add(org, repo);
