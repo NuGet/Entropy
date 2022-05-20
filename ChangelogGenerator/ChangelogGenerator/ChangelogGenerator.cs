@@ -1,79 +1,74 @@
-﻿using Azure;
-using Octokit;
+﻿using Octokit;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using ZenHub;
-using ZenHub.Models;
 
 namespace ChangelogGenerator
 {
     class ChangelogGenerator
     {
         private readonly GitHubClient GitHubClient;
-        private readonly ZenHubClient ZenHubClient;
         private readonly Options Options;
 
         public ChangelogGenerator(Options opts)
         {
             Options = opts;
             GitHubClient = new GitHubClient(new ProductHeaderValue("nuget-changelog-generator"));
-            var creds = new Credentials(Options.GitHubToken);
+
+            Credentials creds = null;
+            if (!string.IsNullOrEmpty(opts.GitHubToken))
+            {
+                creds = new Credentials(opts.GitHubToken);
+            }
+            else
+            {
+                Dictionary<string, string> credentuals = GitCredentials.Get(new Uri("https://github.com/NuGet/Home"));
+                if (credentuals?.TryGetValue("password", out string pat) == true)
+                {
+                    creds = new Credentials(pat);
+                }
+                else
+                {
+                    Console.WriteLine("Warning: Unable to get github token. Making unauthenticated HTTP requests, which has lower request limits.");
+                }
+            }
             GitHubClient.Credentials = creds;
-            ZenHubClient = new ZenHubClient(Options.ZenHubToken);
         }
 
         public async Task<string> GenerateChangelog()
         {
-            string releaseId = await GetReleaseId();
-            Dictionary<IssueType, List<Issue>> issues = await GetIssuesByType(releaseId);
-            return GenerateMarkdown(releaseId, issues);
+            Dictionary<IssueType, List<Issue>> issues = await GetIssuesByType(Options.Release);
+            return GenerateMarkdown(Options.Release, issues);
         }
 
-        private async Task<string> GetReleaseId()
+        public static async Task<IList<Issue>> GetIssuesForMilestone(GitHubClient client, string org, string repo, Milestone milestone)
         {
-            string[] repoParts = Options.Repo.Split('/');
-            Repository repo = await GitHubClient.Repository.Get(repoParts[0], repoParts[1]);
-            ZenHubRepositoryClient repoClient = ZenHubClient.GetRepositoryClient(repo.Id);
-
-            Response<ReleaseReport[]> releases = await repoClient.GetReleaseReportsAsync();
-
-            string releaseId = string.Empty;
-            foreach (var release in releases.Value)
+            var shouldPrioritize = new RepositoryIssueRequest
             {
-                if (release.Title == Options.Release)
-                {
-                    releaseId = release.ReleaseId;
-                    break;
-                }
-            }
+                Milestone = milestone.Number.ToString(),
+                Filter = IssueFilter.All,
+                State = ItemStateFilter.All,
+            };
 
-            if (releaseId == string.Empty)
-            {
-                throw new Exception($"No such release: {Options.Release}");
-            }
-            return releaseId;
+            var issuesForMilestone = await client.Issue.GetAllForRepository(org, repo, shouldPrioritize);
+
+            return issuesForMilestone.ToList();
         }
 
         private async Task<Dictionary<IssueType, List<Issue>>> GetIssuesByType(string releaseId)
         {
             var issuesByType = new Dictionary<IssueType, List<Issue>>();
 
-            ZenHubReleaseClient releaseClient = ZenHubClient.GetReleaseClient(releaseId);
-            IssueDetails[] zenHubIssueList = (await releaseClient.GetIssuesAsync()).Value;
-            string[] repoParts = Options.Repo.Split('/');
-            var primaryRepository = await GitHubClient.Repository.Get(repoParts[0], repoParts[1]);
+            GetRepositoryDetrails(out string org, out string repo);
 
-            foreach (IssueDetails details in zenHubIssueList)
+            Milestone relevantMilestone = await FindMatchingMilestone(releaseId, org, repo);
+
+            var issueList = await GetIssuesForMilestone(GitHubClient, org, repo, relevantMilestone);
+
+            foreach (Issue issue in issueList)
             {
-                if (details.RepositoryId != primaryRepository.Id)
-                {
-                    // skip all issues which aren't in our primary repo
-                    continue;
-                }
-
-                Issue issue = await GitHubClient.Issue.Get(repoParts[0], repoParts[1], details.IssueNumber);
                 bool issueFixed = true;
                 bool hidden = false;
                 IssueType issueType = IssueType.None;
@@ -82,7 +77,7 @@ namespace ChangelogGenerator
                 bool engImproveOrDocs = false;
                 string requiredLabel = Options.RequiredLabel?.ToLower();
                 bool foundRequiredLabel = string.IsNullOrEmpty(requiredLabel);
-                
+
                 if (issue.State == ItemState.Open)
                 {
                     issueType = IssueType.StillOpen;
@@ -170,9 +165,33 @@ namespace ChangelogGenerator
 
                     issuesByType[issueType].Add(issue);
                 }
-            }   
+            }
 
             return issuesByType;
+        }
+
+        private void GetRepositoryDetrails(out string org, out string repo)
+        {
+            var repoParts = Options.Repo.Split("/");
+            if (repoParts.Length != 2)
+            {
+                throw new Exception($"Expected the repo to be 2 part, separated by `/`. Repo:{Options.Repo }, parts{string.Join("; ", repoParts)} ");
+            }
+            org = repoParts[0];
+            repo = repoParts[1];
+        }
+
+        private async Task<Milestone> FindMatchingMilestone(string releaseId, string org, string repo)
+        {
+            var milestones = await GitHubClient.Issue.Milestone.GetAllForRepository(org, repo);
+
+            var relevantMilestone = milestones.SingleOrDefault(e => e.Title.Equals(releaseId));
+            if (relevantMilestone == null)
+            {
+                throw new Exception($"No such release: {Options.Release}");
+            }
+
+            return relevantMilestone;
         }
 
         private string GenerateMarkdown(string releaseId, Dictionary<IssueType, List<Issue>> labelSet)
@@ -199,26 +218,20 @@ namespace ChangelogGenerator
             builder.AppendLine();
             builder.AppendLine(string.Format("## Summary: What's New in {0}", Options.Release));
             builder.AppendLine();
-            OutputSection(labelSet, builder, IssueType.Feature, includeHeader:false);
+            OutputSection(labelSet, builder, IssueType.Feature, includeHeader: false);
             builder.AppendLine("### Issues fixed in this release");
             builder.AppendLine();
             OutputSection(labelSet, builder, IssueType.DCR);
             OutputSection(labelSet, builder, IssueType.Bug);
-            
+
             foreach (var key in labelSet.Keys)
             {
                 if (key != IssueType.Feature && key != IssueType.DCR && key != IssueType.Bug)
                 {
                     // these sections shouldn't exist. tweak the issues in github until these issues move to Feature, Bug, DCR, or go away.
-                    OutputSection(labelSet, builder, key, problem:true);
+                    OutputSection(labelSet, builder, key, problem: true);
                 }
             }
-
-            builder.AppendLine("**[List of all issues fixed in this release - " + Options.Release + "]"
-            + "("
-            + "https://app.zenhub.com/workspaces/nuget-client-team-55aec9a240305cf007585881/reports/release?release="
-            + releaseId
-            + ")**");
 
             return builder.ToString();
         }
@@ -230,7 +243,7 @@ namespace ChangelogGenerator
             bool includeHeader = true,
             bool problem = false)
         {
-            
+
             List<Issue> issues = null;
             bool hasIssues = labelSet.TryGetValue(key, out issues);
 
