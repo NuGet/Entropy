@@ -43,11 +43,11 @@ namespace ChangelogGenerator
             return GenerateMarkdown(Options.Release, issues);
         }
 
-        public static async Task<IList<Issue>> GetIssuesForMilestone(GitHubClient client, string org, string repo, string milestone)
+        public static async Task<IList<Issue>> GetIssuesForMilestone(GitHubClient client, string org, string repo, Milestone milestone)
         {
             var shouldPrioritize = new RepositoryIssueRequest
             {
-                Milestone = milestone,
+                Milestone = milestone.Number.ToString(),
                 Filter = IssueFilter.All,
                 State = ItemStateFilter.All,
             };
@@ -65,7 +65,7 @@ namespace ChangelogGenerator
 
             Milestone relevantMilestone = await FindMatchingMilestone(releaseId, org, repo);
 
-            var issueList = await GetIssuesForMilestone(GitHubClient, org, repo, relevantMilestone.Number.ToString());
+            var issueList = await GetIssuesForMilestone(GitHubClient, org, repo, relevantMilestone);
 
             foreach (Issue issue in issueList)
             {
