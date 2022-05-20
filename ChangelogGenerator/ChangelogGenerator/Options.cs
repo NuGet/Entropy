@@ -12,7 +12,7 @@ namespace ChangelogGenerator
         [Value(1, Required = true, HelpText = "Release version to generate a changelog for.")]
         public string Release { get; set; }
 
-        [Option('g', "github-token", Required = true, HelpText = "GitHub Token for Auth.")]
+        [Option('g', "github-token", Required = false, HelpText = "GitHub Token for Auth. If not specified, it will acquired automatically.")]
         public string GitHubToken { get; set; }
 
 
@@ -27,7 +27,7 @@ namespace ChangelogGenerator
             {
                 return new List<Example>()
                 {
-                    new Example("Generate changelog for a particular release", new Options { Repo = "NuGet/Home", Release = "5.6", GitHubToken = "asdf", ZenHubToken = "hjkl" })
+                    new Example("Generate changelog for a particular release", new Options { Repo = "NuGet/Home", Release = "6.3", GitHubToken = "asdf" })
                 };
             }
         }
