@@ -17,7 +17,7 @@ namespace GithubIssueTagger.Reports
             _queryCache = queryCache ?? throw new ArgumentNullException(nameof(queryCache));
         }
 
-        public async Task Run()
+        public async Task RunAsync()
         {
             IEnumerable<Label> areaLabels = await GetAreaLabels();
             Console.WriteLine("(ID\tName)");

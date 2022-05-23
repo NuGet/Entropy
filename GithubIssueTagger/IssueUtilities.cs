@@ -10,7 +10,7 @@ namespace GithubIssueTagger
     {
         public static async Task GetIssuesRankedAsync(GitHubClient client, params string[] labels)
         {
-            var issues = await GetIssuesForLabels(client, "NuGet", "Home", labels);
+            var issues = await GetIssuesForLabelsAsync(client, "NuGet", "Home", labels);
             var allIssues = new List<IssueRankingModel>(issues.Count);
 
             var internalAliases = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
@@ -63,6 +63,7 @@ namespace GithubIssueTagger
                     new Tuple<string, string>("Score", "Score"),
                 };
             }
+
             static async Task<double> CalculateScoreAsync(Issue issue, GitHubClient client, HashSet<string> internalAliases)
             {
                 int totalCommentsCount = issue.Comments;
@@ -91,7 +92,7 @@ namespace GithubIssueTagger
             }
         }
 
-        internal static async Task ReopenAutoclosedDocsRepoIssues(GitHubClient client)
+        internal static async Task ReopenAutoclosedDocsRepoIssuesAsync(GitHubClient client)
         {
             var nugetRepos = new RepositoryCollection();
             string owner = "nuget";
@@ -122,7 +123,7 @@ namespace GithubIssueTagger
             }
         }
 
-        public static async Task<IList<Issue>> GetIssuesForMilestone(GitHubClient client, string org, string repo, string milestone, Predicate<Issue> predicate)
+        public static async Task<IList<Issue>> GetIssuesForMilestoneAsync(GitHubClient client, string org, string repo, string milestone, Predicate<Issue> predicate)
         {
             var shouldPrioritize = new RepositoryIssueRequest
             {
@@ -135,20 +136,20 @@ namespace GithubIssueTagger
             return issuesForMilestone.Where(e => predicate(e)).ToList();
         }
 
-        public static async Task<IList<Issue>> GetIssuesForLabel(GitHubClient client, string org, string repo, string label)
+        public static async Task<IList<Issue>> GetIssuesForLabelAsync(GitHubClient client, string org, string repo, string label)
         {
-            var issuesForMilestone = await GetAllIssues(client, org, repo);
+            var issuesForMilestone = await GetAllIssuesAsync(client, org, repo);
             return issuesForMilestone.Where(e => HasLabel(e, label)).ToList();
         }
 
         // All labels need to be considered.
-        public static async Task<IList<Issue>> GetIssuesForLabels(GitHubClient client, string org, string repo, params string[] labels)
+        public static async Task<IList<Issue>> GetIssuesForLabelsAsync(GitHubClient client, string org, string repo, params string[] labels)
         {
-            var issuesForMilestone = await GetAllIssues(client, org, repo);
+            var issuesForMilestone = await GetAllIssuesAsync(client, org, repo);
             return issuesForMilestone.Where(e => labels.All(label => HasLabel(e, label))).ToList();
         }
 
-        public static async Task<IReadOnlyList<Issue>> GetAllIssues(GitHubClient client, string org, string repo)
+        public static async Task<IReadOnlyList<Issue>> GetAllIssuesAsync(GitHubClient client, string org, string repo)
         {
             var shouldPrioritize = new RepositoryIssueRequest
             {
@@ -159,7 +160,7 @@ namespace GithubIssueTagger
             return issuesForMilestone;
         }
 
-        public static async Task<IReadOnlyList<Issue>> GetOpenPriority1Issues(GitHubClient client, string org, string repo)
+        public static async Task<IReadOnlyList<Issue>> GetOpenPriority1IssuesAsync(GitHubClient client, string org, string repo)
         {
             var nugetRepos = new RepositoryCollection();
             nugetRepos.Add(org, repo);
@@ -179,7 +180,7 @@ namespace GithubIssueTagger
         /// <summary>
         /// Get all the issues considered unprocessed. This means that either the issue does not have any labels, or only has the pipeline labels.
         /// </summary>
-        public static async Task<IList<Issue>> GetUnprocessedIssues(GitHubClient client, string org, string repo)
+        public static async Task<IList<Issue>> GetUnprocessedIssuesAsync(GitHubClient client, string org, string repo)
         {
             var shouldPrioritize = new RepositoryIssueRequest
             {
@@ -196,7 +197,7 @@ namespace GithubIssueTagger
             }
         }
 
-        public static async Task AddLabelToMatchingIssues(GitHubClient client, string label, string org, string repo, Predicate<Issue> predicate)
+        public static async Task AddLabelToMatchingIssuesAsync(GitHubClient client, string label, string org, string repo, Predicate<Issue> predicate)
         {
             var issuesForRepo = await client.Issue.GetAllForRepository(org, repo);
 

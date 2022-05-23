@@ -4,6 +4,6 @@ namespace GithubIssueTagger.Reports
 {
     internal interface IReport
     {
-        Task Run();
+        Task RunAsync();
     }
 }

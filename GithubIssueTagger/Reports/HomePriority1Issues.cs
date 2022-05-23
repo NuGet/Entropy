@@ -17,11 +17,11 @@ namespace GithubIssueTagger.Reports
             _queryCache = queryCache ?? throw new ArgumentNullException(nameof(queryCache));
         }
 
-        public async Task Run()
+        public async Task RunAsync()
         {
             if (_queryCache.AllHomeIssues is null)
             {
-                _queryCache.AllHomeIssues = await IssueUtilities.GetOpenPriority1Issues(_client, "nuget", "home");
+                _queryCache.AllHomeIssues = await IssueUtilities.GetOpenPriority1IssuesAsync(_client, "nuget", "home");
             }
 
             var outputFileName = "homeIssues.json";

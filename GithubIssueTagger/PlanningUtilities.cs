@@ -27,8 +27,8 @@ namespace GithubIssueTagger
 
         public static async Task<IEnumerable<Issue>> GetPackageSourceMappingFeatureIssues(GitHubClient client)
         {
-            var homeIssues = await IssueUtilities.GetIssuesForLabels(client, "nuget", "home", SourceMappingLabel, TypeFeatureLabel);
-            var clientEngineeringIssues = await IssueUtilities.GetIssuesForLabels(client, "nuget", "client.engineering", SourceMappingLabel, TypeFeatureLabel);
+            var homeIssues = await IssueUtilities.GetIssuesForLabelsAsync(client, "nuget", "home", SourceMappingLabel, TypeFeatureLabel);
+            var clientEngineeringIssues = await IssueUtilities.GetIssuesForLabelsAsync(client, "nuget", "client.engineering", SourceMappingLabel, TypeFeatureLabel);
             var issues = (homeIssues.Union(clientEngineeringIssues)).ToList();
 
             return issues;
@@ -36,8 +36,8 @@ namespace GithubIssueTagger
 
         public static async Task<IEnumerable<Issue>> GetPackageSourceMappingDesign(GitHubClient client)
         {
-            var homeIssues = await IssueUtilities.GetIssuesForLabels(client, "nuget", "home", SourceMappingLabel, TypeSpec);
-            var clientEngineeringIssues = await IssueUtilities.GetIssuesForLabels(client, "nuget", "client.engineering", SourceMappingLabel, TypeSpec);
+            var homeIssues = await IssueUtilities.GetIssuesForLabelsAsync(client, "nuget", "home", SourceMappingLabel, TypeSpec);
+            var clientEngineeringIssues = await IssueUtilities.GetIssuesForLabelsAsync(client, "nuget", "client.engineering", SourceMappingLabel, TypeSpec);
             var issues = (homeIssues.Union(clientEngineeringIssues)).ToList();
 
             return issues;
@@ -46,9 +46,9 @@ namespace GithubIssueTagger
         public static async Task<IEnumerable<Issue>> GetPackageSourceMappingIssuesForSprint(GitHubClient client)
         {
             static bool isRelevant(Issue x) => IsPackageSourceMappingIssue(x);
-            var clientEngineeringIssues = await IssueUtilities.GetIssuesForMilestone(client, "nuget", "client.engineering", "34", isRelevant);
+            var clientEngineeringIssues = await IssueUtilities.GetIssuesForMilestoneAsync(client, "nuget", "client.engineering", "34", isRelevant);
             // 2021-11 is 131 in Home and 2021-11 is 34 on Client.Engineering
-            var homeIssues = await IssueUtilities.GetIssuesForMilestone(client, "nuget", "home", "131", isRelevant);
+            var homeIssues = await IssueUtilities.GetIssuesForMilestoneAsync(client, "nuget", "home", "131", isRelevant);
             var issues = (homeIssues.Union(clientEngineeringIssues)).ToList();
 
             return issues;
@@ -56,8 +56,8 @@ namespace GithubIssueTagger
 
         public static async Task<IList<Issue>> GetAllPackageSourceMappingIssues(GitHubClient client)
         {
-            var homeIssues = await IssueUtilities.GetIssuesForLabel(client, "nuget", "home", SourceMappingLabel);
-            var clientEngineeringIssues = await IssueUtilities.GetIssuesForLabel(client, "nuget", "client.engineering", SourceMappingLabel);
+            var homeIssues = await IssueUtilities.GetIssuesForLabelAsync(client, "nuget", "home", SourceMappingLabel);
+            var clientEngineeringIssues = await IssueUtilities.GetIssuesForLabelAsync(client, "nuget", "client.engineering", SourceMappingLabel);
             var issues = (homeIssues.Union(clientEngineeringIssues)).ToList();
 
             return issues;
@@ -67,9 +67,9 @@ namespace GithubIssueTagger
         {
             Predicate<Issue> isRelevant = (Issue x) => IsPerformance(x);
             // 111 is Sprint 173
-            var homeIssues = await IssueUtilities.GetIssuesForMilestone(client, "nuget", "home", "111", isRelevant);
+            var homeIssues = await IssueUtilities.GetIssuesForMilestoneAsync(client, "nuget", "home", "111", isRelevant);
             // 15 is Sprint 173
-            var clientEngineeringIssues = await IssueUtilities.GetIssuesForMilestone(client, "nuget", "client.engineering", "15", isRelevant);
+            var clientEngineeringIssues = await IssueUtilities.GetIssuesForMilestoneAsync(client, "nuget", "client.engineering", "15", isRelevant);
             var issues = homeIssues.Union(clientEngineeringIssues);
 
             return issues;
@@ -90,7 +90,7 @@ namespace GithubIssueTagger
         {
             Predicate<Issue> isRelevant = (Issue x) => IsEngineeringExcellence(x);
             // 13 is Sprint 171
-            var issues = await IssueUtilities.GetIssuesForMilestone(client, "nuget", "client.engineering", "13", isRelevant);
+            var issues = await IssueUtilities.GetIssuesForMilestoneAsync(client, "nuget", "client.engineering", "13", isRelevant);
 
             return issues;
 
@@ -103,8 +103,8 @@ namespace GithubIssueTagger
 
         public static async Task<IEnumerable<Issue>> GetPerformanceBacklog(GitHubClient client)
         {
-            var homeIssues = await IssueUtilities.GetIssuesForLabel(client, "nuget", "home", "Tenet:Performance");
-            var clientEngineeringIssues = await IssueUtilities.GetIssuesForLabel(client, "nuget", "client.engineering", "Tenet:Performance");
+            var homeIssues = await IssueUtilities.GetIssuesForLabelAsync(client, "nuget", "home", "Tenet:Performance");
+            var clientEngineeringIssues = await IssueUtilities.GetIssuesForLabelAsync(client, "nuget", "client.engineering", "Tenet:Performance");
             var issues = homeIssues.Union(clientEngineeringIssues);
             return issues;
         }

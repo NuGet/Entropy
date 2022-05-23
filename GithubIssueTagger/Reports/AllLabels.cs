@@ -15,7 +15,7 @@ namespace GithubIssueTagger.Reports
             _client = client;
         }
 
-        public async Task Run()
+        public async Task RunAsync()
         {
             if (_allHomeLabels is null)
             {

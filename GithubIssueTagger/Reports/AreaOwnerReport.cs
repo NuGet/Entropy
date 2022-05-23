@@ -17,11 +17,11 @@ namespace GithubIssueTagger.Reports
             _queryCache = queryCache;
         }
 
-        public async Task Run()
+        public async Task RunAsync()
         {
             if (_queryCache.AllHomeIssues is null)
             {
-                _queryCache.AllHomeIssues = await IssueUtilities.GetAllIssues(_client, "nuget", "home");
+                _queryCache.AllHomeIssues = await IssueUtilities.GetAllIssuesAsync(_client, "nuget", "home");
             }
 
             if (_queryCache.AllHomeLabels is null)

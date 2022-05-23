@@ -17,11 +17,11 @@ namespace GithubIssueTagger.Reports
             _client = client;
         }
 
-        public async Task Run()
+        public async Task RunAsync()
         {
             if (_allClientEngineeringIssues is null)
             {
-                _allClientEngineeringIssues = await IssueUtilities.GetOpenPriority1Issues(_client, "nuget", "client.engineering");
+                _allClientEngineeringIssues = await IssueUtilities.GetOpenPriority1IssuesAsync(_client, "nuget", "client.engineering");
             }
 
             var outputFileName = "clientEngineeringIssues.json";

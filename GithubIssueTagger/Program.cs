@@ -18,7 +18,7 @@ var interactiveCommand = new Command(
 "Run in interactive mode.");
 interactiveCommand.AddAlias("-i");
 interactiveCommand.SetHandler(
-    async (string pat) => await RunInteractiveMode(null, allReportTypes),
+    async (string pat) => await RunInteractiveModeAsync(null, allReportTypes),
     patOption);
 
 var rootCommand = new RootCommand
@@ -36,9 +36,9 @@ foreach (var reportType in allReportTypes)
     reportCommand.SetHandler(async (string pat) =>
     {
         var githubClient = GetGitHubClient(pat);
-        var serviceProvider = GetSericeProvider(githubClient, allReportTypes);
+        var serviceProvider = GetServiceProvider(githubClient, allReportTypes);
         IReport report = (IReport)serviceProvider.GetRequiredService(reportType);
-        await report.Run();
+        await report.RunAsync();
     }, patOption);
 
     rootCommand.AddCommand(reportCommand);
@@ -71,7 +71,7 @@ static GitHubClient GetGitHubClient(string pat)
     return client;
 }
 
-static IServiceProvider GetSericeProvider(GitHubClient githubClient, IEnumerable<Type> reports)
+static IServiceProvider GetServiceProvider(GitHubClient githubClient, IEnumerable<Type> reports)
 {
     var services = new ServiceCollection();
 
@@ -87,10 +87,10 @@ static IServiceProvider GetSericeProvider(GitHubClient githubClient, IEnumerable
     return serviceProvider;
 }
 
-static async Task RunInteractiveMode(string pat, IReadOnlyList<Type> reportTypes)
+static async Task RunInteractiveModeAsync(string pat, IReadOnlyList<Type> reportTypes)
 {
     var client = GetGitHubClient(pat);
-    var serviceProvider = GetSericeProvider(client, reportTypes);
+    var serviceProvider = GetServiceProvider(client, reportTypes);
 
     Console.WriteLine("**********************************************************************");
     Console.WriteLine("******************* NuGet GitHub Issue Tagger ************************");
@@ -107,7 +107,7 @@ static async Task RunInteractiveMode(string pat, IReadOnlyList<Type> reportTypes
 
         var input = Console.ReadLine();
 
-        Type? reportToRun;
+        Type reportToRun;
         if (StringComparer.CurrentCultureIgnoreCase.Equals("quit", input))
         {
             return;
@@ -137,7 +137,7 @@ static async Task RunInteractiveMode(string pat, IReadOnlyList<Type> reportTypes
         {
             Console.WriteLine(reportToRun.Name + "***");
             var report = (IReport)serviceProvider.GetRequiredService(reportToRun);
-            await report.Run();
+            await report.RunAsync();
             Console.WriteLine("*** Done Executing " + reportToRun.Name + " ***");
         }
     }

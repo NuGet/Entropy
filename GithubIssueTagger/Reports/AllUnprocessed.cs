@@ -15,11 +15,11 @@ namespace GithubIssueTagger.Reports
             _client = client;
         }
 
-        public async Task Run()
+        public async Task RunAsync()
         {
             if (_unprocessedIssues is null)
             {
-                _unprocessedIssues = await IssueUtilities.GetUnprocessedIssues(_client, "nuget", "home");
+                _unprocessedIssues = await IssueUtilities.GetUnprocessedIssuesAsync(_client, "nuget", "home");
             }
             foreach (var issue in _unprocessedIssues)
             {
