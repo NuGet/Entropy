@@ -1,12 +1,6 @@
 ﻿using ClientSdkSymbolsChecker;
-using NuGet.Common;
-using NuGet.Configuration;
-using NuGet.Packaging;
 using NuGet.Packaging.Core;
-using NuGet.Packaging.Signing;
-using NuGet.Protocol;
 using NuGet.Protocol.Core.Types;
-using NuGet.Repositories;
 using NuGet.Versioning;
 
 string[] packageIds = new[] {
@@ -41,82 +35,97 @@ UserAgent.SetUserAgentString(new UserAgentStringBuilder("NuGetSdkSymbolChecker")
 
 var globalContext = new GlobalContext();
 Dictionary<string, IReadOnlyList<NuGetVersion>> allPackages = await GetAllPackageVersionsAsync(packageIds, globalContext, CancellationToken.None);
+Console.WriteLine("Checking {0} versions from {1} packages", allPackages.Sum(p => p.Value.Count), allPackages.Count);
+
+var missingPackages = await GetMissingPackageVersionsAsync(allPackages, globalContext, CancellationToken.None);
+Console.WriteLine("Need to download {0} packages", missingPackages.Count);
+if (missingPackages.Count > 0)
+{
+    await DownloadMissingPackagesAsync(missingPackages, globalContext, CancellationToken.None);
+}
 
 static async Task<Dictionary<string, IReadOnlyList<NuGetVersion>>> GetAllPackageVersionsAsync(IReadOnlyList<string> packageIds, GlobalContext globalContext, CancellationToken cancellationToken)
 {
-    Task<IReadOnlyList<NuGetVersion>>[] tasks = new Task<IReadOnlyList<NuGetVersion>>[packageIds.Count];
+    Task<(string packageId, IReadOnlyList<NuGetVersion> versions)>[] tasks = new Task<(string, IReadOnlyList<NuGetVersion>)>[packageIds.Count];
     NuGetDownloader downloader = await NuGetDownloader.CreateAsync(cancellationToken);
 
-    using var linkedCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-
-    int packageIdIndex = 0;
-
-    for (int i = 0; i <  Math.Min(tasks.Length, packageIds.Count); i++)
+    for (int i = 0; i <  packageIds.Count; i++)
     {
-        tasks[i] = downloader.GetAllVersionsAsync(packageIds[packageIdIndex], linkedCancellationToken.Token);
+        tasks[i] = downloader.GetAllVersionsAsync(packageIds[i], cancellationToken);
     }
 
-    var result = new Dictionary<string, IReadOnlyList<>>
-
-    while (packageIdIndex < packageIds.Count)
+    await Task.WhenAll(tasks);
+    var fauledTasks = tasks.Count(t => t.IsFaulted);
+    if (fauledTasks > 0)
     {
-        await Task.WhenAny(tasks);
-        Task<IReadOnlyList<NuGetVersion>> finishedTask;
-        for (int finishedIndex = 0; ; finishedIndex++)
+        var exceptions = new Exception[fauledTasks];
+        int index = 0;
+        for (int i =0; i < tasks.Length; i++)
         {
-            finishedTask = tasks[finishedIndex];
-            if (finishedTask.IsCompleted)
+            if (tasks[i].IsFaulted)
+            {
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
+#pragma warning disable CS8601 // Possible null reference assignment.
+                exceptions[index] = tasks[i].Exception.InnerException;
+#pragma warning restore CS8601 // Possible null reference assignment.
+#pragma warning restore CS8602 // Dereference of a possibly null reference.
+                index++;
+            }
+        }
+        throw new AggregateException(exceptions);
+    }
+
+    var packageVersions = new Dictionary<string, IReadOnlyList<NuGetVersion>>();
+
+    for (int i = 0; i < tasks.Length; i++)
+    {
+        var (packageId, versions) = tasks[i].Result;
+        packageVersions[packageId] = versions;
+    }
+
+    return packageVersions;
+}
+
+static Task<IReadOnlyList<PackageIdentity>> GetMissingPackageVersionsAsync(Dictionary<string, IReadOnlyList<NuGetVersion>> allPackages, GlobalContext globalContext, CancellationToken cancellationToken)
+{
+    var needToDownload = new List<PackageIdentity>();
+    var gpf = globalContext.GlobalPackagesFolder;
+    foreach (var (packageId, packageVersions) in allPackages)
+    {
+        foreach (var packageVersion in packageVersions)
+        {
+            if (!gpf.Exists(packageId, packageVersion))
+            {
+                var packageIdentity = new PackageIdentity(packageId, packageVersion);
+                needToDownload.Add(packageIdentity);
+            }
+        }
+    }
+
+    IReadOnlyList<PackageIdentity> result = needToDownload;
+    return Task.FromResult(result);
+}
+
+static async Task DownloadMissingPackagesAsync(IReadOnlyCollection<PackageIdentity> packages, GlobalContext context, CancellationToken cancellationToken)
+{
+    const int maxParallel = 4;
+    var tasks = new List<Task>(maxParallel);
+    // Used to cancel pending requests when a task fails.
+    var tcs = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+
+    using (var enumerator = packages.GetEnumerator())
+    {
+        for (int i = 0; i < maxParallel; i++)
+        {
+            if (!enumerator.MoveNext())
             {
                 break;
             }
-        }
-
-        if (finishedTask.IsFaulted)
-        {
-            linkedCancellationToken.Cancel();
-            await Task.WhenAll(tasks);
-            await finishedTask;
-            // above should throw, but let's be explicit about program flow exiting here
-            throw null;
-        }
-
-
-    }
-}
-
-
-var settings = Settings.LoadDefaultSettings(Environment.CurrentDirectory);
-var gpfPath = SettingsUtility.GetGlobalPackagesFolder(settings);
-NuGetv3LocalRepository gpf = new NuGetv3LocalRepository(gpfPath);
-
-var sourceCacheContext = new SourceCacheContext();
-var clientPolicy = ClientPolicyContext.GetClientPolicy(settings, NullLogger.Instance);
-var packageExtractionContext = new PackageExtractionContext(PackageSaveMode.Defaultv3, XmlDocFileSaveMode.None, clientPolicy, NullLogger.Instance);
-
-var packageSource = new PackageSource("https://api.nuget.org/v3/index.json");
-var source = Repository.Factory.GetCoreV3(packageSource);
-
-var fpbir = await source.GetResourceAsync<FindPackageByIdResource>();
-var packageMetadataResource = await source.GetResourceAsync<PackageMetadataResource>();
-
-foreach (var packageId in packageIds)
-{
-    var versions = (await fpbir.GetAllVersionsAsync(packageId, sourceCacheContext, NullLogger.Instance, CancellationToken.None)).ToList();
-    foreach (var version in versions)
-    {
-        
-        if (!gpf.Exists(packageId, version))
-        {
-            Console.WriteLine("{0} version {1} is not downloaded", packageId, version.OriginalVersion);
-            var packageIdentity = new PackageIdentity(packageId, version);
-            using (var packageDownloader = await fpbir.GetPackageDownloaderAsync(packageIdentity, sourceCacheContext, NullLogger.Instance, CancellationToken.None))
-            {
-                await PackageExtractor.InstallFromSourceAsync(packageIdentity, packageDownloader, gpf.PathResolver, packageExtractionContext, CancellationToken.None);
-            }
-        }
-        else
-        {
-
+            //            using (var packageDownloader = await fpbir.GetPackageDownloaderAsync(packageIdentity, sourceCacheContext, NullLogger.Instance, CancellationToken.None))
+            //            {
+            //                await PackageExtractor.InstallFromSourceAsync(packageIdentity, packageDownloader, gpf.PathResolver, packageExtractionContext, CancellationToken.None);
+            //            }
         }
     }
 }
+

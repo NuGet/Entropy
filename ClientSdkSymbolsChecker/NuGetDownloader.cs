@@ -31,12 +31,12 @@ namespace ClientSdkSymbolsChecker
             return new NuGetDownloader(nuGetOrg, findPackageByIdResource);
         }
 
-        public async Task<IReadOnlyList<NuGetVersion>> GetAllVersionsAsync(string packageId, CancellationToken cancellationToken)
+        public async Task<(string packageId, IReadOnlyList<NuGetVersion>)> GetAllVersionsAsync(string packageId, CancellationToken cancellationToken)
         {
             // I hate that this API returns IEnumerable<T>.
-            var enumerable = await this.FindPackageByIdResource.GetAllVersionsAsync(packageId, SourceCacheContext, NullLogger.Instance, cancellationToken);
+            var enumerable = await FindPackageByIdResource.GetAllVersionsAsync(packageId, SourceCacheContext, NullLogger.Instance, cancellationToken);
             var allVersions = enumerable.ToList().AsReadOnly();
-            return allVersions;
+            return (packageId, allVersions);
         }
     }
 }
