@@ -48,9 +48,13 @@ namespace InsertionChangeLogGenerator
 
             static int GetPRId(string message)
             {
-                foreach (Match match in new Regex(@"(#\d+)", RegexOptions.IgnoreCase).Matches(message))
+                //use RegexOptions.RightToLeft to match from the right side, to ignore the other numbers in the title
+                //E.g. 	Fix spelling of Wiederherstellen (NuGet/Home#11774) (#4591)
+                //Or, Revert "Disable timing out EndToEnd tests (#4592)" (#4597) Fixes https://github.com/NuGet/Client.Engineering/issues/1572 This reverts commit acee7c1c1773e3d96ca806b10ba068dd09b0baf5.
+                foreach (Match match in new Regex(@"\(#\d+\)", RegexOptions.RightToLeft).Matches(message))
                 {
-                    var pullRequestIdText = match.Value.Substring(1, match.Length - 1);
+                    // match={(#4634)}, pullRequestsIdText=4634
+                    var pullRequestIdText = match.Value.Substring(2, match.Length - 3);
                     int.TryParse(pullRequestIdText, out int prId);
                     return prId;
                 }
