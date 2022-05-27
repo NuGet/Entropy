@@ -1,7 +1,11 @@
 ﻿using ClientSdkSymbolsChecker;
+using Microsoft.SymbolStore;
+using Microsoft.SymbolStore.SymbolStores;
 using NuGet.Packaging.Core;
 using NuGet.Protocol.Core.Types;
+using NuGet.Repositories;
 using NuGet.Versioning;
+using System.Runtime.ExceptionServices;
 
 string[] packageIds = new[] {
     "Microsoft.Build.NuGetSdkResolver",
@@ -31,18 +35,71 @@ string[] packageIds = new[] {
     "NuGet.VisualStudio.Contracts",
     };
 
-UserAgent.SetUserAgentString(new UserAgentStringBuilder("NuGetSdkSymbolChecker"));
-
-var globalContext = new GlobalContext();
-Dictionary<string, IReadOnlyList<NuGetVersion>> allPackages = await GetAllPackageVersionsAsync(packageIds, globalContext, CancellationToken.None);
-Console.WriteLine("Checking {0} versions from {1} packages", allPackages.Sum(p => p.Value.Count), allPackages.Count);
-
-var missingPackages = await GetMissingPackageVersionsAsync(allPackages, globalContext, CancellationToken.None);
-Console.WriteLine("Need to download {0} packages", missingPackages.Count);
-if (missingPackages.Count > 0)
+try
 {
-    await DownloadMissingPackagesAsync(missingPackages, globalContext, CancellationToken.None);
+    CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
+    Console.CancelKeyPress += (o, e) =>
+    {
+        cancellationTokenSource.Cancel();
+        e.Cancel = true;
+    };
+    AppDomain.CurrentDomain.UnhandledException += (e1, e2) => Console.WriteLine("Unhandled exception " + e2.ExceptionObject);
+    TaskScheduler.UnobservedTaskException += (e1, e2) => Console.WriteLine("Unhandled task exception " + e2.Exception);
+
+    UserAgent.SetUserAgentString(new UserAgentStringBuilder("NuGetSdkSymbolChecker"));
+
+    var globalContext = new GlobalContext();
+    Dictionary<string, IReadOnlyList<NuGetVersion>> allPackages = await GetAllPackageVersionsAsync(packageIds, globalContext, cancellationTokenSource.Token);
+    Console.WriteLine("Checking {0} versions from {1} packages", allPackages.Sum(p => p.Value.Count), allPackages.Count);
+
+    var missingPackages = await GetMissingPackageVersionsAsync(allPackages, globalContext, cancellationTokenSource.Token);
+    Console.WriteLine("Need to download {0} packages", missingPackages.Count);
+    if (missingPackages.Count > 0)
+    {
+        int downloaded = 0;
+        Action<PackageIdentity> callback = (package) =>
+        {
+            var completed = Interlocked.Increment(ref downloaded);
+            Console.WriteLine("{0}/{1} Downloaded {2}", completed, missingPackages.Count, package);
+        };
+        await DownloadMissingPackagesAsync(missingPackages, globalContext, callback, cancellationTokenSource.Token);
+    }
+
+    var httpClient = new HttpClient();
+
+    foreach (var package in allPackages)
+    {
+        foreach (var version in package.Value)
+        {
+            var dir = globalContext.GlobalPackagesFolder.PathResolver.GetInstallPath(package.Key, version);
+            var dlls = Directory.EnumerateFiles(dir, "*.dll", SearchOption.AllDirectories);
+            foreach (var dll in dlls)
+            {
+                using (var file = File.OpenRead(dll))
+                {
+                    var key = new SymbolStoreFile(file, dll);
+                    var keyFileGenerator = new Microsoft.SymbolStore.KeyGenerators.FileKeyGenerator(null, key);
+                    foreach (var argh in keyFileGenerator.GetKeys(Microsoft.SymbolStore.KeyGenerators.KeyTypeFlags.SymbolKey))
+                    {
+                        var request = new HttpRequestMessage(HttpMethod.Head, "http://msdl.microsoft.com/download/symbols/" + argh.Index);
+                        var response = await httpClient.SendAsync(request, cancellationTokenSource.Token);
+                        if (!response.IsSuccessStatusCode)
+                        {
+                            Console.WriteLine("PDB missing for {0} version {1}: {2}", package.Key, version, dll.Substring(dir.Length));
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
+catch (Exception e)
+{
+    Console.WriteLine("Unhandled exception:");
+    Console.WriteLine(e);
+}
+
+Console.WriteLine("Finished");
 
 static async Task<Dictionary<string, IReadOnlyList<NuGetVersion>>> GetAllPackageVersionsAsync(IReadOnlyList<string> packageIds, GlobalContext globalContext, CancellationToken cancellationToken)
 {
@@ -106,26 +163,82 @@ static Task<IReadOnlyList<PackageIdentity>> GetMissingPackageVersionsAsync(Dicti
     return Task.FromResult(result);
 }
 
-static async Task DownloadMissingPackagesAsync(IReadOnlyCollection<PackageIdentity> packages, GlobalContext context, CancellationToken cancellationToken)
+static async Task DownloadMissingPackagesAsync(IReadOnlyCollection<PackageIdentity> packages, GlobalContext context, Action<PackageIdentity> finishedCallback, CancellationToken cancellationToken)
 {
     const int maxParallel = 4;
     var tasks = new List<Task>(maxParallel);
     // Used to cancel pending requests when a task fails.
-    var tcs = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+    var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+    cts.Token.Register(() => Console.WriteLine("Download canceled"));
+    NuGetDownloader downloader = await NuGetDownloader.CreateAsync(cancellationToken);
 
     using (var enumerator = packages.GetEnumerator())
     {
-        for (int i = 0; i < maxParallel; i++)
+        // Ramp-up
+        while (tasks.Count < maxParallel && enumerator.MoveNext())
         {
-            if (!enumerator.MoveNext())
+            var package = enumerator.Current;
+            Task downloadPackageTask = DownloadPackageAsync(package, context.GlobalPackagesFolder, downloader, finishedCallback, cts.Token);
+            tasks.Add(downloadPackageTask);
+        }
+
+        // Steady state
+        while (enumerator.MoveNext())
+        {
+            var finishedTask = await Task.WhenAny(tasks);
+            if (finishedTask.IsFaulted)
             {
-                break;
+                cts.Cancel();
+                await Task.WhenAll(tasks);
+                ExceptionDispatchInfo.Capture(finishedTask.Exception.InnerException).Throw();
             }
-            //            using (var packageDownloader = await fpbir.GetPackageDownloaderAsync(packageIdentity, sourceCacheContext, NullLogger.Instance, CancellationToken.None))
-            //            {
-            //                await PackageExtractor.InstallFromSourceAsync(packageIdentity, packageDownloader, gpf.PathResolver, packageExtractionContext, CancellationToken.None);
-            //            }
+
+            int taskIndex;
+            for (taskIndex = 0; taskIndex < tasks.Count; taskIndex++)
+            {
+                if (finishedTask == tasks[taskIndex])
+                {
+                    break;
+                }
+            }
+
+            tasks[taskIndex] = DownloadPackageAsync(enumerator.Current, context.GlobalPackagesFolder, downloader, finishedCallback, cts.Token);
+        }
+
+        // Ramp-down
+        while (tasks.Count > 0)
+        {
+            var finishedTask = await Task.WhenAny(tasks);
+            if (finishedTask.IsFaulted)
+            {
+                cts.Cancel();
+                await Task.WhenAll(tasks);
+                ExceptionDispatchInfo.Capture(finishedTask.Exception.InnerException).Throw();
+            }
+
+            int taskIndex;
+            for (taskIndex = 0; taskIndex < tasks.Count; taskIndex++)
+            {
+                if (finishedTask == tasks[taskIndex])
+                {
+                    break;
+                }
+            }
+
+            tasks.RemoveAt(taskIndex);
         }
     }
 }
 
+static async Task DownloadPackageAsync(PackageIdentity package, NuGetv3LocalRepository globalPackagesFolder, NuGetDownloader downloader, Action<PackageIdentity> finishedCallback, CancellationToken cancellationToken)
+{
+    try
+    {
+        await downloader.DownloadPackageAsync(package, globalPackagesFolder, cancellationToken);
+        finishedCallback?.Invoke(package);
+    }
+    catch (Exception e)
+    {
+        Console.WriteLine("Package " + package + " exception " + e.Message + " (" + e.GetType().Name + ")");
+    }
+}
