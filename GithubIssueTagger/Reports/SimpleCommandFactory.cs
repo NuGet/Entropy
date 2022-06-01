@@ -23,7 +23,8 @@ namespace GithubIssueTagger.Reports
                     var report = (IReport)serviceProvider.GetRequiredService(type);
                     await report.RunAsync();
                 }
-            });
+            },
+            clientBinder);
 
             return command;
         }
