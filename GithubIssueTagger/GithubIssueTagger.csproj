@@ -6,6 +6,11 @@
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
+
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>GithubIssueTagger</ToolCommandName>
+    <PackageId>NuGet.Internal.GithubIssueTagger</PackageId>
+    <Version>$([System.DateTime]::Now.ToString('yyyy.MM.dd'))</Version>
   </PropertyGroup>
 
   <ItemGroup>
