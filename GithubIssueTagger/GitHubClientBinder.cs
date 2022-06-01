@@ -10,10 +10,12 @@ namespace GithubIssueTagger
     internal class GitHubClientBinder : BinderBase<GitHubClient>
     {
         private readonly Option<string> _patOption;
+        private readonly Option<string> _patEnvVarOption;
 
-        public GitHubClientBinder(Option<string> patOption)
+        public GitHubClientBinder(Option<string> patOption, Option<string> patEnvVarOption)
         {
             _patOption = patOption ?? throw new ArgumentNullException(nameof(patOption));
+            _patEnvVarOption = patEnvVarOption ?? throw new ArgumentNullException(nameof(patEnvVarOption));
         }
 
         protected override GitHubClient GetBoundValue(BindingContext bindingContext)
@@ -21,9 +23,28 @@ namespace GithubIssueTagger
             var client = new GitHubClient(new ProductHeaderValue("nuget-github-issue-tagger"));
 
             string? pat = bindingContext.ParseResult.GetValueForOption(_patOption);
+            string? patEnvVar = bindingContext.ParseResult.GetValueForOption(_patEnvVarOption);
+
+            if (!string.IsNullOrEmpty(pat) && !string.IsNullOrEmpty(patEnvVar))
+            {
+                throw new Exception($"Only one of {_patOption.Name} or {_patEnvVarOption.Name} can be specified");
+            }
+
             if (!string.IsNullOrEmpty(pat))
             {
                 client.Credentials = new Credentials(pat);
+            }
+            else if (!string.IsNullOrEmpty(patEnvVar))
+            {
+                var value = Environment.GetEnvironmentVariable(patEnvVar);
+                if (string.IsNullOrEmpty(value))
+                {
+                    Console.WriteLine("Warning: Environment variable {0} does not have a value. Making unauthenticated HTTP requests");
+                }
+                else
+                {
+                    client.Credentials = new Credentials(value);
+                }
             }
             else
             {

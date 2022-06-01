@@ -11,9 +11,13 @@ using System.Threading.Tasks;
 var allReportTypes = typeof(Program).Assembly.GetTypes().Where(t => t.IsClass && t.IsAssignableTo(typeof(IReport))).OrderBy(t => t.Name).ToList();
 
 var patOption = new Option<string>("--pat");
+patOption.Description = "GitHub Personal Access Token to make API calls with.";
 patOption.AddAlias("-p");
 
-var githubClientBinder = new GitHubClientBinder(patOption);
+var patEnvVarOption = new Option<string>("--pat-variable");
+patEnvVarOption.Description = "Environment variable that contains the GitHub Personal Access Token to use.";
+
+var githubClientBinder = new GitHubClientBinder(patOption, patEnvVarOption);
 
 var interactiveCommand = new Command(
 "--interactive",
@@ -26,6 +30,7 @@ interactiveCommand.SetHandler(
 var rootCommand = new RootCommand
 {
     patOption,
+    patEnvVarOption,
     interactiveCommand
 };
 
