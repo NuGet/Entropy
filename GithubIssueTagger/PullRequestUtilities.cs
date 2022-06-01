@@ -6,6 +6,8 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
+#nullable disable
+
 namespace GithubIssueTagger
 {
     public static partial class PullRequestUtilities

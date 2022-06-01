@@ -4,6 +4,8 @@ using System;
 using System.Threading.Tasks;
 using System.Linq;
 
+#nullable disable
+
 namespace GithubIssueTagger.Reports
 {
     internal class AreaOwnerReport : IReport

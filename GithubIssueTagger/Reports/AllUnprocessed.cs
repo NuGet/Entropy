@@ -8,7 +8,7 @@ namespace GithubIssueTagger.Reports
     internal class AllUnprocessed : IReport
     {
         private GitHubClient _client;
-        private static IList<Issue> _unprocessedIssues;
+        private static IList<Issue>? _unprocessedIssues;
 
         public AllUnprocessed(GitHubClient client)
         {
