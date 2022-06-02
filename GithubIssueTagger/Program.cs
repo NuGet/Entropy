@@ -14,10 +14,7 @@ var patOption = new Option<string>("--pat");
 patOption.Description = "GitHub Personal Access Token to make API calls with.";
 patOption.AddAlias("-p");
 
-var patEnvVarOption = new Option<string>("--pat-variable");
-patEnvVarOption.Description = "Environment variable that contains the GitHub Personal Access Token to use.";
-
-var githubClientBinder = new GitHubClientBinder(patOption, patEnvVarOption);
+var githubClientBinder = new GitHubClientBinder(patOption);
 
 var interactiveCommand = new Command(
 "--interactive",
@@ -30,11 +27,10 @@ interactiveCommand.SetHandler(
 var rootCommand = new RootCommand
 {
     patOption,
-    patEnvVarOption,
     interactiveCommand
 };
 
-patOption.Description = "GitHub Personal Access Token. If none is supplied, an attempt to get one from the git credential provider will be made.";
+patOption.Description = "GitHub Personal Access Token. If none is supplied, the environment variable GITHUB_TOKEN is checked, and if empty, an attempt to get one from the git credential provider will be made.";
 rootCommand.Description = "NuGet.Client tool to generate reports from GitHub issues.";
 
 var simpleCommandFactory = new SimpleCommandFactory();

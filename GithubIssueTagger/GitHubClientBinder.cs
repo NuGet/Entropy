@@ -10,56 +10,50 @@ namespace GithubIssueTagger
     internal class GitHubClientBinder : BinderBase<GitHubClient>
     {
         private readonly Option<string> _patOption;
-        private readonly Option<string> _patEnvVarOption;
 
-        public GitHubClientBinder(Option<string> patOption, Option<string> patEnvVarOption)
+        public GitHubClientBinder(Option<string> patOption)
         {
             _patOption = patOption ?? throw new ArgumentNullException(nameof(patOption));
-            _patEnvVarOption = patEnvVarOption ?? throw new ArgumentNullException(nameof(patEnvVarOption));
         }
 
         protected override GitHubClient GetBoundValue(BindingContext bindingContext)
         {
             var client = new GitHubClient(new ProductHeaderValue("nuget-github-issue-tagger"));
 
-            string? pat = bindingContext.ParseResult.GetValueForOption(_patOption);
-            string? patEnvVar = bindingContext.ParseResult.GetValueForOption(_patEnvVarOption);
-
-            if (!string.IsNullOrEmpty(pat) && !string.IsNullOrEmpty(patEnvVar))
-            {
-                throw new Exception($"Only one of {_patOption.Name} or {_patEnvVarOption.Name} can be specified");
-            }
-
-            if (!string.IsNullOrEmpty(pat))
+            string? pat = GetPat(bindingContext);
+            if (pat is not null)
             {
                 client.Credentials = new Credentials(pat);
             }
-            else if (!string.IsNullOrEmpty(patEnvVar))
-            {
-                var value = Environment.GetEnvironmentVariable(patEnvVar);
-                if (string.IsNullOrEmpty(value))
-                {
-                    Console.WriteLine("Warning: Environment variable {0} does not have a value. Making unauthenticated HTTP requests");
-                }
-                else
-                {
-                    client.Credentials = new Credentials(value);
-                }
-            }
             else
             {
-                Dictionary<string, string>? credentials = GetGitCredentials(new Uri("https://github.com/NuGet/Home"));
-                if (credentials?.TryGetValue("password", out string? password) == true)
-                {
-                    client.Credentials = new Credentials(password);
-                }
-                else
-                {
-                    Console.WriteLine("Warning: Unable to get github token. Making unauthenticated HTTP requests, which has lower request limits and cannot access private repos.");
-                }
+                Console.WriteLine("Warning: Unable to get github token. Making unauthenticated HTTP requests, which has lower request limits and cannot access private repos.");
             }
 
             return client;
+        }
+
+        private string? GetPat(BindingContext bindingContext)
+        {
+            string? pat = bindingContext.ParseResult.GetValueForOption(_patOption);
+            if (!string.IsNullOrEmpty(pat))
+            {
+                return pat;
+            }
+
+            pat = Environment.GetEnvironmentVariable("GITHUB_TOKEN");
+            if (!string.IsNullOrEmpty(pat))
+            {
+                return pat;
+            }
+
+            Dictionary<string, string>? credentials = GetGitCredentials(new Uri("https://github.com/NuGet/Home"));
+            if (credentials?.TryGetValue("password", out pat) == true && !string.IsNullOrEmpty(pat))
+            {
+                return pat;
+            }
+
+            return null;
         }
 
         // Implement https://git-scm.com/docs/git-credential#_typical_use_of_git_credential
@@ -109,6 +103,5 @@ namespace GithubIssueTagger
 
             return result.Count > 0 ? result : null;
         }
-
     }
 }
