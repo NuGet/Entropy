@@ -11,15 +11,18 @@ using System.Threading.Tasks;
 var allReportTypes = typeof(Program).Assembly.GetTypes().Where(t => t.IsClass && t.IsAssignableTo(typeof(IReport))).OrderBy(t => t.Name).ToList();
 
 var patOption = new Option<string>("--pat");
+patOption.Description = "GitHub Personal Access Token to make API calls with.";
 patOption.AddAlias("-p");
+
+var githubClientBinder = new GitHubClientBinder(patOption);
 
 var interactiveCommand = new Command(
 "--interactive",
 "Run in interactive mode.");
 interactiveCommand.AddAlias("-i");
 interactiveCommand.SetHandler(
-    async (string pat) => await RunInteractiveModeAsync(null, allReportTypes),
-    patOption);
+    async (GitHubClient client) => await RunInteractiveModeAsync(client, allReportTypes),
+    githubClientBinder);
 
 var rootCommand = new RootCommand
 {
@@ -27,70 +30,43 @@ var rootCommand = new RootCommand
     interactiveCommand
 };
 
-patOption.Description = "GitHub Personal Access Token. If none is supplied, an attempt to get one from the git credential provider will be made.";
+patOption.Description = "GitHub Personal Access Token. If none is supplied, the environment variable GITHUB_TOKEN is checked, and if empty, an attempt to get one from the git credential provider will be made.";
 rootCommand.Description = "NuGet.Client tool to generate reports from GitHub issues.";
 
+var simpleCommandFactory = new SimpleCommandFactory();
 foreach (var reportType in allReportTypes)
 {
-    var reportCommand = new Command(reportType.Name);
-    reportCommand.SetHandler(async (string pat) =>
-    {
-        var githubClient = GetGitHubClient(pat);
-        var serviceProvider = GetServiceProvider(githubClient, allReportTypes);
-        IReport report = (IReport)serviceProvider.GetRequiredService(reportType);
-        await report.RunAsync();
-    }, patOption);
-
+    ICommandFactory commandFactory = GetCommandFactory(reportType) ?? simpleCommandFactory;
+    var reportCommand = commandFactory.CreateCommand(reportType, githubClientBinder);
     rootCommand.AddCommand(reportCommand);
 }
 
 var exitCode = await rootCommand.InvokeAsync(args);
 return exitCode;
 
-static GitHubClient GetGitHubClient(string pat)
+ICommandFactory? GetCommandFactory(Type reportType)
 {
-    var client = new GitHubClient(new ProductHeaderValue("nuget-github-issue-tagger"));
-
-    if (!string.IsNullOrEmpty(pat))
+    var commandFactoryAttribute = reportType.CustomAttributes.SingleOrDefault(a => a.AttributeType == typeof(CommandFactoryAttribute));
+    if (commandFactoryAttribute == null)
     {
-        client.Credentials = new Credentials(pat);
-    }
-    else
-    {
-        Dictionary<string, string> credentuals = GitCredentials.Get(new Uri("https://github.com/NuGet/Home"));
-        if (credentuals?.TryGetValue("password", out string password) == true)
-        {
-            client.Credentials = new Credentials(password);
-        }
-        else
-        {
-            Console.WriteLine("Warning: Unable to get github token. Making unauthenticated HTTP requests, which has lower request limits.");
-        }
+        return null;
     }
 
-    return client;
+    var attributeInstance = (CommandFactoryAttribute)commandFactoryAttribute.Constructor.Invoke(commandFactoryAttribute.ConstructorArguments.Select(arg => arg.Value).ToArray());
+    var commandFactory = (ICommandFactory?)Activator.CreateInstance(attributeInstance.FactoryType);
+    if (commandFactory == null)
+    {
+        throw new Exception("Unable to create command factory " + attributeInstance.FactoryType.FullName);
+    }
+    return commandFactory;
 }
 
-static IServiceProvider GetServiceProvider(GitHubClient githubClient, IEnumerable<Type> reports)
+static async Task RunInteractiveModeAsync(GitHubClient client, IReadOnlyList<Type> reportTypes)
 {
-    var services = new ServiceCollection();
-
-    services.AddSingleton(githubClient);
-    services.AddSingleton<QueryCache>();
-
-    foreach (var report in reports)
-    {
-        services.AddSingleton(report);
-    }
-
-    IServiceProvider serviceProvider = services.BuildServiceProvider();
-    return serviceProvider;
-}
-
-static async Task RunInteractiveModeAsync(string pat, IReadOnlyList<Type> reportTypes)
-{
-    var client = GetGitHubClient(pat);
-    var serviceProvider = GetServiceProvider(client, reportTypes);
+    var serviceProvider = new ServiceCollection()
+        .AddGithubIssueTagger(client)
+        .BuildServiceProvider();
+    var scopeFactory = serviceProvider.GetRequiredService<IServiceScopeFactory>();
 
     Console.WriteLine("**********************************************************************");
     Console.WriteLine("******************* NuGet GitHub Issue Tagger ************************");
@@ -107,7 +83,7 @@ static async Task RunInteractiveModeAsync(string pat, IReadOnlyList<Type> report
 
         var input = Console.ReadLine();
 
-        Type reportToRun;
+        Type? reportToRun;
         if (StringComparer.CurrentCultureIgnoreCase.Equals("quit", input))
         {
             return;
@@ -136,8 +112,11 @@ static async Task RunInteractiveModeAsync(string pat, IReadOnlyList<Type> report
         else
         {
             Console.WriteLine(reportToRun.Name + "***");
-            var report = (IReport)serviceProvider.GetRequiredService(reportToRun);
-            await report.RunAsync();
+            using (scopeFactory.CreateScope())
+            {
+                var report = (IReport)serviceProvider.GetRequiredService(reportToRun);
+                await report.RunAsync();
+            }
             Console.WriteLine("*** Done Executing " + reportToRun.Name + " ***");
         }
     }

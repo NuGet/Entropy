@@ -5,7 +5,7 @@ namespace GithubIssueTagger
 {
     internal class QueryCache
     {
-        public IReadOnlyList<Label> AllHomeLabels { get; set; }
-        public IReadOnlyList<Issue> AllHomeIssues { get; set; }
+        public IReadOnlyList<Label>? AllHomeLabels { get; set; }
+        public IReadOnlyList<Issue>? AllHomeIssues { get; set; }
     }
 }

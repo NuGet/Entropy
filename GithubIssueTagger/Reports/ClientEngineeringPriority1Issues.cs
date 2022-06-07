@@ -10,7 +10,7 @@ namespace GithubIssueTagger.Reports
     internal class ClientEngineeringPriority1Issues : IReport
     {
         private GitHubClient _client;
-        private static IEnumerable<Issue> _allClientEngineeringIssues;
+        private static IEnumerable<Issue>? _allClientEngineeringIssues;
 
         public ClientEngineeringPriority1Issues(GitHubClient client)
         {

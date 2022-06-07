@@ -5,6 +5,8 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 
+#nullable disable
+
 namespace GithubIssueTagger
 {
     public static class PlanningUtilities

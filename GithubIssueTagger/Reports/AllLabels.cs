@@ -8,7 +8,7 @@ namespace GithubIssueTagger.Reports
     internal class AllLabels : IReport
     {
         private GitHubClient _client;
-        private static IReadOnlyList<Label> _allHomeLabels;
+        private static IReadOnlyList<Label>? _allHomeLabels;
 
         public AllLabels(GitHubClient client)
         {
