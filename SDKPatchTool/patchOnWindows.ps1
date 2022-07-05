@@ -21,7 +21,7 @@ if (!(Test-Path $patchSDKFolder)) {
     New-Item $patchSDKFolder -ItemType Directory | Out-Null
 }
 if (!(Test-Path $patchSDKFolder\dotnet-install.ps1)) {
-    Invoke-WebRequest https://raw.githubusercontent.com/dotnet/cli/master/scripts/obtain/dotnet-install.ps1 -OutFile $patchSDKFolder\dotnet-install.ps1
+    Invoke-WebRequest https://dot.net/v1/dotnet-install.ps1 -OutFile $patchSDKFolder\dotnet-install.ps1
 }
 
 & $patchSDKFolder\dotnet-install.ps1 -InstallDir $patchSDKFolder -Channel $SDKChannel -Version $SDKVersion -NoPath
