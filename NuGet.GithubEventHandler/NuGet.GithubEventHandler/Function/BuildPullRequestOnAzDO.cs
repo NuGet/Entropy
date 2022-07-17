@@ -13,11 +13,19 @@ namespace NuGet.GithubEventHandler.Function
 {
     public class BuildPullRequestOnAzDO
     {
+        internal const string QueueName = "pull-request-build-azure-pipelines";
+
         private readonly IAzDOClient _azdoClient;
 
         public BuildPullRequestOnAzDO(IAzDOClient azdoClient)
         {
             _azdoClient = azdoClient;
+        }
+
+        public static bool ShouldQueue(WebhookPayload webhook)
+        {
+            return webhook?.Action == "labeled"
+                && webhook?.PullRequest != null;
         }
 
         [FunctionName(nameof(BuildPullRequestOnAzDO))]

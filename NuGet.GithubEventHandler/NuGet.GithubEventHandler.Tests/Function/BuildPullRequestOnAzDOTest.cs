@@ -11,6 +11,45 @@ namespace NuGet.GithubEventHandler.Tests.Function
 {
     public class BuildPullRequestOnAzDOTest
     {
+        [Theory]
+        [InlineData("labeled", true)]
+        [InlineData("push", false)]
+        [InlineData("unlabeled", false)]
+        [InlineData("open", false)]
+        public void ShouldQueueLabeledWebhook(string action, bool expected)
+        {
+            // Arrange
+            WebhookPayload webhook = new WebhookPayload()
+            {
+                Action = action,
+                PullRequest = new PullRequest()
+                {
+                    Title = "Test PR",
+                    Number = 1,
+                    State = "open"
+                },
+                Label = new Label()
+                {
+                    Name = "Label"
+                },
+                Repository = new Repository()
+                {
+                    Owner = new User()
+                    {
+                        Login = "NuGet"
+                    },
+                    Name = "Entropy",
+                    FullName = "NuGet/Entropy"
+                }
+            };
+
+            // Act
+            bool actual = BuildPullRequestOnAzDO.ShouldQueue(webhook);
+
+            // Assert
+            Assert.Equal(expected, actual);
+        }
+
         [Fact]
         public async Task BuildQueued()
         {
@@ -21,7 +60,11 @@ namespace NuGet.GithubEventHandler.Tests.Function
             await Run(config);
 
             // Assert
-            config.Client.Verify(c => c.QueuePipeline(config.Subscription.AzDO_Org, config.Subscription.AzDO_Project, config.Subscription.AzDO_Pipeline.Value, $"refs/pull/{config.BlobData.PullRequest.Number}/head"), Times.Once);
+            string org = config?.Subscription?.AzDO_Org ?? throw new Exception("Default org was null");
+            string project = config?.Subscription?.AzDO_Project ?? throw new Exception("Default project was null");
+            int pipeline = config?.Subscription?.AzDO_Pipeline ?? throw new Exception("Default pipeline was null");
+            int prNumber = config?.BlobData?.PullRequest?.Number ?? throw new Exception("Default PR number was null");
+            config.Client.Verify(c => c.QueuePipeline(org, project, config.Subscription.AzDO_Pipeline.Value, $"refs/pull/{prNumber}/head"), Times.Once);
             config.Log.Verify(l => l.Log<object>(LogLevel.Information, It.IsAny<EventId>(), It.IsAny<object>(), It.IsAny<Exception>(), It.IsAny<Func<object, Exception, string>>()), Times.AtLeastOnce);
             config.Log.Verify(l => l.Log<object>(LogLevel.Error, It.IsAny<EventId>(), It.IsAny<object>(), It.IsAny<Exception>(), It.IsAny<Func<object, Exception, string>>()), Times.Never);
         }
