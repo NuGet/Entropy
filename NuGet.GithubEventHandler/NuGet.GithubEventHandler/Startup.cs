@@ -11,6 +11,7 @@ namespace NuGet.GithubEventHandler
         public override void Configure(IFunctionsHostBuilder builder)
         {
             builder.Services.AddSingleton<IEnvironment, Environment>();
+            builder.Services.AddSingleton<IAzDOClient, AzDOClient>();
         }
     }
 }

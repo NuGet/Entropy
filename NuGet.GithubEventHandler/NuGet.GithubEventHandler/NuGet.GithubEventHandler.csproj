@@ -9,7 +9,7 @@
     <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.Storage" />
     <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.Tables" />
     <PackageReference Include="Microsoft.NET.Sdk.Functions" />
-    <PackageReference Include="Octokit" />
+    <PackageReference Include="Microsoft.TeamFoundationServer.Client" />
   </ItemGroup>
   <ItemGroup>
     <None Update="host.json">
