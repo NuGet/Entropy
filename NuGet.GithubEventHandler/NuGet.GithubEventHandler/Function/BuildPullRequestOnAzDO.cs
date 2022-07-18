@@ -111,7 +111,7 @@ namespace NuGet.GithubEventHandler.Function
             SubscriptionTableEntry? subscription;
             try
             {
-                TableClient tableClient = await binder.BindAsync<TableClient>(new TableAttribute("BuildPullRequest"));
+                TableClient tableClient = await binder.BindAsync<TableClient>(new TableAttribute(nameof(BuildPullRequestOnAzDO)));
                 subscription = await tableClient.GetEntityAsync<SubscriptionTableEntry>(owner, repo);
             }
             catch (RequestFailedException ex) when (ex.Status == 404)
