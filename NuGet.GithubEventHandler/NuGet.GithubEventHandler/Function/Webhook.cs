@@ -6,6 +6,7 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
 using System.Linq;
 using System.IO;
+using Microsoft.Extensions.Logging;
 
 namespace NuGet.GithubEventHandler.Function
 {
@@ -27,18 +28,21 @@ namespace NuGet.GithubEventHandler.Function
         public async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "hooks/{name:alpha}")] HttpRequest req,
             string name,
+            ILogger log,
             IBinder binder) // https://docs.microsoft.com/azure/azure-functions/functions-dotnet-class-library#binding-at-runtime
         {
             string? signatureHeader = req.Headers["X-Hub-Signature-256"].SingleOrDefault();
             string? deliveryId = req.Headers["X-GitHub-Delivery"].SingleOrDefault();
             if (signatureHeader is null || deliveryId is null)
             {
+                log.LogInformation("Request did not contain expected headers");
                 return new BadRequestObjectResult("Expected X-Hub-Signature-256 and X-GitHub-Delivery headers");
             }
 
             byte[]? signature = ParseSignature(signatureHeader);
             if (signature == null)
             {
+                log.LogInformation("X-Hub-Signature-256 header does not contain expected format");
                 return new BadRequestObjectResult("X-Hub-Signature-256 header does not contain expected format");
             }
 
@@ -46,12 +50,14 @@ namespace NuGet.GithubEventHandler.Function
             // Azure Functions consumption plan costs = memory usage * duration, and webhook bodies are 10's of KB UTF8 encoded.
             if (!HMAC.Validate(signature, req.Body, name, _environment))
             {
+                log.LogInformation("HMAC validation failed");
                 return new ForbidResult();
             }
 
             // validation read stream, so need to reset to beginning of stream
-            req.Body.Position = 0;
             var blobPath = $"webhooks/incoming/{DateTime.UtcNow:yyy-MM-dd}/{deliveryId}.json";
+            log.LogInformation("Saving HTTP request body to " + blobPath);
+            req.Body.Position = 0;
 
             using (Stream blobStream = await binder.BindAsync<Stream>(new BlobAttribute(blobPath, FileAccess.Write)))
             {
