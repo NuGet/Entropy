@@ -154,6 +154,8 @@ namespace NuGet.GithubEventHandler.Function
             public string? AzDO_Org { get; set; }
             public string? AzDO_Project { get; set; }
             public int? AzDO_Pipeline { get; set; }
+
+            // These properties are generated and should not be created when inserting/editing a row in the table.
             public DateTimeOffset? Timestamp { get; set; }
             public ETag ETag { get; set; }
         }
