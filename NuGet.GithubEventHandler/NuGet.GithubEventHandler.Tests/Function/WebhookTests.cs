@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
 using Moq;
 using NuGet.GithubEventHandler.Function;
@@ -155,6 +156,8 @@ namespace NuGet.GithubEventHandler.Tests.Function
             req.SetupGet(r => r.Body)
                 .Returns(new MemoryStream(config.Content));
 
+            Mock<ILogger> logger = new Mock<ILogger>();
+
             string? blobPath = null;
             using (var blobData = new MemoryStream())
             {
@@ -168,7 +171,7 @@ namespace NuGet.GithubEventHandler.Tests.Function
                     })
                     .Returns(Task.FromResult<Stream>(blobData));
 
-                IActionResult actual = await target.Run(req.Object, name, binder.Object);
+                IActionResult actual = await target.Run(req.Object, name, logger.Object, binder.Object);
 
                 byte[]? data = blobData.ToArray();
                 var result = new Result(actual, blobPath, data);
