@@ -41,21 +41,24 @@ namespace NuGet.GithubEventHandler.Function
                 return;
             }
 
-            SubscriptionData? subscription = await GetSubscriptionDataAsync(binder, webhookData.Owner, webhookData.Repo, log);
-            if (subscription == null)
+            IReadOnlyList<SubscriptionData>? subscriptions = await GetSubscriptionDataAsync(binder, webhookData.Repo, log);
+            if (subscriptions == null)
             {
                 return;
             }
 
-            if (string.Equals(subscription.Label, webhookData.Label, StringComparison.Ordinal))
+            foreach (var subscription in subscriptions)
             {
-                string gitRef = "refs/pull/" + webhookData.PullRequest + "/head";
-                string url = await _azdoClient.QueuePipeline(subscription.Org, subscription.Project, subscription.Pipeline, gitRef);
-                log.LogInformation("Queued build " + url);
-            }
-            else
-            {
-                log.LogInformation($"Webhook label '{webhookData.Label}' does not match subscription label '{subscription.Label}'");
+                if (string.Equals(subscription.Label, webhookData.Label, StringComparison.Ordinal))
+                {
+                    string gitRef = "refs/pull/" + webhookData.PullRequest + "/head";
+                    string url = await _azdoClient.QueuePipeline(subscription.Org, subscription.Project, subscription.Pipeline, gitRef);
+                    log.LogInformation("Queued build " + url);
+                }
+                else
+                {
+                    log.LogInformation($"Webhook label '{webhookData.Label}' does not match subscription label '{subscription.Label}'");
+                }
             }
         }
 
@@ -72,8 +75,7 @@ namespace NuGet.GithubEventHandler.Function
                 webhookPayload = JsonSerializer.Deserialize<WebhookPayload>(stream);
             }
 
-            string? owner = webhookPayload?.Repository?.Owner?.Login;
-            string? repo = webhookPayload?.Repository?.Name;
+            string? repo = webhookPayload?.Repository?.FullName;
             string? label = webhookPayload?.Label?.Name;
             int? pullRequest = webhookPayload?.PullRequest?.Number;
 
@@ -95,64 +97,101 @@ namespace NuGet.GithubEventHandler.Function
                 return null;
             }
 
-            if (owner == null || repo == null || label == null)
+            if (repo == null || label == null)
             {
-                log.LogInformation("Owner, repo, or label is null. Invalid test data?");
+                log.LogInformation("Repo, or label is null. Invalid test data?");
                 return null;
             }
 
-            var data = new WebhookData(owner, repo, label, pullRequest.Value);
+            var data = new WebhookData(repo, label, pullRequest.Value);
 
             return data;
         }
 
-        private async Task<SubscriptionData?> GetSubscriptionDataAsync(IBinder binder, string owner, string repo, ILogger log)
+        private async Task<IReadOnlyList<SubscriptionData>?> GetSubscriptionDataAsync(IBinder binder, string repo, ILogger log)
         {
-            SubscriptionTableEntry? subscription;
+            repo = repo.Replace("/", "__");
+            List<SubscriptionData>? subscriptions = null;
             try
             {
                 TableClient tableClient = await binder.BindAsync<TableClient>(new TableAttribute(nameof(BuildPullRequestOnAzDO)));
-                subscription = await tableClient.GetEntityAsync<SubscriptionTableEntry>(owner, repo);
+                var filter = "PartitionKey eq '" + repo + "'";
+
+                var results = tableClient.QueryAsync<SubscriptionTableEntry>(filter: filter);
+                await foreach (SubscriptionTableEntry subscription in results)
+                {
+                    if (subscription.Enabled != true)
+                    {
+                        log.LogInformation("Subscription {0} {1} is not enabled.", subscription.PartitionKey, subscription.RowKey);
+                        continue;
+                    }
+
+                    if (subscription.Label == null
+                        || subscription.AzDO_Org == null
+                        || subscription.AzDO_Project == null
+                        || subscription.AzDO_Pipeline == null)
+                    {
+                        List<string>? nullColumns = new();
+                        if (subscription.Label == null) { nullColumns.Add(nameof(subscription.Label)); }
+                        if (subscription.AzDO_Org == null) { nullColumns.Add(nameof(subscription.AzDO_Org)); }
+                        if (subscription.AzDO_Project == null) { nullColumns.Add(nameof(subscription.AzDO_Project)); }
+                        if (subscription.AzDO_Pipeline == null) { nullColumns.Add(nameof(subscription.AzDO_Pipeline)); }
+                        log.LogError($"BuildPullRequest row for {subscription.PartitionKey} {subscription.RowKey} has null values in column(s): " + string.Join(", ", nullColumns));
+                        continue;
+                    }
+
+                    SubscriptionData subscribed = new SubscriptionData(subscription.Label, subscription.AzDO_Org, subscription.AzDO_Project, subscription.AzDO_Pipeline.Value);
+                    if (subscriptions == null)
+                    {
+                        subscriptions = new List<SubscriptionData>();
+                    }
+                    subscriptions.Add(subscribed);
+                }
             }
             catch (RequestFailedException ex) when (ex.Status == 404)
             {
-                subscription = null;
+                subscriptions = null;
             }
 
-            if (subscription == null)
+            if (subscriptions == null)
             {
-                log.LogInformation($"Repro {owner}/{repo} is not subscribed to any builds");
+                log.LogInformation($"Repro {repo} is not subscribed to any builds");
                 return null;
             }
 
-            if (subscription.Label == null
-                || subscription.AzDO_Org == null
-                || subscription.AzDO_Project == null
-                || subscription.AzDO_Pipeline == null)
-            {
-                List<string>? nullColumns = new();
-                if (subscription.Label == null) { nullColumns.Add(nameof(subscription.Label)); }
-                if (subscription.AzDO_Org == null) { nullColumns.Add(nameof(subscription.AzDO_Org)); }
-                if (subscription.AzDO_Project == null) { nullColumns.Add(nameof(subscription.AzDO_Project)); }
-                if (subscription.AzDO_Pipeline == null) { nullColumns.Add(nameof(subscription.AzDO_Pipeline)); }
-                log.LogError($"BuildPullRequest row for {owner}/{repo} has null values in column(s): " + string.Join(", ", nullColumns));
-                return null;
-            }
-
-            var subscriptionData = new SubscriptionData(subscription.Label, subscription.AzDO_Org, subscription.AzDO_Project, subscription.AzDO_Pipeline.Value);
-            return subscriptionData;
+            return subscriptions;
         }
 
-        private record WebhookData(string Owner, string Repo, string Label, int PullRequest);
+        private record WebhookData(string Repo, string Label, int PullRequest);
         private record SubscriptionData(string Label, string Org, string Project, int Pipeline);
 
         public class SubscriptionTableEntry : ITableEntity
         {
-            public string? PartitionKey { get; set; } // owner
+            /// <summary>The GitHub owner and repo separated by double underscore.</summary>
+            /// <remarks>For example https://github.com/contoso/sample should use 'contoso__sample' (without quotes).</remarks>
+            public string? PartitionKey { get; set; }
+
+            /// <summary>Any arbitrary string</summary>
+            /// <remarks>This allows one repo to have multiple build subscriptions</remarks>
             public string? RowKey { get; set; } // repo
+
+            /// <summary>Flag to enable/disable the build subscription.</summary>
+            /// <remarks>Allows to build to be skipped without deleting the configuration.</remarks>
+            public bool? Enabled { get; set; }
+
+            /// <summary>The label name required to trigger the build.</summary>
             public string? Label { get; set; }
+
+            /// <summary>The Azure DevOps organization where the build will be queued.</summary>
+            /// <remarks>For example, if the Azure DevOps URL is https://dev.azure.com/contoso, then the value for this column must be contoso.</remarks>
             public string? AzDO_Org { get; set; }
+
+            /// <summary>The Azure DevOps project where the build will be queued.</summary>
+            /// <remarks>For example, if the Azure DevOps URL is https://dev.azure.com/contoso/widgets, then the value for this column must be widgets.</remarks>
             public string? AzDO_Project { get; set; }
+
+            /// <summary>The Azure DevOps build definition ID.</summary>
+            /// <remarks>For example, if the Azure DevOps URL is https://dev.azure.com/contoso/widgets/_build?definitionId=1234, then the value for this column must be 1234.</remarks>
             public int? AzDO_Pipeline { get; set; }
 
             // These properties are generated and should not be created when inserting/editing a row in the table.
