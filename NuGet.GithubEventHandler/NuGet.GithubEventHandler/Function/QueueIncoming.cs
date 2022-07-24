@@ -34,15 +34,15 @@ namespace NuGet.GithubEventHandler.Function
             try
             {
                 payload = await JsonSerializer.DeserializeAsync<WebhookPayload>(myBlob);
+                if (payload == null)
+                {
+                    log.LogError("Deserialized payload is null");
+                    return;
+                }
             }
-            catch (JsonException)
+            catch (JsonException exception)
             {
-                payload = null;
-            }
-
-            if (payload == null)
-            {
-                log.LogError("Unable to deserialize " + blobPath);
+                log.LogError(exception, exception.Message);
                 return;
             }
 
