@@ -1,4 +1,5 @@
-﻿using Microsoft.Azure.Functions.Extensions.DependencyInjection;
+﻿using Microsoft.ApplicationInsights.Extensibility;
+using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 using NuGet.GithubEventHandler.Function;
 
@@ -14,6 +15,7 @@ namespace NuGet.GithubEventHandler
             builder.Services.AddSingleton<IEnvironment, Environment>();
             builder.Services.AddSingleton<IAzDOClient, AzDOClient>();
             builder.Services.AddSingleton(new QueueIncoming.Config(BuildPullRequestOnAzDO.ShouldQueue, BuildPullRequestOnAzDO.QueueName));
+            builder.Services.AddSingleton<ITelemetryInitializer, GitHubDeliveryTelemetryInitializer>();
         }
     }
 }
