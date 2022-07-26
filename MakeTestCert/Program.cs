@@ -1,3 +1,6 @@
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
+
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 
@@ -202,16 +205,16 @@ namespace MakeTestCert
 
             Console.WriteLine($"Usage:  {file.Name} [option(s)]");
             Console.WriteLine();
-            Console.WriteLine("  Option                   Description                                          Default");
-            Console.WriteLine("  ------------------------ ---------------------------------------------------- -----------------");
-            Console.WriteLine($"  --key-algorithm, -ka     signature key algorithm (RSA or ECDSA)               {DefaultKeyAlgorithmName}");
-            Console.WriteLine($"  --key-size, -ks          RSA key size in bits                                 {DefaultKeySizeInBits}");
-            Console.WriteLine($"  --named-curve, -nc       ECDSA named curve (nistP256, nistP384, or nistP521)  {DefaultECCurve.Oid.FriendlyName}");
-            Console.WriteLine($"  --not-after, -na         validity period end datetime                         (now)");
-            Console.WriteLine($"  --not-before, -nb        validity period start datetime                       (now + {DefaultValidityPeriodInHours} hours)");
-            Console.WriteLine($"  --password, -p           PFX file password                                    (none)");
-            Console.WriteLine($"  --output-directory, -od  output directory path                                .{Path.DirectorySeparatorChar}");
-            Console.WriteLine($"  --subject, -s            certificate subject                                  {DefaultSubject.Name}");
+            Console.WriteLine("  Option                   Description                     Default");
+            Console.WriteLine("  ------------------------ ------------------------------- -----------------");
+            Console.WriteLine($"  --key-algorithm, -ka     RSA or ECDSA                    {DefaultKeyAlgorithmName}");
+            Console.WriteLine($"  --key-size, -ks          RSA key size in bits            {DefaultKeySizeInBits}");
+            Console.WriteLine($"  --named-curve, -nc       ECDSA named curve               {DefaultECCurve.Oid.FriendlyName}");
+            Console.WriteLine($"  --not-after, -na         validity period end datetime    (now)");
+            Console.WriteLine($"  --not-before, -nb        validity period start datetime  (now + {DefaultValidityPeriodInHours} hours)");
+            Console.WriteLine($"  --password, -p           PFX file password               (none)");
+            Console.WriteLine($"  --output-directory, -od  output directory path           .{Path.DirectorySeparatorChar}");
+            Console.WriteLine($"  --subject, -s            certificate subject             {DefaultSubject.Name}");
             Console.WriteLine();
             Console.WriteLine("Examples:");
             Console.WriteLine();
@@ -219,13 +222,16 @@ namespace MakeTestCert
             Console.WriteLine($"    Creates an {DefaultKeyAlgorithmName} {DefaultKeySizeInBits}-bit certificate valid for {DefaultValidityPeriodInHours} hours from creation time.");
             Console.WriteLine();
             Console.WriteLine($"  {file.Name} -nb \"2022-08-01 08:00\" -na \"2022-08-01 16:00\"");
-            Console.WriteLine($"    Creates an {DefaultKeyAlgorithmName} {DefaultKeySizeInBits}-bit certificate valid for the specified local time period.");
+            Console.WriteLine($"    Creates an {DefaultKeyAlgorithmName} {DefaultKeySizeInBits}-bit certificate valid for the specified local time ");
+            Console.WriteLine("    period.");
             Console.WriteLine();
             Console.WriteLine($"  {file.Name} -od .{Path.DirectorySeparatorChar}certs");
-            Console.WriteLine($"    Creates an {DefaultKeyAlgorithmName} {DefaultKeySizeInBits}-bit certificate valid for {DefaultValidityPeriodInHours} hours in the 'certs' subdirectory.");
+            Console.WriteLine($"    Creates an {DefaultKeyAlgorithmName} {DefaultKeySizeInBits}-bit certificate valid for {DefaultValidityPeriodInHours} hours in the 'certs' ");
+            Console.WriteLine("    subdirectory.");
             Console.WriteLine();
             Console.WriteLine($"  {file.Name} -ks 4096 -s CN=untrusted");
-            Console.WriteLine($"    Creates an {DefaultKeyAlgorithmName} 4096-bit certificate valid for {DefaultValidityPeriodInHours} hours with the subject 'CN=untrusted'.");
+            Console.WriteLine($"    Creates an {DefaultKeyAlgorithmName} 4096-bit certificate valid for {DefaultValidityPeriodInHours} hours with the subject ");
+            Console.WriteLine("    'CN=untrusted'.");
         }
 
         private static void CreateCertificate(
@@ -281,7 +287,13 @@ namespace MakeTestCert
         {
             FileInfo file = new(Path.Combine(directory.FullName, $"{fileName}.pem"));
 
-            File.WriteAllText(file.FullName, certificate.ExportCertificatePem());
+            // ExportCertificatePem() is available starting with .NET 7.
+            using (StreamWriter writer = new(file.FullName))
+            {
+                char[] pem = PemEncoding.Write("CERTIFICATE", certificate.RawData);
+
+                writer.WriteLine(pem);
+            }
 
             Console.WriteLine($"    {file.Name}");
         }
