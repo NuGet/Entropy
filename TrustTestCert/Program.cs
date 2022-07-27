@@ -299,7 +299,6 @@ namespace TrustTestCert
             Console.WriteLine($"    {fileNameWithoutExtension} remove -c ./test.pem -vsd ~/dotnet/sdk/7.0.100");
             Console.WriteLine($"      Removes the certificate from the specified .NET SDK's fallback ");
             Console.WriteLine("      certificate bundle.");
-            Console.WriteLine();
         }
     }
 }
