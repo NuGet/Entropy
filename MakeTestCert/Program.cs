@@ -53,6 +53,7 @@ namespace MakeTestCert
             DirectoryInfo outputDirectory = new(".");
             string? password = null;
             X500DistinguishedName subject = DefaultSubject;
+            ushort validityPeriodInHours = DefaultValidityPeriodInHours;
 
             int argsCount = args.Length;
 
@@ -123,6 +124,11 @@ namespace MakeTestCert
                         subject = new X500DistinguishedName(nextArg);
                         break;
 
+                    case "-vp":
+                    case "--validity-period":
+                        validityPeriodInHours = ushort.Parse(nextArg);
+                        break;
+
                     default:
                         PrintHelp();
 
@@ -130,7 +136,7 @@ namespace MakeTestCert
                 }
             }
 
-            notAfter ??= notBefore.AddHours(DefaultValidityPeriodInHours);
+            notAfter ??= notBefore.AddHours(validityPeriodInHours);
 
             // Ensure the directory exists.
             outputDirectory.Create();
@@ -215,11 +221,15 @@ namespace MakeTestCert
             Console.WriteLine($"  --password, -p           PFX file password               (none)");
             Console.WriteLine($"  --output-directory, -od  output directory path           .{Path.DirectorySeparatorChar}");
             Console.WriteLine($"  --subject, -s            certificate subject             {DefaultSubject.Name}");
+            Console.WriteLine($"  --validity-period, -vp   validity period (in hours)      {DefaultValidityPeriodInHours}");
             Console.WriteLine();
             Console.WriteLine("Examples:");
             Console.WriteLine();
             Console.WriteLine($"  {file.Name}");
             Console.WriteLine($"    Creates an {DefaultKeyAlgorithmName} {DefaultKeySizeInBits}-bit certificate valid for {DefaultValidityPeriodInHours} hours from creation time.");
+            Console.WriteLine();
+            Console.WriteLine($"  {file.Name} -vp 8");
+            Console.WriteLine($"    Creates an {DefaultKeyAlgorithmName} {DefaultKeySizeInBits}-bit certificate valid for 8 hours from creation time.");
             Console.WriteLine();
             Console.WriteLine($"  {file.Name} -nb \"2022-08-01 08:00\" -na \"2022-08-01 16:00\"");
             Console.WriteLine($"    Creates an {DefaultKeyAlgorithmName} {DefaultKeySizeInBits}-bit certificate valid for the specified local time ");
