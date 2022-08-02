@@ -62,6 +62,7 @@ namespace GithubIssueTagger.Reports.CiInitiative
                 {
                     if (StringComparer.OrdinalIgnoreCase.Equals("Resolution:WontFix", label.Name)
                         || StringComparer.OrdinalIgnoreCase.Equals("Resolution:Duplicate", label.Name)
+                        || StringComparer.OrdinalIgnoreCase.Equals("Resolution:NotRepro", label.Name)
                         || StringComparer.OrdinalIgnoreCase.Equals("Epic", label.Name))
                     {
                         return false;
