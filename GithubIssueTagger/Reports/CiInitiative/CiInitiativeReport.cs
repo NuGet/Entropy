@@ -119,7 +119,7 @@ namespace GithubIssueTagger.Reports.CiInitiative
 
         private class CiInitiativeCommandFactory : ICommandFactory
         {
-            public Command CreateCommand(Type type, GitHubClientBinder clientBinder)
+            public Command CreateCommand(Type type, GitHubPatBinder patBinder)
             {
                 var command = new Command("CiInitiative");
                 command.Description = "Find completed CI Initiative work.";
@@ -136,16 +136,16 @@ namespace GithubIssueTagger.Reports.CiInitiative
                 output.SetDefaultValue(OutputFormat.Console);
                 command.AddOption(output);
 
-                command.SetHandler<GitHubClient, string, OutputFormat>(RunAsync,
-                    clientBinder, sprint, output);
+                command.SetHandler<GitHubPat, string, OutputFormat>(RunAsync,
+                    patBinder, sprint, output);
 
                 return command;
             }
 
-            public async Task RunAsync(GitHubClient client, string sprint, OutputFormat outputFormat)
+            public async Task RunAsync(GitHubPat pat, string sprint, OutputFormat outputFormat)
             {
                 var serviceProvider = new ServiceCollection()
-                    .AddGithubIssueTagger(client)
+                    .AddGithubIssueTagger(pat)
                     .BuildServiceProvider();
 
                 var scopeFactory = serviceProvider.GetRequiredService<IServiceScopeFactory>();

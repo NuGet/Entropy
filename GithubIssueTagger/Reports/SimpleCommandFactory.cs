@@ -7,14 +7,14 @@ namespace GithubIssueTagger.Reports
 {
     internal class SimpleCommandFactory : ICommandFactory
     {
-        public Command CreateCommand(Type type, GitHubClientBinder clientBinder)
+        public Command CreateCommand(Type type, GitHubPatBinder patBinder)
         {
             var command = new Command(type.Name);
 
-            command.SetHandler(async (GitHubClient client) =>
+            command.SetHandler(async (GitHubPat pat) =>
             {
                 var serviceProvider = new ServiceCollection()
-                  .AddGithubIssueTagger(client)
+                  .AddGithubIssueTagger(pat)
                   .BuildServiceProvider();
 
                 var scopeFactory = serviceProvider.GetRequiredService<IServiceScopeFactory>();
@@ -24,7 +24,7 @@ namespace GithubIssueTagger.Reports
                     await report.RunAsync();
                 }
             },
-            clientBinder);
+            patBinder);
 
             return command;
         }
