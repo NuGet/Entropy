@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.30128.36
+# Visual Studio Version 17
+VisualStudioVersion = 17.3.32728.150
 MinimumVisualStudioVersion = 15.0.26124.0
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "find-buids-in-sprint", "find-buids-in-sprint\find-buids-in-sprint.csproj", "{77967AEE-1BE6-4424-AB78-27484B0FF578}"
 EndProject
@@ -15,7 +15,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ci-failure-analysis", "ci-f
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "find-incomplete-tests", "find-incomplete-tests\find-incomplete-tests.csproj", "{107574C5-102F-4511-A56B-F47B4B82A3C9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetworkManager", "NetworkManager\NetworkManager.csproj", "{E9934781-5FE8-4F16-8318-9DADE60C39F0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NetworkManager", "NetworkManager\NetworkManager.csproj", "{E9934781-5FE8-4F16-8318-9DADE60C39F0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ci-testfailure-analyzer", "ci-testfailure-analyzer\ci-testfailure-analyzer.csproj", "{C6075BFA-8D13-4DE2-BDED-FA927429E473}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +41,10 @@ Global
 		{E9934781-5FE8-4F16-8318-9DADE60C39F0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E9934781-5FE8-4F16-8318-9DADE60C39F0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E9934781-5FE8-4F16-8318-9DADE60C39F0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C6075BFA-8D13-4DE2-BDED-FA927429E473}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C6075BFA-8D13-4DE2-BDED-FA927429E473}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C6075BFA-8D13-4DE2-BDED-FA927429E473}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C6075BFA-8D13-4DE2-BDED-FA927429E473}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
