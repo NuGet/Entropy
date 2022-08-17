@@ -138,23 +138,24 @@ namespace ci_testfailure_analyzer
                   });
             }
 
-            List<(int testResultId, int testRunId)> failedTestIds = new();
+            List<(int testResultId, int testRunId, int pipelineId)> failedTestIds = new();
             for (int i = 0; i < testFailures.Count; i++)
             {
-                failedTestIds.AddRange(testFailures[i].dataProviders.MsVssTestWebTestTabUnifiedPipelineSummaryDataProvider.resultsAnalysis.testFailuresAnalysis.newFailures.testResults.Select(x => (x.testResultId, x.testRunId)));
-                failedTestIds.AddRange(testFailures[i].dataProviders.MsVssTestWebTestTabUnifiedPipelineSummaryDataProvider.resultsAnalysis.testFailuresAnalysis.existingFailures.testResults.Select(x => (x.testResultId, x.testRunId)));
+                failedTestIds.AddRange(testFailures[i].dataProviders.MsVssTestWebTestTabUnifiedPipelineSummaryDataProvider.resultsAnalysis.testFailuresAnalysis.newFailures.testResults.Select(x => (x.testResultId, x.testRunId, testFailures[i].dataProviders.MsVssTestWebTestTabUnifiedPipelineSummaryDataProvider.currentContext.pipelineId)));
+                failedTestIds.AddRange(testFailures[i].dataProviders.MsVssTestWebTestTabUnifiedPipelineSummaryDataProvider.resultsAnalysis.testFailuresAnalysis.existingFailures.testResults.Select(x => (x.testResultId, x.testRunId, testFailures[i].dataProviders.MsVssTestWebTestTabUnifiedPipelineSummaryDataProvider.currentContext.pipelineId)));
             }
 
             return await GetAllTestResultsAsync(failedTestIds, httpClient);
         }
 
-        private static async Task<List<CsvRow>> GetAllTestResultsAsync(List<(int, int)> failedTestIds, HttpClient httpClient)
+        private static async Task<List<CsvRow>> GetAllTestResultsAsync(List<(int, int, int)> failedTestIds, HttpClient httpClient)
         {
-            List<string> results = new();
+            List<Result> results = new();
+            HashSet<int> protocolTestBuild = new();
             httpClient.DefaultRequestHeaders.TryAddWithoutValidation("Accept", "application/json;api-version=5.2-preview.1;excludeUrls=true;enumsAsNumbers=true;msDateFormat=true;noArrayWrap=true");
 
             List<string> tests = new();
-            foreach ((int testResultId, int testRunId) failedTest in failedTestIds)
+            foreach ((int testResultId, int testRunId, int pipelineId) failedTest in failedTestIds)
             {
                 string test = @"{
                 ""id"":" + failedTest.testResultId + @",
@@ -167,10 +168,17 @@ namespace ci_testfailure_analyzer
                 tests.Add(test);
 
                 // There is limit only 200 tests can be quered once.
-                if (tests.Count == 200)
+                if (tests.Count == 1)
                 {
-                    results.AddRange(await GetBatchedTestResultsAsync(tests, httpClient));
-
+                    var testDetails = await GetBatchedTestResultsAsync(tests, httpClient);
+                    results.AddRange(testDetails);
+                    foreach (Result testDetail in testDetails)
+                    {
+                        if (testDetail.AutomatedTestName == "NuGet.Protocol.Tests.ServiceIndexResourceV3ProviderTests.Query_For_Resource_ReturnAllOfSameTypeVersion")
+                        {
+                            protocolTestBuild.Add(failedTest.pipelineId);
+                        }
+                    }
                     tests.Clear();
                 }
             }
@@ -180,13 +188,13 @@ namespace ci_testfailure_analyzer
                 results.AddRange(await GetBatchedTestResultsAsync(tests, httpClient));
             }
 
-            return results.GroupBy(n => n)
+            return results.Select(t => t.AutomatedTestName).GroupBy(n => n)
                             .Select(c => new CsvRow { TestName = c.Key, Count = c.Count() }).OrderByDescending(r => r.Count).ToList();
         }
 
-        private static async Task<List<string>> GetBatchedTestResultsAsync(List<string> tests, HttpClient httpClient)
+        private static async Task<List<Result>> GetBatchedTestResultsAsync(List<string> tests, HttpClient httpClient)
         {
-            List<string> results = new();
+            List<Result> results = new();
             string testResultsUrl = "https://devdiv.vstmr.visualstudio.com/DevDiv/_apis/testresults/results";
 
             // Encountered this issue: https://stackoverflow.com/q/10679214
@@ -230,9 +238,7 @@ namespace ci_testfailure_analyzer
                           var content = await res.Content.ReadAsStringAsync();
                           TestResults testResults = JsonConvert.DeserializeObject<Models.AzDO.TestResults>(content);
 
-                          List<string> allFailedTests = testResults.Results.Select(t => t.TestCaseTitle).ToList();
-
-                          results.AddRange(allFailedTests);
+                          results.AddRange(testResults.Results);
                       }
                   });
             }
