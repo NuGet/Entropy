@@ -45,6 +45,7 @@ namespace ResxComment
             // Create the file
             using ResXResourceWriter resxWriter = new(writerOut);
             resxReader.UseResXDataNodes = true;
+            int localizedEntries = 0;
             foreach (DictionaryEntry entry in resxReader)
             {
                 if (entry.Key is string entryName)
@@ -58,8 +59,8 @@ namespace ResxComment
 
                         if (LangSuffixes.Contains(parts[^1])) // last element
                         {
+                            localizedEntries++;
                             string entryWithoutPrefix = entryName[..entryName.LastIndexOf('_')]; // 0 to last index
-                            Console.Error.WriteLine()
                             entriesToLookup.Add(entryWithoutPrefix);
                             resxNode.Comment = "{Locked}";
                         }
@@ -96,6 +97,8 @@ namespace ResxComment
                     }
                 }
             }
+
+            Console.Error.WriteLine($"All resources: {allEntries.Count()}; Unique resources: {entriesToLookup.Count()}; Three letter localized resources: {localizedEntries}; Three-letter-Localized ratio: {Convert.ToDouble(localizedEntries) / allEntries.Count()}");
         }
     }
 }
