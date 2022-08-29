@@ -4,6 +4,13 @@ using System.Resources;
 
 namespace ResxComment
 {
+    internal enum RunningMode
+    {
+        Report,
+        Remove,
+        Comment,
+    }
+
     internal class Program
     {
         static HashSet<String> LangSuffixes = new(){ "chs", "cht", "csy", "deu", "esp", "fra", "ita", "jpn", "kor", "plk", "ptb", "rus", "trk" };
@@ -15,17 +22,23 @@ namespace ResxComment
 
             var optOutput = new Option<FileInfo>("-o", "output file");
 
+            var optMode = new Option<RunningMode>(name: "-m", description: "Running Mode", getDefaultValue: () => RunningMode.Report);
+
             var rootCmd = new RootCommand(".resx commenter");
 
             rootCmd.Add(optInput);
             rootCmd.Add(optOutput);
+            rootCmd.Add(optMode);
 
-            rootCmd.SetHandler(Run, optInput, optOutput);
+            rootCmd.SetHandler(Run, optInput, optOutput, optMode);
 
             rootCmd.Invoke(args);
         }
 
-        static void Run(FileInfo resxFile, FileInfo outputFile)
+
+
+
+        static void Run(FileInfo resxFile, FileInfo outputFile, RunningMode mode)
         {
             HashSet<string> entriesToLookup = new();
             HashSet<string> allEntries = new();
@@ -46,13 +59,15 @@ namespace ResxComment
             using ResXResourceWriter resxWriter = new(writerOut);
             resxReader.UseResXDataNodes = true;
             int localizedEntries = 0;
+            bool isThreeLetterLocalizedResource = false;
             foreach (DictionaryEntry entry in resxReader)
             {
                 if (entry.Key is string entryName)
                 {
                     allEntries.Add(entryName);
                     var resxNode = entry.Value as ResXDataNode ?? throw new ArgumentNullException($"null entry {entryName}");
-
+                    isThreeLetterLocalizedResource = false;
+                    string entryWithoutPrefix = string.Empty;
                     if (entryName.Contains('_') && entryName.IndexOf('_') > 0)
                     {
                         string[] parts = entryName.Split('_');
@@ -60,17 +75,48 @@ namespace ResxComment
                         if (LangSuffixes.Contains(parts[^1])) // last element
                         {
                             localizedEntries++;
-                            string entryWithoutPrefix = entryName[..entryName.LastIndexOf('_')]; // 0 to last index
+                            isThreeLetterLocalizedResource = true;
+                            entryWithoutPrefix = entryName[..entryName.LastIndexOf('_')]; // 0 to last index
                             entriesToLookup.Add(entryWithoutPrefix);
-                            resxNode.Comment = "{Locked}";
+
+                            switch (mode)
+                            {
+                                case RunningMode.Comment:
+                                    resxNode.Comment = "{Locked}";
+                                    break;
+                            }
+
+                        }
+                        else // it's a not three-letter suffixed string, add to collection
+                        {
+                            resxWriter.AddResource(resxNode);
+                            entriesToLookup.Add(entryName);
                         }
                     }
                     else
                     {
+                        resxWriter.AddResource(resxNode);
                         entriesToLookup.Add(entryName);
                     }
 
-                    resxWriter.AddResource(resxNode);
+                    switch (mode)
+                    {
+                        case RunningMode.Report:
+                        case RunningMode.Comment:
+                            resxWriter.AddResource(resxNode);
+                            break;
+
+                        case RunningMode.Remove:
+                            if (isThreeLetterLocalizedResource)
+                            {
+                                if (!allEntries.Contains(entryWithoutPrefix))
+                                {
+                                    Console.Error.WriteLine($"Warning: String resource not found: {entryWithoutPrefix}. Localized three letter string will not be removed: {entryName}");
+                                    resxWriter.AddResource(resxNode);
+                                }
+                            }
+                            break;
+                    }
                 }
                 else
                 {
