@@ -44,6 +44,16 @@
             content,
             createdAt
           }
+        },
+        labels(first: 100) {
+          totalCount,
+          pageInfo {
+            hasNextPage,
+            endCursor
+          },
+          nodes {
+            name
+          }
         }
       }
     }

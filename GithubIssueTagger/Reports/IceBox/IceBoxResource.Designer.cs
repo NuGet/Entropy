@@ -61,17 +61,55 @@ namespace GithubIssueTagger.Reports.IceBox {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to query {
-        ///  repository(owner: $owner, repo: $repo) {
-        ///    issues (first: 100, after: $after, labels: [$label]) {
-        ///      totalCount
-        ///    }
-        ///  }
-        ///}.
+        ///   Looks up a localized string similar to query($owner: String!,
+        ///      $repo: String!,
+        ///      $after: String,
+        ///      $label: String!,
+        ///      $timelineCount: Int!,
+        ///      $reactionCount: Int!) { 
+        ///  repository(owner: $owner, name:$repo){
+        ///    issues(first:100, after: $after, labels: [$label]){
+        ///      totalCount,
+        ///      pageInfo {
+        ///        hasNextPage,
+        ///        endCursor
+        ///      },
+        ///      nodes {
+        ///        id,
+        ///        number,
+        ///        title,
+        ///        timelineItems(itemTypes: [LABELED_EVENT], last: $timelineCount) {
+        ///          totalCount,
+        ///          p [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string GetIssues {
             get {
                 return ResourceManager.GetString("GetIssues", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to query($issue: ID!) {
+        ///    node (id: $issue) {
+        ///        ... on Issue {
+        ///            timelineItems(first: 100, itemTypes: [ LABELED_EVENT ]) {
+        ///                totalCount,
+        ///                pageInfo {
+        ///                    hasNextPage,
+        ///                    endCursor
+        ///                }
+        ///                nodes {
+        ///                    ... on LabeledEvent {
+        ///                        createdAt,
+        ///                        label {
+        ///                            name
+        ///                        }
+        ///                    }
+        ///         [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string GetLabeledEvents {
+            get {
+                return ResourceManager.GetString("GetLabeledEvents", resourceCulture);
             }
         }
     }

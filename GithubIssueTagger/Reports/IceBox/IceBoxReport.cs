@@ -1,4 +1,5 @@
 ﻿using GithubIssueTagger.GraphQL;
+using GithubIssueTagger.Reports.IceBox.Models;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
@@ -25,15 +26,33 @@ namespace GithubIssueTagger.Reports.IceBox
             return Task.CompletedTask;
         }
 
-        public async Task RunAsync(string owner, string repo, string label, int upvoteCount)
+        public async Task RunAsync(string owner, string repo, string label, int upvoteCount, string? add)
         {
-            await foreach (GetIssues.IssuesModel issue in GetIssuesAsync(owner, repo, label, upvoteCount))
+            await foreach (GetIssuesResult.IssuesModel issue in GetIssuesAsync(owner, repo, label, upvoteCount))
             {
-                if (!TryGetLastLabelTime(issue, label, out DateTime? labelAdded))
+                if (add != null)
                 {
-                    // TODO: If we reach here, we need to do a different GraphQL query to get more events for this issue to find the last time the label was added.
-                    Console.WriteLine("##vso[task.logissue type=warning]Unsupported scenario: issue " + issue.Number + " did not find label in latest events");
-                    continue;
+                    if (issue.Labels.Nodes.Any(l => l.Name == add))
+                    {
+                        // action label already applied, skip
+                        continue;
+                    }
+                    else if (issue.Labels.PageInfo.HasNextPage)
+                    {
+                        // TODO: Handle when issue has more than 100 labels
+                        Console.WriteLine("##vso[task.logissue type=warning]Unsupported scenario: issue " + issue.Number + " has more than 100 labels");
+                    }
+                }
+
+                if (!TryGetLastLabelTime(issue.TimelineItems.Nodes, label, out DateTime? labelAdded))
+                {
+                    labelAdded = await GetLastLabelTimeAsync(issue.Id, label);
+                    if (labelAdded == null)
+                    {
+                        // TODO: If we reach here, we need to do a different GraphQL query to get more events for this issue to find the last time the label was added.
+                        Console.WriteLine("##vso[task.logissue type=warning]Unsupported scenario: issue " + issue.Number + " did not find label in latest events");
+                        continue;
+                    }
                 }
 
                 if (HasEnoughPositiveReactions(issue, labelAdded.Value, upvoteCount))
@@ -43,10 +62,10 @@ namespace GithubIssueTagger.Reports.IceBox
             }
         }
 
-        private async IAsyncEnumerable<GetIssues.IssuesModel> GetIssuesAsync(string owner, string repo, string label, int upvotes)
+        private async IAsyncEnumerable<GetIssuesResult.IssuesModel> GetIssuesAsync(string owner, string repo, string label, int upvotes)
         {
             // See GitHub docs on resource/query limits. Increasing the counts has a multiplactive effect towards the hourly query limit.
-            Dictionary<string, object?>? variables = new Dictionary<string, object?>()
+            Dictionary<string, object?> variables = new Dictionary<string, object?>()
             {
                 ["owner"] = owner,
                 ["repo"] = repo,
@@ -63,10 +82,10 @@ namespace GithubIssueTagger.Reports.IceBox
 
             while (variables != null)
             {
-                GraphQLResponse<GetIssues>? response = await _client.SendAsync<GetIssues>(request);
+                GraphQLResponse<GetIssuesResult>? response = await _client.SendAsync<GetIssuesResult>(request);
                 if (response?.Data?.Repository.Issues.Nodes != null)
                 {
-                    foreach (GetIssues.IssuesModel issue in response.Data.Repository.Issues.Nodes)
+                    foreach (GetIssuesResult.IssuesModel issue in response.Data.Repository.Issues.Nodes)
                     {
                         yield return issue;
                     }
@@ -84,9 +103,9 @@ namespace GithubIssueTagger.Reports.IceBox
             }
         }
 
-        private bool TryGetLastLabelTime(GetIssues.IssuesModel issue, string label, [NotNullWhen(true)] out DateTime? labelAdded)
+        private static bool TryGetLastLabelTime(IReadOnlyList<LabeledEvent>? labeledEvents, string label, [NotNullWhen(true)] out DateTime? labelAdded)
         {
-            IEnumerable<DateTime>? enumerable = issue?.TimelineItems?.Nodes
+            IEnumerable<DateTime>? enumerable = labeledEvents
                 ?.Where(e => string.Equals(label, e?.Label?.Name, StringComparison.OrdinalIgnoreCase))
                 ?.Select(e => e.CreatedAt);
             if (enumerable == null || !enumerable.Any())
@@ -101,7 +120,48 @@ namespace GithubIssueTagger.Reports.IceBox
             }
         }
 
-        private bool HasEnoughPositiveReactions(GetIssues.IssuesModel issue, DateTime after, int upvotes)
+        private async Task<DateTime?> GetLastLabelTimeAsync(string issueId, string label)
+        {
+            Dictionary<string, object?> variables = new Dictionary<string, object?>()
+            {
+                ["issue"] = issueId
+            };
+
+            var request = new GraphQLRequest(IceBoxResource.GetLabeledEvents)
+            {
+                Variables = variables
+            };
+
+            GraphQLResponse<GetLabeledEventsResult>? response = await _client.SendAsync<GetLabeledEventsResult>(request);
+
+            if (response == null)
+            {
+                return null;
+            }
+
+            if (response?.Data == null)
+            {
+                Console.WriteLine("GetLabeledEvents query failed:");
+                if (response?.Errors != null)
+                {
+                    foreach (var error in response.Errors)
+                    {
+                        Console.WriteLine(error.Message);
+                    }
+                }
+                return null;
+            }
+
+            IReadOnlyList<LabeledEvent>? labeledEvents = response.Data?.Node.TimelineItems.Nodes;
+            if (!TryGetLastLabelTime(labeledEvents, label, out DateTime? labeledAdded))
+            {
+                return null;
+            }
+
+            return labeledAdded;
+        }
+
+        private static bool HasEnoughPositiveReactions(GetIssuesResult.IssuesModel issue, DateTime after, int upvotes)
         {
             if (!issue.Reactions.PageInfo.HasNextPage)
             {
@@ -127,12 +187,12 @@ namespace GithubIssueTagger.Reports.IceBox
                     }
 
                     // TODO: Need to get more reactions from GraphQL to check if upvote threshold met
-                    Console.WriteLine("##vso[task.logissue type=warning]Unsupported scenario: issue " + issue?.Number + " needs to check more reactions for theshold check.");
+                    Console.WriteLine("##vso[task.logissue type=warning]Unsupported scenario: issue " + issue?.Number + " needs to check more reactions for threshold check.");
                     return false;
                 }
             }
 
-            static int GetCustomerUpvoteCount(IEnumerable<GetIssues.Reaction> reactions)
+            static int GetCustomerUpvoteCount(IEnumerable<Reaction> reactions)
             {
                 HashSet<string> customers = new HashSet<string>();
                 foreach (var reaction in reactions)
@@ -192,12 +252,18 @@ namespace GithubIssueTagger.Reports.IceBox
                 upvotesOption.SetDefaultValue(5);
                 command.Add(upvotesOption);
 
+                var addOption = new Option<string>("--add");
+                addOption.AddAlias("-a");
+                addOption.Description = "Label to add on issues which meet or exceed the upvote threshold. When not specified, no action is taken.";
+                command.Add(addOption);
+
                 command.SetHandler(async
                     (GitHubPat pat,
                     string owner,
                     string repo, 
                     string label, 
-                    int upvotes) =>
+                    int upvotes,
+                    string add) =>
                 {
                     var serviceProvider = new ServiceCollection()
                         .AddGithubIssueTagger(pat)
@@ -207,9 +273,9 @@ namespace GithubIssueTagger.Reports.IceBox
                     using (scopeFactory.CreateScope())
                     {
                         var report = serviceProvider.GetRequiredService<IceBoxReport>();
-                        await report.RunAsync(owner, repo, label, upvotes);
+                        await report.RunAsync(owner, repo, label, upvotes, add);
                     }
-                }, patBinder, ownerOption, repoOption, labelOption, upvotesOption);
+                }, patBinder, ownerOption, repoOption, labelOption, upvotesOption, addOption);
 
                 return command;
             }
