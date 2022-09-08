@@ -14,6 +14,7 @@ namespace GithubIssueTagger.Reports.IceBox
     internal class IceBoxReport : IReport
     {
         private readonly GitHubGraphQLClient _client;
+        private string? _addLabelId;
 
         public IceBoxReport(GitHubGraphQLClient client)
         {
@@ -34,6 +35,12 @@ namespace GithubIssueTagger.Reports.IceBox
                 {
                     if (issue.Labels.Nodes.Any(l => l.Name == add))
                     {
+                        if (_addLabelId == null)
+                        {
+                            Label addLabel = issue.Labels.Nodes.First(l => l.Name == add);
+                            _addLabelId = addLabel.Id;
+                        }
+
                         // action label already applied, skip
                         continue;
                     }
@@ -58,6 +65,15 @@ namespace GithubIssueTagger.Reports.IceBox
                 if (HasEnoughPositiveReactions(issue, labelAdded.Value, upvoteCount))
                 {
                     Console.WriteLine($"Issue {issue.Number} has enough upvotes");
+                    if (add != null)
+                    {
+                        if (_addLabelId == null)
+                        {
+                            _addLabelId = await GetLabelIdAsync(owner, repo, add);
+                        }
+
+                        await AddLabelToIssueAsync(issue.Id, _addLabelId);
+                    }
                 }
             }
         }
@@ -65,7 +81,7 @@ namespace GithubIssueTagger.Reports.IceBox
         private async IAsyncEnumerable<GetIssuesResult.IssuesModel> GetIssuesAsync(string owner, string repo, string label, int upvotes)
         {
             // See GitHub docs on resource/query limits. Increasing the counts has a multiplactive effect towards the hourly query limit.
-            Dictionary<string, object?> variables = new Dictionary<string, object?>()
+            Dictionary<string, object?>? variables = new Dictionary<string, object?>()
             {
                 ["owner"] = owner,
                 ["repo"] = repo,
@@ -217,6 +233,57 @@ namespace GithubIssueTagger.Reports.IceBox
                 else
                 {
                     return false;
+                }
+            }
+        }
+
+        private async Task<string?> GetLabelIdAsync(string owner, string repo, string label)
+        {
+            var variables = new Dictionary<string, object?>()
+            {
+                ["owner"] = owner,
+                ["repo"] = repo,
+                ["label"] = label
+            };
+
+            var request = new GraphQLRequest(IceBoxResource.GetLabelId)
+            {
+                Variables = variables
+            };
+
+            GraphQLResponse<GetLabelIdResult>? response = await _client.SendAsync<GetLabelIdResult>(request);
+
+            string? id = response?.Data?.Repository?.Label?.Id;
+
+            if (id == null)
+            {
+                Console.WriteLine("##vso[task.logissue type=warning]Unsupported scenario: GetLabelIdAsync.");
+            }
+
+            return id;
+        }
+
+        private async Task AddLabelToIssueAsync(string id, string? addLabelId)
+        {
+            var variables = new Dictionary<string, object?>()
+            {
+                ["issue"] = id,
+                ["label"] = addLabelId
+            };
+
+            var request = new GraphQLRequest(IceBoxResource.AddLabelToIssue)
+            {
+                Variables = variables
+            };
+
+            var response = await _client.SendAsync<object>(request);
+
+            if (response?.Errors?.Count > 0)
+            {
+                Console.WriteLine("##vso[task.logissue type=warning]Unsupported scenario: AddLabelToIssue failed.");
+                foreach (var error in response.Errors)
+                {
+                    Console.WriteLine(error.Message);
                 }
             }
         }

@@ -25,7 +25,8 @@
             __typename,
             ... on LabeledEvent {
               label {
-                name
+                name,
+                id
               },
               createdAt
             }
@@ -52,7 +53,8 @@
             endCursor
           },
           nodes {
-            name
+            name,
+            id
           }
         }
       }

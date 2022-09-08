@@ -11,7 +11,8 @@ query($issue: ID!) {
                     ... on LabeledEvent {
                         createdAt,
                         label {
-                            name
+                            name,
+                            id
                         }
                     }
                 }

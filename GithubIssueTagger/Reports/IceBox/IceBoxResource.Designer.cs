@@ -61,6 +61,20 @@ namespace GithubIssueTagger.Reports.IceBox {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to mutation($issue:ID!, $label:ID!) {
+        ///  addLabelsToLabelable(input:{labelableId: $issue, labelIds: [ $label ]}) {
+        ///    __typename
+        ///  }
+        ///}
+        ///.
+        /// </summary>
+        internal static string AddLabelToIssue {
+            get {
+                return ResourceManager.GetString("AddLabelToIssue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to query($owner: String!,
         ///      $repo: String!,
         ///      $after: String,
@@ -92,7 +106,7 @@ namespace GithubIssueTagger.Reports.IceBox {
         ///   Looks up a localized string similar to query($issue: ID!) {
         ///    node (id: $issue) {
         ///        ... on Issue {
-        ///            timelineItems(first: 100, itemTypes: [ LABELED_EVENT ]) {
+        ///            timelineItems(last: 100, itemTypes: [ LABELED_EVENT ]) {
         ///                totalCount,
         ///                pageInfo {
         ///                    hasNextPage,
@@ -105,11 +119,27 @@ namespace GithubIssueTagger.Reports.IceBox {
         ///                            name
         ///                        }
         ///                    }
-        ///         [rest of string was truncated]&quot;;.
+        ///          [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string GetLabeledEvents {
             get {
                 return ResourceManager.GetString("GetLabeledEvents", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to query($owner: String!, $repo: String!, $label: String!) {
+        ///  repository(owner: $owner, name: $repo) {
+        ///    label(name: $label) {
+        ///      id
+        ///    }
+        ///  }
+        ///}
+        ///.
+        /// </summary>
+        internal static string GetLabelId {
+            get {
+                return ResourceManager.GetString("GetLabelId", resourceCulture);
             }
         }
     }
