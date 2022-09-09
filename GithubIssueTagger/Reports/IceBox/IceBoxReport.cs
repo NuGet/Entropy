@@ -99,6 +99,12 @@ namespace GithubIssueTagger.Reports.IceBox
             while (variables != null)
             {
                 GraphQLResponse<GetIssuesResult>? response = await _client.SendAsync<GetIssuesResult>(request);
+
+                if (response?.Errors?.Count > 0)
+                {
+                    WriteGraphQlErrors(response.Errors);
+                }
+
                 if (response?.Data?.Repository.Issues.Nodes != null)
                 {
                     foreach (GetIssuesResult.IssuesModel issue in response.Data.Repository.Issues.Nodes)
@@ -153,6 +159,11 @@ namespace GithubIssueTagger.Reports.IceBox
             if (response == null)
             {
                 return null;
+            }
+
+            if (response?.Errors?.Count > 0)
+            {
+                WriteGraphQlErrors(response.Errors);
             }
 
             if (response?.Data == null)
@@ -252,12 +263,16 @@ namespace GithubIssueTagger.Reports.IceBox
             };
 
             GraphQLResponse<GetLabelIdResult>? response = await _client.SendAsync<GetLabelIdResult>(request);
+            if (response?.Errors?.Count > 0)
+            {
+                WriteGraphQlErrors(response.Errors);
+            }
 
             string? id = response?.Data?.Repository?.Label?.Id;
 
             if (id == null)
             {
-                WriteGitHubActionsWarning("Unsupported scenario: GetLabelIdAsync.");
+                WriteGitHubActionsWarning("Unsupported scenario: GetLabelIdAsync failed.");
             }
 
             return id;
@@ -281,16 +296,29 @@ namespace GithubIssueTagger.Reports.IceBox
             if (response?.Errors?.Count > 0)
             {
                 WriteGitHubActionsWarning("Unsupported scenario: AddLabelToIssue failed.");
-                foreach (var error in response.Errors)
-                {
-                    Console.WriteLine(error.Message);
-                }
+                WriteGraphQlErrors(response.Errors);
             }
         }
 
         private static void WriteGitHubActionsWarning(string message)
         {
             Console.WriteLine("::warning ::" + message);
+        }
+
+        private static void WriteGraphQlErrors(IReadOnlyList<GraphQLResponseError> errors)
+        {
+            foreach (var error in errors)
+            {
+                if (error.Message!= null)
+                {
+                    WriteGitHubActionsError(error.Message);
+                }
+            }
+        }
+
+        private static void WriteGitHubActionsError(string message)
+        {
+            Console.WriteLine("::error ::" + message);
         }
 
         private class IceBoxReportCommandFactory : ICommandFactory
