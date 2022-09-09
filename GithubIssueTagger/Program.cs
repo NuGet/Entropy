@@ -14,15 +14,15 @@ var patOption = new Option<string>("--pat");
 patOption.Description = "GitHub Personal Access Token to make API calls with.";
 patOption.AddAlias("-p");
 
-var githubClientBinder = new GitHubClientBinder(patOption);
+var patBinder = new GitHubPatBinder(patOption);
 
 var interactiveCommand = new Command(
 "--interactive",
 "Run in interactive mode.");
 interactiveCommand.AddAlias("-i");
 interactiveCommand.SetHandler(
-    async (GitHubClient client) => await RunInteractiveModeAsync(client, allReportTypes),
-    githubClientBinder);
+    async (GitHubPat pat) => await RunInteractiveModeAsync(pat, allReportTypes),
+    patBinder);
 
 var rootCommand = new RootCommand
 {
@@ -37,7 +37,7 @@ var simpleCommandFactory = new SimpleCommandFactory();
 foreach (var reportType in allReportTypes)
 {
     ICommandFactory commandFactory = GetCommandFactory(reportType) ?? simpleCommandFactory;
-    var reportCommand = commandFactory.CreateCommand(reportType, githubClientBinder);
+    var reportCommand = commandFactory.CreateCommand(reportType, patBinder);
     rootCommand.AddCommand(reportCommand);
 }
 
@@ -61,10 +61,10 @@ ICommandFactory? GetCommandFactory(Type reportType)
     return commandFactory;
 }
 
-static async Task RunInteractiveModeAsync(GitHubClient client, IReadOnlyList<Type> reportTypes)
+static async Task RunInteractiveModeAsync(GitHubPat pat, IReadOnlyList<Type> reportTypes)
 {
     var serviceProvider = new ServiceCollection()
-        .AddGithubIssueTagger(client)
+        .AddGithubIssueTagger(pat)
         .BuildServiceProvider();
     var scopeFactory = serviceProvider.GetRequiredService<IServiceScopeFactory>();
 

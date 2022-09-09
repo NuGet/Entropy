@@ -1,0 +1,22 @@
+query($issue: ID!) {
+    node (id: $issue) {
+        ... on Issue {
+            timelineItems(last: 100, itemTypes: [ LABELED_EVENT ]) {
+                totalCount,
+                pageInfo {
+                    hasNextPage,
+                    endCursor
+                }
+                nodes {
+                    ... on LabeledEvent {
+                        createdAt,
+                        label {
+                            name,
+                            id
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,5 @@
+﻿mutation($issue:ID!, $label:ID!) {
+  addLabelsToLabelable(input:{labelableId: $issue, labelIds: [ $label ]}) {
+    __typename
+  }
+}

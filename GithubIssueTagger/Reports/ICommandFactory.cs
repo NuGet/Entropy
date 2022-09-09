@@ -10,6 +10,6 @@ namespace GithubIssueTagger.Reports
         /// </summary>
         /// <param name="type">A type that must implement IReport.</param>
         /// <returns>A Command that will be added to the System.CommandLine.RootCommand.</returns>
-        Command CreateCommand(Type type, GitHubClientBinder clientBinder);
+        Command CreateCommand(Type type, GitHubPatBinder clientBinder);
     }
 }

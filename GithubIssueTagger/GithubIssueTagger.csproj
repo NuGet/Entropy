@@ -20,4 +20,19 @@
     <PackageReference Include="System.CommandLine" Version="2.0.0-beta3.22114.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Update="Reports\IceBox\IceBoxResource.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>IceBoxResource.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Reports\IceBox\IceBoxResource.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>IceBoxResource.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+
 </Project>

@@ -7,30 +7,24 @@ using System.Diagnostics;
 
 namespace GithubIssueTagger
 {
-    internal class GitHubClientBinder : BinderBase<GitHubClient>
+    internal class GitHubPatBinder : BinderBase<GitHubPat>
     {
         private readonly Option<string> _patOption;
 
-        public GitHubClientBinder(Option<string> patOption)
+        public GitHubPatBinder(Option<string> patOption)
         {
             _patOption = patOption ?? throw new ArgumentNullException(nameof(patOption));
         }
 
-        protected override GitHubClient GetBoundValue(BindingContext bindingContext)
+        protected override GitHubPat GetBoundValue(BindingContext bindingContext)
         {
-            var client = new GitHubClient(new ProductHeaderValue("nuget-github-issue-tagger"));
-
             string? pat = GetPat(bindingContext);
-            if (pat is not null)
+            var result = new GitHubPat
             {
-                client.Credentials = new Credentials(pat);
-            }
-            else
-            {
-                Console.WriteLine("Warning: Unable to get github token. Making unauthenticated HTTP requests, which has lower request limits and cannot access private repos.");
-            }
+                Value = pat,
+            };
 
-            return client;
+            return result;
         }
 
         private string? GetPat(BindingContext bindingContext)
