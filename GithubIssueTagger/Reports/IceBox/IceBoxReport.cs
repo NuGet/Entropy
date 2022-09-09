@@ -47,7 +47,7 @@ namespace GithubIssueTagger.Reports.IceBox
                     else if (issue.Labels.PageInfo.HasNextPage)
                     {
                         // TODO: Handle when issue has more than 100 labels
-                        Console.WriteLine("##vso[task.logissue type=warning]Unsupported scenario: issue " + issue.Number + " has more than 100 labels");
+                        WriteGitHubActionsWarning("Unsupported scenario: issue " + issue.Number + " has more than 100 labels");
                     }
                 }
 
@@ -57,7 +57,7 @@ namespace GithubIssueTagger.Reports.IceBox
                     if (labelAdded == null)
                     {
                         // TODO: If we reach here, we need to do a different GraphQL query to get more events for this issue to find the last time the label was added.
-                        Console.WriteLine("##vso[task.logissue type=warning]Unsupported scenario: issue " + issue.Number + " did not find label in latest events");
+                        WriteGitHubActionsWarning("Unsupported scenario: issue " + issue.Number + " did not find label in latest events");
                         continue;
                     }
                 }
@@ -203,7 +203,7 @@ namespace GithubIssueTagger.Reports.IceBox
                     }
 
                     // TODO: Need to get more reactions from GraphQL to check if upvote threshold met
-                    Console.WriteLine("##vso[task.logissue type=warning]Unsupported scenario: issue " + issue?.Number + " needs to check more reactions for threshold check.");
+                    WriteGitHubActionsWarning("Unsupported scenario: issue " + issue?.Number + " needs to check more reactions for threshold check.");
                     return false;
                 }
             }
@@ -257,7 +257,7 @@ namespace GithubIssueTagger.Reports.IceBox
 
             if (id == null)
             {
-                Console.WriteLine("##vso[task.logissue type=warning]Unsupported scenario: GetLabelIdAsync.");
+                WriteGitHubActionsWarning("Unsupported scenario: GetLabelIdAsync.");
             }
 
             return id;
@@ -280,12 +280,17 @@ namespace GithubIssueTagger.Reports.IceBox
 
             if (response?.Errors?.Count > 0)
             {
-                Console.WriteLine("##vso[task.logissue type=warning]Unsupported scenario: AddLabelToIssue failed.");
+                WriteGitHubActionsWarning("Unsupported scenario: AddLabelToIssue failed.");
                 foreach (var error in response.Errors)
                 {
                     Console.WriteLine(error.Message);
                 }
             }
+        }
+
+        private static void WriteGitHubActionsWarning(string message)
+        {
+            Console.WriteLine("::warning ::" + message);
         }
 
         private class IceBoxReportCommandFactory : ICommandFactory
