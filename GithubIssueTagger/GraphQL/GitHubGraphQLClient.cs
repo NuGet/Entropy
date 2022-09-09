@@ -38,14 +38,12 @@ namespace GithubIssueTagger.GraphQL
             var rateLimitRemaining = httpResponse.Headers.GetValues("X-RateLimit-Remaining").SingleOrDefault();
             var rateLimitReset = long.Parse(httpResponse.Headers.GetValues("X-RateLimit-Reset").Single());
             var resetTime = DateTime.UnixEpoch.AddSeconds(rateLimitReset);
-            Console.WriteLine($"limit = {rateLimitLimit}, remaining = {rateLimitRemaining}, reset = {resetTime:o}");
+            Console.WriteLine($"GraphQL HTTP rate-limit = {rateLimitLimit}, remaining = {rateLimitRemaining}, reset = {resetTime:o}");
 
             using var stream = await httpResponse.Content.ReadAsStreamAsync();
             GraphQLResponse<T>? response = await JsonSerializer.DeserializeAsync<GraphQLResponse<T>>(stream);
 
             return response;
         }
-
-
     }
 }
