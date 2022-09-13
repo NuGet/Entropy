@@ -6,11 +6,14 @@
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
+    <Description>NuGet team's internal reporting tool for GitHub issues.</Description>
+    <Authors>NuGet Team</Authors>
 
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>GithubIssueTagger</ToolCommandName>
     <PackageId>NuGet.Internal.GithubIssueTagger</PackageId>
     <Version>$([System.DateTime]::Now.ToString('yyyy.MM.dd'))</Version>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>
@@ -18,6 +21,7 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="Octokit" Version="0.51.0" />
     <PackageReference Include="System.CommandLine" Version="2.0.0-beta3.22114.1" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
