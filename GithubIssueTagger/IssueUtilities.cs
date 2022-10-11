@@ -12,7 +12,8 @@ namespace GithubIssueTagger
     {
         public static async Task GetIssuesRankedAsync(GitHubClient client, params string[] labels)
         {
-            var issues = await GetIssuesForLabelsAsync(client, "NuGet", "Home", labels);
+            IList<Issue> issues = await GetIssuesForAnyMatchingLabelsAsync(client, "NuGet", "Home", labels);
+
             var allIssues = new List<IssueRankingModel>(issues.Count);
 
             var internalAliases = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
@@ -42,17 +43,14 @@ namespace GithubIssueTagger
 
             foreach (var issue in issues)
             {
-                var score = await CalculateScoreAsync(issue, client, internalAliases);
+                var (score,upvotes, comments)  = await CalculateScoreAsync(issue, client, internalAliases);
 
-                allIssues.Add(new IssueRankingModel(issue, score));
+                allIssues.Add(new IssueRankingModel(issue, score, upvotes, comments));
             }
 
-            var markdownTable = allIssues.OrderByDescending(e => e.Score).ToMarkdownTable(GetModelMapping());
+            var markdownTable = allIssues.OrderByDescending(e => e.Upvotes).ToMarkdownTable(GetModelMapping());
 
-            Console.WriteLine();
             Console.WriteLine(markdownTable);
-            Console.WriteLine();
-            Console.ReadKey();
 
             static List<Tuple<string, string>> GetModelMapping()
             {
@@ -63,10 +61,15 @@ namespace GithubIssueTagger
                     new Tuple<string, string>("Assignee", "Assignee"),
                     new Tuple<string, string>("Milestone", "Milestone"),
                     new Tuple<string, string>("Score", "Score"),
+                    new Tuple<string, string>("Upvotes", "Upvotes"),
+                    new Tuple<string, string>("Comments", "Comments"),
+                    new Tuple<string, string>("Type", "Type"),
+                    new Tuple<string, string>("Cost", "Cost"),
+                    new Tuple<string, string>("Verdict", "Verdict"),
                 };
             }
 
-            static async Task<double> CalculateScoreAsync(Issue issue, GitHubClient client, HashSet<string> internalAliases)
+            static async Task<(double, int, int)> CalculateScoreAsync(Issue issue, GitHubClient client, HashSet<string> internalAliases)
             {
                 int totalCommentsCount = issue.Comments;
                 int reactionCount = issue.Reactions.TotalCount;
@@ -79,7 +82,9 @@ namespace GithubIssueTagger
 
                 var internalCommentersCount = uniqueCommenterList.Where(e => internalAliases.Contains(e) && !internalAliases.Contains(issue.User.Login)).Count();
 
-                return uniqueCommentersCount + reactionCount - (internalCommentersCount * 0.25) + CaculateExtraCommentImpact(totalCommentsCount, uniqueCommentersCount);
+                return (uniqueCommentersCount + reactionCount - (internalCommentersCount * 0.25) + CaculateExtraCommentImpact(totalCommentsCount, uniqueCommentersCount), 
+                    reactionCount, 
+                    totalCommentsCount);
                 static double CaculateExtraCommentImpact(int totalComments, int uniqueCommenters)
                 {
                     int diff = totalComments - uniqueCommenters;
@@ -149,6 +154,12 @@ namespace GithubIssueTagger
         {
             var issuesForMilestone = await GetAllIssuesAsync(client, org, repo);
             return issuesForMilestone.Where(e => labels.All(label => HasLabel(e, label))).ToList();
+        }
+
+        public static async Task<IList<Issue>> GetIssuesForAnyMatchingLabelsAsync(GitHubClient client, string org, string repo, params string[] labels)
+        {
+            var issuesForMilestone = await GetAllIssuesAsync(client, org, repo);
+            return issuesForMilestone.Where(e => labels.Any(label => HasLabel(e, label))).ToList();
         }
 
         public static async Task<IReadOnlyList<Issue>> GetAllIssuesAsync(GitHubClient client, string org, string repo)
@@ -261,14 +272,23 @@ namespace GithubIssueTagger
         public string Assignee { get; }
         public string Milestone { get; }
         public double Score { get; }
+        public int Upvotes { get; }
+        public double Comments { get; }
+        public string Type { get; }
+        public string Verdict { get; }
+        public string Cost { get; }
 
-        public IssueRankingModel(Issue e, double score)
+
+        public IssueRankingModel(Issue e, double score, int upvotes, int comments)
         {
             Link = e.HtmlUrl;
             Title = e.Title;
             Assignee = string.Join(",", e.Assignees.Select(e => e.Login));
             Milestone = e.Milestone?.Title;
             Score = score;
+            Upvotes = upvotes;
+            Comments = comments;
+            Type = e.Labels.Any(e => e.Name.Equals("Type:Feature")) ? "Feature" : "DCR";
         }
     }
 }
