@@ -80,7 +80,7 @@ namespace GithubIssueTagger.Reports.CiInitiative
                 Since = sprintStart.ToDateTime(TimeOnly.MinValue),
                 State = ItemStateFilter.Closed
             };
-            request.Labels.Add("CI Initiative");
+            request.Labels.Add("Engineering Productivity");
 
             var options = new ApiOptions()
             {
