@@ -10,12 +10,9 @@ namespace GithubIssueTagger
     {
         private const string UserAgent = "nuget-github-issue-tagger";
 
-        public static ServiceCollection AddGithubIssueTagger(this ServiceCollection serviceCollection, GitHubPat pat)
+        public static ServiceCollection AddGithubIssueTagger(this ServiceCollection serviceCollection)
         {
-            serviceCollection.AddSingleton(pat);
             serviceCollection.AddSingleton<QueryCache>();
-            serviceCollection.AddSingleton(GitHubClientFactory);
-            serviceCollection.AddSingleton(GitHubGraphQLClientFactory);
 
             Type reportType = typeof(IReport);
             foreach (Type type in reportType.Assembly.GetTypes())
@@ -25,6 +22,17 @@ namespace GithubIssueTagger
                     serviceCollection.AddSingleton(type);
                 }
             }
+
+            return serviceCollection;
+        }
+
+        public static ServiceCollection AddGithubIssueTagger(this ServiceCollection serviceCollection, GitHubPat pat)
+        {
+            AddGithubIssueTagger(serviceCollection);
+
+            serviceCollection.AddSingleton(pat);
+            serviceCollection.AddSingleton(GitHubClientFactory);
+            serviceCollection.AddSingleton(GitHubGraphQLClientFactory);
 
             return serviceCollection;
         }
