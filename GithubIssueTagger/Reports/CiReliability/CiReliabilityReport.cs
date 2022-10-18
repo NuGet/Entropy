@@ -30,7 +30,7 @@ namespace GithubIssueTagger.Reports.CiReliability
         {
             (DateOnly startOfSprint, DateOnly endOfSprint) = SprintUtilities.GetSprintStartAndEnd(sprintName);
 
-            string kustoQuery = $@"let start = startofday(datetime(""{startOfSprint.ToString("yyyy-MM-dd")}""));
+            string failedBuildsQuery = $@"let start = startofday(datetime(""{startOfSprint.ToString("yyyy-MM-dd")}""));
 let end = endofday(datetime(""{endOfSprint.ToString("yyyy-MM-dd")}""));
 let nugetBuilds = Build
 | where OrganizationName == 'devdiv' and ProjectId == '0bdbc590-a062-4c3f-b0f6-9383f67865ee' and DefinitionId == 8118 and FinishTime between (start..end) and SourceBranch == 'refs/heads/dev';
@@ -45,23 +45,11 @@ nugetBuilds
 | where Result !in ('succeeded', 'partiallySucceeded') or BuildId in (previousAttempts)
 | order by FinishTime";
 
-            var (failedBuilds, trackingIssues) = await GetFailedBuilds(kustoQuery);
-
-            var data = new ReportData()
-            {
-                SprintName = sprintName,
-                KustoQuery = kustoQuery,
-                FailedBuilds = failedBuilds,
-                TrackingIssues = trackingIssues
-            };
-
-            return data;
-        }
-
-        private async Task<(IReadOnlyList<ReportData.FailedBuild> failedBuilds, IReadOnlyDictionary<string, string> trackingIssues)> GetFailedBuilds(string kustoQuery)
-        {
-            List<ReportData.FailedBuild> failedBuilds = new();
-            Dictionary<string, string> trackingIssues = new();
+            string buildCountQuery = $@"let start = startofday(datetime(""{startOfSprint.ToString("yyyy-MM-dd")}""));
+let end = endofday(datetime(""{endOfSprint.ToString("yyyy-MM-dd")}""));
+Build
+| where OrganizationName == 'devdiv' and ProjectId == '0bdbc590-a062-4c3f-b0f6-9383f67865ee' and DefinitionId == 8118 and FinishTime between (start..end) and SourceBranch == 'refs/heads/dev'
+| summarize count()";
 
             var connectionBuilder = new KustoConnectionStringBuilder("https://1es.kusto.windows.net/", "AzureDevOps")
             {
@@ -72,37 +60,78 @@ nugetBuilds
                 Application = "NuGet Report Generator (https://github.com/NuGet/Entropy/tree/main/GithubIssueTagger)"
             };
 
+            ReportData data;
+
             using (var client = KustoClientFactory.CreateCslQueryProvider(connectionBuilder))
             {
-                var result = await client.ExecuteQueryAsync("AzureDevOps", kustoQuery, crp);
 
-                int buildIdColumn = result.GetOrdinal("BuildId");
-                int buildNumberColumn = result.GetOrdinal("BuildNumber");
+                var (failedBuilds, trackingIssues) = await GetFailedBuilds(client, crp, failedBuildsQuery);
 
-                while (result.Read())
+                int totalBuilds = await GetBuildCount(client, crp, buildCountQuery);
+
+                data = new ReportData()
                 {
-                    long buildId = result.GetInt64(buildIdColumn);
-                    string buildNumber = result.GetString(buildNumberColumn);
-
-                    var (details, tracking) = await GetFailedBuildDetails(buildId, client, crp);
-
-                    foreach (var  kvp in tracking)
-                    {
-                        if (!trackingIssues.ContainsKey(kvp.Key))
-                        {
-                            trackingIssues.Add(kvp.Key, kvp.Value);
-                        }
-                    }
-
-                    var failedBuild = new ReportData.FailedBuild()
-                    {
-                        Id = buildId.ToString(),
-                        Number = buildNumber,
-                        Details = details,
-                    };
-                    failedBuilds.Add(failedBuild);
-                }
+                    SprintName = sprintName,
+                    KustoQuery = failedBuildsQuery,
+                    FailedBuilds = failedBuilds,
+                    TrackingIssues = trackingIssues,
+                    TotalBuilds = totalBuilds
+                };
             }
+
+            return data;
+        }
+
+        private async Task<int> GetBuildCount(ICslQueryProvider client, ClientRequestProperties crp, string query)
+        {
+            using var result = await client.ExecuteQueryAsync("AzureDevOps", query, crp);
+
+            if (!result.Read())
+            {
+                throw new Exception("Build count query did not return any rows");
+            }
+
+            int count;
+
+            checked { count = (int)(long)result[0]; }
+
+            return count;
+        }
+
+        private async Task<(IReadOnlyList<ReportData.FailedBuild> failedBuilds, IReadOnlyDictionary<string, string> trackingIssues)> GetFailedBuilds(ICslQueryProvider client, ClientRequestProperties crp, string query)
+        {
+            List<ReportData.FailedBuild> failedBuilds = new();
+            Dictionary<string, string> trackingIssues = new();
+
+            var result = await client.ExecuteQueryAsync("AzureDevOps", query, crp);
+
+            int buildIdColumn = result.GetOrdinal("BuildId");
+            int buildNumberColumn = result.GetOrdinal("BuildNumber");
+
+            while (result.Read())
+            {
+                long buildId = result.GetInt64(buildIdColumn);
+                string buildNumber = result.GetString(buildNumberColumn);
+
+                var (details, tracking) = await GetFailedBuildDetails(buildId, client, crp);
+
+                foreach (var kvp in tracking)
+                {
+                    if (!trackingIssues.ContainsKey(kvp.Key))
+                    {
+                        trackingIssues.Add(kvp.Key, kvp.Value);
+                    }
+                }
+
+                var failedBuild = new ReportData.FailedBuild()
+                {
+                    Id = buildId.ToString(),
+                    Number = buildNumber,
+                    Details = details,
+                };
+                failedBuilds.Add(failedBuild);
+            }
+
 
             return (failedBuilds, trackingIssues);
         }
@@ -137,7 +166,7 @@ nugetBuilds
                 string job = (string)row["RecordName"];
                 var jobId = (string)row["RecordId"];
                 string task =
-                    (string)rows
+                    (string?)rows
                     .Where(row => IsFailedTask(row, jobId))
                     .OrderBy(r => r["Order"])
                     .FirstOrDefault()
@@ -189,23 +218,34 @@ nugetBuilds
 
         private void Output(ReportData data)
         {
+            if (data == null) { throw new ArgumentNullException(nameof(data)); }
+            if (data.FailedBuilds == null) {  throw new ArgumentException(paramName: nameof(data.FailedBuilds), message: "data.FailedBuilds must not be null"); }
+
+            float reliability = (data.TotalBuilds - data.FailedBuilds.Count) * 100.0f / data.TotalBuilds;
+
             Console.WriteLine("# NuGet.Client CI Reliability " + data.SprintName);
             Console.WriteLine();
             Console.WriteLine("[NuGet.Client-PR dev branch builds](https://dev.azure.com/devdiv/DevDiv/_build?definitionId=8118&branchFilter=101196%2C101196%2C101196%2C101196%2C101196)");
+            Console.WriteLine();
+            Console.WriteLine("|Total Builds|Failed Builds|Reliability|");
+            Console.WriteLine("|:--:|:--:|:--:|");
+            Console.WriteLine($"|{data.TotalBuilds}|{data.FailedBuilds.Count}|{reliability:f1}%|");
+            Console.WriteLine();
+            Console.WriteLine("## Failed Builds");
+            Console.WriteLine();
+            Console.WriteLine("**Note:**: Includes builds that succeeded on retry, so first attempt failed");
             Console.WriteLine();
             Console.WriteLine("Kusto ([Needs access to 1ES' CloudMine](https://aka.ms/CloudMine)):");
             Console.WriteLine("```text");
             Console.WriteLine(data.KustoQuery);
             Console.WriteLine("```");
             Console.WriteLine();
-            Console.WriteLine("## Failed Builds");
-            Console.WriteLine();
-            Console.WriteLine("**Note:**: Includes builds that succeeded on retry, so first attempt failed");
-            Console.WriteLine();
             Console.WriteLine("|Build|Job|Task|Commentary|");
             Console.WriteLine("|--|--|--|--|");
             foreach (var build in data.FailedBuilds)
             {
+                if (build.Details == null) { throw new ArgumentException(nameof(build.Details), "data.FailedBuilds[int].Details must not be null"); }
+
                 string job = string.Join("<br/>", build.Details.Select(d => d.Job));
                 string task = string.Join("<br/>", build.Details.Select(d => d.Task));
                 string details = string.Join("<br/>", build.Details.Select(d => d.Details));
@@ -222,7 +262,7 @@ nugetBuilds
             public Command CreateCommand(Type type, GitHubPatBinder patBinder)
             {
                 var command = new Command(nameof(CiReliability));
-                command.Description = "Find completed CI Initiative work.";
+                command.Description = "Find NuGet.Client build reliability and build failures.";
 
                 var sprint = new Option<string>("--sprint");
                 sprint.AddAlias("-s");

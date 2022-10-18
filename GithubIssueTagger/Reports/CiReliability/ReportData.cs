@@ -12,6 +12,7 @@ namespace GithubIssueTagger.Reports.CiReliability
 
         public IReadOnlyDictionary<string, string>? TrackingIssues { get; init; }
 
+        public int TotalBuilds { get; init; }
 
         internal class FailedBuild
         {
