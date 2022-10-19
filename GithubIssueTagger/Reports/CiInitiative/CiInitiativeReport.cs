@@ -121,7 +121,7 @@ namespace GithubIssueTagger.Reports.CiInitiative
         {
             public Command CreateCommand(Type type, GitHubPatBinder patBinder)
             {
-                var command = new Command("CiInitiative");
+                var command = new Command(nameof(CiInitiative));
                 command.Description = "Find completed CI Initiative work.";
 
                 var sprint = new Option<string>("--sprint");
