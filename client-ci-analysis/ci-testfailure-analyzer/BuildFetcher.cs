@@ -8,6 +8,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using static System.Net.WebRequestMethods;
 using File = System.IO.File;
 
 namespace ci_testfailure_analyzer
@@ -33,9 +34,12 @@ namespace ci_testfailure_analyzer
         {
             BuildList result;
             var url = $"https://dev.azure.com/devdiv/devdiv/_apis/build/builds?definitions={buildDefinition}&api-version=5.1&result=!succeeded";
-
-            var buildsCacheFileInfo = new FileInfo(Path.Combine(cache.FullName, $"builds_{buildDefinition}.json"));
+            var jsonCacheFileName = string.Format("builds_{0}_{1:yyyy-MM-dd_hh-mm}.json",
+            buildDefinition,
+            DateTime.Now);
+            var buildsCacheFileInfo = new FileInfo(Path.Combine(cache.FullName, jsonCacheFileName));
             Stopwatch stopwatch = new Stopwatch();
+
             if (!buildsCacheFileInfo.Exists || buildsCacheFileInfo.LastWriteTimeUtc >= DateTime.UtcNow.AddHours(-1))
             {
                 stopwatch.Restart();
@@ -43,10 +47,7 @@ namespace ci_testfailure_analyzer
                 {
                     if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
                     {
-                        Console.WriteLine("Response: {0}", response);
-                        var content = await response.Content.ReadAsStringAsync();
-                        Console.WriteLine("Authentication token is expired, please renew!!!!!!!!!!!");
-                        Console.WriteLine(content);
+                        Console.Error.Write("Authentication token is expired for https://dev.azure.com/devdiv/devdiv/_apis/build/builds?definitions, please renew!!!!!!!!!!!");
                         Environment.Exit(1);
                     }
                     using (Stream stream = await response.Content.ReadAsStreamAsync())
@@ -74,77 +75,54 @@ namespace ci_testfailure_analyzer
 
         internal static async Task<List<CsvRow>> GetFailingFunctionalTestAsync(List<BuildInfo> builds, HttpClient httpClient)
         {
-            httpClient.DefaultRequestHeaders.TryAddWithoutValidation("Accept", "api-version=5.0-preview.1;excludeUrls=true;enumsAsNumbers=true;msDateFormat=true;noArrayWrap=true");
-
-            List<TestFailure> testFailures = new();
+            List<TestItem> testFailures = new();
             for (int i = 0; i < builds.Count; i++)
             {
                 BuildInfo buildInfo = builds[i];
-                string url = "https://devdiv.visualstudio.com/_apis/Contribution/HierarchyQuery/project/0bdbc590-a062-4c3f-b0f6-9383f67865ee";
                 string buildId = buildInfo.id.ToString();
-                // Encountered this issue: https://stackoverflow.com/q/10679214
-                HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, url);
-
-                string requestBody = "{\"contributionIds\":[\"ms.vss-test-web.test-tab-unifiedPipeline-summary-data-provider\"],\"dataProviderContext\":{\"properties\":{\"sourcePage\":{\"url\":\"https://devdiv.visualstudio.com/DevDiv/_build/results?buildId=" + buildId + "&view=ms.vss-test-web.build-test-results-tab\",\"routeValues\":{\"project\":\"DevDiv\",\"viewname\":\"build-results\"}}}}}";
-
-                request.Content = new StringContent(requestBody,
-                                        Encoding.UTF8,
-                                        "application/json");
-
+                string url = $"https://devdiv.vstmr.visualstudio.com/DevDiv/_apis/testresults/resultsbypipeline?pipelineId={buildId}&outcomes=Failed";     
                 Console.WriteLine($"buildId : {buildId} {buildInfo.result}");
 
-                await httpClient.SendAsync(request)
-                  .ContinueWith(async responseTask =>
-                  {
-                      var res = responseTask.Result;
+                using (HttpResponseMessage response = await httpClient.GetAsync(url))
+                {
+                    if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                    {
+                        var content = await response.Content.ReadAsStringAsync();
+                        var testFailure = JsonConvert.DeserializeObject<TestRes>(content);
 
-                      if (res.StatusCode == System.Net.HttpStatusCode.OK)
-                      {
-                          var content = await res.Content.ReadAsStringAsync();
-                          TestFailure testFailure = JsonConvert.DeserializeObject<Models.AzDO.TestFailure>(content);
+                        testFailures.AddRange(testFailure.TestItems);
+                    }
+                    else if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
+                    {
+                        Console.WriteLine("Response: {0}", response);
+                        var content = await response.Content.ReadAsStringAsync();
 
-                          if (testFailure?.dataProviders?.MsVssTestWebTestTabUnifiedPipelineSummaryDataProvider?.resultsAnalysis != null)
-                          {
-                              testFailures.Add(testFailure);
-                          }
-                          else
-                          {
-                              // This build doesn't have actual test error, most likely build error.
-                          }
-                      }
-                      else if (res.StatusCode == System.Net.HttpStatusCode.BadRequest)
-                      {
-                          Console.WriteLine("Response: {0}", res);
-                          var content = await res.Content.ReadAsStringAsync();
+                        Console.WriteLine("Unexpected error!!!!!!!!!!!");
+                        Console.WriteLine(content);
+                    }
+                    else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                    {
+                        Console.Error.Write("Authentication token is expired for https://devdiv.vstmr.visualstudio.com/DevDiv/_apis/testresults/resultsbypipeline?pipelineId, please renew!!!!!!!!!!!");
+                        Environment.Exit(1);
+                    }
+                    else
+                    {
+                        Console.WriteLine("Response: {0}", response);
+                        var content = await response.Content.ReadAsStringAsync();
+                        Console.WriteLine("Unexpected error!!!!!!!!!!!");
+                        Console.WriteLine(content);
+                    }
 
-                          Console.WriteLine("Unexpected error!!!!!!!!!!!");
-                          Console.WriteLine(content);
-                      }
-                      else if (res.StatusCode == System.Net.HttpStatusCode.Unauthorized)
-                      {
-                          Console.WriteLine("Response: {0}", res);
-                          var content = await res.Content.ReadAsStringAsync();
-                          Console.WriteLine("Authentication token is expired, please renew!!!!!!!!!!!");
-                          Console.WriteLine(content);
-                          Environment.Exit(1);
-                      }
-                      else
-                      {
-                          Console.WriteLine("Response: {0}", res);
-                          var content = await res.Content.ReadAsStringAsync();
-                          Console.WriteLine("Unexpected error!!!!!!!!!!!");
-                          Console.WriteLine(content);
-                      }
-                  });
+                }
             }
 
             List<(int testResultId, int testRunId)> failedTestIds = new();
             for (int i = 0; i < testFailures.Count; i++)
             {
-                failedTestIds.AddRange(testFailures[i].dataProviders.MsVssTestWebTestTabUnifiedPipelineSummaryDataProvider.resultsAnalysis.testFailuresAnalysis.newFailures.testResults.Select(x => (x.testResultId, x.testRunId)));
-                failedTestIds.AddRange(testFailures[i].dataProviders.MsVssTestWebTestTabUnifiedPipelineSummaryDataProvider.resultsAnalysis.testFailuresAnalysis.existingFailures.testResults.Select(x => (x.testResultId, x.testRunId)));
+                failedTestIds.Add((testFailures[i].Id, testFailures[i].RunId));
             }
 
+            //await GetTestFlakyStatusAsync(failedTestIds, httpClient);
             return await GetAllTestResultsAsync(failedTestIds, httpClient);
         }
 
@@ -210,7 +188,8 @@ namespace ci_testfailure_analyzer
         ""DateCompleted"",
         ""OutcomeConfidence"",
         ""IsTestResultFlaky"",
-        ""TestResultFlakyState""
+        ""TestResultFlakyState"",
+        ""CustomFields""
     ]
 }";
 
@@ -228,7 +207,7 @@ namespace ci_testfailure_analyzer
                       if (res.StatusCode == System.Net.HttpStatusCode.OK)
                       {
                           var content = await res.Content.ReadAsStringAsync();
-                          TestResults testResults = JsonConvert.DeserializeObject<Models.AzDO.TestResults>(content);
+                          var testResults = JsonConvert.DeserializeObject<TestResults>(content);
 
                           List<string> allFailedTests = testResults.Results.Select(t => t.TestCaseTitle).ToList();
 
@@ -244,10 +223,9 @@ namespace ci_testfailure_analyzer
             return results;
         }
 
-
         internal static void WriteCVSFile(List<CsvRow> rows, DirectoryInfo cache, int buildDefinition)
         {
-            string cvsFile = string.Format("failedTestsReport-{0}-{1:yyyy-MM-dd_hh-mm}.csv",
+            string cvsFile = string.Format("FailedTestsReport-{0}-{1:yyyy-MM-dd_hh-mm}.csv",
             buildDefinition,
             DateTime.Now);
             cvsFile = Path.Join(cache.FullName, cvsFile);
@@ -293,6 +271,52 @@ namespace ci_testfailure_analyzer
             }
 
             return str;
+        }
+
+        // Currently below flaky test detection is not working, it looks it's not enabled for https://dev.azure.com/devdiv/devdiv/, how to enable doc is here https://learn.microsoft.com/en-us/azure/devops/pipelines/test/flaky-test-management?view=azure-devops
+        // According to doc it's enabled for whole project, so I don't believe it would be enabled.
+        private static async Task GetTestFlakyStatusAsync(List<(int, int)> failedTestIds, HttpClient httpClient)
+        {
+            foreach ((int testResultId, int testRunId) in failedTestIds)
+            {
+                //
+                string url = $"https://dev.azure.com/devdiv/devdiv/_apis/test/Runs/{testRunId}/results/{testResultId}?api-version=6.1-preview.6";
+
+                using (HttpResponseMessage response = await httpClient.GetAsync(url))
+                {
+                    if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                    {
+                        var content = await response.Content.ReadAsStringAsync();
+                        var testFlakinessStatus = JsonConvert.DeserializeObject<TestFlakinessStatus>(content);
+                        
+                        if (testFlakinessStatus.CustomFields!=null && testFlakinessStatus.CustomFields.Count>0)
+                        {
+                            Console.Out.WriteLineAsync(string.Join(" ", testFlakinessStatus.CustomFields));
+                        }
+                    }
+                    else if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
+                    {
+                        Console.WriteLine("Response: {0}", response);
+                        var content = await response.Content.ReadAsStringAsync();
+
+                        Console.WriteLine("Unexpected error!!!!!!!!!!!");
+                        Console.WriteLine(content);
+                    }
+                    else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                    {
+                        Console.Error.Write("Authentication token is expired for https://dev.azure.com/devdiv/devdiv/_apis/test/Runs, please renew!!!!!!!!!!!");
+                        Environment.Exit(1);
+                    }
+                    else
+                    {
+                        Console.WriteLine("Response: {0}", response);
+                        var content = await response.Content.ReadAsStringAsync();
+                        Console.WriteLine("Unexpected error!!!!!!!!!!!");
+                        Console.WriteLine(content);
+                    }
+
+                }
+            }
         }
     }
 }

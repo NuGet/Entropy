@@ -32,7 +32,7 @@ namespace ci_testfailure_analyzer
                 cache.Create();
             }
 
-            var buildDefinition = 8118; //private build. Use 8117 for official, 14219 for trusted build.
+            var buildDefinition = 8117; // 8117 official CI pipeline. Use 8118 for private, 14219 for trusted pipeline.
 
             if (args.Length > 1 && int.TryParse(args[1], out buildDefinition))
             { }
@@ -42,18 +42,22 @@ namespace ci_testfailure_analyzer
 
             var accountName = Environment.GetEnvironmentVariable("AzDO_ACCOUNT");
 
+            if(string.IsNullOrEmpty(accountName))
+            {
+                accountName = Environment.UserName;
+            }
+
             // You can get bearer token from web browser use here, had no time to fix automatically getting it.
-            var bearerToken = Environment.GetEnvironmentVariable("AzDO_BEARERTOKEN");
-            if (string.IsNullOrEmpty(bearerToken))
+            var azdoToken = Environment.GetEnvironmentVariable("AzDO_PAT");
+            if (string.IsNullOrEmpty(azdoToken))
             {
                 try
                 {
-                    // Bearer token expire after few minutes so save in easy to update txt file.
-                    string filename = Path.Combine(cache.FullName, "bearerToken.txt");
+                    string filename = Path.Combine(cache.FullName, "pat.txt");
                     Console.WriteLine($"Reading bearer token from {filename}");
                     string[] lines = File.ReadLines(filename).ToArray();
 
-                    bearerToken = lines[0];
+                    azdoToken = lines[0];
                 }
                 catch (Exception ex)
                 {
@@ -62,15 +66,13 @@ namespace ci_testfailure_analyzer
                 }
             }
 
-            if (string.IsNullOrWhiteSpace(accountName) || string.IsNullOrWhiteSpace(bearerToken))
+            if (string.IsNullOrWhiteSpace(azdoToken))
             {
-                Console.WriteLine("Set AzDO_ACCOUNT and AzDO_BEARERTOKEN (or update bearerToken.txt) environment variables.");
-                Console.WriteLine("Project properties -> Debug in VS");
-                Console.WriteLine("launchSettings.json in VSCode");
+                Console.WriteLine("AzDO_PAT environment variable or update PAT token in pat.txt in path");
                 return;
             }
 
-            var httpClient = CreateAzureDevOpsClient(accountName, bearerToken);
+            var httpClient = CreateAzureDevOpsClient(accountName, azdoToken);
 
             List<BuildInfo> builds = await BuildFetcher.DownloadBuildsAsync(cache, httpClient, buildDefinition);
             List<CsvRow> rows = await BuildFetcher.GetFailingFunctionalTestAsync(builds, httpClient);
@@ -79,14 +81,14 @@ namespace ci_testfailure_analyzer
             Console.WriteLine("-----End-----");
         }
 
-        private static HttpClient CreateAzureDevOpsClient(string accountName, string bearerToken)
+        private static HttpClient CreateAzureDevOpsClient(string accountName, string authToken)
         {
             var httpClient = new HttpClient();
 
-            var cred = new AuthenticationHeaderValue("BASIC", Convert.ToBase64String(Encoding.ASCII.GetBytes(accountName + ":" + bearerToken)));
+            var cred = new AuthenticationHeaderValue("BASIC", Convert.ToBase64String(Encoding.ASCII.GetBytes(accountName + ":" + authToken)));
             httpClient.DefaultRequestHeaders.Authorization = cred;
 
-            var userAgent = new ProductInfoHeaderValue("NugetClientCiAnalysis", "0.1");
+            var userAgent = new ProductInfoHeaderValue("NugetClientCiAnalysis", "0.2");
             httpClient.DefaultRequestHeaders.UserAgent.Add(userAgent);
 
             return httpClient;

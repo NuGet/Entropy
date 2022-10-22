@@ -11,6 +11,7 @@ namespace ci_testfailure_analyzer.Models.AzDO
         [JsonProperty("fields")]
         public List<string> Fields { get; set; }
     }
+
     public class Result
     {
         [JsonProperty("id")]
