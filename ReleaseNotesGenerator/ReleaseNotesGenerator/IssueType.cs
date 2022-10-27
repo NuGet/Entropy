@@ -1,4 +1,4 @@
-﻿namespace ChangelogGenerator
+﻿namespace ReleaseNotesGenerator
 {
     public enum IssueType
     {

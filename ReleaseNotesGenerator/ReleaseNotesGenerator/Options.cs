@@ -2,7 +2,7 @@
 using CommandLine.Text;
 using System.Collections.Generic;
 
-namespace ChangelogGenerator
+namespace ReleaseNotesGenerator
 {
     class Options
     {
