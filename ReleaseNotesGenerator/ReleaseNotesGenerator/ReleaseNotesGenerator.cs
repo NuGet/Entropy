@@ -7,15 +7,15 @@ using System.Threading.Tasks;
 
 namespace ChangelogGenerator
 {
-    class ChangelogGenerator
+    class ReleaseNotesGenerator
     {
         private readonly GitHubClient GitHubClient;
         private readonly Options Options;
 
-        public ChangelogGenerator(Options opts)
+        public ReleaseNotesGenerator(Options opts)
         {
             Options = opts;
-            GitHubClient = new GitHubClient(new ProductHeaderValue("nuget-changelog-generator"));
+            GitHubClient = new GitHubClient(new ProductHeaderValue("nuget-release-notes-generator"));
 
             Credentials creds = null;
             if (!string.IsNullOrEmpty(opts.GitHubToken))
@@ -75,8 +75,6 @@ namespace ChangelogGenerator
                 bool epicLabel = false;
                 bool regressionDuringThisVersion = false;
                 bool engImproveOrDocs = false;
-                string requiredLabel = Options.RequiredLabel?.ToLower();
-                bool foundRequiredLabel = string.IsNullOrEmpty(requiredLabel);
 
                 if (issue.State == ItemState.Open)
                 {
@@ -103,11 +101,6 @@ namespace ChangelogGenerator
                             hidden = true;
                         }
 
-                        if (!foundRequiredLabel && label.Name.ToLower() == requiredLabel)
-                        {
-                            foundRequiredLabel = true;
-                        }
-
                         if (label.Name == IssueLabels.Epic)
                         {
                             epicLabel = true;
@@ -129,10 +122,6 @@ namespace ChangelogGenerator
                             issueType = IssueType.Spec;
                         }
                     }
-                }
-                if (!foundRequiredLabel)
-                {
-                    hidden = true;
                 }
 
                 // if an issue is an epicLabel and has a real IssueType (feature/bug/dcr),
