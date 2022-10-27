@@ -12,14 +12,15 @@ namespace GithubIssueTagger
     public static class PlanningUtilities
     {
         private static readonly string SourceMappingLabel = "Area:PackageSourceMapping";
+        private static readonly string SeasonOfGiving = "Category:SeasonOfGiving";
         private static readonly string TypeFeatureLabel = "Type:Feature";
         private static readonly string TypeSpec = "Type:Spec";
 
         public static async Task RunPlanningAsync(GitHubClient client)
         {
-            IEnumerable<Issue> issues = await GetPackageSourceMappingDesign(client);
+            IEnumerable<Issue> issues = await GetIssuesForLabelFromBothClientRepos(client, SeasonOfGiving);
 
-            var markdownTable = issues.Select(e => new IssueModel(e)).ToMarkdownTable(GetPackageSourceMapping());
+            var markdownTable = issues.Select(e => new IssueModel(e)).ToMarkdownTable(GetSeasonOfGivingColumns());
 
             Console.WriteLine();
             Console.WriteLine(markdownTable);
@@ -56,59 +57,14 @@ namespace GithubIssueTagger
             return issues;
         }
 
-        public static async Task<IList<Issue>> GetAllPackageSourceMappingIssues(GitHubClient client)
+        public static async Task<IList<Issue>> GetIssuesForLabelFromBothClientRepos(GitHubClient client, string label)
         {
-            var homeIssues = await IssueUtilities.GetIssuesForLabelAsync(client, "nuget", "home", SourceMappingLabel);
-            var clientEngineeringIssues = await IssueUtilities.GetIssuesForLabelAsync(client, "nuget", "client.engineering", SourceMappingLabel);
-            var issues = (homeIssues.Union(clientEngineeringIssues)).ToList();
+            var homeIssues = await IssueUtilities.GetIssuesForLabelAsync(client, "nuget", "home", label);
+            var clientEngineeringIssues = await IssueUtilities.GetIssuesForLabelAsync(client, "nuget", "client.engineering", label);
+            var issues = (homeIssues.Union(clientEngineeringIssues)).OrderBy(e => e.Repository).OrderBy(e => e.Number).ToList();
 
             return issues;
-        }
-
-        public static async Task<IEnumerable<Issue>> GetPerformanceIssuesForSprint(GitHubClient client)
-        {
-            Predicate<Issue> isRelevant = (Issue x) => IsPerformance(x);
-            // 111 is Sprint 173
-            var homeIssues = await IssueUtilities.GetIssuesForMilestoneAsync(client, "nuget", "home", "111", isRelevant);
-            // 15 is Sprint 173
-            var clientEngineeringIssues = await IssueUtilities.GetIssuesForMilestoneAsync(client, "nuget", "client.engineering", "15", isRelevant);
-            var issues = homeIssues.Union(clientEngineeringIssues);
-
-            return issues;
-
-            static bool IsPerformance(Issue e)
-            {
-                var aliases = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-                aliases.Add("nkolev92");
-                aliases.Add("srdjanjovcic");
-                aliases.Add("donnie-msft");
-                aliases.Add("dominofire");
-                aliases.Add("erdembayar");
-                return aliases.Contains(e.Assignee?.Login) && e.Labels.Any(e => e.Name.Equals("Tenet:Performance"));
-            }
-        }
-
-        public static async Task<IEnumerable<Issue>> GetEngineeringExcellenceIssuesForSprint(GitHubClient client)
-        {
-            Predicate<Issue> isRelevant = (Issue x) => IsEngineeringExcellence(x);
-            // 13 is Sprint 171
-            var issues = await IssueUtilities.GetIssuesForMilestoneAsync(client, "nuget", "client.engineering", "13", isRelevant);
-
-            return issues;
-
-            static bool IsEngineeringExcellence(Issue e)
-            {
-                return e.Labels.Any(e => e.Name.Equals("Engineering Excellence"));
-            }
-
-        }
-
-        public static async Task<IEnumerable<Issue>> GetPerformanceBacklog(GitHubClient client)
-        {
-            var homeIssues = await IssueUtilities.GetIssuesForLabelAsync(client, "nuget", "home", "Tenet:Performance");
-            var clientEngineeringIssues = await IssueUtilities.GetIssuesForLabelAsync(client, "nuget", "client.engineering", "Tenet:Performance");
-            var issues = homeIssues.Union(clientEngineeringIssues);
-            return issues;
+        
         }
 
         public static List<Tuple<string, string>> GetPackageSourceMapping()
@@ -119,6 +75,17 @@ namespace GithubIssueTagger
                     new Tuple<string, string>("Title", "Title"),
                     new Tuple<string, string>("Assignee", "Assignee"),
                     new Tuple<string, string>("Milestone", "Milestone"),
+                };
+        }
+
+        public static List<Tuple<string, string>> GetSeasonOfGivingColumns()
+        {
+            return new List<Tuple<string, string>>()
+                {
+                    new Tuple<string, string>("Link", "Link"),
+                    new Tuple<string, string>("Title", "Title"),
+                    new Tuple<string, string>("Cost", "Cost"),
+                    new Tuple<string, string>("Assignee", "Assignee"),
                 };
         }
 

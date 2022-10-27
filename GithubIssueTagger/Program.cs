@@ -1,7 +1,6 @@
 ﻿using GithubIssueTagger;
 using GithubIssueTagger.Reports;
 using Microsoft.Extensions.DependencyInjection;
-using Octokit;
 using System;
 using System.Collections.Generic;
 using System.CommandLine;
