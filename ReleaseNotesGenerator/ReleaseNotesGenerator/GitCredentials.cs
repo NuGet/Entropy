@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 
-namespace ChangelogGenerator
+namespace ReleaseNotesGenerator
 {
     internal class GitCredentials
     {

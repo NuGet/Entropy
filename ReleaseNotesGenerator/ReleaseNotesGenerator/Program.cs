@@ -4,7 +4,7 @@ using System.IO;
 using System.Threading.Tasks;
 
 
-namespace ChangelogGenerator
+namespace ReleaseNotesGenerator
 {
     class Program
     {
