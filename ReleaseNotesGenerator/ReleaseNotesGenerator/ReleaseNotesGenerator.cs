@@ -29,7 +29,7 @@ namespace ReleaseNotesGenerator
             }
             else
             {
-                Dictionary<string, string> credentuals = GitCredentials.Get(new Uri("https://github.com/NuGet/Home"));
+                Dictionary<string, string> credentuals = GitCredentials.Get(new Uri($"https://github.com/{NuGet}/{Home}"));
                 if (credentuals?.TryGetValue("password", out string pat) == true)
                 {
                     creds = new Credentials(pat);
@@ -45,13 +45,9 @@ namespace ReleaseNotesGenerator
         public async Task<string> GenerateChangelog()
         {
             Dictionary<IssueType, List<Issue>> issues = await GetIssuesByType(NuGet, Home, Options.Release);
+            List<PullRequest> communityPullRequests = await GetCommunityPullRequests(GitHubClient, NuGet, NuGetClient, Options.StartSha, $"release-{Options.Release}.x");
 
-            List<PullRequest> CommunityPullRequests = null;
-            if (!string.IsNullOrEmpty(Options.StartSha))
-            {
-                CommunityPullRequests = await GetCommunityPullRequests(GitHubClient, NuGet, NuGetClient, Options.StartSha, $"release-{Options.Release}.x");
-            }
-            return GenerateMarkdown(Options.Release, issues, CommunityPullRequests);
+            return GenerateMarkdown(Options.Release, issues, communityPullRequests);
         }
 
         public static async Task<IList<Issue>> GetIssuesForMilestone(GitHubClient client, string org, string repo, Milestone milestone)
@@ -234,8 +230,8 @@ namespace ReleaseNotesGenerator
         private static string GenerateMarkdown(string release, Dictionary<IssueType, List<Issue>> labelSet, List<PullRequest> communityPullRequests)
         {
             var version = Version.Parse(release);
-            string VSYear = version.Major == 6 ? "2022" : "<TODO: VSYear. Consider updating the tool.>";
-            string VSVersion = version.Major + 11 + "." + version.Minor;
+            string VSYear = GetVSYear(version.Major);
+            string VSVersion = GetVSVersion(version);
             string fullSDKVersion = "<TODO: Full SDK Version>";
             string SDKMajorMinorVersion = "<TODO: SDKMajorMinorVersionOnly";
             string GithubAlias = "<TODO: GitHubAlias>";
@@ -283,6 +279,26 @@ namespace ReleaseNotesGenerator
             }
 
             return builder.ToString();
+        }
+
+        private static string GetVSVersion(Version version)
+        {
+            return version.Major + 11 + "." + version.Minor;
+        }
+
+        private static string GetVSYear(int major)
+        {
+            Dictionary<int, int> NuGetMajorToVSYearMapping = new()
+            {
+                { 5, 2019 },
+                { 6, 2022 },
+            };
+
+            if (NuGetMajorToVSYearMapping.TryGetValue(major, out int VSYear))
+            {
+                return VSYear.ToString();
+            }
+            return "<TODO: VSYear. Consider updating the tool.>";
         }
 
         private static void OutputCommunityPullRequestsSection(
