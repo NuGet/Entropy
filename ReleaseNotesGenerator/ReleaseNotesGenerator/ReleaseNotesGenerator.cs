@@ -10,6 +10,10 @@ namespace ReleaseNotesGenerator
 {
     class ReleaseNotesGenerator
     {
+        private const string NuGet = "nuget";
+        private const string NuGetClient = "nuget.client";
+        private const string Home = "home";
+
         private readonly GitHubClient GitHubClient;
         private readonly Options Options;
 
@@ -40,12 +44,12 @@ namespace ReleaseNotesGenerator
 
         public async Task<string> GenerateChangelog()
         {
-            Dictionary<IssueType, List<Issue>> issues = await GetIssuesByType(Options.Release);
+            Dictionary<IssueType, List<Issue>> issues = await GetIssuesByType(NuGet, Home, Options.Release);
 
             List<PullRequest> CommunityPullRequests = null;
             if (!string.IsNullOrEmpty(Options.StartSha))
             {
-                CommunityPullRequests = await GetCommunityPullRequests(GitHubClient, Options.StartSha, $"release-{Options.Release}.x");
+                CommunityPullRequests = await GetCommunityPullRequests(GitHubClient, NuGet, NuGetClient, Options.StartSha, $"release-{Options.Release}.x");
             }
             return GenerateMarkdown(Options.Release, issues, CommunityPullRequests);
         }
@@ -64,10 +68,8 @@ namespace ReleaseNotesGenerator
             return issuesForMilestone.ToList();
         }
 
-        public static async Task<List<PullRequest>> GetCommunityPullRequests(GitHubClient gitHubClient, string startSha, string branchName, string endSha = null)
+        public static async Task<List<PullRequest>> GetCommunityPullRequests(GitHubClient gitHubClient, string orgName, string repoName, string startSha, string branchName, string endSha = null)
         {
-            var orgName = "nuget";
-            var repoName = "nuget.client";
             Console.Write($"Processing the pull requests for {branchName}, ");
 
             var githubBranch = await gitHubClient.Repository.Branch.Get(orgName, repoName, branchName);
@@ -116,11 +118,9 @@ namespace ReleaseNotesGenerator
             }
         }
 
-        private async Task<Dictionary<IssueType, List<Issue>>> GetIssuesByType(string releaseId)
+        private async Task<Dictionary<IssueType, List<Issue>>> GetIssuesByType(string org, string repo, string releaseId)
         {
             var issuesByType = new Dictionary<IssueType, List<Issue>>();
-
-            GetRepositoryDetails(out string org, out string repo);
 
             Milestone relevantMilestone = await FindMatchingMilestone(releaseId, org, repo);
 
@@ -218,17 +218,6 @@ namespace ReleaseNotesGenerator
             return issuesByType;
         }
 
-        private void GetRepositoryDetails(out string org, out string repo)
-        {
-            var repoParts = Options.Repo.Split("/");
-            if (repoParts.Length != 2)
-            {
-                throw new Exception($"Expected the repo to be 2 part, separated by `/`. Repo:{Options.Repo}, parts{string.Join("; ", repoParts)} ");
-            }
-            org = repoParts[0];
-            repo = repoParts[1];
-        }
-
         private async Task<Milestone> FindMatchingMilestone(string releaseId, string org, string repo)
         {
             var milestones = await GitHubClient.Issue.Milestone.GetAllForRepository(org, repo);
@@ -242,29 +231,39 @@ namespace ReleaseNotesGenerator
             return relevantMilestone;
         }
 
-        private string GenerateMarkdown(string releaseId, Dictionary<IssueType, List<Issue>> labelSet, List<PullRequest> communityPullRequests)
+        private static string GenerateMarkdown(string release, Dictionary<IssueType, List<Issue>> labelSet, List<PullRequest> communityPullRequests)
         {
+            var version = Version.Parse(release);
+            string VSYear = version.Major == 6 ? "2022" : "<TODO: VSYear. Consider updating the tool.>";
+            string VSVersion = version.Major + 11 + "." + version.Minor;
+            string fullSDKVersion = "<TODO: Full SDK Version>";
+            string SDKMajorMinorVersion = "<TODO: SDKMajorMinorVersionOnly";
+            string GithubAlias = "<TODO: GitHubAlias>";
+            string MicrosoftAlias = "<TODO: MicrosoftAlias>";
             StringBuilder builder = new StringBuilder();
             builder.AppendLine("---");
-            builder.AppendLine(string.Format("title: NuGet {0} Release Notes", Options.Release));
-            builder.AppendLine(string.Format("description: Release notes for NuGet {0} including new features, bug fixes, and DCRs.", Options.Release));
-            builder.AppendLine("author: <TODO: GithubAlias>");
-            builder.AppendLine("ms.author: <TODO: MicrosoftAlias>");
+            builder.AppendLine(string.Format("title: NuGet {0} Release Notes", release));
+            builder.AppendLine(string.Format("description: Release notes for NuGet {0} including new features, bug fixes, and DCRs.", release));
+            builder.AppendLine(string.Format("author: {0}", GithubAlias));
+            builder.AppendLine(string.Format("ms.author: {0}", MicrosoftAlias));
             builder.AppendLine(string.Format("ms.date: {0}", DateTime.Now.ToString("d", System.Globalization.CultureInfo.GetCultureInfo("en-US"))));
             builder.AppendLine("ms.topic: conceptual");
             builder.AppendLine("---");
             builder.AppendLine();
-            builder.AppendLine(string.Format("# NuGet {0} Release Notes", Options.Release));
+            builder.AppendLine(string.Format("# NuGet {0} Release Notes", release));
             builder.AppendLine();
             builder.AppendLine("NuGet distribution vehicles:");
             builder.AppendLine();
             builder.AppendLine("| NuGet version | Available in Visual Studio version | Available in .NET SDK(s) |");
             builder.AppendLine("|:---|:---|:---|");
-            builder.AppendLine(string.Format("| [**{0}**](https://nuget.org/downloads) | [Visual Studio <TODO: VSYear> version <TODO: VSVersion>](https://visualstudio.microsoft.com/downloads/) | [<TODO: SDKVersion>](https://dotnet.microsoft.com/download/dotnet-core/<SDKMajorMinorVersionOnly>)<sup>1</sup> |", Options.Release));
+            builder.AppendLine(string.Format("| [**{0}**](https://nuget.org/downloads) |" +
+                " [Visual Studio {1} version {2}](https://visualstudio.microsoft.com/downloads/) " +
+                "| [{3}](https://dotnet.microsoft.com/download/dotnet-core/{4})<sup>1</sup> |",
+                release, VSYear, VSVersion, fullSDKVersion, SDKMajorMinorVersion));
             builder.AppendLine();
-            builder.AppendLine("<sup>1</sup> Installed with Visual Studio <TODO: VSYear> with.NET Core workload");
+            builder.AppendLine(string.Format("<sup>1</sup> Installed with Visual Studio {0} with.NET Core workload", VSYear));
             builder.AppendLine();
-            builder.AppendLine(string.Format("## Summary: What's New in {0}", Options.Release));
+            builder.AppendLine(string.Format("## Summary: What's New in {0}", release));
             builder.AppendLine();
             OutputSection(labelSet, builder, IssueType.Feature, includeHeader: false);
             builder.AppendLine("### Issues fixed in this release");
