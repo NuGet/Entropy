@@ -298,7 +298,7 @@ namespace ReleaseNotesGenerator
             {
                 return VSYear.ToString();
             }
-            return "<TODO: VSYear. Consider updating the tool.>";
+            return "<TODO: VSYear. Unknown version/year combo, consider updating the tool.>";
         }
 
         private static void OutputCommunityPullRequestsSection(
