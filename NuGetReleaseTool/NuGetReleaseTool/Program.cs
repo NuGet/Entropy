@@ -1,8 +1,7 @@
 ﻿using CommandLine;
-using GenerateReleaseNotesCommand;
-using InsertionChangeLogGenerator;
 using NuGetReleaseTool;
 using NuGetReleaseTool.GenerateInsertionChangelogCommand;
+using NuGetReleaseTool.GenerateReleaseNotesCommand;
 using NuGetReleaseTool.ValidateReleaseCommand;
 using Octokit;
 
@@ -19,7 +18,8 @@ static int RunReleaseNotesGeneratorCommand(GenerateReleaseNotesCommandOptions op
     async Task<int> RunReleaseNotesGeneratorCommandAsync(GenerateReleaseNotesCommandOptions options)
     {
         var fileName = "NuGet-" + options.Release + ".md";
-        File.WriteAllText(fileName, await new ReleaseNotesGenerator(options).GenerateChangelog());
+        var githubClient = GenerateGitHubClient(opts);
+        File.WriteAllText(fileName, await new ReleaseNotesGenerator(options, githubClient).GenerateChangelog());
         Console.WriteLine($"{fileName} creation complete");
         return 0;
     }
@@ -44,24 +44,7 @@ static int RunGenerateInsertionChangelog(GenerateInsertionChangelogCommandOption
     return RunGenerateCommandAsync(opts).GetAwaiter().GetResult();
     async Task<int> RunGenerateCommandAsync(GenerateInsertionChangelogCommandOptions opts)
     {
-        var githubClient = new GitHubClient(new ProductHeaderValue("nuget-github-insertion-changelog-tagger"));
-
-        if (!string.IsNullOrEmpty(opts.GitHubToken))
-        {
-            githubClient.Credentials = new Credentials(opts.GitHubToken);
-        }
-        else
-        {
-            Dictionary<string, string> credentuals = GitCredentials.Get(new Uri("https://github.com/NuGet/Home"));
-            if (credentuals?.TryGetValue("password", out string pat) == true)
-            {
-                githubClient.Credentials = new Credentials(pat);
-            }
-            else
-            {
-                Console.WriteLine("Warning: Unable to get github token. Making unauthenticated HTTP requests, which has lower request limits.");
-            }
-        }
+        GitHubClient githubClient = GenerateGitHubClient(opts);
 
         var startSha = opts.StartSha;
         var branch = opts.Branch;
@@ -87,3 +70,27 @@ static int RunGenerateInsertionChangelog(GenerateInsertionChangelogCommandOption
 
 }
 
+static GitHubClient GenerateGitHubClient(BaseOptions opts)
+{
+    string NuGet = "nuget";
+    string Home = "home";
+    var githubClient = new GitHubClient(new ProductHeaderValue("nuget-release-tool"));
+
+    if (!string.IsNullOrEmpty(opts.GitHubToken))
+    {
+        githubClient.Credentials = new Credentials(opts.GitHubToken);
+    }
+    else
+    {
+        Dictionary<string, string> credentuals = GitCredentials.Get(new Uri($"https://github.com/{NuGet}/{Home}"));
+        if (credentuals?.TryGetValue("password", out string pat) == true)
+        {
+            githubClient.Credentials = new Credentials(pat);
+        }
+        else
+        {
+            Console.WriteLine("Warning: Unable to get github token. Making unauthenticated HTTP requests, which has lower request limits.");
+        }
+    }
+    return githubClient;
+}

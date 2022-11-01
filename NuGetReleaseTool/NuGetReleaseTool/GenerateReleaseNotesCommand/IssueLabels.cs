@@ -1,4 +1,4 @@
-﻿namespace GenerateReleaseNotesCommand
+﻿namespace NuGetReleaseTool.GenerateReleaseNotesCommand
 {
     public class IssueLabels
     {

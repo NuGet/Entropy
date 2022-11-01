@@ -1,8 +1,7 @@
 ﻿using CommandLine;
 using CommandLine.Text;
-using NuGetReleaseTool;
 
-namespace GenerateReleaseNotesCommand
+namespace NuGetReleaseTool.GenerateReleaseNotesCommand
 {
     [Verb("generate-release-notes", HelpText = "Generates the release notes for the NuGet Client for a given release version.")]
     public class GenerateReleaseNotesCommandOptions : BaseOptions

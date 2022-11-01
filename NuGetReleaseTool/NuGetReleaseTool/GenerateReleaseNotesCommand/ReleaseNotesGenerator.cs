@@ -3,7 +3,7 @@ using Octokit;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace GenerateReleaseNotesCommand
+namespace NuGetReleaseTool.GenerateReleaseNotesCommand
 {
     public class ReleaseNotesGenerator
     {
@@ -14,29 +14,10 @@ namespace GenerateReleaseNotesCommand
         private readonly GitHubClient GitHubClient;
         private readonly GenerateReleaseNotesCommandOptions Options;
 
-        public ReleaseNotesGenerator(GenerateReleaseNotesCommandOptions opts)
+        public ReleaseNotesGenerator(GenerateReleaseNotesCommandOptions opts, GitHubClient gitHubClient)
         {
             Options = opts;
-            GitHubClient = new GitHubClient(new ProductHeaderValue("nuget-release-notes-generator"));
-
-            Credentials creds = null;
-            if (!string.IsNullOrEmpty(opts.GitHubToken))
-            {
-                creds = new Credentials(opts.GitHubToken);
-            }
-            else
-            {
-                Dictionary<string, string> credentuals = GitCredentials.Get(new Uri($"https://github.com/{NuGet}/{Home}"));
-                if (credentuals?.TryGetValue("password", out string pat) == true)
-                {
-                    creds = new Credentials(pat);
-                }
-                else
-                {
-                    Console.WriteLine("Warning: Unable to get github token. Making unauthenticated HTTP requests, which has lower request limits.");
-                }
-            }
-            GitHubClient.Credentials = creds;
+            GitHubClient = gitHubClient;
         }
 
         public async Task<string> GenerateChangelog()
