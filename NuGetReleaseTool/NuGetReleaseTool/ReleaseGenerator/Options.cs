@@ -1,10 +1,9 @@
 ﻿using CommandLine;
 using CommandLine.Text;
-using System.Collections.Generic;
 
 namespace ReleaseNotesGenerator
 {
-    class Options
+    public class Options
     {
         [Value(0, Required = true, HelpText = "Release version to generate the release notes for.")]
         public string Release { get; set; }

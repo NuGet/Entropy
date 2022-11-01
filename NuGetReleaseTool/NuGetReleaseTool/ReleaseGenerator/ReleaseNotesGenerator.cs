@@ -1,14 +1,10 @@
 ﻿using Octokit;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace ReleaseNotesGenerator
 {
-    class ReleaseNotesGenerator
+    public class ReleaseNotesGenerator
     {
         private const string NuGet = "nuget";
         private const string NuGetClient = "nuget.client";
