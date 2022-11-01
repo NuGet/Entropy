@@ -3,13 +3,13 @@ using CommandLine;
 
 namespace NuGetReleaseTool.ValidateReleaseCommand
 {
-    [Verb("validate-release", HelpText = "Generates the release notes for the NuGet Client for a given release version.")]
-    internal class ValidateReleaseCommandOptions : BaseOptions
+    [Verb("validate-release", HelpText = "Validates a specific NuGet release. Checks things such as NuGet.exe, NuGet SDK packages, release notes, open docs issues etc.")]
+    public class ValidateReleaseCommandOptions : BaseOptions
     {
         [Value(1, Required = true, HelpText = "Release version to generate the release notes for.")]
         public string Release { get; set; }
 
-        [Usage(ApplicationAlias = "release-notes-generator")]
+        [Usage(ApplicationAlias = "validate-release")]
         public static IEnumerable<Example> Examples
         {
             get
@@ -21,5 +21,4 @@ namespace NuGetReleaseTool.ValidateReleaseCommand
             }
         }
     }
-
 }
