@@ -32,7 +32,7 @@ static int RunReleaseValidateCommand(ValidateReleaseCommandOptions opts)
     {
         // Check release notes.
         // Check nuget.exe.
-        // Check docs issues. Check undocumented log codes.
+        // Check docs issues that are part of the PRs that were inserted. Check undocumented log codes
 
         Console.WriteLine("You have succesfully run the release validate command");
         return 0;
