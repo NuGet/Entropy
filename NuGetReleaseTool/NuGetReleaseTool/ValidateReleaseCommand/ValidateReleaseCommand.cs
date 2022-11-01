@@ -22,11 +22,18 @@ namespace NuGetReleaseTool.ValidateReleaseCommand
 
         public async Task<int> RunAsync()
         {
-            (Status, string) releaseNotesResult = await ValidateReleaseNotesAsync();
+            Console.WriteLine("|Section | Status | Notes |");
+            Console.WriteLine("|--------|--------|-------|");
+            WriteResultLine("Release notes", await ValidateReleaseNotesAsync());
             ValidateDocumentationReadiness();
             ValidateNuGetExe();
             ValidateNuGetSDKPackages();
             return 0;
+        }
+
+        private static void WriteResultLine(string section, (Status, string) result)
+        {
+            Console.WriteLine($"| {section} | {result.Item1} | {result.Item2} |");
         }
 
         private void ValidateNuGetSDKPackages()
@@ -88,12 +95,4 @@ namespace NuGetReleaseTool.ValidateReleaseCommand
             return false;
         }
     }
-
-    public enum Status
-    {
-        Completed,
-        InProgress,
-        NotStarted
-    }
 }
-1
