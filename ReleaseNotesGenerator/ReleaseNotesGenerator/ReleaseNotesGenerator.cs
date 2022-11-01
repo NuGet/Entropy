@@ -46,8 +46,8 @@ namespace ReleaseNotesGenerator
         {
             Dictionary<IssueType, List<Issue>> issues = await GetIssuesByType(NuGet, Home, Options.Release);
             List<PullRequest> communityPullRequests = await GetCommunityPullRequests(GitHubClient, NuGet, NuGetClient, Options.StartSha, $"release-{Options.Release}.x");
-
-            return GenerateMarkdown(Options.Release, issues, communityPullRequests);
+            string commitsDeltaLink = await GenerateReleaseDeltasLink(GitHubClient, Version.Parse(Options.Release));
+            return GenerateMarkdown(Options.Release, issues, communityPullRequests, commitsDeltaLink);
         }
 
         public static async Task<IList<Issue>> GetIssuesForMilestone(GitHubClient client, string org, string repo, Milestone milestone)
@@ -227,7 +227,7 @@ namespace ReleaseNotesGenerator
             return relevantMilestone;
         }
 
-        private static string GenerateMarkdown(string release, Dictionary<IssueType, List<Issue>> labelSet, List<PullRequest> communityPullRequests)
+        private static string GenerateMarkdown(string release, Dictionary<IssueType, List<Issue>> labelSet, List<PullRequest> communityPullRequests, string commitsDeltaLink)
         {
             var version = Version.Parse(release);
             string VSYear = GetVSYear(version.Major);
@@ -266,7 +266,7 @@ namespace ReleaseNotesGenerator
             builder.AppendLine();
             OutputSection(labelSet, builder, IssueType.DCR);
             OutputSection(labelSet, builder, IssueType.Bug);
-            builder.AppendLine("[List of commits in this release](TODO: Provide the link.)");
+            builder.AppendLine(string.Format("[List of commits in this release]({0})", commitsDeltaLink));
             builder.AppendLine();
             OutputCommunityPullRequestsSection(communityPullRequests, builder);
 
@@ -279,6 +279,41 @@ namespace ReleaseNotesGenerator
             }
 
             return builder.ToString();
+        }
+
+        private static async Task<string> GenerateReleaseDeltasLink(GitHubClient gitHubClient, Version currentVersion)
+        {
+            var allTags = await gitHubClient.Repository.GetAllTags(NuGet, NuGetClient);
+
+            Version previousVersion = EstimatePreviousMajorMinorVersion(currentVersion, allTags);
+            Console.WriteLine($"Generating a release deltas link for {currentVersion}, with the calculated previous version {previousVersion}");
+            var startVersion = GetLatestTagForMajorMinor(currentVersion, allTags);
+            var endVersion = GetLatestTagForMajorMinor(previousVersion, allTags);
+
+            return $"https://github.com/NuGet/NuGet.Client/compare/{startVersion}...{endVersion}";
+
+            static string GetLatestTagForMajorMinor(Version currentVersion, IReadOnlyList<RepositoryTag> allTags)
+            {
+                return allTags.Where(e => e.Name.StartsWith($"{currentVersion.Major}.{currentVersion.Minor}")).Select(e => Version.Parse(e.Name)).Max().ToString();
+            }
+
+            static Version EstimatePreviousMajorMinorVersion(Version currentVersion, IReadOnlyList<RepositoryTag> allTags)
+            {
+                if (currentVersion.Minor > 0)
+                {
+                    return new Version(currentVersion.Major, currentVersion.Minor - 1);
+                }
+                else
+                {
+                    var tagsWithPreviousMajor = allTags.Where(e => e.Name.StartsWith(currentVersion.Major - 1 + "."));
+                    if (!tagsWithPreviousMajor.Any())
+                    {
+                        throw new Exception($"Cannot infer previous major/minor version from the tags. Current version is {currentVersion}.");
+                    }
+                    var maxTagVersion = tagsWithPreviousMajor.Select(e => Version.Parse(e.Name)).Max();
+                    return new Version(maxTagVersion.Major, maxTagVersion.Minor);
+                }
+            }
         }
 
         private static string GetVSVersion(Version version)
