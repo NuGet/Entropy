@@ -4,7 +4,7 @@
     <NuGetCommonVersion Condition=" '$(NuGetMajorMinorVersion)' != '' ">$(NuGetMajorMinorVersion).*-*</NuGetCommonVersion>
     <NuGetCommonVersion Condition=" '$(NuGetCommonVersion)' == '' ">*-*</NuGetCommonVersion>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <Description>A utility for validating that relevant NuGet documentation has been published.</Description>
   </PropertyGroup>
 

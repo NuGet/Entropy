@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using CommandLine;
+using Octokit;
 
 namespace DocumentationValidator
 {
@@ -38,7 +40,13 @@ namespace DocumentationValidator
             return GenerateIssuesCommandAsync(opts).GetAwaiter().GetResult();
             async Task<int> GenerateIssuesCommandAsync(GenerateIssuesOptions opts)
             {
-                NuGetLogCodeAnalyzer analyzer = new(pat: null, Console.Out);
+                Dictionary<string, string> credentuals = GitCredentials.Get(new Uri("https://github.com/nuget/docs.microsoft.com-nuget"));
+                string pat = null;
+                if (!credentuals?.TryGetValue("password", out pat) == true) {
+                    Console.WriteLine("Warning: Unable to get github token. Making unauthenticated HTTP requests, which has lower request limits.");
+                }
+
+                NuGetLogCodeAnalyzer analyzer = new(pat, Console.Out);
                 var codes = await analyzer.GetUndocumentedLogCodesAsync();
 
                 if (codes.Any())
@@ -58,8 +66,6 @@ namespace DocumentationValidator
         [Verb("generate-issues", HelpText = "Creates issues in the docs repo for the log codes that are undocumented.")]
         class GenerateIssuesOptions
         {
-            [Option("pat", Required = true, HelpText = "A Github PAT from a user with sufficient permissions to perform the invoked action.")]
-            public string PAT { get; set; }
         }
     }
 }
