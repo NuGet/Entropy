@@ -3,6 +3,7 @@ using NuGet.Protocol;
 using NuGet.Protocol.Core.Types;
 using NuGet.Versioning;
 using Octokit;
+using static System.Net.WebRequestMethods;
 using Repository = NuGet.Protocol.Core.Types.Repository;
 
 namespace NuGetReleaseTool.ValidateReleaseCommand
@@ -119,7 +120,7 @@ namespace NuGetReleaseTool.ValidateReleaseCommand
             }
             else if (packagesMissingList.Count == expectedPackagesCount)
             {
-                return (Status.NotStarted, string.Join(", ", CorePackagesList) + " are not uploaded.");
+                return (Status.NotStarted, string.Join(", ", CorePackagesList, AllVSPackagesList) + " are not uploaded.");
             }
             else
             {
@@ -135,7 +136,7 @@ namespace NuGetReleaseTool.ValidateReleaseCommand
             SourceRepository repository = Repository.Factory.GetCoreV3("https://api.nuget.org/v3/index.json");
             FindPackageByIdResource resource = await repository.GetResourceAsync<FindPackageByIdResource>();
             var expectedVersion = NuGetVersion.Parse(Options.Release);
-            if(await resource.DoesPackageExistAsync(
+            if (await resource.DoesPackageExistAsync(
                     NuGetCommandlinePackageId,
                     expectedVersion,
                     cache,
@@ -145,6 +146,12 @@ namespace NuGetReleaseTool.ValidateReleaseCommand
                 return (Status.Completed, $"{expectedVersion} is on NuGet.org, and considered blessed");
             }
 
+            var expectedNuGetExeUrl = $"https://dist.nuget.org/win-x86-commandline/v{expectedVersion}/nuget.exe";
+            if (await UrlExistsAsync(HttpClient, expectedNuGetExeUrl))
+            {
+                return (Status.InProgress, $"{expectedVersion} is on NuGet.org, but no NuGet.Commandline package has been published and as such is not blessed.");
+
+            }
             return (Status.NotStarted, "Not started");
         }
 
