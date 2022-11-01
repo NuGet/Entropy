@@ -46,9 +46,9 @@ static int RunGenerateInsertionChangelog(GenerateInsertionChangelogCommandOption
     {
         var githubClient = new GitHubClient(new ProductHeaderValue("nuget-github-insertion-changelog-tagger"));
 
-        if (!string.IsNullOrEmpty(opts.PAT))
+        if (!string.IsNullOrEmpty(opts.GitHubToken))
         {
-            githubClient.Credentials = new Credentials(opts.PAT);
+            githubClient.Credentials = new Credentials(opts.GitHubToken);
         }
         else
         {

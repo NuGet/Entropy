@@ -7,11 +7,8 @@ namespace GenerateReleaseNotesCommand
     [Verb("generate-release-notes", HelpText = "Generates the release notes for the NuGet Client for a given release version.")]
     public class GenerateReleaseNotesCommandOptions : BaseOptions
     {
-        [Value(1, Required = true, HelpText = "Release version to generate the release notes for.")]
+        [Value(0, Required = true, HelpText = "Release version to generate the release notes for.")]
         public string Release { get; set; }
-
-        [Option('g', "github-token", Required = false, HelpText = "GitHub Token for Auth. If not specified, it will acquired automatically.")]
-        public string GitHubToken { get; set; }
 
         [Option("start-commit", Required = true, HelpText = "The starting sha for the current release. This commit must be on the release branch.")]
         public string StartSha { get; set; }
@@ -26,7 +23,7 @@ namespace GenerateReleaseNotesCommand
             {
                 return new List<Example>()
                 {
-                    new Example("Generate release notes for a particular release", new GenerateReleaseNotesCommandOptions { Command = "generate-release-notes", Release = "6.3", GitHubToken = "asdf", StartSha =" startSha", EndSha = "endSha" })
+                    new Example("Generate release notes for a particular release", new GenerateReleaseNotesCommandOptions { Release = "6.3", GitHubToken = "asdf", StartSha =" startSha", EndSha = "endSha" })
                 };
             }
         }
