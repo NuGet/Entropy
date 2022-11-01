@@ -1,4 +1,4 @@
-﻿namespace ReleaseNotesGenerator
+﻿namespace GenerateReleaseNotesCommand
 {
     public enum IssueType
     {

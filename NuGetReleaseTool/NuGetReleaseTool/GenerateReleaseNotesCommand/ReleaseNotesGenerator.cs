@@ -1,8 +1,9 @@
-﻿using Octokit;
+﻿using NuGetReleaseTool;
+using Octokit;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace ReleaseNotesGenerator
+namespace GenerateReleaseNotesCommand
 {
     public class ReleaseNotesGenerator
     {
@@ -11,9 +12,9 @@ namespace ReleaseNotesGenerator
         private const string Home = "home";
 
         private readonly GitHubClient GitHubClient;
-        private readonly Options Options;
+        private readonly GenerateReleaseNotesCommandOptions Options;
 
-        public ReleaseNotesGenerator(Options opts)
+        public ReleaseNotesGenerator(GenerateReleaseNotesCommandOptions opts)
         {
             Options = opts;
             GitHubClient = new GitHubClient(new ProductHeaderValue("nuget-release-notes-generator"));

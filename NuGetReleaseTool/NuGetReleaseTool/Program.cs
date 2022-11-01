@@ -1,34 +1,19 @@
-﻿// See https://aka.ms/new-console-template for more information
-using CommandLine;
-using ReleaseNotesGenerator;
+﻿using CommandLine;
+using GenerateReleaseNotesCommand;
 
-Console.WriteLine("Hello, World!");
+return Parser.Default.ParseArguments<GenerateReleaseNotesCommandOptions>(args)
+               .MapResult(
+                 (GenerateReleaseNotesCommandOptions releaseNotesGeneratorOptions) => RunReleaseNotesGeneratorCommand(releaseNotesGeneratorOptions),
+                 errs => 1);
 
-ParserResult<Options> parserResult = Parser.Default.ParseArguments<Options>(args);
-parserResult
-    .WithParsed(options =>
+static int RunReleaseNotesGeneratorCommand(GenerateReleaseNotesCommandOptions opts)
+{
+    return RunReleaseNotesGeneratorCommandAsync(opts).GetAwaiter().GetResult();
+    async Task<int> RunReleaseNotesGeneratorCommandAsync(GenerateReleaseNotesCommandOptions options)
     {
-        var task = Task.Run(async () =>
-        {
-            try
-            {
-                var fileName = "NuGet-" + options.Release + ".md";
-
-                File.WriteAllText(fileName, await new ReleaseNotesGenerator.ReleaseNotesGenerator(options).GenerateChangelog());
-                Console.WriteLine($"{fileName} creation complete");
-                Environment.Exit(0);
-                Console.ReadLine();
-            }
-            catch (Exception ex)
-            {
-                Console.Error.WriteLine(ex.Message);
-                Environment.Exit(1);
-            }
-        });
-        task.Wait();
-    })
-    .WithNotParsed(errors =>
-    {
-        Environment.Exit(1);
-        Console.ReadLine();
-    });
+        var fileName = "NuGet-" + options.Release + ".md";
+        File.WriteAllText(fileName, await new ReleaseNotesGenerator(options).GenerateChangelog());
+        Console.WriteLine($"{fileName} creation complete");
+        return 0;
+    }
+}

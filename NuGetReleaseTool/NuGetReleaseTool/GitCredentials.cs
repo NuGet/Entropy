@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 
-namespace ReleaseNotesGenerator
+namespace NuGetReleaseTool
 {
     internal class GitCredentials
     {

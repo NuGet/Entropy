@@ -1,9 +1,10 @@
 ﻿using CommandLine;
 using CommandLine.Text;
 
-namespace ReleaseNotesGenerator
+namespace GenerateReleaseNotesCommand
 {
-    public class Options
+    [Verb("generate-release-notes", HelpText = "Generates the release notes for the NuGet Client for a given release version.")]
+    public class GenerateReleaseNotesCommandOptions
     {
         [Value(0, Required = true, HelpText = "Release version to generate the release notes for.")]
         public string Release { get; set; }
@@ -24,7 +25,7 @@ namespace ReleaseNotesGenerator
             {
                 return new List<Example>()
                 {
-                    new Example("Generate release notes for a particular release", new Options { Release = "6.3", GitHubToken = "asdf", StartSha =" startSha", EndSha = "endSha" })
+                    new Example("Generate release notes for a particular release", new GenerateReleaseNotesCommandOptions { Release = "6.3", GitHubToken = "asdf", StartSha =" startSha", EndSha = "endSha" })
                 };
             }
         }

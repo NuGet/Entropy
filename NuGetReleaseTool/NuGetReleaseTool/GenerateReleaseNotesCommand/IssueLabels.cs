@@ -1,6 +1,6 @@
-﻿namespace ReleaseNotesGenerator
+﻿namespace GenerateReleaseNotesCommand
 {
-    class IssueLabels
+    public class IssueLabels
     {
         public static string ClosedPrefix = "Resolution:";
         public static string RegressionDuringThisVersion = "RegressionDuringThisVersion";
