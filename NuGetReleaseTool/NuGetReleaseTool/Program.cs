@@ -30,10 +30,10 @@ static int RunReleaseValidateCommand(ValidateReleaseCommandOptions opts)
     return RunReleaseValidateCommandAsync(opts).GetAwaiter().GetResult();
     async Task<int> RunReleaseValidateCommandAsync(ValidateReleaseCommandOptions options)
     {
+        var githubClient = GenerateGitHubClient(opts);
         // Check release notes.
         // Check nuget.exe.
         // Check docs issues that are part of the PRs that were inserted. Check undocumented log codes
-
         Console.WriteLine("You have succesfully run the release validate command");
         return 0;
     }
