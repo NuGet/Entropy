@@ -1,4 +1,9 @@
-﻿using Octokit;
+﻿using NuGet.Common;
+using NuGet.Protocol;
+using NuGet.Protocol.Core.Types;
+using NuGet.Versioning;
+using Octokit;
+using Repository = NuGet.Protocol.Core.Types.Repository;
 
 namespace NuGetReleaseTool.ValidateReleaseCommand
 {
@@ -13,6 +18,36 @@ namespace NuGetReleaseTool.ValidateReleaseCommand
         private readonly ValidateReleaseCommandOptions Options;
         private readonly HttpClient HttpClient;
 
+        private string NuGetCommandlinePackageId = "NuGet.CommandLine";
+
+        List<string> CorePackagesList = new List<string>() {
+            "NuGet.Indexing",
+            "NuGet.Build.Tasks.Console",
+            "NuGet.Build.Tasks.Pack",
+            "NuGet.Build.Tasks",
+            "NuGet.CommandLine.XPlat",
+            "NuGet.Commands",
+            "NuGet.Common",
+            "NuGet.Configuration",
+            "NuGet.Credentials",
+            "NuGet.DependencyResolver.Core",
+            "NuGet.Frameworks",
+            "NuGet.LibraryModel",
+            "NuGet.Localization",
+            "NuGet.PackageManagement",
+            "NuGet.Packaging.Core",
+            "NuGet.Packaging",
+            "NuGet.ProjectModel",
+            "NuGet.Protocol",
+            "NuGet.Resolver",
+            "NuGet.Versioning" };
+
+        List<string> AllVSPackagesList = new()
+        {
+            "NuGet.VisualStudio.Contracts",
+            "NuGet.VisualStudio",
+        };
+
         public ValidateReleaseCommand(ValidateReleaseCommandOptions opts, GitHubClient gitHubClient)
         {
             Options = opts;
@@ -25,9 +60,9 @@ namespace NuGetReleaseTool.ValidateReleaseCommand
             Console.WriteLine("|Section | Status | Notes |");
             Console.WriteLine("|--------|--------|-------|");
             WriteResultLine("Release notes", await ValidateReleaseNotesAsync());
-            ValidateDocumentationReadiness();
-            ValidateNuGetExe();
-            ValidateNuGetSDKPackages();
+            WriteResultLine("Documentation readiness", await ValidateDocumentationReadinessAsync());
+            WriteResultLine("SDK packages", await ValidateNuGetSDKPackages());
+            WriteResultLine("NuGet.exe", await ValidateNuGetExeAsync());
             return 0;
         }
 
@@ -36,16 +71,86 @@ namespace NuGetReleaseTool.ValidateReleaseCommand
             Console.WriteLine($"| {section} | {result.Item1} | {result.Item2} |");
         }
 
-        private void ValidateNuGetSDKPackages()
+        private async Task<(Status, string)> ValidateNuGetSDKPackages()
         {
+            ILogger logger = NullLogger.Instance;
+            CancellationToken cancellationToken = CancellationToken.None;
+            SourceCacheContext cache = new();
+            SourceRepository repository = Repository.Factory.GetCoreV3("https://api.nuget.org/v3/index.json");
+            FindPackageByIdResource resource = await repository.GetResourceAsync<FindPackageByIdResource>();
+
+            var packagesMissingList = new List<string>() { };
+            var expectedVersion = NuGetVersion.Parse(Options.Release);
+            var expectedVsPackageVersion = new NuGetVersion(expectedVersion.Major + 11, expectedVersion.Minor, expectedVersion.Patch, expectedVersion.Revision, expectedVersion.Release, expectedVersion.Metadata);
+
+            int expectedPackagesCount = CorePackagesList.Count + AllVSPackagesList.Count;
+
+            foreach (var package in CorePackagesList)
+            {
+                if (!await resource.DoesPackageExistAsync(
+                    package,
+                    expectedVersion,
+                    cache,
+                    logger,
+                    cancellationToken))
+                {
+                    packagesMissingList.Add(package);
+
+                }
+            }
+
+            foreach (var package in AllVSPackagesList)
+            {
+                if (!await resource.DoesPackageExistAsync(
+                    package,
+                    expectedVsPackageVersion,
+                    cache,
+                    logger,
+                    cancellationToken))
+                {
+                    packagesMissingList.Add(package);
+
+                }
+            }
+
+            if (packagesMissingList.Count == 0)
+            {
+                return (Status.Completed, string.Empty);
+            }
+            else if (packagesMissingList.Count == expectedPackagesCount)
+            {
+                return (Status.NotStarted, string.Join(", ", CorePackagesList) + " are not uploaded.");
+            }
+            else
+            {
+                return (Status.InProgress, string.Join(", ", packagesMissingList) + " were expected to be available, but are not.");
+            }
         }
 
-        private void ValidateNuGetExe()
+        private async Task<(Status, string)> ValidateNuGetExeAsync()
         {
+            ILogger logger = NullLogger.Instance;
+            CancellationToken cancellationToken = CancellationToken.None;
+            SourceCacheContext cache = new();
+            SourceRepository repository = Repository.Factory.GetCoreV3("https://api.nuget.org/v3/index.json");
+            FindPackageByIdResource resource = await repository.GetResourceAsync<FindPackageByIdResource>();
+            var expectedVersion = NuGetVersion.Parse(Options.Release);
+            if(await resource.DoesPackageExistAsync(
+                    NuGetCommandlinePackageId,
+                    expectedVersion,
+                    cache,
+                    logger,
+                    cancellationToken))
+            {
+                return (Status.Completed, $"{expectedVersion} is on NuGet.org, and considered blessed");
+            }
+
+            return (Status.NotStarted, "Not started");
         }
 
-        private void ValidateDocumentationReadiness()
+        private async Task<(Status, string)> ValidateDocumentationReadinessAsync()
         {
+            return (Status.NotStarted, "Documentation readiness not being evaluated yet.");
         }
 
         private async Task<(Status, string)> ValidateReleaseNotesAsync()
@@ -58,7 +163,7 @@ namespace NuGetReleaseTool.ValidateReleaseCommand
             }
             else if (await UrlExistsAsync(HttpClient, releaseNotesGHUrl))
             {
-                return (Status.InProgress, $"The docs repo has the release notes, but they are not published to the repo yet. {releaseNotesGHUrl}".);
+                return (Status.InProgress, $"The docs repo has the release notes, but they are not published to the repo yet. {releaseNotesGHUrl}");
             }
             else
             {
