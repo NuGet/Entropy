@@ -13,6 +13,6 @@ To run the tool:
 
 This is a manually managed list of commands available in the tool. It is expected that each command has a README of their own and has a its own folder.
 
-- [generate-release-notes](NugetReleaseTool/GenerateReleaseNotesCommand/README.md)
-- [generate-insertion-changelog](NugetReleaseTool/GenerateInsertionChangelogCommand/README.md)
-- [validate-release](NugetReleaseTool/ValidateReleaseCommand/README.md)
+- [generate-release-notes](NuGetReleaseTool/GenerateReleaseNotesCommand/README.md)
+- [generate-insertion-changelog](NuGetReleaseTool/GenerateInsertionChangelogCommand/README.md)
+- [validate-release](NuGetReleaseTool/ValidateReleaseCommand/README.md)
