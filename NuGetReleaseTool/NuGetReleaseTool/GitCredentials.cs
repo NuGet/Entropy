@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 
-namespace ReleaseNotesGenerator
+namespace NuGetReleaseTool
 {
     internal class GitCredentials
     {
         // Implement https://git-scm.com/docs/git-credential#_typical_use_of_git_credential
-        public static Dictionary<string, string> Get(Uri uri)
+        public static Dictionary<string, string>? Get(Uri uri)
         {
             string description = "url=" + uri.AbsoluteUri + "\n\n";
 

@@ -1,4 +1,4 @@
-﻿namespace ReleaseNotesGenerator
+﻿namespace NuGetReleaseTool.GenerateReleaseNotesCommand
 {
     public enum IssueType
     {

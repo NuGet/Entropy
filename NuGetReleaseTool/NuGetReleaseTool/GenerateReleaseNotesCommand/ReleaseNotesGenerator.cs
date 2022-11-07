@@ -1,45 +1,23 @@
-﻿using Octokit;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using NuGetReleaseTool;
+using Octokit;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
-namespace ReleaseNotesGenerator
+namespace NuGetReleaseTool.GenerateReleaseNotesCommand
 {
-    class ReleaseNotesGenerator
+    public class ReleaseNotesGenerator
     {
         private const string NuGet = "nuget";
         private const string NuGetClient = "nuget.client";
         private const string Home = "home";
 
         private readonly GitHubClient GitHubClient;
-        private readonly Options Options;
+        private readonly GenerateReleaseNotesCommandOptions Options;
 
-        public ReleaseNotesGenerator(Options opts)
+        public ReleaseNotesGenerator(GenerateReleaseNotesCommandOptions opts, GitHubClient gitHubClient)
         {
             Options = opts;
-            GitHubClient = new GitHubClient(new ProductHeaderValue("nuget-release-notes-generator"));
-
-            Credentials creds = null;
-            if (!string.IsNullOrEmpty(opts.GitHubToken))
-            {
-                creds = new Credentials(opts.GitHubToken);
-            }
-            else
-            {
-                Dictionary<string, string> credentuals = GitCredentials.Get(new Uri($"https://github.com/{NuGet}/{Home}"));
-                if (credentuals?.TryGetValue("password", out string pat) == true)
-                {
-                    creds = new Credentials(pat);
-                }
-                else
-                {
-                    Console.WriteLine("Warning: Unable to get github token. Making unauthenticated HTTP requests, which has lower request limits.");
-                }
-            }
-            GitHubClient.Credentials = creds;
+            GitHubClient = gitHubClient;
         }
 
         public async Task<string> GenerateChangelog()
