@@ -9,6 +9,9 @@ namespace NuGetReleaseTool.ValidateReleaseCommand
         [Value(1, Required = true, HelpText = "Release version to generate the release notes for.")]
         public string Release { get; set; }
 
+        [Option("start-commit", Required = true, HelpText = "The starting sha for the current release. This commit must be on the release branch.")]
+        public string StartSha { get; set; }
+
         [Usage(ApplicationAlias = "validate-release")]
         public static IEnumerable<Example> Examples
         {

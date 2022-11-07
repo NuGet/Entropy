@@ -14,19 +14,19 @@ namespace NuGetReleaseTool.GenerateInsertionChangelogCommand
 
             var githubBranch = await gitHubClient.Repository.Branch.Get(orgName, repoName, branchName);
             var githubCommits = (await gitHubClient.Repository.Commit.Compare(orgName, repoName, startSha, githubBranch.Commit.Sha)).Commits.Reverse();
-            List<Commit> commits = await GetCommitDetails(gitHubClient, orgName, repoName, issueRepositories, githubCommits);
+            List<CommitWithDetails> commits = await GetCommitDetails(gitHubClient, orgName, repoName, issueRepositories, githubCommits);
 
             SaveAsHtml(commits, resultPath);
             SaveAsMarkdown(commits, resultPath);
         }
 
-        private static async Task<List<Commit>> GetCommitDetails(GitHubClient gitHubClient, string orgName, string repoName, string[] issueRepositories, IEnumerable<GitHubCommit> githubCommits)
+        public static async Task<List<CommitWithDetails>> GetCommitDetails(GitHubClient gitHubClient, string orgName, string repoName, string[] issueRepositories, IEnumerable<GitHubCommit> githubCommits)
         {
-            var processedCommits = new List<Commit>();
+            var processedCommits = new List<CommitWithDetails>();
             foreach (var ghCommit in githubCommits)
             {
                 var author = ghCommit.Author?.Login ?? ghCommit.Committer?.Login ?? "";
-                var commit = new Commit(ghCommit.Sha, author, $"https://github.com/{orgName}/{repoName}/commit/{ghCommit.Sha}", ghCommit.Commit.Message);
+                var commit = new CommitWithDetails(ghCommit.Sha, author, $"https://github.com/{orgName}/{repoName}/commit/{ghCommit.Sha}", ghCommit.Commit.Message);
                 var id = GetPRId(ghCommit.Commit.Message);
                 string pullRequestbody = string.Empty;
                 if (id != -1)
@@ -59,7 +59,7 @@ namespace NuGetReleaseTool.GenerateInsertionChangelogCommand
         }
 
         public static void UpdateCommitIssuesFromText(
-            Commit commit,
+            CommitWithDetails commit,
             string body,
             IList<string> issueRepositories)
         {
@@ -119,7 +119,7 @@ namespace NuGetReleaseTool.GenerateInsertionChangelogCommand
             return list;
         }
 
-        public static void SaveAsHtml(IList<Commit> commits, string path)
+        public static void SaveAsHtml(IList<CommitWithDetails> commits, string path)
         {
             var resultHtmlPath = Path.Combine(path, "results.html");
             Directory.CreateDirectory(Path.GetDirectoryName(resultHtmlPath));
@@ -152,9 +152,9 @@ table, th, td {
 <th>Area</th>
 <th>Pull Request</th>
 <th>Issue(s)</th>
-<th>Commit</th>
+<th>CommitWithDetails</th>
 <th>Author</th>
-<th>Commit Message</th>
+<th>CommitWithDetails Message</th>
 </tr>");
                 foreach (var commit in commits)
                 {
@@ -186,7 +186,7 @@ table, th, td {
             }
         }
 
-        public static void SaveAsMarkdown(IList<Commit> commits, string path)
+        public static void SaveAsMarkdown(IList<CommitWithDetails> commits, string path)
         {
             var resultMarkdownPath = Path.Combine(path, "results.md");
             Directory.CreateDirectory(Path.GetDirectoryName(resultMarkdownPath));
@@ -199,7 +199,7 @@ table, th, td {
             using (var w = File.AppendText(resultMarkdownPath))
             {
                 w.WriteLine(
-                @"|Pull Request |Issue(s) |Commit |Author |Commit Message |");
+                @"|Pull Request |Issue(s) |CommitWithDetails |Author |CommitWithDetails Message |");
                 w.WriteLine("--- | --- | --- | --- | ---");
                 foreach (var commit in commits)
                 {
@@ -232,29 +232,6 @@ table, th, td {
                 }
 
                 return string.Empty;
-            }
-        }
-
-        public class Commit
-        {
-            public string Sha { get; }
-            public string Author { get; }
-            public string Link { get; }
-            public string Message { get; }
-
-            public ISet<Tuple<int, string>> Issues { get; }
-
-            public Tuple<int, string> PR { get; set; }
-
-            public Commit(string sha, string author, string link, string message)
-            {
-                Sha = sha;
-                Author = author;
-                Link = link;
-                Message = message?
-                            .Replace("\r", " ")
-                            .Replace("\n", " ");
-                Issues = new HashSet<Tuple<int, string>>();
             }
         }
     }

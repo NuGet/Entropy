@@ -2,8 +2,8 @@
 using NuGet.Protocol;
 using NuGet.Protocol.Core.Types;
 using NuGet.Versioning;
+using NuGetReleaseTool.GenerateInsertionChangelogCommand;
 using Octokit;
-using static System.Net.WebRequestMethods;
 using Repository = NuGet.Protocol.Core.Types.Repository;
 
 namespace NuGetReleaseTool.ValidateReleaseCommand
@@ -61,7 +61,7 @@ namespace NuGetReleaseTool.ValidateReleaseCommand
             Console.WriteLine("|Section | Status | Notes |");
             Console.WriteLine("|--------|--------|-------|");
             WriteResultLine("Release notes", await ValidateReleaseNotesAsync());
-            WriteResultLine("Documentation readiness", await ValidateDocumentationReadinessAsync());
+            WriteResultLine("Documentation readiness", await ValidateDocumentationReadinessAsync(GitHubClient, Options.StartSha, $"release-{Options.Release}.x"));
             WriteResultLine("SDK packages", await ValidateNuGetSDKPackages());
             WriteResultLine("NuGet.exe", await ValidateNuGetExeAsync());
             return 0;
@@ -120,7 +120,7 @@ namespace NuGetReleaseTool.ValidateReleaseCommand
             }
             else if (packagesMissingList.Count == expectedPackagesCount)
             {
-                return (Status.NotStarted, string.Join(", ", CorePackagesList, AllVSPackagesList) + " are not uploaded.");
+                return (Status.NotStarted, string.Join(", ", packagesMissingList) + " are not uploaded.");
             }
             else
             {
@@ -155,9 +155,36 @@ namespace NuGetReleaseTool.ValidateReleaseCommand
             return (Status.NotStarted, "Not started");
         }
 
-        private async Task<(Status, string)> ValidateDocumentationReadinessAsync()
+        private async Task<(Status, string)> ValidateDocumentationReadinessAsync(GitHubClient gitHubClient, string startSha, string branchName)
         {
-            return (Status.NotStarted, "Documentation readiness not being evaluated yet.");
+            // For a given ID/branch, get all of the linked documentation PRs that are still open.
+            var orgName = "nuget";
+            var repoName = "nuget.client";
+            var docsReponame = "docs.microsoft.com-nuget";
+            string[] issueRepositories = new string[] { "NuGet/docs.microsoft.com-nuget" };
+
+            var githubBranch = await gitHubClient.Repository.Branch.Get(orgName, repoName, branchName);
+            var githubCommits = (await gitHubClient.Repository.Commit.Compare(orgName, repoName, startSha, githubBranch.Commit.Sha)).Commits.Reverse();
+            List<CommitWithDetails> commits = await ChangeLogGenerator.GetCommitDetails(gitHubClient, orgName, repoName, issueRepositories, githubCommits);
+
+            var urls = new HashSet<string>();
+
+            foreach (var commit in commits)
+            {
+                foreach (var issue in commit.Issues)
+                {
+                    var ghIssue = await GitHubClient.Issue.Get(orgName, docsReponame, issue.Item1);
+                    if (ghIssue.State == ItemState.Open)
+                    {
+                        urls.Add(issue.Item2);
+                    }
+                }
+            }
+            if (urls.Count > 0)
+            {
+                return (Status.InProgress, $"Issues linked in PRs of commits that are part of the release: {string.Join(", ", urls)}");
+            }
+            return (Status.Completed, "No open issues");
         }
 
         private async Task<(Status, string)> ValidateReleaseNotesAsync()
