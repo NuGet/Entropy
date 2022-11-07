@@ -5,8 +5,8 @@ namespace NuGetReleaseTool.GenerateInsertionChangelogCommand
     [Verb("generate-insertion-changelog", HelpText = "Generate an insertion changelog.")]
     public class GenerateInsertionChangelogCommandOptions : BaseOptions
     {
-        [Option("startSha", Required = true, HelpText = "The sha from which to start the generator.")]
-        public string StartSha { get; set; }
+        [Option("start-commit", Required = true, HelpText = "The sha from which to start the generator.")]
+        public string StartCommit { get; set; }
 
         [Option("branch", Required = true, HelpText = "The branch in which to search for the start sha.")]
         public string Branch { get; set; }

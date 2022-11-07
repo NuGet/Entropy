@@ -5,7 +5,7 @@ A command of the release tool to generate a list of commits for NuGet Client ins
 Sample commandline arguments:
 
 ```console
-NuGetReleaseTool.exe generate-insertion-changelog --startSha sha123456789 --branch dev --output D:\Output
+NuGetReleaseTool.exe generate-insertion-changelog --start-commit sha123456789 --branch dev --output D:\Output
 ```
 
 ### GitHub Personal Access Token

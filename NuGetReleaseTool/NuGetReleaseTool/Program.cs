@@ -43,7 +43,7 @@ static int RunGenerateInsertionChangelog(GenerateInsertionChangelogCommandOption
     {
         GitHubClient githubClient = GenerateGitHubClient(opts);
 
-        var startSha = opts.StartSha;
+        var startSha = opts.StartCommit;
         var branch = opts.Branch;
         var directory = opts.Output ?? Directory.GetCurrentDirectory();
 

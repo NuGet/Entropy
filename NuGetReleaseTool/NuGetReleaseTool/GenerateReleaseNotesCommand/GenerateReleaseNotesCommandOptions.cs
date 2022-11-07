@@ -10,10 +10,10 @@ namespace NuGetReleaseTool.GenerateReleaseNotesCommand
         public string Release { get; set; }
 
         [Option("start-commit", Required = true, HelpText = "The starting sha for the current release. This commit must be on the release branch.")]
-        public string StartSha { get; set; }
+        public string StartCommit { get; set; }
 
         [Option("end-commit", Required = false, HelpText = "The starting sha for the current release. This commit must be on the release branch. If not specified, the tip of the release branch will be used.")]
-        public string EndSha { get; set; }
+        public string EndCommit { get; set; }
 
         [Usage(ApplicationAlias = "generate-release-notes")]
         public static IEnumerable<Example> Examples
@@ -22,7 +22,7 @@ namespace NuGetReleaseTool.GenerateReleaseNotesCommand
             {
                 return new List<Example>()
                 {
-                    new Example("Generate release notes for a particular release", new GenerateReleaseNotesCommandOptions { Release = "6.3", GitHubToken = "asdf", StartSha =" startSha", EndSha = "endSha" })
+                    new Example("Generate release notes for a particular release", new GenerateReleaseNotesCommandOptions { Release = "6.3", GitHubToken = "asdf", StartCommit =" startSha", EndCommit = "endSha" })
                 };
             }
         }
