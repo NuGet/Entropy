@@ -1,6 +1,6 @@
 # NuGet Release Tool
 
-This is a tool that's contains helper commands to ship releases, create insertions, and other helpers that help deliver NuGet to our customers. 
+This is a tool that's contains helper commands to ship releases, create insertions, and other helpers that help deliver NuGet to our customers.
 
 To run the tool:
 
@@ -9,11 +9,10 @@ To run the tool:
   - cd `NuGetReleaseTool`
   - dotnet run help
 
-
 ## Command List
 
 This is a manually managed list of commands available in the tool. It is expected that each command has a README of their own and has a its own folder.
 
-- [generate-release-notes](.\NugetReleaseTool\GenerateReleaseNotesCommand\README.md)
-- [generate-insertion-changelog](.\NugetReleaseTool\GenerateInsertionChangelogCommand\README.md)
-- [validate-release](.\NugetReleaseTool\ValidateReleaseCommand\README.md)
+- [generate-release-notes](NugetReleaseTool/GenerateReleaseNotesCommand/README.md)
+- [generate-insertion-changelog](NugetReleaseTool/GenerateInsertionChangelogCommand/README.md)
+- [validate-release](NugetReleaseTool/ValidateReleaseCommand/README.md)
