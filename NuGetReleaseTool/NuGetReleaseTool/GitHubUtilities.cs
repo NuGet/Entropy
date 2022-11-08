@@ -5,6 +5,12 @@ namespace NuGetReleaseTool
 {
     internal static class GitHubUtilities
     {
+        public static string GetReleaseBranchFromVersion(string version)
+        {
+            var parsedVersion = new Version(version);
+            return $"release-{parsedVersion.Major}.{parsedVersion.Minor}.x";
+        }
+
         private static string GetReleaseBranchFromVersion(Version parsedVersion)
         {
             return $"release-{parsedVersion.Major}.{parsedVersion.Minor}.x";

@@ -19,7 +19,7 @@ namespace NuGetReleaseTool.GenerateReleaseNotesCommand
         public async Task<string> GenerateChangelog()
         {
             Dictionary<IssueType, List<Issue>> issues = await GetIssuesByType(Constants.NuGet, Constants.Home, Options.Release);
-            List<PullRequest> communityPullRequests = await GetCommunityPullRequests(GitHubClient, Constants.NuGet, Constants.NuGetClient, Options.StartCommit, $"release-{Options.Release}.x");
+            List<PullRequest> communityPullRequests = await GetCommunityPullRequests(GitHubClient, Constants.NuGet, Constants.NuGetClient, Options.StartCommit, GitHubUtilities.GetReleaseBranchFromVersion(Options.Release));
             string commitsDeltaLink = await GenerateReleaseDeltasLink(GitHubClient, Version.Parse(Options.Release));
             return GenerateMarkdown(Options.Release, issues, communityPullRequests, commitsDeltaLink);
         }
