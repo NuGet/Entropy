@@ -58,12 +58,14 @@ namespace NuGetReleaseTool.ValidateReleaseCommand
 
         public async Task<int> RunAsync()
         {
-            Console.WriteLine("|Section | Status | Notes |");
-            Console.WriteLine("|--------|--------|-------|");
-            WriteResultLine("Release notes", await ValidateReleaseNotesAsync());
-            WriteResultLine("Documentation readiness", await ValidateDocumentationReadinessAsync(GitHubClient, Options.StartSha, $"release-{Options.Release}.x"));
-            WriteResultLine("SDK packages", await ValidateNuGetSDKPackages());
-            WriteResultLine("NuGet.exe", await ValidateNuGetExeAsync());
+            await GitHubUtilities.GetUniqueCommitsListBetween2Branches(GitHubClient, "nuget", "nuget.client", "release-6.3.x", "release-6.4.x");
+
+            //Console.WriteLine("|Section | Status | Notes |");
+            //Console.WriteLine("|--------|--------|-------|");
+            //WriteResultLine("Release notes", await ValidateReleaseNotesAsync());
+            //WriteResultLine("Documentation readiness", await ValidateDocumentationReadinessAsync();
+            //WriteResultLine("SDK packages", await ValidateNuGetSDKPackages());
+            //WriteResultLine("NuGet.exe", await ValidateNuGetExeAsync());
             return 0;
         }
 
@@ -155,7 +157,7 @@ namespace NuGetReleaseTool.ValidateReleaseCommand
             return (Status.NotStarted, "Not started");
         }
 
-        private async Task<(Status, string)> ValidateDocumentationReadinessAsync(GitHubClient gitHubClient, string startSha, string branchName)
+        private async Task<(Status, string)> ValidateDocumentationReadinessAsync()
         {
             // For a given ID/branch, get all of the linked documentation PRs that are still open.
             var orgName = "nuget";
@@ -163,9 +165,9 @@ namespace NuGetReleaseTool.ValidateReleaseCommand
             var docsReponame = "docs.microsoft.com-nuget";
             string[] issueRepositories = new string[] { "NuGet/docs.microsoft.com-nuget" };
 
-            var githubBranch = await gitHubClient.Repository.Branch.Get(orgName, repoName, branchName);
-            var githubCommits = (await gitHubClient.Repository.Commit.Compare(orgName, repoName, startSha, githubBranch.Commit.Sha)).Commits.Reverse();
-            List<CommitWithDetails> commits = await ChangeLogGenerator.GetCommitDetails(gitHubClient, orgName, repoName, issueRepositories, githubCommits);
+            var githubBranch = await GitHubClient.Repository.Branch.Get(orgName, repoName, GitHubUtilities.GetReleaseBranchFromVersion(Options.Release));
+            var githubCommits = (await GitHubClient.Repository.Commit.Compare(orgName, repoName, Options.StartCommit, githubBranch.Commit.Sha)).Commits.Reverse();
+            List<CommitWithDetails> commits = await ChangeLogGenerator.GetCommitDetails(GitHubClient, orgName, repoName, issueRepositories, githubCommits);
 
             var urls = new HashSet<string>();
 
