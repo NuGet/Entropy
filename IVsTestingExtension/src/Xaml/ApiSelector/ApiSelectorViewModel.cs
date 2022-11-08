@@ -20,6 +20,7 @@ namespace IVsTestingExtension.Xaml.ApiSelector
     {
         public ApiSelectorViewModel(ObservableCollection<TargetProject> projects, IAsyncServiceProvider asyncServiceProvider)
         {
+#pragma warning disable CS0618 // Type or member is obsolete
             Interfaces = new Builder()
                 .WithService<INuGetProjectService>()
                     .FromBrokeredService(asyncServiceProvider, NuGetServices.NuGetProjectServiceV1)
@@ -54,7 +55,12 @@ namespace IVsTestingExtension.Xaml.ApiSelector
                     .WithMethod(s => s.GetShortFrameworkName(It.IsAny<FrameworkName>()))
                     .WithMethod(s => s.ParseFrameworkName(It.IsAny<string>()))
                     .BuildService()
+                .WithService<IVsPackageInstaller>()
+                    .FromMEF(asyncServiceProvider)
+                    .WithMethod(s => s.InstallPackage(It.IsAny<string>(), It.IsAny<EnvDTE.Project>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<bool>()))
+                    .BuildService()
                 .Build();
+#pragma warning restore CS0618 // Type or member is obsolete
 
             Projects = projects;
         }

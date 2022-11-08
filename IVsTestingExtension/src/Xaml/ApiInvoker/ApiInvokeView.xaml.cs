@@ -59,6 +59,10 @@ namespace IVsTestingExtension.Xaml.ApiInvoker
                         {
                             parameters[i] = CancellationToken.None;
                         }
+                        else if (paramModel.Type == typeof(bool))
+                        {
+                            parameters[i] = bool.Parse((string)paramModel.Value);
+                        }
                         else if (paramModel.Type == paramModel.Value.GetType())
                         {
                             parameters[i] = paramModel.Value;

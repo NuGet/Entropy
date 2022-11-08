@@ -1,5 +1,4 @@
 ﻿using IVsTestingExtension.Models;
-using IVsTestingExtension.Xaml.ApiSelector;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Threading;
 using System;
