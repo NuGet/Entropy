@@ -18,7 +18,7 @@ namespace GithubIssueTagger
 
         public static async Task RunPlanningAsync(GitHubClient client)
         {
-            IEnumerable<Issue> issues = await GetIssuesForLabelFromBothClientRepos(client, SeasonOfGiving);
+            IEnumerable<Issue> issues = await GetIssuesForLabelFromBothClientRepos(client, ItemStateFilter.All, SeasonOfGiving);
 
             var markdownTable = issues.Select(e => new IssueModel(e)).ToMarkdownTable(GetSeasonOfGivingColumns());
 
@@ -57,14 +57,14 @@ namespace GithubIssueTagger
             return issues;
         }
 
-        public static async Task<IList<Issue>> GetIssuesForLabelFromBothClientRepos(GitHubClient client, string label)
+        public static async Task<IList<Issue>> GetIssuesForLabelFromBothClientRepos(GitHubClient client, ItemStateFilter itemState, string label)
         {
-            var homeIssues = await IssueUtilities.GetIssuesForLabelAsync(client, "nuget", "home", label);
-            var clientEngineeringIssues = await IssueUtilities.GetIssuesForLabelAsync(client, "nuget", "client.engineering", label);
+            var homeIssues = await IssueUtilities.GetIssuesForLabelsAsync(client, "nuget", "home", itemState, label);
+            var clientEngineeringIssues = await IssueUtilities.GetIssuesForLabelsAsync(client, "nuget", "client.engineering", itemState, label);
             var issues = (homeIssues.Union(clientEngineeringIssues)).OrderBy(e => e.Repository).OrderBy(e => e.Number).ToList();
 
             return issues;
-        
+
         }
 
         public static List<Tuple<string, string>> GetPackageSourceMapping()
@@ -84,8 +84,9 @@ namespace GithubIssueTagger
                 {
                     new Tuple<string, string>("Link", "Link"),
                     new Tuple<string, string>("Title", "Title"),
-                    new Tuple<string, string>("Cost", "Cost"),
+                    new Tuple<string, string>("Status", "Status"),
                     new Tuple<string, string>("Assignee", "Assignee"),
+                    new Tuple<string, string>("Milestone", "Milestone"),
                 };
         }
 
@@ -200,7 +201,9 @@ namespace GithubIssueTagger
         public string FocusArea { get; }
         public string Notes { get; }
 
-        public IssueModel(string link, string title, string assignee, string milestone, string release, string focusArea)
+        public string Status { get; }
+
+        public IssueModel(string link, string title, string assignee, string milestone, string release, string focusArea, string status)
         {
             Link = link;
             Title = title;
@@ -208,6 +211,7 @@ namespace GithubIssueTagger
             Milestone = milestone;
             Release = release;
             FocusArea = focusArea;
+            Status = status;
         }
 
         public IssueModel(Issue e)
@@ -218,6 +222,7 @@ namespace GithubIssueTagger
             Milestone = e.Milestone?.Title;
             Release = string.Empty;
             FocusArea = string.Empty;
+            Status = e.State.ToString();
         }
     }
 

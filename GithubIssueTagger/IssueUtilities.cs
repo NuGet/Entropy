@@ -143,17 +143,25 @@ namespace GithubIssueTagger
             return issuesForMilestone.Where(e => predicate(e)).ToList();
         }
 
-        public static async Task<IList<Issue>> GetIssuesForLabelAsync(GitHubClient client, string org, string repo, string label)
+        public static Task<IList<Issue>> GetIssuesForLabelsAsync(GitHubClient client, string org, string repo, params string[] labels)
         {
-            var issuesForMilestone = await GetAllIssuesAsync(client, org, repo);
-            return issuesForMilestone.Where(e => HasLabel(e, label)).ToList();
+            return GetIssuesForLabelsAsync(client, org, repo, ItemStateFilter.All, labels);
         }
 
-        // All labels need to be considered.
-        public static async Task<IList<Issue>> GetIssuesForLabelsAsync(GitHubClient client, string org, string repo, params string[] labels)
+        public static async Task<IList<Issue>> GetIssuesForLabelsAsync(GitHubClient client, string org, string repo, ItemStateFilter itemState, params string[] labels)
         {
-            var issuesForMilestone = await GetAllIssuesAsync(client, org, repo);
-            return issuesForMilestone.Where(e => labels.All(label => HasLabel(e, label))).ToList();
+            var shouldPrioritize = new RepositoryIssueRequest
+            {
+                Filter = IssueFilter.All,
+                State = itemState,
+            };
+
+            foreach (var label in labels)
+            {
+                shouldPrioritize.Labels.Add(label);
+            }
+            var issues = await client.Issue.GetAllForRepository(org, repo, shouldPrioritize);
+            return issues.ToList();
         }
 
         public static async Task<IList<Issue>> GetIssuesForAnyMatchingLabelsAsync(GitHubClient client, string org, string repo, params string[] labels)
