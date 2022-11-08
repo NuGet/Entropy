@@ -44,7 +44,7 @@ namespace NuGetReleaseTool
             }
         }
 
-        public static async Task<List<GitHubCommit>> GetCommitsForRelease(GitHubClient gitHubClient, string releaseVersion, string endCommit)
+        public static async Task<List<GitHubCommit>> GetCommitsForRelease(GitHubClient gitHubClient, string releaseVersion, string? endCommit)
         {
             var version = new Version(releaseVersion);
             var currentReleaseBranchName = GetReleaseBranchFromVersion(version);
@@ -56,7 +56,6 @@ namespace NuGetReleaseTool
         {
             var previousBranch = await gitHubClient.Repository.Branch.Get(orgName, repoName, previousBranchName);
             var currentBranch = await gitHubClient.Repository.Branch.Get(orgName, repoName, currentBranchName);
-
             // Reverse so that the oldest commit is at the top.
             string latestShaToUse = latestShaOnCurrentBranch ?? currentBranch.Commit.Sha;
             var allCommitDifference = (await gitHubClient.Repository.Commit.Compare(orgName, repoName, previousBranch.Commit.Sha, latestShaToUse)).Commits.Reverse();
@@ -72,6 +71,7 @@ namespace NuGetReleaseTool
             foreach (var commit in allCommitDifference)
             {
                 var commitMessage = commit.Commit.Message;
+                // If a commit in the previous version's branch has one with an equivalent name in the current release branch, we skip that commit as it was part of the previous release.
                 var matchingCommitMessage = commitsOnReleaseBranchSince.FirstOrDefault(e => RemovePRLabel(e.Commit.Message).Contains(RemovePRLabel(commitMessage)));
                 if (matchingCommitMessage == null)
                 {

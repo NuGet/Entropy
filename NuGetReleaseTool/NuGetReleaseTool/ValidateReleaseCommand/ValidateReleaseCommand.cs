@@ -57,7 +57,7 @@ namespace NuGetReleaseTool.ValidateReleaseCommand
             Console.WriteLine("|--------|--------|-------|");
             WriteResultLine("Release notes", await ValidateReleaseNotesAsync());
             WriteResultLine("Documentation readiness", await ValidateDocumentationReadinessAsync());
-            WriteResultLine("SDK packages", await ValidateNuGetSDKPackages());
+            WriteResultLine("SDK packages", await ValidateNuGetSDKPackagesAsync());
             WriteResultLine("NuGet.exe", await ValidateNuGetExeAsync());
             return 0;
         }
@@ -67,7 +67,7 @@ namespace NuGetReleaseTool.ValidateReleaseCommand
             Console.WriteLine($"| {section} | {result.Item1} | {result.Item2} |");
         }
 
-        private async Task<(Status, string)> ValidateNuGetSDKPackages()
+        private async Task<(Status, string)> ValidateNuGetSDKPackagesAsync()
         {
             ILogger logger = NullLogger.Instance;
             CancellationToken cancellationToken = CancellationToken.None;
@@ -153,8 +153,7 @@ namespace NuGetReleaseTool.ValidateReleaseCommand
         private async Task<(Status, string)> ValidateDocumentationReadinessAsync()
         {
             // For a given ID/branch, get all of the linked documentation PRs that are still open.
-            var docsReponame = "docs.microsoft.com-nuget";
-            string[] issueRepositories = new string[] { "NuGet/docs.microsoft.com-nuget" };
+            string[] issueRepositories = new string[] { $"{Constants.NuGet}/{Constants.DocsRepo}" };
 
             var githubCommits = await GitHubUtilities.GetCommitsForRelease(GitHubClient, Options.Release, Options.EndCommit);
 
@@ -166,7 +165,7 @@ namespace NuGetReleaseTool.ValidateReleaseCommand
             {
                 foreach (var issue in commit.Issues)
                 {
-                    var ghIssue = await GitHubClient.Issue.Get(Constants.NuGet, docsReponame, issue.Item1);
+                    var ghIssue = await GitHubClient.Issue.Get(Constants.NuGet, Constants.DocsRepo, issue.Item1);
                     if (ghIssue.State == ItemState.Open)
                     {
                         urls.Add(issue.Item2);

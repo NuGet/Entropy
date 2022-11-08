@@ -12,6 +12,6 @@ namespace NuGetReleaseTool.GenerateInsertionChangelogCommand
         public string Branch { get; set; }
 
         [Option("output", Required = false, HelpText = "Directory to output the results file in.")]
-        public string Output { get; set; }
+        public string? Output { get; set; }
     }
 }
