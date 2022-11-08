@@ -11,7 +11,7 @@ namespace NuGetReleaseTool
             return $"release-{parsedVersion.Major}.{parsedVersion.Minor}.x";
         }
 
-        public static async Task<object> GetUniqueCommitsListBetween2Branches(GitHubClient gitHubClient, string orgName, string repoName, string previousBranchName, string currentBranchName)
+        public static async Task<List<GitHubCommit>> GetUniqueCommitsListBetween2Branches(GitHubClient gitHubClient, string orgName, string repoName, string previousBranchName, string currentBranchName)
         {
             var previousBranch = await gitHubClient.Repository.Branch.Get(orgName, repoName, previousBranchName);
             var currentBranch = await gitHubClient.Repository.Branch.Get(orgName, repoName, currentBranchName);
@@ -41,7 +41,6 @@ namespace NuGetReleaseTool
                 if (matchingCommitMessage == null)
                 {
                     gitHubCommits.Add(commit);
-                    Console.WriteLine($"{commit.Commit.Message} {commit.Commit.Committer.Date}");
                 }
             }
             return gitHubCommits;

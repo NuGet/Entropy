@@ -58,14 +58,12 @@ namespace NuGetReleaseTool.ValidateReleaseCommand
 
         public async Task<int> RunAsync()
         {
-            await GitHubUtilities.GetUniqueCommitsListBetween2Branches(GitHubClient, "nuget", "nuget.client", "release-6.3.x", "release-6.4.x");
-
-            //Console.WriteLine("|Section | Status | Notes |");
-            //Console.WriteLine("|--------|--------|-------|");
-            //WriteResultLine("Release notes", await ValidateReleaseNotesAsync());
-            //WriteResultLine("Documentation readiness", await ValidateDocumentationReadinessAsync();
-            //WriteResultLine("SDK packages", await ValidateNuGetSDKPackages());
-            //WriteResultLine("NuGet.exe", await ValidateNuGetExeAsync());
+            Console.WriteLine("|Section | Status | Notes |");
+            Console.WriteLine("|--------|--------|-------|");
+            WriteResultLine("Release notes", await ValidateReleaseNotesAsync());
+            WriteResultLine("Documentation readiness", await ValidateDocumentationReadinessAsync());
+            WriteResultLine("SDK packages", await ValidateNuGetSDKPackages());
+            WriteResultLine("NuGet.exe", await ValidateNuGetExeAsync());
             return 0;
         }
 
@@ -165,8 +163,8 @@ namespace NuGetReleaseTool.ValidateReleaseCommand
             var docsReponame = "docs.microsoft.com-nuget";
             string[] issueRepositories = new string[] { "NuGet/docs.microsoft.com-nuget" };
 
-            var githubBranch = await GitHubClient.Repository.Branch.Get(orgName, repoName, GitHubUtilities.GetReleaseBranchFromVersion(Options.Release));
-            var githubCommits = (await GitHubClient.Repository.Commit.Compare(orgName, repoName, Options.StartCommit, githubBranch.Commit.Sha)).Commits.Reverse();
+            var githubCommits = await GitHubUtilities.GetUniqueCommitsListBetween2Branches(GitHubClient, orgName, repoName, "release-6.3.x", GitHubUtilities.GetReleaseBranchFromVersion(Options.Release));
+
             List<CommitWithDetails> commits = await ChangeLogGenerator.GetCommitDetails(GitHubClient, orgName, repoName, issueRepositories, githubCommits);
 
             var urls = new HashSet<string>();

@@ -272,7 +272,12 @@ namespace NuGetReleaseTool.GenerateReleaseNotesCommand
 
             static string GetLatestTagForMajorMinor(Version currentVersion, IReadOnlyList<RepositoryTag> allTags)
             {
-                return allTags.Where(e => e.Name.StartsWith($"{currentVersion.Major}.{currentVersion.Minor}")).Select(e => Version.Parse(e.Name)).Max().ToString();
+                var latestTag = allTags.Where(e => e.Name.StartsWith($"{currentVersion.Major}.{currentVersion.Minor}")).Select(e => Version.Parse(e.Name)).Max();
+                if (latestTag != null)
+                {
+                    return latestTag.ToString();
+                }
+                throw new InvalidOperationException($"The {currentVersion} does not have any tags");
             }
 
             static Version EstimatePreviousMajorMinorVersion(Version currentVersion, IReadOnlyList<RepositoryTag> allTags)
