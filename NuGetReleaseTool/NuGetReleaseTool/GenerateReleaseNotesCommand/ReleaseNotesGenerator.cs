@@ -39,7 +39,7 @@ namespace NuGetReleaseTool.GenerateReleaseNotesCommand
 
         public async Task<List<PullRequest>> GetCommunityPullRequests()
         {
-            IReadOnlyList<GitHubCommit> commits = await GitHubUtilities.GetCommitsForRelease(GitHubClient, Options.Release, Options.EndCommit);
+            IReadOnlyList<GitHubCommit> commits = await Helpers.GetCommitsForRelease(GitHubClient, Options.Release, Options.EndCommit);
 
             List<PullRequest> pullRequests = new();
 
@@ -251,10 +251,10 @@ namespace NuGetReleaseTool.GenerateReleaseNotesCommand
         {
             var allTags = await GitHubClient.Repository.GetAllTags(Constants.NuGet, Constants.NuGetClient);
 
-            Version previousVersion = GitHubUtilities.EstimatePreviousMajorMinorVersion(currentVersion, allTags);
+            Version previousVersion = Helpers.EstimatePreviousMajorMinorVersion(currentVersion, allTags);
             Console.WriteLine($"Generating a release deltas link for {currentVersion}, with the calculated previous version {previousVersion}");
-            var startVersion = GitHubUtilities.GetLatestTagForMajorMinor(currentVersion, allTags);
-            var endVersion = GitHubUtilities.GetLatestTagForMajorMinor(previousVersion, allTags);
+            var startVersion = Helpers.GetLatestTagForMajorMinor(currentVersion, allTags);
+            var endVersion = Helpers.GetLatestTagForMajorMinor(previousVersion, allTags);
 
             return $"https://github.com/NuGet/NuGet.Client/compare/{startVersion}...{endVersion}";
         }

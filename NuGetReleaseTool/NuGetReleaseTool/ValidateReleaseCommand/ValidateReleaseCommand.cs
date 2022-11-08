@@ -155,9 +155,9 @@ namespace NuGetReleaseTool.ValidateReleaseCommand
             // For a given ID/branch, get all of the linked documentation PRs that are still open.
             string[] issueRepositories = new string[] { $"{Constants.NuGet}/{Constants.DocsRepo}" };
 
-            var githubCommits = await GitHubUtilities.GetCommitsForRelease(GitHubClient, Options.Release, Options.EndCommit);
+            var githubCommits = await Helpers.GetCommitsForRelease(GitHubClient, Options.Release, Options.EndCommit);
 
-            List<CommitWithDetails> commits = await ChangeLogGenerator.GetCommitDetails(GitHubClient, Constants.NuGet, Constants.NuGetClient, issueRepositories, githubCommits);
+            List<CommitWithDetails> commits = await Helpers.GetCommitDetails(GitHubClient, Constants.NuGet, Constants.NuGetClient, issueRepositories, githubCommits);
 
             var urls = new HashSet<string>();
 

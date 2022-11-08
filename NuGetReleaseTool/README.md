@@ -16,3 +16,4 @@ This is a manually managed list of commands available in the tool. It is expecte
 - [generate-release-notes](NuGetReleaseTool/GenerateReleaseNotesCommand/README.md)
 - [generate-insertion-changelog](NuGetReleaseTool/GenerateInsertionChangelogCommand/README.md)
 - [validate-release](NuGetReleaseTool/ValidateReleaseCommand/README.md)
+- [generate-release-changelog](NuGetReleaseTool/GenerateReleaseChangelogCommand/README.md)
