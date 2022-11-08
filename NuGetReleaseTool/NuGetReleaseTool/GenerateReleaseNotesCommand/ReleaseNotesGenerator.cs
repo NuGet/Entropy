@@ -1,5 +1,4 @@
-﻿using NuGetReleaseTool;
-using Octokit;
+﻿using Octokit;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -19,12 +18,12 @@ namespace NuGetReleaseTool.GenerateReleaseNotesCommand
         public async Task<string> GenerateChangelog()
         {
             Dictionary<IssueType, List<Issue>> issues = await GetIssuesByType(Constants.NuGet, Constants.Home, Options.Release);
-            List<PullRequest> communityPullRequests = await GetCommunityPullRequests(GitHubClient, Constants.NuGet, Constants.NuGetClient, Options.StartCommit, GitHubUtilities.GetReleaseBranchFromVersion(Options.Release));
-            string commitsDeltaLink = await GenerateReleaseDeltasLink(GitHubClient, Version.Parse(Options.Release));
+            List<PullRequest> communityPullRequests = await GetCommunityPullRequests();
+            string commitsDeltaLink = await GenerateReleaseDeltasLink(Version.Parse(Options.Release));
             return GenerateMarkdown(Options.Release, issues, communityPullRequests, commitsDeltaLink);
         }
 
-        public static async Task<IList<Issue>> GetIssuesForMilestone(GitHubClient client, string org, string repo, Milestone milestone)
+        public async Task<IList<Issue>> GetIssuesForMilestone(string org, string repo, Milestone milestone)
         {
             var shouldPrioritize = new RepositoryIssueRequest
             {
@@ -33,21 +32,14 @@ namespace NuGetReleaseTool.GenerateReleaseNotesCommand
                 State = ItemStateFilter.All,
             };
 
-            var issuesForMilestone = await client.Issue.GetAllForRepository(org, repo, shouldPrioritize);
+            var issuesForMilestone = await GitHubClient.Issue.GetAllForRepository(org, repo, shouldPrioritize);
 
             return issuesForMilestone.ToList();
         }
 
-        public static async Task<List<PullRequest>> GetCommunityPullRequests(GitHubClient gitHubClient, string orgName, string repoName, string startSha, string branchName, string endSha = null)
+        public async Task<List<PullRequest>> GetCommunityPullRequests()
         {
-            Console.Write($"Processing the pull requests for {branchName}, ");
-
-            var githubBranch = await gitHubClient.Repository.Branch.Get(orgName, repoName, branchName);
-            string finalSha = string.IsNullOrEmpty(endSha) ? githubBranch.Commit.Sha : endSha;
-
-            Console.WriteLine($"starting with {startSha} and ending with {finalSha}");
-
-            var commits = (await gitHubClient.Repository.Commit.Compare(orgName, repoName, startSha, finalSha)).Commits;
+            IReadOnlyList<GitHubCommit> commits = await GitHubUtilities.GetCommitsForRelease(GitHubClient, Options.Release, Options.EndCommit);
 
             List<PullRequest> pullRequests = new();
 
@@ -56,7 +48,7 @@ namespace NuGetReleaseTool.GenerateReleaseNotesCommand
                 var assumedId = GetPRId(commit.Commit.Message);
                 try
                 {
-                    var pullRequest = await gitHubClient.Repository.PullRequest.Get(orgName, repoName, assumedId);
+                    var pullRequest = await GitHubClient.Repository.PullRequest.Get(Constants.NuGet, Constants.NuGetClient, assumedId);
                     var isCommunity = pullRequest.Labels.Any(e => e.Name == IssueLabels.Community);
                     if (isCommunity)
                     {
@@ -94,7 +86,7 @@ namespace NuGetReleaseTool.GenerateReleaseNotesCommand
 
             Milestone relevantMilestone = await FindMatchingMilestone(releaseId, org, repo);
 
-            var issueList = await GetIssuesForMilestone(GitHubClient, org, repo, relevantMilestone);
+            var issueList = await GetIssuesForMilestone(org, repo, relevantMilestone);
 
             foreach (Issue issue in issueList)
             {
@@ -255,9 +247,9 @@ namespace NuGetReleaseTool.GenerateReleaseNotesCommand
             return builder.ToString();
         }
 
-        private static async Task<string> GenerateReleaseDeltasLink(GitHubClient gitHubClient, Version currentVersion)
+        private async Task<string> GenerateReleaseDeltasLink(Version currentVersion)
         {
-            var allTags = await gitHubClient.Repository.GetAllTags(Constants.NuGet, Constants.NuGetClient);
+            var allTags = await GitHubClient.Repository.GetAllTags(Constants.NuGet, Constants.NuGetClient);
 
             Version previousVersion = GitHubUtilities.EstimatePreviousMajorMinorVersion(currentVersion, allTags);
             Console.WriteLine($"Generating a release deltas link for {currentVersion}, with the calculated previous version {previousVersion}");
@@ -331,7 +323,7 @@ namespace NuGetReleaseTool.GenerateReleaseNotesCommand
             bool includeHeader = true,
             bool problem = false)
         {
-            if (labelSet.TryGetValue(key, out List<Issue> issues))
+            if (labelSet.TryGetValue(key, out List<Issue>? issues))
             {
                 if (includeHeader)
                 {

@@ -12,7 +12,7 @@ namespace NuGetReleaseTool.ValidateReleaseCommand
 
         [Option("end-commit", Required = false, HelpText = "The end commit for the current release. This commit must be on the release branch. " +
             "You do not normally need to use this argument, unless there's a commit on the branch, that is not within the current release.")]
-        public string EndCommit { get; set; }
+        public string? EndCommit { get; set; }
 
         [Usage(ApplicationAlias = "validate-release")]
         public static IEnumerable<Example> Examples

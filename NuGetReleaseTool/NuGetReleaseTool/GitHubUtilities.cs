@@ -52,7 +52,7 @@ namespace NuGetReleaseTool
             return await GetUniqueCommitsListBetween2Branches(gitHubClient, Constants.NuGet, Constants.NuGetClient, previousReleaseBranchName, currentReleaseBranchName, endCommit);
         }
 
-        public static async Task<List<GitHubCommit>> GetUniqueCommitsListBetween2Branches(GitHubClient gitHubClient, string orgName, string repoName, string previousBranchName, string currentBranchName, string latestShaOnCurrentBranch = null)
+        public static async Task<List<GitHubCommit>> GetUniqueCommitsListBetween2Branches(GitHubClient gitHubClient, string orgName, string repoName, string previousBranchName, string currentBranchName, string? latestShaOnCurrentBranch = null)
         {
             var previousBranch = await gitHubClient.Repository.Branch.Get(orgName, repoName, previousBranchName);
             var currentBranch = await gitHubClient.Repository.Branch.Get(orgName, repoName, currentBranchName);
