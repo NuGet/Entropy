@@ -10,11 +10,6 @@ namespace NuGetReleaseTool.ValidateReleaseCommand
 {
     public class ValidateReleaseCommand
     {
-        private const string NuGet = "nuget";
-        private const string NuGetClient = "nuget.client";
-        private const string Home = "home";
-        private const string Docs = "docs.microsoft.com-nuget";
-
         private readonly GitHubClient GitHubClient;
         private readonly ValidateReleaseCommandOptions Options;
         private readonly HttpClient HttpClient;
@@ -158,14 +153,12 @@ namespace NuGetReleaseTool.ValidateReleaseCommand
         private async Task<(Status, string)> ValidateDocumentationReadinessAsync()
         {
             // For a given ID/branch, get all of the linked documentation PRs that are still open.
-            var orgName = "nuget";
-            var repoName = "nuget.client";
             var docsReponame = "docs.microsoft.com-nuget";
             string[] issueRepositories = new string[] { "NuGet/docs.microsoft.com-nuget" };
 
-            var githubCommits = await GitHubUtilities.GetUniqueCommitsListBetween2Branches(GitHubClient, orgName, repoName, "release-6.3.x", GitHubUtilities.GetReleaseBranchFromVersion(Options.Release));
+            var githubCommits = await GitHubUtilities.GetCommitsForRelease(GitHubClient, Options.Release, Options.EndCommit);
 
-            List<CommitWithDetails> commits = await ChangeLogGenerator.GetCommitDetails(GitHubClient, orgName, repoName, issueRepositories, githubCommits);
+            List<CommitWithDetails> commits = await ChangeLogGenerator.GetCommitDetails(GitHubClient, Constants.NuGet, Constants.NuGetClient, issueRepositories, githubCommits);
 
             var urls = new HashSet<string>();
 
@@ -173,7 +166,7 @@ namespace NuGetReleaseTool.ValidateReleaseCommand
             {
                 foreach (var issue in commit.Issues)
                 {
-                    var ghIssue = await GitHubClient.Issue.Get(orgName, docsReponame, issue.Item1);
+                    var ghIssue = await GitHubClient.Issue.Get(Constants.NuGet, docsReponame, issue.Item1);
                     if (ghIssue.State == ItemState.Open)
                     {
                         urls.Add(issue.Item2);
@@ -201,8 +194,8 @@ namespace NuGetReleaseTool.ValidateReleaseCommand
             }
             else
             {
-                var allOpenPullRequests = await GitHubClient.PullRequest.GetAllForRepository(NuGet, Docs);
-                string docsPR = null;
+                var allOpenPullRequests = await GitHubClient.PullRequest.GetAllForRepository(Constants.NuGet, Constants.DocsRepo);
+                string? docsPR = null;
                 foreach (var pullRequests in allOpenPullRequests)
                 {
                     if (pullRequests.Title.Contains(Options.Release))

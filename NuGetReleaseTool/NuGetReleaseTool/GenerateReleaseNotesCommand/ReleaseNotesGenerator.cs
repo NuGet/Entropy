@@ -7,10 +7,6 @@ namespace NuGetReleaseTool.GenerateReleaseNotesCommand
 {
     public class ReleaseNotesGenerator
     {
-        private const string NuGet = "nuget";
-        private const string NuGetClient = "nuget.client";
-        private const string Home = "home";
-
         private readonly GitHubClient GitHubClient;
         private readonly GenerateReleaseNotesCommandOptions Options;
 
@@ -22,8 +18,8 @@ namespace NuGetReleaseTool.GenerateReleaseNotesCommand
 
         public async Task<string> GenerateChangelog()
         {
-            Dictionary<IssueType, List<Issue>> issues = await GetIssuesByType(NuGet, Home, Options.Release);
-            List<PullRequest> communityPullRequests = await GetCommunityPullRequests(GitHubClient, NuGet, NuGetClient, Options.StartCommit, $"release-{Options.Release}.x");
+            Dictionary<IssueType, List<Issue>> issues = await GetIssuesByType(Constants.NuGet, Constants.Home, Options.Release);
+            List<PullRequest> communityPullRequests = await GetCommunityPullRequests(GitHubClient, Constants.NuGet, Constants.NuGetClient, Options.StartCommit, $"release-{Options.Release}.x");
             string commitsDeltaLink = await GenerateReleaseDeltasLink(GitHubClient, Version.Parse(Options.Release));
             return GenerateMarkdown(Options.Release, issues, communityPullRequests, commitsDeltaLink);
         }
@@ -261,42 +257,14 @@ namespace NuGetReleaseTool.GenerateReleaseNotesCommand
 
         private static async Task<string> GenerateReleaseDeltasLink(GitHubClient gitHubClient, Version currentVersion)
         {
-            var allTags = await gitHubClient.Repository.GetAllTags(NuGet, NuGetClient);
+            var allTags = await gitHubClient.Repository.GetAllTags(Constants.NuGet, Constants.NuGetClient);
 
-            Version previousVersion = EstimatePreviousMajorMinorVersion(currentVersion, allTags);
+            Version previousVersion = GitHubUtilities.EstimatePreviousMajorMinorVersion(currentVersion, allTags);
             Console.WriteLine($"Generating a release deltas link for {currentVersion}, with the calculated previous version {previousVersion}");
-            var startVersion = GetLatestTagForMajorMinor(currentVersion, allTags);
-            var endVersion = GetLatestTagForMajorMinor(previousVersion, allTags);
+            var startVersion = GitHubUtilities.GetLatestTagForMajorMinor(currentVersion, allTags);
+            var endVersion = GitHubUtilities.GetLatestTagForMajorMinor(previousVersion, allTags);
 
             return $"https://github.com/NuGet/NuGet.Client/compare/{startVersion}...{endVersion}";
-
-            static string GetLatestTagForMajorMinor(Version currentVersion, IReadOnlyList<RepositoryTag> allTags)
-            {
-                var latestTag = allTags.Where(e => e.Name.StartsWith($"{currentVersion.Major}.{currentVersion.Minor}")).Select(e => Version.Parse(e.Name)).Max();
-                if (latestTag != null)
-                {
-                    return latestTag.ToString();
-                }
-                throw new InvalidOperationException($"The {currentVersion} does not have any tags");
-            }
-
-            static Version EstimatePreviousMajorMinorVersion(Version currentVersion, IReadOnlyList<RepositoryTag> allTags)
-            {
-                if (currentVersion.Minor > 0)
-                {
-                    return new Version(currentVersion.Major, currentVersion.Minor - 1);
-                }
-                else
-                {
-                    var tagsWithPreviousMajor = allTags.Where(e => e.Name.StartsWith(currentVersion.Major - 1 + "."));
-                    if (!tagsWithPreviousMajor.Any())
-                    {
-                        throw new Exception($"Cannot infer previous major/minor version from the tags. Current version is {currentVersion}.");
-                    }
-                    var maxTagVersion = tagsWithPreviousMajor.Select(e => Version.Parse(e.Name)).Max();
-                    return new Version(maxTagVersion.Major, maxTagVersion.Minor);
-                }
-            }
         }
 
         private static string GetVSVersion(Version version)
