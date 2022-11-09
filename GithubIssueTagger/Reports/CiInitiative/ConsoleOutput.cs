@@ -7,7 +7,7 @@ namespace GithubIssueTagger.Reports.CiInitiative
 {
     internal static class ConsoleOutput
     {
-        public static void Write(IReadOnlyList<Issue> issues)
+        public static void Write(IEnumerable<Issue> issues)
         {
             foreach (var issue in issues)
             {
