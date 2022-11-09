@@ -141,7 +141,7 @@ namespace NuGetReleaseTool.ValidateReleaseCommand
                 return (Status.Completed, $"{expectedVersion} is on NuGet.org, and considered blessed");
             }
 
-            var expectedNuGetExeUrl = $"https://dist.nuget.org/win-x86-commandline/v{expectedVersion}/nuget.exe";
+            var expectedNuGetExeUrl = $"https://dist.nuget.org/win-x86-commandline/v{expectedVersion.ToNormalizedString()}/nuget.exe";
             if (await UrlExistsAsync(HttpClient, expectedNuGetExeUrl))
             {
                 return (Status.InProgress, $"{expectedVersion} is on NuGet.org, but no NuGet.Commandline package has been published and as such is not blessed.");
