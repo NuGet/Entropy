@@ -3,11 +3,6 @@ using System.Collections.Generic;
 
 namespace ci_testfailure_analyzer.Models.AzDO
 {
-    public class TestFailure
-    {
-        public DataProviders dataProviders { get; set; }
-    }
-
     public class _2
     {
         public int outcome { get; set; }
@@ -41,7 +36,6 @@ namespace ci_testfailure_analyzer.Models.AzDO
         [JsonProperty("ms.vss-test-web.test-tab-unifiedPipeline-summary-data-provider")]
         public MsVssTestWebTestTabUnifiedPipelineSummaryDataProvider MsVssTestWebTestTabUnifiedPipelineSummaryDataProvider { get; set; }
     }
-
 
     public class ExistingFailures
     {
