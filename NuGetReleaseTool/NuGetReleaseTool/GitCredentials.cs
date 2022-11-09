@@ -19,12 +19,12 @@ namespace NuGetReleaseTool
             };
             processStartInfo.Environment["GIT_TERMINAL_PROMPT"] = "0";
 
-            Process process = Process.Start(processStartInfo);
-            process.StandardInput.Write(description);
+            Process? process = Process.Start(processStartInfo);
+            process?.StandardInput.Write(description);
 
-            process.WaitForExit();
+            process?.WaitForExit();
 
-            if (process.ExitCode != 0)
+            if (process?.ExitCode != 0)
             {
                 // unable to get credentials
                 return null;

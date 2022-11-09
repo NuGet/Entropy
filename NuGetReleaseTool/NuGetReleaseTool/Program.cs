@@ -1,15 +1,17 @@
 ﻿using CommandLine;
 using NuGetReleaseTool;
 using NuGetReleaseTool.GenerateInsertionChangelogCommand;
+using NuGetReleaseTool.GenerateReleaseChangelogCommand;
 using NuGetReleaseTool.GenerateReleaseNotesCommand;
 using NuGetReleaseTool.ValidateReleaseCommand;
 using Octokit;
 
-return Parser.Default.ParseArguments<GenerateReleaseNotesCommandOptions, ValidateReleaseCommandOptions, GenerateInsertionChangelogCommandOptions>(args)
+return Parser.Default.ParseArguments<GenerateReleaseNotesCommandOptions, ValidateReleaseCommandOptions, GenerateInsertionChangelogCommandOptions, GenerateReleaseChangelogCommandOptions>(args)
                .MapResult(
                  (GenerateReleaseNotesCommandOptions generateOpts) => RunReleaseNotesGeneratorCommand(generateOpts),
                  (ValidateReleaseCommandOptions validateOpts) => RunReleaseValidateCommand(validateOpts),
                 (GenerateInsertionChangelogCommandOptions insertionOpts) => RunGenerateInsertionChangelog(insertionOpts),
+                (GenerateReleaseChangelogCommandOptions releaseChangelogOpts) => RunGenerateReleaseChangelogCommand(releaseChangelogOpts),
                  errs => 1);
 
 static int RunReleaseNotesGeneratorCommand(GenerateReleaseNotesCommandOptions opts)
@@ -65,6 +67,18 @@ static int RunGenerateInsertionChangelog(GenerateInsertionChangelogCommandOption
         return 0;
     }
 
+}
+
+static int RunGenerateReleaseChangelogCommand(GenerateReleaseChangelogCommandOptions opts)
+{
+    return RunGenerateReleaseChangelogCommandAsync(opts).GetAwaiter().GetResult();
+    async Task<int> RunGenerateReleaseChangelogCommandAsync(GenerateReleaseChangelogCommandOptions options)
+    {
+        var githubClient = GenerateGitHubClient(options);
+        var releaseChangelogGenerator = new ReleaseChangelogGenerator(options, githubClient);
+        await releaseChangelogGenerator.RunAsync();
+        return 0;
+    }
 }
 
 static GitHubClient GenerateGitHubClient(BaseOptions opts)

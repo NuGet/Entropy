@@ -10,11 +10,6 @@ namespace NuGetReleaseTool.ValidateReleaseCommand
 {
     public class ValidateReleaseCommand
     {
-        private const string NuGet = "nuget";
-        private const string NuGetClient = "nuget.client";
-        private const string Home = "home";
-        private const string Docs = "docs.microsoft.com-nuget";
-
         private readonly GitHubClient GitHubClient;
         private readonly ValidateReleaseCommandOptions Options;
         private readonly HttpClient HttpClient;
@@ -61,8 +56,8 @@ namespace NuGetReleaseTool.ValidateReleaseCommand
             Console.WriteLine("|Section | Status | Notes |");
             Console.WriteLine("|--------|--------|-------|");
             WriteResultLine("Release notes", await ValidateReleaseNotesAsync());
-            WriteResultLine("Documentation readiness", await ValidateDocumentationReadinessAsync(GitHubClient, Options.StartSha, $"release-{Options.Release}.x"));
-            WriteResultLine("SDK packages", await ValidateNuGetSDKPackages());
+            WriteResultLine("Documentation readiness", await ValidateDocumentationReadinessAsync());
+            WriteResultLine("SDK packages", await ValidateNuGetSDKPackagesAsync());
             WriteResultLine("NuGet.exe", await ValidateNuGetExeAsync());
             return 0;
         }
@@ -72,7 +67,7 @@ namespace NuGetReleaseTool.ValidateReleaseCommand
             Console.WriteLine($"| {section} | {result.Item1} | {result.Item2} |");
         }
 
-        private async Task<(Status, string)> ValidateNuGetSDKPackages()
+        private async Task<(Status, string)> ValidateNuGetSDKPackagesAsync()
         {
             ILogger logger = NullLogger.Instance;
             CancellationToken cancellationToken = CancellationToken.None;
@@ -146,7 +141,7 @@ namespace NuGetReleaseTool.ValidateReleaseCommand
                 return (Status.Completed, $"{expectedVersion} is on NuGet.org, and considered blessed");
             }
 
-            var expectedNuGetExeUrl = $"https://dist.nuget.org/win-x86-commandline/v{expectedVersion}/nuget.exe";
+            var expectedNuGetExeUrl = $"https://dist.nuget.org/win-x86-commandline/v{expectedVersion.ToNormalizedString()}/nuget.exe";
             if (await UrlExistsAsync(HttpClient, expectedNuGetExeUrl))
             {
                 return (Status.InProgress, $"{expectedVersion} is on NuGet.org, but no NuGet.Commandline package has been published and as such is not blessed.");
@@ -155,17 +150,14 @@ namespace NuGetReleaseTool.ValidateReleaseCommand
             return (Status.NotStarted, "Not started");
         }
 
-        private async Task<(Status, string)> ValidateDocumentationReadinessAsync(GitHubClient gitHubClient, string startSha, string branchName)
+        private async Task<(Status, string)> ValidateDocumentationReadinessAsync()
         {
             // For a given ID/branch, get all of the linked documentation PRs that are still open.
-            var orgName = "nuget";
-            var repoName = "nuget.client";
-            var docsReponame = "docs.microsoft.com-nuget";
-            string[] issueRepositories = new string[] { "NuGet/docs.microsoft.com-nuget" };
+            string[] issueRepositories = new string[] { $"{Constants.NuGet}/{Constants.DocsRepo}" };
 
-            var githubBranch = await gitHubClient.Repository.Branch.Get(orgName, repoName, branchName);
-            var githubCommits = (await gitHubClient.Repository.Commit.Compare(orgName, repoName, startSha, githubBranch.Commit.Sha)).Commits.Reverse();
-            List<CommitWithDetails> commits = await ChangeLogGenerator.GetCommitDetails(gitHubClient, orgName, repoName, issueRepositories, githubCommits);
+            var githubCommits = await Helpers.GetCommitsForRelease(GitHubClient, Options.Release, Options.EndCommit);
+
+            List<CommitWithDetails> commits = await Helpers.GetCommitDetails(GitHubClient, Constants.NuGet, Constants.NuGetClient, issueRepositories, githubCommits);
 
             var urls = new HashSet<string>();
 
@@ -173,7 +165,7 @@ namespace NuGetReleaseTool.ValidateReleaseCommand
             {
                 foreach (var issue in commit.Issues)
                 {
-                    var ghIssue = await GitHubClient.Issue.Get(orgName, docsReponame, issue.Item1);
+                    var ghIssue = await GitHubClient.Issue.Get(Constants.NuGet, Constants.DocsRepo, issue.Item1);
                     if (ghIssue.State == ItemState.Open)
                     {
                         urls.Add(issue.Item2);
@@ -201,8 +193,8 @@ namespace NuGetReleaseTool.ValidateReleaseCommand
             }
             else
             {
-                var allOpenPullRequests = await GitHubClient.PullRequest.GetAllForRepository(NuGet, Docs);
-                string docsPR = null;
+                var allOpenPullRequests = await GitHubClient.PullRequest.GetAllForRepository(Constants.NuGet, Constants.DocsRepo);
+                string? docsPR = null;
                 foreach (var pullRequests in allOpenPullRequests)
                 {
                     if (pullRequests.Title.Contains(Options.Release))

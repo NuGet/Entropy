@@ -1,10 +1,11 @@
-﻿using CommandLine;
-using CommandLine.Text;
+﻿using CommandLine.Text;
+using CommandLine;
+using NuGetReleaseTool.GenerateReleaseNotesCommand;
 
-namespace NuGetReleaseTool.GenerateReleaseNotesCommand
+namespace NuGetReleaseTool.GenerateReleaseChangelogCommand
 {
-    [Verb("generate-release-notes", HelpText = "Generates the release notes for the NuGet Client for a given release version.")]
-    public class GenerateReleaseNotesCommandOptions : BaseOptions
+    [Verb("generate-release-changelog", HelpText = "Generate an insertion changelog.")]
+    public class GenerateReleaseChangelogCommandOptions : BaseOptions
     {
         [Value(0, Required = true, HelpText = "Release version to generate the release notes for.")]
         public string Release { get; set; }
@@ -20,9 +21,12 @@ namespace NuGetReleaseTool.GenerateReleaseNotesCommand
             {
                 return new List<Example>()
                 {
-                    new Example("Generate release notes for a particular release", new GenerateReleaseNotesCommandOptions { Release = "6.3", GitHubToken = "asdf", EndCommit = "endSha" })
+                    new Example("Generate changelog for a particular release", new GenerateReleaseNotesCommandOptions { Release = "6.3", GitHubToken = "asdf", EndCommit = "endSha" })
                 };
             }
         }
+
+        [Option("output", Required = false, HelpText = "Directory to output the results file in.")]
+        public string? Output { get; set; }
     }
 }
