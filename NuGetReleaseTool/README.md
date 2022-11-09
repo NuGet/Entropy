@@ -17,3 +17,5 @@ This is a manually managed list of commands available in the tool. It is expecte
 - [generate-insertion-changelog](NuGetReleaseTool/GenerateInsertionChangelogCommand/README.md)
 - [validate-release](NuGetReleaseTool/ValidateReleaseCommand/README.md)
 - [generate-release-changelog](NuGetReleaseTool/GenerateReleaseChangelogCommand/README.md)
+- [unlist-redudant-packages](NuGetReleaseTool/UnlistRedundantPackagesCommand/README.md)
+

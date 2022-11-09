@@ -14,36 +14,6 @@ namespace NuGetReleaseTool.ValidateReleaseCommand
         private readonly ValidateReleaseCommandOptions Options;
         private readonly HttpClient HttpClient;
 
-        private string NuGetCommandlinePackageId = "NuGet.CommandLine";
-
-        List<string> CorePackagesList = new List<string>() {
-            "NuGet.Indexing",
-            "NuGet.Build.Tasks.Console",
-            "NuGet.Build.Tasks.Pack",
-            "NuGet.Build.Tasks",
-            "NuGet.CommandLine.XPlat",
-            "NuGet.Commands",
-            "NuGet.Common",
-            "NuGet.Configuration",
-            "NuGet.Credentials",
-            "NuGet.DependencyResolver.Core",
-            "NuGet.Frameworks",
-            "NuGet.LibraryModel",
-            "NuGet.Localization",
-            "NuGet.PackageManagement",
-            "NuGet.Packaging.Core",
-            "NuGet.Packaging",
-            "NuGet.ProjectModel",
-            "NuGet.Protocol",
-            "NuGet.Resolver",
-            "NuGet.Versioning" };
-
-        List<string> AllVSPackagesList = new()
-        {
-            "NuGet.VisualStudio.Contracts",
-            "NuGet.VisualStudio",
-        };
-
         public ValidateReleaseCommand(ValidateReleaseCommandOptions opts, GitHubClient gitHubClient)
         {
             Options = opts;
@@ -79,9 +49,9 @@ namespace NuGetReleaseTool.ValidateReleaseCommand
             var expectedVersion = NuGetVersion.Parse(Options.Release);
             var expectedVsPackageVersion = new NuGetVersion(expectedVersion.Major + 11, expectedVersion.Minor, expectedVersion.Patch, expectedVersion.Revision, expectedVersion.Release, expectedVersion.Metadata);
 
-            int expectedPackagesCount = CorePackagesList.Count + AllVSPackagesList.Count;
+            int expectedPackagesCount = Constants.CorePackagesList.Count + Constants.VSPackagesList.Count;
 
-            foreach (var package in CorePackagesList)
+            foreach (var package in Constants.CorePackagesList)
             {
                 if (!await resource.DoesPackageExistAsync(
                     package,
@@ -95,7 +65,7 @@ namespace NuGetReleaseTool.ValidateReleaseCommand
                 }
             }
 
-            foreach (var package in AllVSPackagesList)
+            foreach (var package in Constants.VSPackagesList)
             {
                 if (!await resource.DoesPackageExistAsync(
                     package,
@@ -132,7 +102,7 @@ namespace NuGetReleaseTool.ValidateReleaseCommand
             FindPackageByIdResource resource = await repository.GetResourceAsync<FindPackageByIdResource>();
             var expectedVersion = NuGetVersion.Parse(Options.Release);
             if (await resource.DoesPackageExistAsync(
-                    NuGetCommandlinePackageId,
+                    Constants.NuGetCommandlinePackageId,
                     expectedVersion,
                     cache,
                     logger,

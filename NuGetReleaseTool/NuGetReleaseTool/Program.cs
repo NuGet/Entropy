@@ -1,17 +1,19 @@
 ﻿using CommandLine;
 using NuGetReleaseTool;
 using NuGetReleaseTool.GenerateInsertionChangelogCommand;
+using NuGetReleaseTool.GenerateRedundantPackageListCommand;
 using NuGetReleaseTool.GenerateReleaseChangelogCommand;
 using NuGetReleaseTool.GenerateReleaseNotesCommand;
 using NuGetReleaseTool.ValidateReleaseCommand;
 using Octokit;
 
-return Parser.Default.ParseArguments<GenerateReleaseNotesCommandOptions, ValidateReleaseCommandOptions, GenerateInsertionChangelogCommandOptions, GenerateReleaseChangelogCommandOptions>(args)
+return Parser.Default.ParseArguments<GenerateReleaseNotesCommandOptions, ValidateReleaseCommandOptions, GenerateInsertionChangelogCommandOptions, GenerateReleaseChangelogCommandOptions, UnlistRedundantPackagesCommandOptions>(args)
                .MapResult(
                  (GenerateReleaseNotesCommandOptions generateOpts) => RunReleaseNotesGeneratorCommand(generateOpts),
                  (ValidateReleaseCommandOptions validateOpts) => RunReleaseValidateCommand(validateOpts),
                 (GenerateInsertionChangelogCommandOptions insertionOpts) => RunGenerateInsertionChangelog(insertionOpts),
                 (GenerateReleaseChangelogCommandOptions releaseChangelogOpts) => RunGenerateReleaseChangelogCommand(releaseChangelogOpts),
+                (UnlistRedundantPackagesCommandOptions unlistOpts) => RunGenerateUnlistRedundantPackagesCommand(unlistOpts),
                  errs => 1);
 
 static int RunReleaseNotesGeneratorCommand(GenerateReleaseNotesCommandOptions opts)
@@ -76,6 +78,17 @@ static int RunGenerateReleaseChangelogCommand(GenerateReleaseChangelogCommandOpt
     {
         var githubClient = GenerateGitHubClient(options);
         var releaseChangelogGenerator = new ReleaseChangelogGenerator(options, githubClient);
+        await releaseChangelogGenerator.RunAsync();
+        return 0;
+    }
+}
+
+static int RunGenerateUnlistRedundantPackagesCommand(UnlistRedundantPackagesCommandOptions opts)
+{
+    return RunAsync(opts).GetAwaiter().GetResult();
+    async Task<int> RunAsync(UnlistRedundantPackagesCommandOptions options)
+    {
+        var releaseChangelogGenerator = new UnlistRedudantPackagesCommand(options);
         await releaseChangelogGenerator.RunAsync();
         return 0;
     }
