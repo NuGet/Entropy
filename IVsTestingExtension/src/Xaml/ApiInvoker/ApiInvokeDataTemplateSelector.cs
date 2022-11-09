@@ -33,6 +33,11 @@ namespace IVsTestingExtension.Xaml.ApiInvoker
                 var template = (DataTemplate)element.FindResource("FrameworkName");
                 return template;
             }
+            else if (parameter.Type == typeof(Boolean))
+            {
+                var template = (DataTemplate)element.FindResource("Boolean");
+                return template;
+            }
             else
             {
                 var template = (DataTemplate)element.FindResource("NotImplemented");

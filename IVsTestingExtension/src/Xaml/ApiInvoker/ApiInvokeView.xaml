@@ -82,6 +82,20 @@
                         </Grid>
                     </DataTemplate>
 
+                    <DataTemplate x:Key="Boolean">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition SharedSizeGroup="left" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="{Binding Path=Name, Mode=OneTime}" />
+                            <ComboBox Grid.Column="1" Text="{Binding Path=Value, Mode=OneWayToSource}">
+                                <ComboBoxItem>false</ComboBoxItem>
+                                <ComboBoxItem>true</ComboBoxItem>
+                            </ComboBox>
+                        </Grid>
+                    </DataTemplate>
+
                     <DataTemplate x:Key="NotImplemented">
                         <Grid>
                             <Grid.ColumnDefinitions>
