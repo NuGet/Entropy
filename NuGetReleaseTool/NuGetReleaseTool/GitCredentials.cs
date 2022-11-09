@@ -32,6 +32,7 @@ namespace NuGetReleaseTool
 
             Dictionary<string, string> result = new();
             string line;
+#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
             while ((line = process.StandardOutput.ReadLine()) != null)
             {
                 int index = line.IndexOf('=');
@@ -44,6 +45,7 @@ namespace NuGetReleaseTool
                 string value = line.Substring(index + 1);
                 result[key] = value;
             }
+#pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
 
             return result.Count > 0 ? result : null;
         }

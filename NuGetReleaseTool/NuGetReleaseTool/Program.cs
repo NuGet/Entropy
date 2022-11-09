@@ -18,8 +18,8 @@ return Parser.Default.ParseArguments<GenerateReleaseNotesCommandOptions, Validat
 
 static int RunReleaseNotesGeneratorCommand(GenerateReleaseNotesCommandOptions opts)
 {
-    return RunReleaseNotesGeneratorCommandAsync(opts).GetAwaiter().GetResult();
-    async Task<int> RunReleaseNotesGeneratorCommandAsync(GenerateReleaseNotesCommandOptions options)
+    return RunAsync(opts).GetAwaiter().GetResult();
+    async Task<int> RunAsync(GenerateReleaseNotesCommandOptions options)
     {
         var fileName = "NuGet-" + options.Release + ".md";
         var githubClient = GenerateGitHubClient(opts);
@@ -31,8 +31,8 @@ static int RunReleaseNotesGeneratorCommand(GenerateReleaseNotesCommandOptions op
 
 static int RunReleaseValidateCommand(ValidateReleaseCommandOptions opts)
 {
-    return RunReleaseValidateCommandAsync(opts).GetAwaiter().GetResult();
-    async Task<int> RunReleaseValidateCommandAsync(ValidateReleaseCommandOptions options)
+    return RunAsync(opts).GetAwaiter().GetResult();
+    async Task<int> RunAsync(ValidateReleaseCommandOptions options)
     {
         var githubClient = GenerateGitHubClient(options);
         var validateReleaseCommand = new ValidateReleaseCommand(options, githubClient);
@@ -42,8 +42,8 @@ static int RunReleaseValidateCommand(ValidateReleaseCommandOptions opts)
 
 static int RunGenerateInsertionChangelog(GenerateInsertionChangelogCommandOptions opts)
 {
-    return RunGenerateCommandAsync(opts).GetAwaiter().GetResult();
-    async Task<int> RunGenerateCommandAsync(GenerateInsertionChangelogCommandOptions opts)
+    return RunAsync(opts).GetAwaiter().GetResult();
+    async Task<int> RunAsync(GenerateInsertionChangelogCommandOptions opts)
     {
         GitHubClient githubClient = GenerateGitHubClient(opts);
 
@@ -73,8 +73,8 @@ static int RunGenerateInsertionChangelog(GenerateInsertionChangelogCommandOption
 
 static int RunGenerateReleaseChangelogCommand(GenerateReleaseChangelogCommandOptions opts)
 {
-    return RunGenerateReleaseChangelogCommandAsync(opts).GetAwaiter().GetResult();
-    async Task<int> RunGenerateReleaseChangelogCommandAsync(GenerateReleaseChangelogCommandOptions options)
+    return RunAsync(opts).GetAwaiter().GetResult();
+    async Task<int> RunAsync(GenerateReleaseChangelogCommandOptions options)
     {
         var githubClient = GenerateGitHubClient(options);
         var releaseChangelogGenerator = new ReleaseChangelogGenerator(options, githubClient);
@@ -106,8 +106,8 @@ static GitHubClient GenerateGitHubClient(BaseOptions opts)
     }
     else
     {
-        Dictionary<string, string> credentuals = GitCredentials.Get(new Uri($"https://github.com/{NuGet}/{Home}"));
-        if (credentuals?.TryGetValue("password", out string pat) == true)
+        Dictionary<string, string>? credentuals = GitCredentials.Get(new Uri($"https://github.com/{NuGet}/{Home}"));
+        if (credentuals?.TryGetValue("password", out string? pat) == true)
         {
             githubClient.Credentials = new Credentials(pat);
         }

@@ -9,7 +9,7 @@
 
         public ISet<Tuple<int, string>> Issues { get; }
 
-        public Tuple<int, string> PR { get; set; }
+        public Tuple<int, string>? PR { get; set; }
 
         public CommitWithDetails(string sha, string author, string link, string message)
         {
@@ -18,7 +18,7 @@
             Link = link;
             Message = message?
                         .Replace("\r", " ")
-                        .Replace("\n", " ");
+                        .Replace("\n", " ") ?? string.Empty;
             Issues = new HashSet<Tuple<int, string>>();
         }
     }

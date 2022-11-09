@@ -9,7 +9,7 @@ namespace NuGetReleaseTool.GenerateInsertionChangelogCommand
         public bool DryRun { get; set; }
 
         [Option("api-key", Required = false, HelpText = "The API key to use to unlist.")]
-        public string APIKey { get; set; }
+        public string? APIKey { get; set; }
 
     }
 }

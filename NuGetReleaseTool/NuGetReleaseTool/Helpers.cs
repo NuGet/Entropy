@@ -193,7 +193,7 @@ namespace NuGetReleaseTool
         public static void SaveAsHtml(IList<CommitWithDetails> commits, string path)
         {
             var resultHtmlPath = Path.Combine(path, "results.html");
-            Directory.CreateDirectory(Path.GetDirectoryName(resultHtmlPath));
+            Directory.CreateDirectory(path);
 
             if (File.Exists(resultHtmlPath))
             {
@@ -247,7 +247,7 @@ table, th, td {
 
             Console.WriteLine($"Saving results file: {resultHtmlPath}");
 
-            static string GetHrefOrEmpty(Tuple<int, string> url)
+            static string GetHrefOrEmpty(Tuple<int, string>? url)
             {
                 if (url == null)
                 {
@@ -260,7 +260,7 @@ table, th, td {
         public static void SaveAsMarkdown(IList<CommitWithDetails> commits, string path)
         {
             var resultMarkdownPath = Path.Combine(path, "results.md");
-            Directory.CreateDirectory(Path.GetDirectoryName(resultMarkdownPath));
+            Directory.CreateDirectory(path);
 
             if (File.Exists(resultMarkdownPath))
             {
@@ -284,9 +284,9 @@ table, th, td {
 
             Console.WriteLine($"Saving results file: {resultMarkdownPath}");
 
-            static string GetMdURLOrEmpty(object url)
+            static string GetMdURLOrEmpty(object? url)
             {
-                Tuple<string, string> tuple = null;
+                Tuple<string, string>? tuple = null;
 
                 if (url is Tuple<string, string> stringTuple)
                 {

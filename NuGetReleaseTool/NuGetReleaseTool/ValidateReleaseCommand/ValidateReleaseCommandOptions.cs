@@ -8,7 +8,9 @@ namespace NuGetReleaseTool.ValidateReleaseCommand
     public class ValidateReleaseCommandOptions : BaseOptions
     {
         [Value(1, Required = true, HelpText = "Release version to validate the release for.")]
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         public string Release { get; set; }
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
         [Option("end-commit", Required = false, HelpText = "The end commit for the current release. This commit must be on the release branch. " +
             "You do not normally need to use this argument, unless there's a commit on the branch, that is not within the current release.")]
