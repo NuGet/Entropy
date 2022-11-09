@@ -12,7 +12,7 @@ namespace GithubIssueTagger.Reports.CiInitiative
     {
         private static readonly IReadOnlyList<string> CompleteIcons = new[] { "🥳", "🤩", "👏", "🎈", "🎉", "🎊", "🪄", "🎂", "🧁", "🚀", "⛲", "🌝", "🌞", "⭐", "🌟", "🌈", "💯" };
 
-        public static void Write(IReadOnlyList<Issue> issues)
+        public static void Write(IEnumerable<Issue> issues)
         {
             var dt = ConvertToDataTable(issues);
 
@@ -25,7 +25,7 @@ namespace GithubIssueTagger.Reports.CiInitiative
         }
 
         // Use DataTable to eliminate risk of mismatched column counts in rows/header. Perf not a concern here.
-        private static DataTable ConvertToDataTable(IReadOnlyList<Issue> issues)
+        private static DataTable ConvertToDataTable(IEnumerable<Issue> issues)
         {
             DataTable dt = new DataTable();
             dt.Columns.Add("What");

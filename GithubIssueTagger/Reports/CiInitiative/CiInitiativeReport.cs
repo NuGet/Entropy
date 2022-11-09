@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Octokit;
+﻿using Octokit;
 using System;
 using System.Collections.Generic;
 using System.CommandLine;
@@ -11,34 +10,27 @@ namespace GithubIssueTagger.Reports.CiInitiative
     [CommandFactory(typeof(CiInitiativeCommandFactory))]
     internal class CiInitiativeReport : IReport
     {
-        private readonly GitHubClient _client;
-
-        public CiInitiativeReport(GitHubClient client)
-        {
-            _client = client;
-        }
-
         public Task RunAsync()
         {
             Console.WriteLine("This report cannot run in interactive mode");
             return Task.CompletedTask;
         }
 
-        public async Task RunAsync(string sprintName, OutputFormat outputFormat)
+        internal static async Task RunAsync(GitHubClient client, Args args)
         {
-            var sprint = SprintUtilities.GetSprintStartAndEnd(sprintName);
-            IReadOnlyList<Issue> issues = await GetCompletedCiIssuesBetweenDatesAsync(sprint.start, sprint.end);
+            IReadOnlyList<Issue> issues = await GetCompletedCiIssuesBetweenDatesAsync(client, args.Start, args.End);
+            var orderedIssues = OrderIssues(issues, args.Order);
 
-            var outputter = GetOutputter(outputFormat);
-            outputter(issues);
+            var outputter = GetOutputter(args.OutputFormat);
+            outputter(orderedIssues);
         }
 
-        private async Task<IReadOnlyList<Issue>> GetCompletedCiIssuesBetweenDatesAsync(DateOnly start, DateOnly end)
+        private static async Task<IReadOnlyList<Issue>> GetCompletedCiIssuesBetweenDatesAsync(GitHubClient client, DateOnly start, DateOnly end)
         {
             var tasks = new Task<IReadOnlyList<Issue>>[]
             {
-                GetClosedCiIssuesAsync("Home", start, end),
-                GetClosedCiIssuesAsync("Client.Engineering", start, end)
+                GetClosedCiIssuesAsync(client, "Home", start, end),
+                GetClosedCiIssuesAsync(client, "Client.Engineering", start, end)
             };
 
             await Task.WhenAll(tasks);
@@ -73,7 +65,7 @@ namespace GithubIssueTagger.Reports.CiInitiative
             }
         }
 
-        private async Task<IReadOnlyList<Issue>> GetClosedCiIssuesAsync(string repo, DateOnly sprintStart, DateOnly sprintEnd)
+        private static async Task<IReadOnlyList<Issue>> GetClosedCiIssuesAsync(GitHubClient client, string repo, DateOnly sprintStart, DateOnly sprintEnd)
         {
             var request = new RepositoryIssueRequest()
             {
@@ -88,7 +80,7 @@ namespace GithubIssueTagger.Reports.CiInitiative
                 PageCount = 100
             };
 
-            var closedIssues = await _client.Issue.GetAllForRepository("NuGet", repo, request, options);
+            var closedIssues = await client.Issue.GetAllForRepository("NuGet", repo, request, options);
 
             List<Issue> issues = new();
             foreach (var issue in closedIssues)
@@ -105,7 +97,23 @@ namespace GithubIssueTagger.Reports.CiInitiative
             return issues;
         }
 
-        private Action<IReadOnlyList<Issue>> GetOutputter(OutputFormat outputFormat)
+        private static IEnumerable<Issue> OrderIssues(IReadOnlyList<Issue> issues, Order order)
+        {
+            switch (order)
+            {
+                case Order.Date:
+                    return issues.OrderBy(i => i.ClosedAt);
+
+                case Order.Assignee:
+                    return issues.OrderBy(i => i.Assignee?.Login ?? string.Empty)
+                        .ThenBy(i => i.ClosedAt);
+
+                default:
+                    throw new Exception("Unknown order " + order);
+            }
+        }
+
+        private static Action<IEnumerable<Issue>> GetOutputter(OutputFormat outputFormat)
         {
             switch (outputFormat)
             {
@@ -115,7 +123,17 @@ namespace GithubIssueTagger.Reports.CiInitiative
             }
         }
 
-        public enum OutputFormat { Console, Md };
+        public enum OutputFormat { Console, Md }
+
+        public enum Order { Date, Assignee }
+
+        internal class Args
+        {
+            public required DateOnly Start { get; init; }
+            public required DateOnly End { get; init; }
+            public required OutputFormat OutputFormat { get; init; }
+            public required Order Order { get; init; }
+        }
 
         private class CiInitiativeCommandFactory : ICommandFactory
         {
@@ -124,36 +142,22 @@ namespace GithubIssueTagger.Reports.CiInitiative
                 var command = new Command(nameof(CiInitiative));
                 command.Description = "Find completed CI Initiative work.";
 
-                var sprint = new Option<string>("--sprint");
-                sprint.AddAlias("-s");
-                sprint.Description = "Sprint name";
-                sprint.IsRequired = true;
-                command.AddOption(sprint);
+                var format = new Option<OutputFormat>("--format");
+                format.AddAlias("-f");
+                format.Description = "Output format";
+                format.SetDefaultValue(OutputFormat.Console);
 
-                var output = new Option<OutputFormat>("--output");
-                output.AddAlias("-o");
-                output.Description = "Output format";
-                output.SetDefaultValue(OutputFormat.Console);
-                command.AddOption(output);
+                var order = new Option<Order>("--order");
+                order.AddAlias("-o");
+                order.Description = "Output order";
+                order.SetDefaultValue(Order.Date);
 
-                command.SetHandler<GitHubPat, string, OutputFormat>(RunAsync,
-                    patBinder, sprint, output);
+                var sprint = SprintReport.GetCommand(patBinder, format, order);
+                command.Add(sprint);
+                var between = BetweenReport.GetCommand(patBinder, format, order);
+                command.Add(between);
 
                 return command;
-            }
-
-            public async Task RunAsync(GitHubPat pat, string sprint, OutputFormat outputFormat)
-            {
-                var serviceProvider = new ServiceCollection()
-                    .AddGithubIssueTagger(pat)
-                    .BuildServiceProvider();
-
-                var scopeFactory = serviceProvider.GetRequiredService<IServiceScopeFactory>();
-                using (scopeFactory.CreateScope())
-                {
-                    var report = serviceProvider.GetRequiredService<CiInitiativeReport>();
-                    await report.RunAsync(sprint, outputFormat);
-                }
             }
         }
     }
