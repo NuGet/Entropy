@@ -13,6 +13,7 @@ function PatchNupkgs {
         [Parameter(Mandatory = $true)]
         [string]$nupkgsPath
     )
+
     #Create a temp folder for extracted files
     $tempExtractFolder = [System.IO.Path]::Combine($tempFolder, $nupkgID)
     $delimeter = [IO.Path]::DirectorySeparatorChar
@@ -53,7 +54,7 @@ function PatchNupkgs {
     
     $tfmFolderNetcoreapp21 =  Get-ChildItem -Path "$libPath$delimeter*" | Where-Object {$_.Name -like "netcoreapp2.1"}
    
-    if (($tfmFolderNet5 -ne $null) -Or ($tfmFolderNetcoreapp50 -ne $null)){
+    if (([int]($SDKVersion.Substring(0, 1)) -ge 5) -And (($tfmFolderNet5 -ne $null) -Or ($tfmFolderNetcoreapp50 -ne $null))){
         if ($tfmFolderNet5 -ne $null){
             $patchDll = Get-ChildItem -Path "$tfmFolderNet5$delimeter*" | Where-Object {$_.Name -like "*.dll"}
         }else{
