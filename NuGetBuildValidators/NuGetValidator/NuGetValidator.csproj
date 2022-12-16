@@ -9,22 +9,30 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Version>2.0.5.0</Version>
+    <Version>2.1.0</Version>
     <AssemblyVersion>$(Version)</AssemblyVersion>
     <PackageVersion>$(Version)</PackageVersion>
     <PackageVersion Condition=" '$(ReleaseLabel)'!=''">$(Version)-$(ReleaseLabel)</PackageVersion>
-    <Authors>Ankit Mishra</Authors>
+    <Authors>NuGet Client</Authors>
     <Description>Package used internally in NuGet team's localization validation pipeline.</Description>
-    <RepositoryUrl>https://github.com/mishra14/NuGetBuildValidators</RepositoryUrl>
-    <PackageProjectUrl>https://github.com/mishra14/NuGetBuildValidators</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/NuGet/Entropy/tree/main/NuGetBuildValidators/NuGetValidator</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/NuGet/Entropy/tree/main/NuGetBuildValidators/NuGetValidator</PackageProjectUrl>
     <RepositoryType>git</RepositoryType>
-
   </PropertyGroup>
+  
+  <ItemDefinitionGroup>
+    <PackageReference>
+      <PrivateAssets>All</PrivateAssets>
+    </PackageReference>
+    <ProjectReference>
+      <PrivateAssets>All</PrivateAssets>
+    </ProjectReference>
+  </ItemDefinitionGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.CommandLineUtils" Version="1.1.1" />
-    <PackageReference Include="NuGet.Common" Version="4.0.0" PrivateAssets="All" />
-    <PackageReference Include="ILRepack" Version="2.0.13" PrivateAssets="All" />
+    <PackageReference Include="NuGet.Common" Version="4.0.0" />
+    <PackageReference Include="ILRepack" Version="2.0.13" />
   </ItemGroup>
 
   <ItemGroup>
