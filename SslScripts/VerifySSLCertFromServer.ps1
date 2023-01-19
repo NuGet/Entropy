@@ -8,12 +8,11 @@ $SleepDurationInSeconds = 6
 
 $resultPath = ".\result.csv"
 
-# Place a list of URLs to test under the same domain
-$URLs = @("https://api.nuget.org/v3-registration5-gz-semver2/newtonsoft.json/index.json",
-          "https://api.nuget.org/v3-flatcontainer/newtonsoft.json/index.json",
-          "https://api.nuget.org/v3/index.json")
 $Domain = "api.nuget.org"
 $CertSubjectName = "CN=*.nuget.org"
+$URLs = @("https://$Domain/v3-registration5-gz-semver2/newtonsoft.json/index.json",
+          "https://$Domain/v3-flatcontainer/newtonsoft.json/index.json",
+          "https://$Domain/v3/index.json")
 
 $TestRound = 1
 $SuccessedTimes = 0
