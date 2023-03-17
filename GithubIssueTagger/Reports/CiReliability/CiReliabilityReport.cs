@@ -219,7 +219,7 @@ Build
         private void Output(ReportData data)
         {
             if (data == null) { throw new ArgumentNullException(nameof(data)); }
-            if (data.FailedBuilds == null) {  throw new ArgumentException(paramName: nameof(data.FailedBuilds), message: "data.FailedBuilds must not be null"); }
+            if (data.FailedBuilds == null) { throw new ArgumentException(paramName: nameof(data.FailedBuilds), message: "data.FailedBuilds must not be null"); }
 
             float reliability = (data.TotalBuilds - data.FailedBuilds.Count) * 100.0f / data.TotalBuilds;
 
@@ -240,18 +240,38 @@ Build
             Console.WriteLine(data.KustoQuery);
             Console.WriteLine("```");
             Console.WriteLine();
-            Console.WriteLine("|Build|Job|Task|Commentary|");
-            Console.WriteLine("|--|--|--|--|");
+            Console.WriteLine("<table>");
+            Console.WriteLine("  <tr>");
+            Console.WriteLine("    <th>Build</th>");
+            Console.WriteLine("    <th>Job</th>");
+            Console.WriteLine("    <th>Task</th>");
+            Console.WriteLine("    <th>Commentary</th>");
+            Console.WriteLine("  </tr>");
             foreach (var build in data.FailedBuilds)
             {
                 if (build.Details == null) { throw new ArgumentException(nameof(build.Details), "data.FailedBuilds[int].Details must not be null"); }
 
-                string job = string.Join("<br/>", build.Details.Select(d => d.Job));
-                string task = string.Join("<br/>", build.Details.Select(d => d.Task));
-                string details = string.Join("<br/>", build.Details.Select(d => d.Details));
-                Console.WriteLine($"|[{build.Number}](https://dev.azure.com/devdiv/DevDiv/_build/results?buildId={build.Id})|{job}|{task}|{details}|");
+                for (int i = 0; i < build.Details.Count; i++)
+                {
+                    Console.WriteLine("  <tr>");
+                    if (i == 0)
+                    {
+                        if (build.Details.Count > 1)
+                        {
+                            Console.WriteLine($"    <td rowspan=\"{build.Details.Count}\"><a href=\"https://dev.azure.com/devdiv/DevDiv/_build/results?buildId={build.Id}\">{build.Number}</a></td>");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"    <td><a href=\"https://dev.azure.com/devdiv/DevDiv/_build/results?buildId={build.Id}\">{build.Number}</a></td>");
+                        }
+                    }
+                    Console.WriteLine($"    <td>{build.Details[i].Job}</td>");
+                    Console.WriteLine($"    <td>{build.Details[i].Task}</td>");
+                    Console.WriteLine($"    <td>{build.Details[i].Details}</td>");
+                    Console.WriteLine("  </tr>");
+                }
             }
-
+            Console.WriteLine("</table>");
             Console.WriteLine();
             Console.WriteLine("### Tracking");
             Console.WriteLine();
