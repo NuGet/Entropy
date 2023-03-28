@@ -6,7 +6,7 @@ namespace GithubIssueTagger
 {
     public class PullRequestStatistic
     {
-        private Lazy<DateTimeOffset?> _firstCommentDate;
+        private Lazy<DateTimeOffset> _firstEngagementDate;
         private Lazy<IList<string>> _reviewers;
 
         public int PullRequestNumber { get; }
@@ -24,21 +24,16 @@ namespace GithubIssueTagger
             State = state;
             MergedDate = mergedDate;
             Comments = comments;
-            _firstCommentDate = new Lazy<DateTimeOffset?>(() => GetFirstEngagementDateInternal());
+            _firstEngagementDate = new Lazy<DateTimeOffset>(() => GetFirstEngagementDateInternal());
             _reviewers = new Lazy<IList<string>>(() => GetReviewersInternal());
         }
 
-        public DateTimeOffset? GetFirstEngagementDate()
+        public DateTimeOffset GetFirstEngagementDate()
         {
-            return _firstCommentDate.Value;
+            return _firstEngagementDate.Value;
         }
 
-        public IList<string> GetReviewers()
-        {
-            return _reviewers.Value;
-        }
-
-        private DateTimeOffset? GetFirstEngagementDateInternal()
+        private DateTimeOffset GetFirstEngagementDateInternal()
         {
             DateTimeOffset? result = null;
 
@@ -52,10 +47,18 @@ namespace GithubIssueTagger
                     }
                 }
             }
+            if (result == null)
+            {
+                return MergedDate!.Value;
+            }
 
-            return result;
+            return result.Value;
         }
 
+        public IList<string> GetReviewers()
+        {
+            return _reviewers.Value;
+        }
         private IList<string> GetReviewersInternal()
         {
             var reviewers = new HashSet<string>();

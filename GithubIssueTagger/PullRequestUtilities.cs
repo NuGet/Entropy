@@ -6,119 +6,145 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
-#nullable disable
-
 namespace GithubIssueTagger
 {
     public static partial class PullRequestUtilities
     {
-        // Ugly code alert. This method is a collection of random code :) 
-        public static async Task ProcessPullRequestStatsAsync(GitHubClient client)
-        {
-            bool FetchDataFromRemote = false;
-            bool Preprocess = false;
-            bool AnalyzeReviewDistribution = false;
-            bool AnalyzeTimeToReview = true;
-            var outputFileName = "statistics.json";
-            var closedIssueFileName = "closed-processed.json";
+        public static string[] ActiveTeamMembers =
+            new string[] {
+                "aortiz-msft",
+                "donnie-msft",
+                "dtivel",
+                "erdembayar",
+                "heng-liu",
+                "jebriede",
+                "kartheekp-ms",
+                "martinrrm",
+                "nkolev92",
+                "rrelyea",
+                "zivkan",
+                "jeffkl",
+            };
 
-            if (FetchDataFromRemote)
+        /// <summary>
+        /// Get some pull request stats printed on the console. This method only analyzes closed PRs.
+        /// </summary>
+        /// <param name="client">GH Client</param>
+        /// <param name="fetchDataFromRemote">Whether to fetch new data from remote. Usually you'd want to do this once per PR range. Optimization for local running.</param>
+        /// <param name="preprocess">>Whether to process new data in the file fetched remotely. Usually you'd want to do this once per PR range. Optimization for local running.</param>
+        /// <param name="analyzeReviewDistribution">Print data about who reviewed how many PRs.</param>
+        /// <param name="analyzeTimeToReview">Whether to print data about how long individual PRs took to the review</param>
+        /// <param name="oldestPR">PR id to start with.</param>
+        /// <param name="newestPR">PR id to end with.</param>
+        /// <returns></returns>
+        public static async Task ProcessPullRequestStatsAsync(GitHubClient client, bool fetchDataFromRemote, bool preprocess, bool analyzeReviewDistribution, bool analyzeTimeToReview, int oldestPR, int newestPR)
+        {
+            var rawPullRequestDataFileName = "statistics.json";
+            var processedPullRequestFileName = "closed-processed.json";
+
+            if (fetchDataFromRemote)
             {
                 // Load code paths
-                var statistics = await PullRequestUtilities.GeneratePullRequestStatistics(client, "nuget", "NuGet.Client", 3200, 3302);
+                var statistics = await GeneratePullRequestStatistics(client, "NuGet", "NuGet.Client", oldestPR, newestPR);
                 var json = JsonConvert.SerializeObject(statistics, Formatting.Indented);
-                File.WriteAllText(outputFileName, json);
+                File.WriteAllText(rawPullRequestDataFileName, json);
             }
 
-            if (Preprocess)
+            if (preprocess)
             {
-                var lines = File.ReadAllText(outputFileName);
-                var stats = JsonConvert.DeserializeObject<IDictionary<int, PullRequestStatistic>>(lines);
-                var importantStat = stats.Where(e => e.Value.State == "closed" && e.Value.MergedDate != null).OrderByDescending(e => e.Value.MergedDate)
-                    .Select(e => new Stat(e.Value.Creator, e.Key, e.Value.CreatedAt, (DateTimeOffset)e.Value.MergedDate, (DateTimeOffset)e.Value.GetFirstEngagementDate(), e.Value.GetReviewers())).ToArray();
-                File.WriteAllText(closedIssueFileName, JsonConvert.SerializeObject(importantStat, Formatting.Indented));
+                IDictionary<int, PullRequestStatistic> PRStatistics = JsonConvert.DeserializeObject<IDictionary<int, PullRequestStatistic>>(File.ReadAllText(rawPullRequestDataFileName))!;
+                var mergedPRs = PRStatistics.Where(e => e.Value.State == "closed" && e.Value.MergedDate != null)
+                    .OrderByDescending(e => e.Value.MergedDate);
+                List<PullRequestReviewData> pullRequestReviewData = new();
+                foreach (var mergedPR in mergedPRs)
+                {
+                    var statistic = mergedPR.Value;
+                    pullRequestReviewData.Add(new
+                        PullRequestReviewData(statistic.Creator,
+                            mergedPR.Key,
+                            statistic.CreatedAt,
+                            (DateTimeOffset)statistic.MergedDate!,
+                            (DateTimeOffset)statistic.GetFirstEngagementDate(),
+                            statistic.GetReviewers()));
+                }
+
+                File.WriteAllText(processedPullRequestFileName, JsonConvert.SerializeObject(pullRequestReviewData, Formatting.Indented));
             }
 
-            if (AnalyzeReviewDistribution)
+            if (analyzeReviewDistribution)
             {
-                var lines = File.ReadAllText(closedIssueFileName);
-                var stats = JsonConvert.DeserializeObject<Stat[]>(lines);
-                var interestingPeople = new string[] { "kartheekp-ms", "cristinamanum", "zivkan", "heng-liu", "nkolev92", "aortiz-msft", "dominoFire", "rrelyea", "dtivel", "donnie-msft", "zkat" };
+                Dictionary<string, Tuple<int, int>> reviewDistributionData = GetReviewDistribution(processedPullRequestFileName);
 
-                var reviews = interestingPeople.ToDictionary(item => item, item => 0);
-                var potentialReviews = interestingPeople.ToDictionary(item => item, item => stats.Length);
-
-                foreach (var issue in stats)
-                {
-                    if (potentialReviews.ContainsKey(issue.Name))
-                    {
-                        potentialReviews[issue.Name]--;
-                    }
-
-                    foreach (var reviewer in issue.Reviewers)
-                    {
-                        if (reviews.ContainsKey(reviewer))
-                        {
-                            reviews[reviewer]++;
-                        }
-                    }
-                }
-
-                var finalDict = new Dictionary<string, Tuple<int, int>>();
-
-                foreach (var review in reviews)
-                {
-                    var countReview = review.Value;
-                    var countPotentialReview = potentialReviews[review.Key];
-
-                    finalDict.Add(review.Key, new Tuple<int, int>(countReview, countPotentialReview));
-                }
-
-                foreach (var entry in finalDict)
+                Console.WriteLine("User,PRsReviewed,MaxReviewablePRs");
+                foreach (var entry in reviewDistributionData)
                 {
                     Console.WriteLine($"{entry.Key},{entry.Value.Item1},{entry.Value.Item2}");
                 }
             }
 
-            if (AnalyzeTimeToReview)
+            if (analyzeTimeToReview)
             {
-                var lines = File.ReadAllText(closedIssueFileName);
-                var stats = JsonConvert.DeserializeObject<Stat[]>(lines);
-                var timings = new List<Tuple<int, TimeSpan, TimeSpan>>();
+                List<Tuple<int, TimeSpan, TimeSpan>> timings = GetTimeToReview(processedPullRequestFileName);
 
-                foreach (var stat in stats)
-                {
-                    timings.Add(new Tuple<int, TimeSpan, TimeSpan>(stat.Number, stat.FirstReview.Subtract(stat.StartedOn), stat.EndedOn.Subtract(stat.StartedOn)));
-                }
-
+                Console.WriteLine("PRId,TimeToFirstReview,TimeToMerge");
                 foreach (var entry in timings)
                 {
-                    Console.WriteLine($"{entry.Item1},{entry.Item2.TotalDays},{entry.Item3.TotalDays}{Environment.NewLine}");
+                    Console.WriteLine($"{entry.Item1},{entry.Item2.TotalDays},{entry.Item3.TotalDays}");
                 }
             }
         }
 
-        public class Stat
+        private static List<Tuple<int, TimeSpan, TimeSpan>> GetTimeToReview(string processedPullRequestFileName)
         {
-            public string Name { get; }
-            public int Number { get; }
-            public DateTimeOffset StartedOn { get; }
-            public DateTimeOffset EndedOn { get; }
-            public DateTimeOffset FirstReview { get; }
-            public IList<string> Reviewers { get; }
+            PullRequestReviewData[] pullRequestReviewData = JsonConvert.DeserializeObject<PullRequestReviewData[]>(File.ReadAllText(processedPullRequestFileName))!;
+            var timings = new List<Tuple<int, TimeSpan, TimeSpan>>();
 
-            public Stat(string name, int number, DateTimeOffset startedOn, DateTimeOffset endedOn, DateTimeOffset firstReview, IList<string> reviewers)
+            foreach (var entry in pullRequestReviewData)
             {
-                Name = name;
-                Number = number;
-                StartedOn = startedOn;
-                EndedOn = endedOn;
-                FirstReview = firstReview;
-                Reviewers = reviewers;
+                timings.Add(new Tuple<int, TimeSpan, TimeSpan>(entry.Number,
+                    entry.FirstReview.Subtract(entry.StartedOn),
+                    entry.EndedOn.Subtract(entry.StartedOn)));
             }
+            return timings;
         }
 
-        public static async Task<IDictionary<int, PullRequestStatistic>> GeneratePullRequestStatistics(GitHubClient client, string org, string repo, int from, int to)
+        private static Dictionary<string, Tuple<int, int>> GetReviewDistribution(string processedPullRequestFileName)
+        {
+            PullRequestReviewData[] pullRequestReviewData = JsonConvert.DeserializeObject<PullRequestReviewData[]>(File.ReadAllText(processedPullRequestFileName))!;
+            int maxReviews = pullRequestReviewData.Length;
+            var reviews = ActiveTeamMembers.ToDictionary(item => item, item => 0);
+            var potentialReviews = ActiveTeamMembers.ToDictionary(item => item, item => maxReviews);
+
+            foreach (var entry in pullRequestReviewData)
+            {
+                if (potentialReviews.ContainsKey(entry.Name))
+                {
+                    potentialReviews[entry.Name]--;
+                }
+
+                foreach (var reviewer in entry.Reviewers)
+                {
+                    if (reviews.ContainsKey(reviewer))
+                    {
+                        reviews[reviewer]++;
+                    }
+                }
+            }
+
+            var reviewDistributionData = new Dictionary<string, Tuple<int, int>>();
+
+            foreach (var review in reviews)
+            {
+                var countReview = review.Value;
+                var countPotentialReview = potentialReviews[review.Key];
+
+                reviewDistributionData.Add(review.Key, new Tuple<int, int>(countReview, countPotentialReview));
+            }
+
+            return reviewDistributionData;
+        }
+
+        private static async Task<IDictionary<int, PullRequestStatistic>> GeneratePullRequestStatistics(GitHubClient client, string org, string repo, int from, int to)
         {
             var statistics = new Dictionary<int, PullRequestStatistic>();
 
@@ -141,7 +167,6 @@ namespace GithubIssueTagger
                     {
                         reviews.Add(new ReviewStatistic(review.User.Login, review.SubmittedAt, true));
                     }
-
                     var pullRequestStat = new PullRequestStatistic(pullNumber, pullRequest.User.Login, pullRequest.CreatedAt, pullRequest.State.StringValue, pullRequest.MergedAt, reviews);
 
                     statistics.Add(pullNumber, pullRequestStat);
