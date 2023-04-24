@@ -222,14 +222,16 @@ Build
             if (data.FailedBuilds == null) { throw new ArgumentException(paramName: nameof(data.FailedBuilds), message: "data.FailedBuilds must not be null"); }
 
             float reliability = (data.TotalBuilds - data.FailedBuilds.Count) * 100.0f / data.TotalBuilds;
+            int failedBuildsOnlyBecauseOfApex = data.FailedBuilds.Where(b => b.Details.Count == 1 && b.Details[0].Job == "Apex Test Execution").Count();
+            float reliabilityIgnoringApex = (data.TotalBuilds - data.FailedBuilds.Count + failedBuildsOnlyBecauseOfApex) * 100.0f / data.TotalBuilds;
 
             Console.WriteLine("# NuGet.Client CI Reliability " + data.SprintName);
             Console.WriteLine();
             Console.WriteLine("[NuGet.Client-PR dev branch builds](https://dev.azure.com/devdiv/DevDiv/_build?definitionId=8118&branchFilter=101196%2C101196%2C101196%2C101196%2C101196)");
             Console.WriteLine();
-            Console.WriteLine("|Total Builds|Failed Builds|Reliability|");
-            Console.WriteLine("|:--:|:--:|:--:|");
-            Console.WriteLine($"|{data.TotalBuilds}|{data.FailedBuilds.Count}|{reliability:f1}%|");
+            Console.WriteLine("|Total Builds|Failed Builds|Reliability|Reliability Ignoring Apex|");
+            Console.WriteLine("|:--:|:--:|:--:|:--:|");
+            Console.WriteLine($"|{data.TotalBuilds}|{data.FailedBuilds.Count}|{reliability:f1}%|{reliabilityIgnoringApex:f1}%|");
             Console.WriteLine();
             Console.WriteLine("## Failed Builds");
             Console.WriteLine();
