@@ -154,11 +154,6 @@ namespace MakeTestCert
                     Console.WriteLine($"Signature algorithm:    RSA {hashAlgorithmName}");
                     Console.WriteLine($"Key size (bits):        {keySizeInBits}");
 
-                    certificateRequest.CertificateExtensions.Add(
-                        new X509SubjectKeyIdentifierExtension(
-                            keyPair.ExportSubjectPublicKeyInfo(),
-                            critical: false));
-
                     CreateCertificate(
                         certificateRequest,
                         notBefore,
@@ -178,11 +173,6 @@ namespace MakeTestCert
 
                     Console.WriteLine($"Signature algorithm:    ECDSA {hashAlgorithmName}");
                     Console.WriteLine($"Named curve:            {namedCurve.Oid.FriendlyName}");
-
-                    certificateRequest.CertificateExtensions.Add(
-                        new X509SubjectKeyIdentifierExtension(
-                            certificateRequest.PublicKey,
-                            critical: false));
 
                     CreateCertificate(
                         certificateRequest,
@@ -251,6 +241,8 @@ namespace MakeTestCert
             string? password,
             DirectoryInfo outputDirectory)
         {
+            X509SubjectKeyIdentifierExtension skiExtension = new(certificateRequest.PublicKey, critical: false);
+
             certificateRequest.CertificateExtensions.Add(
                 new X509BasicConstraintsExtension(
                     certificateAuthority: true,
@@ -265,6 +257,9 @@ namespace MakeTestCert
                 new X509KeyUsageExtension(
                     X509KeyUsageFlags.DigitalSignature | X509KeyUsageFlags.KeyCertSign,
                     critical: true));
+            certificateRequest.CertificateExtensions.Add(skiExtension);
+            certificateRequest.CertificateExtensions.Add(
+                X509AuthorityKeyIdentifierExtension.CreateFromSubjectKeyIdentifier(skiExtension));
 
             using (X509Certificate2 certificate = certificateRequest.CreateSelfSigned(notBefore, notAfter))
             {
@@ -297,10 +292,9 @@ namespace MakeTestCert
         {
             FileInfo file = new(Path.Combine(directory.FullName, $"{fileName}.pem"));
 
-            // ExportCertificatePem() is available starting with .NET 7.
             using (StreamWriter writer = new(file.FullName))
             {
-                char[] pem = PemEncoding.Write("CERTIFICATE", certificate.RawData);
+                string pem = certificate.ExportCertificatePem();
 
                 writer.WriteLine(pem);
             }
