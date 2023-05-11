@@ -64,6 +64,19 @@ namespace MakeTestCert
 
                 switch (arg)
                 {
+                    case "-ha":
+                    case "--hash-algorithm":
+                        if (!TryGetHashAlgorithmName(nextArg, out hashAlgorithmName))
+                        {
+                            Console.Error.WriteLine($"Hash algorithm '{nextArg}' is unsupported.");
+                            Console.WriteLine();
+
+                            PrintHelp();
+
+                            return Error;
+                        }
+                        break;
+
                     case "-ka":
                     case "--key-algorithm":
                         keyAlgorithmName = nextArg;
@@ -201,15 +214,17 @@ namespace MakeTestCert
 
             Console.WriteLine($"Usage:  {file.Name} [option(s)]");
             Console.WriteLine();
-            Console.WriteLine("  Option                   Description                     Default");
-            Console.WriteLine("  ------------------------ ------------------------------- -----------------");
+            Console.WriteLine($"  Option                   Description                     Default");
+            Console.WriteLine($"  ------------------------ ------------------------------- -----------------");
+            Console.WriteLine($"  --hash-algorithm, -ha    signature hash algorithm        {DefaultHashAlgorithmName.Name!.ToLowerInvariant()}");
+            Console.WriteLine($"                           (sha256, sha384, or sha512)");
             Console.WriteLine($"  --key-algorithm, -ka     RSA or ECDSA                    {DefaultKeyAlgorithmName}");
             Console.WriteLine($"  --key-size, -ks          RSA key size in bits            {DefaultKeySizeInBits}");
             Console.WriteLine($"  --named-curve, -nc       ECDSA named curve               {DefaultECCurve.Oid.FriendlyName}");
             Console.WriteLine($"  --not-after, -na         validity period end datetime    (now)");
             Console.WriteLine($"  --not-before, -nb        validity period start datetime  (now + {DefaultValidityPeriodInHours} hours)");
-            Console.WriteLine($"  --password, -p           PFX file password               (none)");
             Console.WriteLine($"  --output-directory, -od  output directory path           .{Path.DirectorySeparatorChar}");
+            Console.WriteLine($"  --password, -p           PFX file password               (none)");
             Console.WriteLine($"  --subject, -s            certificate subject             {DefaultSubject.Name}");
             Console.WriteLine($"  --validity-period, -vp   validity period (in hours)      {DefaultValidityPeriodInHours}");
             Console.WriteLine();
@@ -278,6 +293,31 @@ namespace MakeTestCert
                 WritePemFile(certificate, outputDirectory, fingerprint);
             }
         }
+
+        private static bool TryGetHashAlgorithmName(string value, out HashAlgorithmName hashAlgorithmName)
+        {
+            switch (value.ToLowerInvariant())
+            {
+                case "sha256":
+                    hashAlgorithmName = HashAlgorithmName.SHA256;
+                    break;
+
+                case "sha384":
+                    hashAlgorithmName = HashAlgorithmName.SHA384;
+                    break;
+
+                case "sha512":
+                    hashAlgorithmName = HashAlgorithmName.SHA512;
+                    break;
+
+                default:
+                    hashAlgorithmName = DefaultHashAlgorithmName;
+                    return false;
+            }
+
+            return true;
+        }
+
 
         private static void WriteDerFile(X509Certificate2 certificate, DirectoryInfo directory, string fileName)
         {
