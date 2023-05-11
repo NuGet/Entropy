@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.CommandLine;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -28,6 +29,18 @@ namespace GithubIssueTagger.Reports.CiReliability
 
         private async Task<ReportData> GetDataAsync(string sprintName)
         {
+            TextWriter? log;
+            if (Console.IsOutputRedirected)
+            {
+                log = Console.IsErrorRedirected
+                    ? null
+                    : Console.Error;
+            }
+            else
+            {
+                log = Console.Out;
+            }
+
             (DateOnly startOfSprint, DateOnly endOfSprint) = SprintUtilities.GetSprintStartAndEnd(sprintName);
 
             string failedBuildsQuery = $@"let start = startofday(datetime(""{startOfSprint.ToString("yyyy-MM-dd")}""));
@@ -64,9 +77,10 @@ Build
 
             using (var client = KustoClientFactory.CreateCslQueryProvider(connectionBuilder))
             {
+                log?.WriteLine($"Querying builds from {startOfSprint:yyyy-MM-dd} to {endOfSprint:yyyy-MM-dd}");
+                var (failedBuilds, trackingIssues) = await GetFailedBuilds(client, crp, failedBuildsQuery, log);
 
-                var (failedBuilds, trackingIssues) = await GetFailedBuilds(client, crp, failedBuildsQuery);
-
+                log?.WriteLine("Querying total builds in sprint");
                 int totalBuilds = await GetBuildCount(client, crp, buildCountQuery);
 
                 data = new ReportData()
@@ -98,7 +112,11 @@ Build
             return count;
         }
 
-        private async Task<(IReadOnlyList<ReportData.FailedBuild> failedBuilds, IReadOnlyDictionary<string, string> trackingIssues)> GetFailedBuilds(ICslQueryProvider client, ClientRequestProperties crp, string query)
+        private async Task<(IReadOnlyList<ReportData.FailedBuild> failedBuilds, IReadOnlyDictionary<string, string> trackingIssues)> GetFailedBuilds(
+            ICslQueryProvider client,
+            ClientRequestProperties crp,
+            string query,
+            TextWriter? log)
         {
             List<ReportData.FailedBuild> failedBuilds = new();
             Dictionary<string, string> trackingIssues = new();
@@ -113,7 +131,19 @@ Build
                 long buildId = result.GetInt64(buildIdColumn);
                 string buildNumber = result.GetString(buildNumberColumn);
 
-                var (details, tracking) = await GetFailedBuildDetails(buildId, client, crp);
+                var failedBuild = new ReportData.FailedBuild()
+                {
+                    Id = buildId,
+                    Number = buildNumber,
+                };
+                failedBuilds.Add(failedBuild);
+            }
+
+            for (int i = 0; i < failedBuilds.Count; i++)
+            {
+                log?.WriteLine($"Checking failed build {i + 1}/{failedBuilds.Count}");
+
+                var (details, tracking) = await GetFailedBuildDetails(failedBuilds[i].Id, client, crp);
 
                 foreach (var kvp in tracking)
                 {
@@ -123,20 +153,20 @@ Build
                     }
                 }
 
-                var failedBuild = new ReportData.FailedBuild()
+                failedBuilds[i] = failedBuilds[i] with
                 {
-                    Id = buildId.ToString(),
-                    Number = buildNumber,
                     Details = details,
                 };
-                failedBuilds.Add(failedBuild);
             }
 
 
             return (failedBuilds, trackingIssues);
         }
 
-        private async Task<(IReadOnlyList<ReportData.FailureDetail> details, IReadOnlyDictionary<string, string> tracking)> GetFailedBuildDetails(long buildId, ICslQueryProvider client, ClientRequestProperties crp)
+        private async Task<(IReadOnlyList<ReportData.FailureDetail> details, IReadOnlyDictionary<string, string> tracking)> GetFailedBuildDetails(
+            long buildId,
+            ICslQueryProvider client,
+            ClientRequestProperties crp)
         {
             List<ReportData.FailureDetail> details = new();
             Dictionary<string, string> trackingIssues = new();

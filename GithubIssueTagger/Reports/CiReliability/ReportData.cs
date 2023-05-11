@@ -14,9 +14,9 @@ namespace GithubIssueTagger.Reports.CiReliability
 
         public int TotalBuilds { get; init; }
 
-        internal class FailedBuild
+        internal struct FailedBuild
         {
-            public string? Id { get; init; }
+            public long Id { get; init; }
             public string? Number { get; init; }
             public IReadOnlyList<FailureDetail>? Details { get; init; }
         }
