@@ -31,6 +31,9 @@ namespace NuGet.GithubEventHandler.Function
             ILogger log,
             IBinder binder) // https://docs.microsoft.com/azure/azure-functions/functions-dotnet-class-library#binding-at-runtime
         {
+            // We need to read the HTTP request's body at least twice, once to validate HMAC, once to save to blob storage.
+            req.EnableBuffering();
+
             string? signatureHeader = req.Headers["X-Hub-Signature-256"].SingleOrDefault();
             string? deliveryId = req.Headers["X-GitHub-Delivery"].SingleOrDefault();
             if (signatureHeader is null || deliveryId is null)
