@@ -3,12 +3,12 @@ using Octokit;
 
 namespace NuGetReleaseTool.AddMilestoneCommand
 {
-    public class AddMilestone
+    public class AddMilestoneCommand
     {
         private readonly GitHubClient GitHubClient;
         private readonly AddMilestoneCommandOptions Options;
 
-        public AddMilestone(AddMilestoneCommandOptions opts, GitHubClient gitHubClient)
+        public AddMilestoneCommand(AddMilestoneCommandOptions opts, GitHubClient gitHubClient)
         {
             Options = opts;
             GitHubClient = gitHubClient;
@@ -27,9 +27,9 @@ namespace NuGetReleaseTool.AddMilestoneCommand
 
             var homeRepoIssueNumbers = new List<Tuple<int, string>>();
 
-            foreach(var commit in commits)
+            foreach (var commit in commits)
             {
-                foreach(var issue in commit.Issues)
+                foreach (var issue in commit.Issues)
                 {
                     if (issue.Item2.Contains("nuget/home", StringComparison.OrdinalIgnoreCase))
                     {
@@ -38,19 +38,25 @@ namespace NuGetReleaseTool.AddMilestoneCommand
                 }
             }
 
-            var expectedMilestone = (await GitHubClient.Issue.Milestone.GetAllForRepository("NuGet", "Home")).Single(e => e.Title == Options.Release);
+            Milestone expectedMilestone = await GetExpectedMilestone();
 
-            foreach(var homeIssue in homeRepoIssueNumbers)
+            foreach (var homeIssue in homeRepoIssueNumbers)
             {
                 var issue = await GitHubClient.Issue.Get("nuget", "home", homeIssue.Item1);
-                if(issue.Milestone?.Title != Options.Release)
+                if (issue.Milestone?.Title != Options.Release)
                 {
                     var toUpdate = issue.ToUpdate();
                     toUpdate.Milestone = expectedMilestone.Number;
-                    await GitHubClient.Issue.Update("Nuget", "home", homeIssue.Item1, toUpdate);
+                    await GitHubClient.Issue.Update("nuget", "home", homeIssue.Item1, toUpdate);
                 }
 
+            }
 
+            async Task<Milestone> GetExpectedMilestone()
+            {
+                IReadOnlyList<Milestone> allMilestones = await GitHubClient.Issue.Milestone.GetAllForRepository("NuGet", "Home");
+                return allMilestones.SingleOrDefault(e => e.Title == Options.Release) ??
+                    throw new InvalidOperationException($"Could not locate a matching milestone with the title {Options.Release}");
             }
         }
     }

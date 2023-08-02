@@ -1,5 +1,6 @@
 ﻿using CommandLine;
 using NuGetReleaseTool;
+using NuGetReleaseTool.AddMilestoneCommand;
 using NuGetReleaseTool.GenerateInsertionChangelogCommand;
 using NuGetReleaseTool.GenerateRedundantPackageListCommand;
 using NuGetReleaseTool.GenerateReleaseChangelogCommand;
@@ -7,13 +8,14 @@ using NuGetReleaseTool.GenerateReleaseNotesCommand;
 using NuGetReleaseTool.ValidateReleaseCommand;
 using Octokit;
 
-return Parser.Default.ParseArguments<GenerateReleaseNotesCommandOptions, ValidateReleaseCommandOptions, GenerateInsertionChangelogCommandOptions, GenerateReleaseChangelogCommandOptions, UnlistRedundantPackagesCommandOptions>(args)
+return Parser.Default.ParseArguments<GenerateReleaseNotesCommandOptions, ValidateReleaseCommandOptions, GenerateInsertionChangelogCommandOptions, GenerateReleaseChangelogCommandOptions, UnlistRedundantPackagesCommandOptions, AddMilestoneCommandOptions>(args)
                .MapResult(
                  (GenerateReleaseNotesCommandOptions generateOpts) => RunReleaseNotesGeneratorCommand(generateOpts),
                  (ValidateReleaseCommandOptions validateOpts) => RunReleaseValidateCommand(validateOpts),
                 (GenerateInsertionChangelogCommandOptions insertionOpts) => RunGenerateInsertionChangelog(insertionOpts),
                 (GenerateReleaseChangelogCommandOptions releaseChangelogOpts) => RunGenerateReleaseChangelogCommand(releaseChangelogOpts),
                 (UnlistRedundantPackagesCommandOptions unlistOpts) => RunGenerateUnlistRedundantPackagesCommand(unlistOpts),
+                (AddMilestoneCommandOptions addMilestoneOpts) => RunAddMilestoneCommand(addMilestoneOpts),
                  errs => 1);
 
 static int RunReleaseNotesGeneratorCommand(GenerateReleaseNotesCommandOptions opts)
@@ -69,6 +71,18 @@ static int RunGenerateInsertionChangelog(GenerateInsertionChangelogCommandOption
         return 0;
     }
 
+}
+
+static int RunAddMilestoneCommand(AddMilestoneCommandOptions opts)
+{
+    return RunAsync(opts).GetAwaiter().GetResult();
+    async Task<int> RunAsync(AddMilestoneCommandOptions options)
+    {
+        var githubClient = GenerateGitHubClient(options);
+        var command = new AddMilestoneCommand(options, githubClient);
+        await command.RunAsync();
+        return 0;
+    }
 }
 
 static int RunGenerateReleaseChangelogCommand(GenerateReleaseChangelogCommandOptions opts)
