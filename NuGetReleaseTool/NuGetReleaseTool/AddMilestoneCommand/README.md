@@ -1,11 +1,12 @@
-# generate-insertion-changelog
+# add-milestone
 
-A command of the release tool to generate a list of commits for NuGet Client insertions.
+A command of the release tool to add milestones to issues that don't have one or don't have the expected one.
+It is recommended that you always do a dry run first.
 
 Sample commandline arguments:
 
 ```console
-NuGetReleaseTool.exe generate-insertion-changelog --start-commit sha123456789 --branch dev --output D:\Output
+NuGetReleaseTool.exe add-milestone 6.7 --dry-run --correct-milestones
 ```
 
 ### GitHub Personal Access Token

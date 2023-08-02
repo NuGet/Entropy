@@ -15,6 +15,12 @@ namespace NuGetReleaseTool.AddMilestoneCommand
             "You do not normally need to use this argument, unless there's a commit on the branch, that is not within the current release.")]
         public string? EndCommit { get; set; }
 
+        [Option("dry-run", Required = false, HelpText = "Perform a dry-run and list all of the issues that will get a milestone.")]
+        public bool DryRun { get; set; }
+
+        [Option("correct-milestones", Required = false, HelpText = "Correct milestones for issues that have a milestone different from the expected one.")]
+        public bool CorrectMilestones { get; set; }
+
         [Usage(ApplicationAlias = "add-milestone")]
         public static IEnumerable<Example> Examples
         {

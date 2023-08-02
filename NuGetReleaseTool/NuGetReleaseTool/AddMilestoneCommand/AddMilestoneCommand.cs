@@ -38,26 +38,45 @@ namespace NuGetReleaseTool.AddMilestoneCommand
                 }
             }
 
-            Milestone expectedMilestone = await GetExpectedMilestone();
+            Milestone expectedMilestone = await GetExpectedMilestoneAsync();
 
             foreach (var homeIssue in homeRepoIssueNumbers)
             {
                 var issue = await GitHubClient.Issue.Get("nuget", "home", homeIssue.Item1);
-                if (issue.Milestone?.Title != Options.Release)
+                if (!Options.DryRun)
                 {
-                    var toUpdate = issue.ToUpdate();
-                    toUpdate.Milestone = expectedMilestone.Number;
-                    await GitHubClient.Issue.Update("nuget", "home", homeIssue.Item1, toUpdate);
+                    if (issue.Milestone?.Title == null)
+                    {
+                        await AddMilestoneToIssueAsync(expectedMilestone, issue);
+                    }
+                    if (issue.Milestone?.Title != expectedMilestone.Title && Options.CorrectMilestones)
+                    {
+                        await AddMilestoneToIssueAsync(expectedMilestone, issue);
+                    }
                 }
-
+                else
+                {
+                    if (issue.Milestone?.Title != expectedMilestone.Title)
+                    {
+                        Console.WriteLine($"{issue.HtmlUrl} Expected: {expectedMilestone.Title} Actual: {issue.Milestone?.Title}");
+                    }
+                }
             }
 
-            async Task<Milestone> GetExpectedMilestone()
+            async Task<Milestone> GetExpectedMilestoneAsync()
             {
                 IReadOnlyList<Milestone> allMilestones = await GitHubClient.Issue.Milestone.GetAllForRepository("NuGet", "Home");
                 return allMilestones.SingleOrDefault(e => e.Title == Options.Release) ??
                     throw new InvalidOperationException($"Could not locate a matching milestone with the title {Options.Release}");
             }
+        }
+
+        private async Task AddMilestoneToIssueAsync(Milestone expectedMilestone, Issue issue)
+        {
+            var toUpdate = issue.ToUpdate();
+            toUpdate.Milestone = expectedMilestone.Number;
+            await GitHubClient.Issue.Update("nuget", "home", issue.Number, toUpdate);
+            Console.WriteLine($"Added {expectedMilestone.Title} to {issue.HtmlUrl}");
         }
     }
 }
