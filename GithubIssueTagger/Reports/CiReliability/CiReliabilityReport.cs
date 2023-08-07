@@ -46,7 +46,7 @@ namespace GithubIssueTagger.Reports.CiReliability
             string failedBuildsQuery = $@"let start = startofday(datetime(""{startOfSprint.ToString("yyyy-MM-dd")}""));
 let end = endofday(datetime(""{endOfSprint.ToString("yyyy-MM-dd")}""));
 let nugetBuilds = Build
-| where OrganizationName == 'devdiv' and ProjectId == '0bdbc590-a062-4c3f-b0f6-9383f67865ee' and DefinitionId == 8118 and FinishTime between (start..end) and SourceBranch == 'refs/heads/dev';
+| where OrganizationName == 'devdiv' and ProjectId == '0bdbc590-a062-4c3f-b0f6-9383f67865ee' and DefinitionId == 8118 and FinishTime between (start..end) and SourceBranch == 'refs/heads/dev' and Reason == 'schedule';
 let sprintBuilds = nugetBuilds
 | project BuildId;
 let previousAttempts = BuildTimelineRecord
@@ -159,7 +159,6 @@ Build
                 };
             }
 
-
             return (failedBuilds, trackingIssues);
         }
 
@@ -252,7 +251,7 @@ Build
             if (data.FailedBuilds == null) { throw new ArgumentException(paramName: nameof(data.FailedBuilds), message: "data.FailedBuilds must not be null"); }
 
             float reliability = (data.TotalBuilds - data.FailedBuilds.Count) * 100.0f / data.TotalBuilds;
-            int failedBuildsOnlyBecauseOfApex = data.FailedBuilds.Where(b => b.Details.Count == 1 && b.Details[0].Job == "Apex Test Execution").Count();
+            int failedBuildsOnlyBecauseOfApex = data.FailedBuilds.Where(b => b.Details?.Count == 1 && b.Details[0].Job == "Apex Test Execution").Count();
             float reliabilityIgnoringApex = (data.TotalBuilds - data.FailedBuilds.Count + failedBuildsOnlyBecauseOfApex) * 100.0f / data.TotalBuilds;
 
             Console.WriteLine("# NuGet.Client CI Reliability " + data.SprintName);

@@ -100,7 +100,7 @@ namespace GithubIssueTagger.Reports.CiInitiative
                     DateOnly date = DateOnly.Parse(result);
                     return date;
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     throw;
                 }

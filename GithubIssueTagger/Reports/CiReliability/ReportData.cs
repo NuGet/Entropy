@@ -8,24 +8,26 @@ namespace GithubIssueTagger.Reports.CiReliability
 
         public string? KustoQuery { get; init; }
 
-        public IReadOnlyList<FailedBuild>? FailedBuilds { get; init; }
+        public required IReadOnlyList<FailedBuild> FailedBuilds { get; init; }
 
-        public IReadOnlyDictionary<string, string>? TrackingIssues { get; init; }
+        public required IReadOnlyDictionary<string, string> TrackingIssues { get; init; }
 
         public int TotalBuilds { get; init; }
 
         internal struct FailedBuild
         {
             public long Id { get; init; }
-            public string? Number { get; init; }
+
+            public required string Number { get; init; }
+
             public IReadOnlyList<FailureDetail>? Details { get; init; }
         }
 
         internal class FailureDetail
         {
-            public string? Job { get; init; }
-            public string? Task { get; init; }
-            public string? Details { get; init; }
+            public required string Job { get; init; }
+            public required string Task { get; init; }
+            public required string Details { get; init; }
         }
     }
 }
