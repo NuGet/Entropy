@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.CommandLine;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -201,14 +202,28 @@ Build
                     .FirstOrDefault()
                     ?["RecordName"] ?? string.Empty;
 
+                string reason;
+                if (job == "Apex Test Execution" && task == "Run Tests")
+                {
+                    reason = "Apex jobs not investigated due to high failure count";
+                    trackingIssues.Add("Apex flakiness",
+                        "https://github.com/NuGet/Client.Engineering/issues/1299");
+                }
+                else
+                {
+                    reason = string.Empty;
+                }
+
                 ReportData.FailureDetail detail = new()
                 {
                     Job = job,
                     Task = task,
-                    Details = string.Empty
+                    Details = reason
                 };
                 details.Add(detail);
             }
+
+            Debug.Assert(details.Count > 0);
 
             return (details, trackingIssues);
 
@@ -305,7 +320,14 @@ Build
             Console.WriteLine("</table>");
             Console.WriteLine();
             Console.WriteLine("### Tracking");
-            Console.WriteLine();
+
+            foreach (var kvp in data.TrackingIssues)
+            {
+                Console.WriteLine();
+                Console.WriteLine($"- {kvp.Key}");
+                Console.WriteLine();
+                Console.WriteLine(kvp.Value);
+            }
         }
 
         private class CiReliabilityCommandFactory : ICommandFactory
