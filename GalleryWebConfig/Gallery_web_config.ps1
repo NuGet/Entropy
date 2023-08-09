@@ -21,6 +21,7 @@ $appSettings = $pf.parameters.appSettings.value
 foreach ($name in ($appSettings | Get-Member -Type NoteProperty | Select-Object -ExpandProperty Name))
 {
     $value = $appSettings.$name;
+    $value = $value -replace "\$\$",'$$$$$$$$';
     $search = "<add(?:\s+)key=`"$name`"(?:\s+)value=`"[^`"]*`"(?:\s*)/>";
     $replace = "<add key=`"$name`" value=`"$value`"/>";
     # Write-Host "Searching for '$search', replacing with '$replace'"
@@ -32,6 +33,7 @@ $connectionStrings = $pf.parameters.connectionStrings.value;
 foreach ($cs in $connectionStrings) {
     $name = $cs.name;
     $value = $cs.connectionString;
+    $value = $value -replace "\$\$",'$$$$$$$$';
     # Write-Host "connection string: $name => $value";
     $search = "<add(?:\s+)name=`"$name`"(?:\s+)connectionString=`"[^`"]*`"";
     $replace = "<add name=`"$name`" connectionString=`"$value`"";
