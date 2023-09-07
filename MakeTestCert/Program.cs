@@ -291,6 +291,7 @@ namespace MakeTestCert
                 WritePfxFile(certificate, outputDirectory, fingerprint, password);
                 WriteDerFile(certificate, outputDirectory, fingerprint);
                 WritePemFile(certificate, outputDirectory, fingerprint);
+                WriteP7bFile(certificate, outputDirectory, fingerprint);
             }
         }
 
@@ -317,7 +318,6 @@ namespace MakeTestCert
 
             return true;
         }
-
 
         private static void WriteDerFile(X509Certificate2 certificate, DirectoryInfo directory, string fileName)
         {
@@ -361,6 +361,17 @@ namespace MakeTestCert
             }
 
             File.WriteAllBytes(file.FullName, bytes);
+
+            Console.WriteLine($"    {file.Name}");
+        }
+
+        private static void WriteP7bFile(X509Certificate2 certificate, DirectoryInfo directory, string fileName)
+        {
+            FileInfo file = new(Path.Combine(directory.FullName, $"{fileName}.p7b"));
+            X509Certificate2Collection certificates = new(certificate);
+            byte[]? bytes = certificates.Export(X509ContentType.Pkcs7);
+
+            File.WriteAllBytes(file.FullName, bytes!);
 
             Console.WriteLine($"    {file.Name}");
         }
