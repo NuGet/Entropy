@@ -8,5 +8,6 @@
         DCR,
         Spec,
         StillOpen,
+        BreakingChange,
     }
 }

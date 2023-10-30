@@ -96,6 +96,7 @@ namespace NuGetReleaseTool.GenerateReleaseNotesCommand
                 bool epicLabel = false;
                 bool regressionDuringThisVersion = false;
                 bool engImproveOrDocs = false;
+                bool isBreakingChange = false;
 
                 if (issue.State == ItemState.Open)
                 {
@@ -122,7 +123,11 @@ namespace NuGetReleaseTool.GenerateReleaseNotesCommand
                             hidden = true;
                         }
 
-                        if (label.Name == IssueLabels.Epic)
+                        if (label.Name.Contains(IssueLabels.BreakingChange))
+                        {
+                            issueType = IssueType.BreakingChange;
+                        }
+                        else if (label.Name == IssueLabels.Epic)
                         {
                             epicLabel = true;
                         }
@@ -227,6 +232,10 @@ namespace NuGetReleaseTool.GenerateReleaseNotesCommand
             builder.AppendLine();
             builder.AppendLine(string.Format("## Summary: What's New in {0}", release));
             builder.AppendLine();
+            OutputSection(labelSet, builder, IssueType.Feature, includeHeader: false);
+            builder.AppendLine(string.Format("### Breaking changes ", release));
+            builder.AppendLine();
+            OutputSection(labelSet, builder, IssueType.BreakingChange, includeHeader: false);
             OutputSection(labelSet, builder, IssueType.Feature, includeHeader: false);
             builder.AppendLine("### Issues fixed in this release");
             builder.AppendLine();

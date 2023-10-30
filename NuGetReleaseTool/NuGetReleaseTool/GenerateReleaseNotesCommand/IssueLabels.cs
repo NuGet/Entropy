@@ -13,5 +13,7 @@
         public static string Test = "Type:Test";
         public static string Docs = "Type:Docs";
         public static string Community = "Community";
+        public static string BreakingChange = "Category:BreakingChange";
+
     }
 }
