@@ -96,7 +96,6 @@ namespace NuGetReleaseTool.GenerateReleaseNotesCommand
                 bool epicLabel = false;
                 bool regressionDuringThisVersion = false;
                 bool engImproveOrDocs = false;
-                bool isBreakingChange = false;
 
                 if (issue.State == ItemState.Open)
                 {
@@ -127,25 +126,28 @@ namespace NuGetReleaseTool.GenerateReleaseNotesCommand
                         {
                             issueType = IssueType.BreakingChange;
                         }
-                        else if (label.Name == IssueLabels.Epic)
+                        else
                         {
-                            epicLabel = true;
-                        }
-                        else if (label.Name == IssueLabels.Feature)
-                        {
-                            issueType = IssueType.Feature;
-                        }
-                        else if (label.Name == IssueLabels.DCR)
-                        {
-                            issueType = IssueType.DCR;
-                        }
-                        else if (label.Name == IssueLabels.Bug)
-                        {
-                            issueType = IssueType.Bug;
-                        }
-                        else if (label.Name == IssueLabels.Spec)
-                        {
-                            issueType = IssueType.Spec;
+                            if (label.Name == IssueLabels.Epic)
+                            {
+                                epicLabel = true;
+                            }
+                            else if (label.Name == IssueLabels.Feature)
+                            {
+                                issueType = IssueType.Feature;
+                            }
+                            else if (label.Name == IssueLabels.DCR)
+                            {
+                                issueType = IssueType.DCR;
+                            }
+                            else if (label.Name == IssueLabels.Bug)
+                            {
+                                issueType = IssueType.Bug;
+                            }
+                            else if (label.Name == IssueLabels.Spec)
+                            {
+                                issueType = IssueType.Spec;
+                            }
                         }
                     }
                 }
@@ -233,10 +235,9 @@ namespace NuGetReleaseTool.GenerateReleaseNotesCommand
             builder.AppendLine(string.Format("## Summary: What's New in {0}", release));
             builder.AppendLine();
             OutputSection(labelSet, builder, IssueType.Feature, includeHeader: false);
-            builder.AppendLine(string.Format("### Breaking changes ", release));
+            builder.AppendLine(string.Format("### Breaking changes", release));
             builder.AppendLine();
             OutputSection(labelSet, builder, IssueType.BreakingChange, includeHeader: false);
-            OutputSection(labelSet, builder, IssueType.Feature, includeHeader: false);
             builder.AppendLine("### Issues fixed in this release");
             builder.AppendLine();
             OutputSection(labelSet, builder, IssueType.DCR);

@@ -45,7 +45,7 @@ namespace NuGetReleaseTool.AddMilestoneCommand
                 var issue = await GitHubClient.Issue.Get("nuget", "home", homeIssue.Item1);
                 if (!Options.DryRun)
                 {
-                    if(issue.State == ItemState.Open && Options.AddToOpenIssues)
+                    if(issue.State == ItemState.Open && !Options.AddToOpenIssues)
                     {
                         continue;
                     }
