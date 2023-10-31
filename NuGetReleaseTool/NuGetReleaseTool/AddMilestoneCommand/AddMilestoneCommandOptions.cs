@@ -21,6 +21,9 @@ namespace NuGetReleaseTool.AddMilestoneCommand
         [Option("correct-milestones", Required = false, HelpText = "Correct milestones for issues that have a milestone different from the expected one.")]
         public bool CorrectMilestones { get; set; }
 
+        [Option("add-to-open-issues", Required = false, HelpText = "Add milestones to open issues.")]
+        public bool AddToOpenIssues { get; set; }
+
         [Usage(ApplicationAlias = "add-milestone")]
         public static IEnumerable<Example> Examples
         {
