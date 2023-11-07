@@ -1,4 +1,5 @@
 ﻿using Octokit;
+using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -152,20 +153,7 @@ namespace NuGetReleaseTool.GenerateReleaseNotesCommand
                     }
                 }
 
-                // if an issue is an epicLabel and has a real IssueType (feature/bug/dcr),
-                // then hide it... we want to show the primary epic issue only.
-                if (epicLabel)
-                {
-                    if (issueType == IssueType.None)
-                    {
-                        issueType = IssueType.Feature;
-                    }
-                    else
-                    {
-                        hidden = true;
-                    }
-                }
-                else if (issueType == IssueType.None)
+                if (issueType == IssueType.None)
                 {
                     if (!(issueFixed && !regressionDuringThisVersion && !engImproveOrDocs))
                     {
@@ -318,11 +306,21 @@ namespace NuGetReleaseTool.GenerateReleaseNotesCommand
                     builder.AppendLine("Thank you to all the contributors who helped make this NuGet release awesome!");
                     builder.AppendLine();
 
-                    var contributors = communityPullRequests.GroupBy(e => e.User).OrderBy(e => e.Count());
-                    foreach (var contribution in contributors)
+                    Dictionary<string, List<PullRequest>> pullRequestsByContributors = new();
+                    foreach (var pullRequest in communityPullRequests)
                     {
-                        builder.AppendLine($"* [{contribution.Key.Login}]({contribution.Key.HtmlUrl})");
-                        foreach (var PR in contribution)
+                        if (!pullRequestsByContributors.TryGetValue(pullRequest.User.Login, out List<PullRequest> pullRequests))
+                        {
+                            pullRequests = new List<PullRequest>();
+                            pullRequestsByContributors.Add(pullRequest.User.Login, pullRequests);
+                        }
+                        pullRequests.Add(pullRequest);
+                    }
+
+                    foreach (var contribution in pullRequestsByContributors.OrderByDescending(e => e.Value.Count))
+                    {
+                        builder.AppendLine($"* [{contribution.Key}]({contribution.Value[0].HtmlUrl})");
+                        foreach (var PR in contribution.Value)
                         {
                             builder.AppendLine($"  * [{PR.Number}]({PR.HtmlUrl}) {PR.Title}");
                         }
