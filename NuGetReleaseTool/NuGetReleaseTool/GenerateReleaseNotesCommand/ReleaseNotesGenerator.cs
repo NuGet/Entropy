@@ -116,7 +116,7 @@ namespace NuGetReleaseTool.GenerateReleaseNotesCommand
                             hidden = true;
                         }
 
-                        if (label.Name == IssueLabels.EngImprovement || label.Name == IssueLabels.Test || label.Name == IssueLabels.Docs)
+                        if (label.Name == IssueLabels.EngImprovement || label.Name == IssueLabels.Test || label.Name == IssueLabels.Docs || label.Name == IssueLabels.DeveloperDocs)
                         {
                             engImproveOrDocs = true;
                             hidden = true;
@@ -240,21 +240,38 @@ namespace NuGetReleaseTool.GenerateReleaseNotesCommand
             OutputSection(labelSet, builder, IssueType.BreakingChange, includeHeader: false);
             builder.AppendLine("### Issues fixed in this release");
             builder.AppendLine();
-            OutputSection(labelSet, builder, IssueType.DCR);
-            OutputSection(labelSet, builder, IssueType.Bug);
+            OutputSection(labelSet, builder, IssueType.DCR, includeHeader: false);
+            OutputSection(labelSet, builder, IssueType.Bug, includeHeader: false);
             builder.AppendLine(string.Format("[List of commits in this release]({0})", commitsDeltaLink));
             builder.AppendLine();
             OutputCommunityPullRequestsSection(communityPullRequests, builder);
 
             foreach (var key in labelSet.Keys)
             {
-                if (key != IssueType.Feature && key != IssueType.DCR && key != IssueType.Bug)
+                if (key != IssueType.Feature && key != IssueType.DCR && key != IssueType.Bug && key != IssueType.BreakingChange)
                 {
                     OutputSection(labelSet, builder, key, problem: true);
                 }
             }
 
             return builder.ToString();
+        }
+
+        public static bool IsExpected(IssueType type)
+        {
+            switch (type)
+            {
+                case IssueType.Feature:
+                case IssueType.Bug:
+                case IssueType.BreakingChange:
+                case IssueType.DCR:
+                    return true;
+                case IssueType.None:
+                case IssueType.Spec:
+                case IssueType.StillOpen:
+                default:
+                    return false;
+            }
         }
 
         private async Task<string> GenerateReleaseDeltasLink(Version currentVersion)
