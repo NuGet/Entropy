@@ -215,10 +215,10 @@ namespace NuGetReleaseTool.GenerateReleaseNotesCommand
             builder.AppendLine("|:---|:---|:---|");
             builder.AppendLine(string.Format("| [**{0}**](https://nuget.org/downloads) |" +
                 " [Visual Studio {1} version {2}](https://visualstudio.microsoft.com/downloads/) " +
-                "| [{3}](https://dotnet.microsoft.com/download/dotnet-core/{4})<sup>1</sup> |",
+                "| [{3}](https://dotnet.microsoft.com/download/dotnet/{4})<sup>1</sup> |",
                 release, VSYear, VSVersion, fullSDKVersion, SDKMajorMinorVersion));
             builder.AppendLine();
-            builder.AppendLine(string.Format("<sup>1</sup> Installed with Visual Studio {0} with.NET Core workload", VSYear));
+            builder.AppendLine(string.Format("<sup>1</sup> Installed with Visual Studio {0} with any .NET workload", VSYear));
             builder.AppendLine();
             builder.AppendLine(string.Format("## Summary: What's New in {0}", release));
             builder.AppendLine();
