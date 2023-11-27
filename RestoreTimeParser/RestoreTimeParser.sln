@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34309.116
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RestoreTimeParser", "RestoreTimeParser.csproj", "{5FF79FED-7CC8-4D56-AA2E-3A04A563CCF5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RestoreTimeParser.UnitTests", "RestoreTimeParser.UnitTests\RestoreTimeParser.UnitTests.csproj", "{8DF4F2CD-B9EE-4654-8A27-4C5C73B19B9B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5FF79FED-7CC8-4D56-AA2E-3A04A563CCF5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5FF79FED-7CC8-4D56-AA2E-3A04A563CCF5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5FF79FED-7CC8-4D56-AA2E-3A04A563CCF5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5FF79FED-7CC8-4D56-AA2E-3A04A563CCF5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8DF4F2CD-B9EE-4654-8A27-4C5C73B19B9B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8DF4F2CD-B9EE-4654-8A27-4C5C73B19B9B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8DF4F2CD-B9EE-4654-8A27-4C5C73B19B9B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8DF4F2CD-B9EE-4654-8A27-4C5C73B19B9B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {E733397A-B8BE-4BC8-AF3F-1639F680EC2E}
+	EndGlobalSection
+EndGlobal
