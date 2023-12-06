@@ -20,8 +20,8 @@ namespace GithubIssueTagger.Reports
                 preprocess: true, 
                 analyzeReviewDistribution: true, 
                 analyzeTimeToReview: true,
-                oldestPR: 5000,
-                newestPR: 5111);
+                oldestPR: 5289,
+                newestPR: 5503);
         }
     }
 }

@@ -14,16 +14,15 @@ namespace GithubIssueTagger
             new string[] {
                 "aortiz-msft",
                 "donnie-msft",
-                "dtivel",
-                "erdembayar",
                 "heng-liu",
                 "jebriede",
                 "kartheekp-ms",
                 "martinrrm",
                 "nkolev92",
-                "rrelyea",
                 "zivkan",
                 "jeffkl",
+                "nigusu-allehu",
+                "jgonz120"
             };
 
         /// <summary>
