@@ -45,8 +45,10 @@ function PatchNupkgs {
     }else{
         $libPath = [System.IO.Path]::Combine($tempExtractFolder, 'lib')
     }
+
+    $tfmFolderNet7 =  Get-ChildItem -Path "$libPath$delimeter*" | Where-Object {$_.Name -like "net7.0" }
     
-    $tfmFolderNet5 =  Get-ChildItem -Path "$libPath$delimeter*" | Where-Object {$_.Name -like "net5.0"}
+    $tfmFolderNet5 =  Get-ChildItem -Path "$libPath$delimeter*" | Where-Object {$_.Name -like "net5.0" }
    
     $tfmFolderNetcoreapp50 =  Get-ChildItem -Path "$libPath$delimeter*" | Where-Object {$_.Name -like "netcoreapp5.0"}
    
@@ -54,7 +56,11 @@ function PatchNupkgs {
     
     $tfmFolderNetcoreapp21 =  Get-ChildItem -Path "$libPath$delimeter*" | Where-Object {$_.Name -like "netcoreapp2.1"}
    
-    if (([int]($SDKVersion.Substring(0, 1)) -ge 5) -And (($tfmFolderNet5 -ne $null) -Or ($tfmFolderNetcoreapp50 -ne $null))){
+    if (([int]($SDKVersion.Substring(0, 1)) -ge 5) -And ($null -ne $tfmFolderNet7)){
+        $patchDll = Get-ChildItem -Path "$tfmFolderNet7$delimeter*" | Where-Object {$_.Name -like "*.dll"}
+    }
+    elseif (([int]($SDKVersion.Substring(0, 1)) -ge 5) -And (($tfmFolderNet5 -ne $null) -Or ($tfmFolderNetcoreapp50 -ne $null))){
+
         if ($tfmFolderNet5 -ne $null){
             $patchDll = Get-ChildItem -Path "$tfmFolderNet5$delimeter*" | Where-Object {$_.Name -like "*.dll"}
         }else{
