@@ -2,7 +2,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <AssemblyName>MakeTestCert</AssemblyName>
-    <TargetFrameworks>net7.0</TargetFrameworks>
+    <TargetFrameworks>net7.0;net8.0</TargetFrameworks>
     <Deterministic>true</Deterministic>
     <Features>strict</Features>
     <LangVersion>preview</LangVersion>
