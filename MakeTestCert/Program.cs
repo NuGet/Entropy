@@ -15,6 +15,7 @@ namespace MakeTestCert
         private static readonly HashAlgorithmName DefaultHashAlgorithmName = HashAlgorithmName.SHA384;
         private static readonly string DefaultKeyAlgorithmName = "RSA";
         private static readonly ushort DefaultKeySizeInBits = 3072;
+        private static readonly RSASignaturePadding DefaultRsaSignaturePadding = RSASignaturePadding.Pkcs1;
         private static readonly X500DistinguishedName DefaultSubject = new("CN=NuGet testing");
         private static readonly ushort DefaultValidityPeriodInHours = 2;
 
@@ -44,6 +45,7 @@ namespace MakeTestCert
                 return Success;
             }
 
+            HashSet<string> ekuSet = new(StringComparer.Ordinal);
             HashAlgorithmName hashAlgorithmName = DefaultHashAlgorithmName;
             string keyAlgorithmName = DefaultKeyAlgorithmName;
             ushort keySizeInBits = DefaultKeySizeInBits;
@@ -52,6 +54,7 @@ namespace MakeTestCert
             DateTimeOffset notBefore = DateTimeOffset.Now;
             DirectoryInfo outputDirectory = new(".");
             string? password = null;
+            RSASignaturePadding rsaSignaturePadding = DefaultRsaSignaturePadding;
             X500DistinguishedName subject = DefaultSubject;
             ushort validityPeriodInHours = DefaultValidityPeriodInHours;
 
@@ -64,6 +67,11 @@ namespace MakeTestCert
 
                 switch (arg)
                 {
+                    case "-eku":
+                    case "--extended-key-usage":
+                        ekuSet.Add(nextArg);
+                        break;
+
                     case "-ha":
                     case "--hash-algorithm":
                         if (!TryGetHashAlgorithmName(nextArg, out hashAlgorithmName))
@@ -132,6 +140,29 @@ namespace MakeTestCert
                         password = nextArg;
                         break;
 
+                    case "-rsp":
+                    case "--rsa-signature-padding":
+                        if (!Enum.TryParse(nextArg, ignoreCase: true, out RSASignaturePaddingMode mode)
+                            || (mode != RSASignaturePaddingMode.Pkcs1 && mode != RSASignaturePaddingMode.Pss))
+                        {
+                            Console.Error.WriteLine($"RSA signature padding '{nextArg}' is unsupported.");
+                            Console.WriteLine();
+
+                            PrintHelp();
+
+                            return Error;
+                        }
+
+                        if (mode == RSASignaturePaddingMode.Pkcs1)
+                        {
+                            rsaSignaturePadding = RSASignaturePadding.Pkcs1;
+                        }
+                        else if (mode == RSASignaturePaddingMode.Pss)
+                        {
+                            rsaSignaturePadding = RSASignaturePadding.Pss;
+                        }
+                        break;
+
                     case "-s":
                     case "--subject":
                         subject = new X500DistinguishedName(nextArg);
@@ -149,6 +180,18 @@ namespace MakeTestCert
                 }
             }
 
+            OidCollection ekus = new();
+
+            foreach (string eku in ekuSet)
+            {
+                ekus.Add(new Oid(eku));
+            }
+
+            if (ekus.Count == 0)
+            {
+                ekus.Add(Oids.CodeSigningEku);
+            }
+
             notAfter ??= notBefore.AddHours(validityPeriodInHours);
 
             // Ensure the directory exists.
@@ -162,13 +205,15 @@ namespace MakeTestCert
                         subject,
                         keyPair,
                         hashAlgorithmName,
-                        RSASignaturePadding.Pkcs1);
+                        rsaSignaturePadding);
 
                     Console.WriteLine($"Signature algorithm:    RSA {hashAlgorithmName}");
                     Console.WriteLine($"Key size (bits):        {keySizeInBits}");
+                    Console.WriteLine($"RSA signature padding:  {rsaSignaturePadding.Mode}");
 
                     CreateCertificate(
                         certificateRequest,
+                        ekus,
                         notBefore,
                         notAfter.Value,
                         password,
@@ -189,6 +234,7 @@ namespace MakeTestCert
 
                     CreateCertificate(
                         certificateRequest,
+                        ekus,
                         notBefore,
                         notAfter.Value,
                         password,
@@ -214,43 +260,57 @@ namespace MakeTestCert
 
             Console.WriteLine($"Usage:  {file.Name} [option(s)]");
             Console.WriteLine();
-            Console.WriteLine($"  Option                   Description                     Default");
-            Console.WriteLine($"  ------------------------ ------------------------------- -----------------");
-            Console.WriteLine($"  --hash-algorithm, -ha    signature hash algorithm        {DefaultHashAlgorithmName.Name!.ToLowerInvariant()}");
-            Console.WriteLine($"                           (sha256, sha384, or sha512)");
-            Console.WriteLine($"  --key-algorithm, -ka     RSA or ECDSA                    {DefaultKeyAlgorithmName}");
-            Console.WriteLine($"  --key-size, -ks          RSA key size in bits            {DefaultKeySizeInBits}");
-            Console.WriteLine($"  --named-curve, -nc       ECDSA named curve               {DefaultECCurve.Oid.FriendlyName}");
-            Console.WriteLine($"  --not-after, -na         validity period end datetime    (now)");
-            Console.WriteLine($"  --not-before, -nb        validity period start datetime  (now + {DefaultValidityPeriodInHours} hours)");
-            Console.WriteLine($"  --output-directory, -od  output directory path           .{Path.DirectorySeparatorChar}");
-            Console.WriteLine($"  --password, -p           PFX file password               (none)");
-            Console.WriteLine($"  --subject, -s            certificate subject             {DefaultSubject.Name}");
-            Console.WriteLine($"  --validity-period, -vp   validity period (in hours)      {DefaultValidityPeriodInHours}");
+            Console.WriteLine($"  Option                        Description                    Default");
+            Console.WriteLine($"  ----------------------------- ------------------------------ -----------------");
+            Console.WriteLine($"  --extended-key-usage, -eku    extended key usage (EKU)       {Oids.CodeSigningEku.Value}");
+            Console.WriteLine($"  --hash-algorithm, -ha         signature hash algorithm       {DefaultHashAlgorithmName.Name!.ToLowerInvariant()}");
+            Console.WriteLine($"                                (sha256, sha384, or sha512)");
+            Console.WriteLine($"  --key-algorithm, -ka          RSA or ECDSA                   {DefaultKeyAlgorithmName}");
+            Console.WriteLine($"  --key-size, -ks               RSA key size in bits           {DefaultKeySizeInBits}");
+            Console.WriteLine($"  --named-curve, -nc            ECDSA named curve              {DefaultECCurve.Oid.FriendlyName}");
+            Console.WriteLine($"  --not-after, -na              validity period end datetime   (now)");
+            Console.WriteLine($"  --not-before, -nb             validity period start datetime (now + {DefaultValidityPeriodInHours} hours)");
+            Console.WriteLine($"  --output-directory, -od       output directory path          .{Path.DirectorySeparatorChar}");
+            Console.WriteLine($"  --password, -p                PFX file password              (none)");
+            Console.WriteLine($"  --rsa-signature-padding, -rsp RSA signature padding          {DefaultRsaSignaturePadding.Mode.ToString().ToLowerInvariant()}");
+            Console.WriteLine($"                                (pkcs1 or pss)");
+            Console.WriteLine($"  --subject, -s                 certificate subject            {DefaultSubject.Name}");
+            Console.WriteLine($"  --validity-period, -vp        validity period (in hours)     {DefaultValidityPeriodInHours}");
+            Console.WriteLine();
+            Console.WriteLine("Notes:");
+            Console.WriteLine();
+            Console.WriteLine("  Common values for --extended-key-usage / -eku are defined in RFC 5280, section 4.2.1.12 and include:");
+            Console.WriteLine($"    {Oids.ServerAuthenticationEku.Value}: {Oids.ServerAuthenticationEku.FriendlyName}");
+            Console.WriteLine($"    {Oids.ClientAuthenticationEku.Value}: {Oids.ClientAuthenticationEku.FriendlyName}");
+            Console.WriteLine($"    {Oids.CodeSigningEku.Value}: {Oids.CodeSigningEku.FriendlyName}");
             Console.WriteLine();
             Console.WriteLine("Examples:");
             Console.WriteLine();
             Console.WriteLine($"  {file.Name}");
-            Console.WriteLine($"    Creates an {DefaultKeyAlgorithmName} {DefaultKeySizeInBits}-bit certificate valid for {DefaultValidityPeriodInHours} hours from creation time.");
+            Console.WriteLine($"    Creates an {DefaultKeyAlgorithmName} {DefaultKeySizeInBits}-bit code signing certificate valid for {DefaultValidityPeriodInHours} hours from creation time.");
             Console.WriteLine();
             Console.WriteLine($"  {file.Name} -vp 8");
-            Console.WriteLine($"    Creates an {DefaultKeyAlgorithmName} {DefaultKeySizeInBits}-bit certificate valid for 8 hours from creation time.");
+            Console.WriteLine($"    Creates an {DefaultKeyAlgorithmName} {DefaultKeySizeInBits}-bit code signing certificate valid for 8 hours from creation time.");
             Console.WriteLine();
             Console.WriteLine($"  {file.Name} -nb \"2022-08-01 08:00\" -na \"2022-08-01 16:00\"");
-            Console.WriteLine($"    Creates an {DefaultKeyAlgorithmName} {DefaultKeySizeInBits}-bit certificate valid for the specified local time ");
+            Console.WriteLine($"    Creates an {DefaultKeyAlgorithmName} {DefaultKeySizeInBits}-bit code signing certificate valid for the specified local time ");
             Console.WriteLine("    period.");
             Console.WriteLine();
             Console.WriteLine($"  {file.Name} -od .{Path.DirectorySeparatorChar}certs");
-            Console.WriteLine($"    Creates an {DefaultKeyAlgorithmName} {DefaultKeySizeInBits}-bit certificate valid for {DefaultValidityPeriodInHours} hours in the 'certs' ");
+            Console.WriteLine($"    Creates an {DefaultKeyAlgorithmName} {DefaultKeySizeInBits}-bit code signing certificate valid for {DefaultValidityPeriodInHours} hours in the 'certs' ");
             Console.WriteLine("    subdirectory.");
             Console.WriteLine();
             Console.WriteLine($"  {file.Name} -ks 4096 -s CN=untrusted");
-            Console.WriteLine($"    Creates an {DefaultKeyAlgorithmName} 4096-bit certificate valid for {DefaultValidityPeriodInHours} hours with the subject ");
+            Console.WriteLine($"    Creates an {DefaultKeyAlgorithmName} 4096-bit code signing certificate valid for {DefaultValidityPeriodInHours} hours with the subject ");
             Console.WriteLine("    'CN=untrusted'.");
+            Console.WriteLine();
+            Console.WriteLine($"  {file.Name} -eku 1.3.6.1.5.5.7.3.1 -eku 1.3.6.1.5.5.7.3.2");
+            Console.WriteLine($"    Creates an {DefaultKeyAlgorithmName} {DefaultKeySizeInBits}-bit TLS certificate valid for {DefaultValidityPeriodInHours} hours from creation time.");
         }
 
         private static void CreateCertificate(
             CertificateRequest certificateRequest,
+            OidCollection ekus,
             DateTimeOffset notBefore,
             DateTimeOffset notAfter,
             string? password,
@@ -265,9 +325,7 @@ namespace MakeTestCert
                     pathLengthConstraint: 0,
                     critical: true));
             certificateRequest.CertificateExtensions.Add(
-                new X509EnhancedKeyUsageExtension(
-                    new OidCollection() { Oids.CodeSigningEku },
-                    critical: true));
+                new X509EnhancedKeyUsageExtension(ekus, critical: true));
             certificateRequest.CertificateExtensions.Add(
                 new X509KeyUsageExtension(
                     X509KeyUsageFlags.DigitalSignature | X509KeyUsageFlags.KeyCertSign,
@@ -279,6 +337,27 @@ namespace MakeTestCert
             using (X509Certificate2 certificate = certificateRequest.CreateSelfSigned(notBefore, notAfter))
             {
                 string fingerprint = certificate.GetCertHashString().ToLowerInvariant();
+
+                Console.Write("EKU's:                  ");
+
+                for (var i = 0; i < ekus.Count; ++i)
+                {
+                    Oid eku = ekus[i];
+
+                    if (i > 0)
+                    {
+                        Console.Write("                        ");
+                    }
+
+                    Console.Write(eku.Value);
+
+                    if (!string.IsNullOrWhiteSpace(eku.FriendlyName))
+                    {
+                        Console.Write($" ({eku.FriendlyName})");
+                    }
+
+                    Console.WriteLine();
+                }
 
                 Console.WriteLine($"NotBefore:              {certificate.NotBefore:yyyy-MM-dd HH:mm:ssK}");
                 Console.WriteLine($"NotAfter:               {certificate.NotAfter:yyyy-MM-dd HH:mm:ssK}");
