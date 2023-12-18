@@ -202,17 +202,13 @@ Build
                     .FirstOrDefault()
                     ?["RecordName"] ?? string.Empty;
 
-                string reason;
-                if (job == "Apex Test Execution" && task == "Run Tests")
-                {
-                    reason = "Apex jobs not investigated due to high failure count";
-                    trackingIssues.Add("Apex flakiness",
-                        "https://github.com/NuGet/Client.Engineering/issues/1299");
-                }
-                else
-                {
-                    reason = string.Empty;
-                }
+                string reason = string.Empty;
+                // if (job == "Apex Test Execution" && task == "Run Tests")
+                // {
+                //     reason = "Apex jobs not investigated due to high failure count";
+                //     trackingIssues.Add("Apex flakiness",
+                //         "https://github.com/NuGet/Client.Engineering/issues/1299");
+                // }
 
                 ReportData.FailureDetail detail = new()
                 {
