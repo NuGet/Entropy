@@ -288,6 +288,9 @@ namespace TrustTestCert
             Console.WriteLine($"    {fileNameWithoutExtension}.exe add -c .\\test.cer");
             Console.WriteLine($"      Adds the certificate to the current user's root store.");
             Console.WriteLine();
+            Console.WriteLine($"    {fileNameWithoutExtension}.exe add -c .\\test.pfx");
+            Console.WriteLine($"      Adds the certificate and its private key to the current user's root store.");
+            Console.WriteLine();
             Console.WriteLine($"    {fileNameWithoutExtension}.exe remove -c .\\test.cer");
             Console.WriteLine($"      Removes the certificate from the current user's root store.");
             Console.WriteLine();
