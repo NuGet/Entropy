@@ -1,3 +1,30 @@
+[CmdletBinding()]
+param(
+    [Parameter(Mandatory = $True)]
+    [string]$SDKPath,
+    [Parameter(Mandatory = $True)]
+    [string]$NupkgsPath,
+    [string]$SDKChannel
+)
+# SDKPath is the folder stores the patched SDK. It will be created if it doesn't exist.
+# NupkgsPath is the nupkgs folder which contains the latest nupkgs.
+
+if(!(Test-Path -Path $NupkgsPath)){
+    Write-Error "The nupkgs path does not exist: $NupkgsPath"
+    exit
+}
+
+# SDKVersion is the version of dotnet/sdk which NuGet is inserting into.
+$SDKVersion = "latest"
+
+# Channel name of SDK. Pls refer to https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-install-script#options
+# Two-part version in A.B format, representing a specific release (for example, 6.0 or 7.0).
+# Three-part version in A.B.Cxx format, representing a specific SDK release (for example, 5.0.1xx or 5.0.2xx). Available since the 5.0 release.
+# If we'd like to test against lastest dotnet sdk NuGet inserted, we may refer to NuGet insertion PR to look for version number.
+if ([string]::IsNullOrEmpty($SDKChannel)) {
+    $SDKChannel = "8.0"
+}
+
 function PatchNupkgs {
     param(
         [Parameter(Mandatory = $true)]
@@ -223,10 +250,17 @@ function PatchPackNupkg{
 }
 
 
-function Patch{
+function Patch
+{
+    param(
+        [Parameter(Mandatory = $true)]
         [string]$patchSDKFolder,
+        [Parameter(Mandatory = $true)]
         [string]$SDKVersion,
+        [Parameter(Mandatory = $true)]
         [string]$nupkgsPath
+        )
+
     $packNupkgId = "NuGet.Build.Tasks.Pack"
     $copiedNupkgIds = @(
         "Microsoft.Build.NuGetSdkResolver",
@@ -259,7 +293,7 @@ function Patch{
     }
     
 
-    #Write-host "PatchPackNupkg -nupkgId $packNupkgId -suffix $suffix -tempFolder $tempFolder -patchSDKFolder $patchSDKFolder -SDKVersion $SDKVersion -nupkgsPath $nupkgsPath"
+    Write-host "PatchPackNupkg -nupkgId $packNupkgId -suffix $suffix -tempFolder $tempFolder -patchSDKFolder $patchSDKFolder -SDKVersion $SDKVersion -nupkgsPath $nupkgsPath"
     $result = PatchPackNupkg -nupkgId $packNupkgId -suffix $suffix -tempFolder $tempFolder -patchSDKFolder $patchSDKFolder -SDKVersion $SDKVersion -nupkgsPath $nupkgsPath
     if ($result -eq $true){
         write-host "Patched NuGet.Build.Tasks.Pack successfully. `n"
@@ -282,3 +316,46 @@ function Patch{
     #Remove-Item -Path "$tempFolder" -Force -Recurse
     return $true
 }
+
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
+if (!(Test-Path $SDKPath)) {
+    New-Item $SDKPath -ItemType Directory | Out-Null
+}
+
+if ("Win32NT" -eq [System.Environment]::OSVersion.Platform){
+    Write-Host "Patching for Windows"
+    if (!(Test-Path $SDKPath\dotnet-install.ps1)) {
+        Invoke-WebRequest https://dot.net/v1/dotnet-install.ps1 -OutFile $SDKPath\dotnet-install.ps1
+    }
+
+    & $SDKPath\dotnet-install.ps1 -InstallDir $SDKPath -Channel $SDKChannel -Version $SDKVersion -NoPath
+
+    $DOTNET = Join-Path -Path $SDKPath -ChildPath 'dotnet.exe'
+} else {
+    Write-Host "Patching for Unix"
+    if (!(Test-Path $SDKPath/dotnet-install.sh)) {
+        Invoke-WebRequest https://dot.net/v1/dotnet-install.sh -OutFile $SDKPath/dotnet-install.sh
+    }
+
+    sudo chmod u+x $SDKPath/dotnet-install.sh
+    & $SDKPath/dotnet-install.sh -InstallDir $SDKPath -Channel $SDKChannel -Version $SDKVersion -NoPath
+   
+    $DOTNET = Join-Path -Path $SDKPath -ChildPath 'dotnet'
+}
+
+# Set DOTNET_MULTILEVEL_LOOKUP to 0 so it will just check the version in the specific path.
+$env:DOTNET_MULTILEVEL_LOOKUP = 0
+# Display current version
+& $DOTNET --version
+$SDKVersion = & $DOTNET --version
+
+$result = Patch $SDKPath $SDKVersion $NupkgsPath
+
+if ($result -eq $true)
+{
+    write-host "Finish patching `n"
+}else{
+    write-host "Patching failed `n"
+}
+
