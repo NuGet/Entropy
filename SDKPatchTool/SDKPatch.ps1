@@ -1,13 +1,49 @@
+<#
+.SYNOPSIS
+Downloads an SDK version and replaces the the NuGet files as part of that SDK with the here specified ones.
+
+.PARAMETER SDKPath
+The path where the patched SDK will be installed. It will be created it if doesn't exist.
+
+.PARAMETER NupkgsPath
+The nupkgs folder which contains the latest nupkgs.
+
+.PARAMETER SDKChannel
+Channel name of SDK. Please refer to https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-install-script#options. 
+Two-part version in A.B format, representing a specific release (for example, 6.0 or 7.0). 
+Three-part version in A.B.Cxx format, representing a specific SDK release (for example, 5.0.1xx or 5.0.2xx). Available since the 5.0 release.
+
+.PARAMETER Quality
+The build quality. Works in conjunction with the channel. Likely options: `daily`, `preview` or `GA`, which represents daily, monthly and General Availability release respectively.
+Please refer to https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-install-script#options. 
+
+.EXAMPLE
+.\SDKPatch.ps1 -SDKPath E:\SDK -NupkgsPath E:\NuGet\NuGet.Client\artifacts\nupkgs -SDKChannel 8.0.2xx -Quality daily
+Use this to download the latest private build of a release, if any.
+
+.EXAMPLE
+.\SDKPatch.ps1 -SDKPath E:\SDK -NupkgsPath E:\NuGet\NuGet.Client\artifacts\nupkgs -SDKChannel 8.0.2xx -Quality preview
+Use this to download the latest public preview of a release, if any.
+
+.EXAMPLE
+.\SDKPatch.ps1 -SDKPath E:\SDK -NupkgsPath E:\NuGet\NuGet.Client\artifacts\nupkgs -SDKChannel 8.0.2xx
+Use this to download the latest GA version of a release, if any.
+
+#>
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $True)]
     [string]$SDKPath,
     [Parameter(Mandatory = $True)]
     [string]$NupkgsPath,
-    [string]$SDKChannel
+    [Parameter(Mandatory = $True)]
+    [string]$SDKChannel,
+    [string]$Quality
 )
-# SDKPath is the folder stores the patched SDK. It will be created if it doesn't exist.
 # NupkgsPath is the nupkgs folder which contains the latest nupkgs.
+# Channel name of SDK. Pls refer to https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-install-script#options
+  # Two-part version in A.B format, representing a specific release (for example, 6.0 or 7.0).
+  # Three-part version in A.B.Cxx format, representing a specific SDK release (for example, 5.0.1xx or 5.0.2xx). Available since the 5.0 release.
 
 if(!(Test-Path -Path $NupkgsPath)){
     Write-Error "The nupkgs path does not exist: $NupkgsPath"
@@ -17,12 +53,8 @@ if(!(Test-Path -Path $NupkgsPath)){
 # SDKVersion is the version of dotnet/sdk which NuGet is inserting into.
 $SDKVersion = "latest"
 
-# Channel name of SDK. Pls refer to https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-install-script#options
-# Two-part version in A.B format, representing a specific release (for example, 6.0 or 7.0).
-# Three-part version in A.B.Cxx format, representing a specific SDK release (for example, 5.0.1xx or 5.0.2xx). Available since the 5.0 release.
-# If we'd like to test against lastest dotnet sdk NuGet inserted, we may refer to NuGet insertion PR to look for version number.
-if ([string]::IsNullOrEmpty($SDKChannel)) {
-    $SDKChannel = "8.0"
+if ([string]::IsNullOrEmpty($Quality)) {
+    $Quality = "GA"
 }
 
 function PatchNupkgs {
@@ -329,7 +361,7 @@ if ("Win32NT" -eq [System.Environment]::OSVersion.Platform){
         Invoke-WebRequest https://dot.net/v1/dotnet-install.ps1 -OutFile $SDKPath\dotnet-install.ps1
     }
 
-    & $SDKPath\dotnet-install.ps1 -InstallDir $SDKPath -Channel $SDKChannel -Version $SDKVersion -NoPath
+    & $SDKPath\dotnet-install.ps1 -InstallDir $SDKPath -Channel $SDKChannel -Version $SDKVersion -Quality $Quality -NoPath
 
     $DOTNET = Join-Path -Path $SDKPath -ChildPath 'dotnet.exe'
 } else {
@@ -339,7 +371,7 @@ if ("Win32NT" -eq [System.Environment]::OSVersion.Platform){
     }
 
     sudo chmod u+x $SDKPath/dotnet-install.sh
-    & $SDKPath/dotnet-install.sh -InstallDir $SDKPath -Channel $SDKChannel -Version $SDKVersion -NoPath
+    & $SDKPath/dotnet-install.sh -InstallDir $SDKPath -Channel $SDKChannel -Version $SDKVersion -Quality $Quality -NoPath
    
     $DOTNET = Join-Path -Path $SDKPath -ChildPath 'dotnet'
 }
