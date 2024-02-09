@@ -106,7 +106,7 @@ All that said, here are some examples based on the NuGet release and time of tes
 | 6.8.100 |October 2023 | 8.0.1xx | daily | We're testing the latest 8.0.100 before the release in November 2023 |
 | 6.9.100 | January 2024 | 8.0.2xx | daily | We're testing the latest 8.0.2xx, before the February 2024 release |
 | 6.10.5 | January 2024 | 8.0.3xx | daily | We're testing the latest 8.0.3xx, before the release sometime in 2024 |
-| X.Y.Z | September 2024 | 9.0.3xx | daily | We're testing the latest 9.0.1xx, before the release in November 2024 |
+| X.Y.Z | September 2024 | 9.0.1xx | daily | We're testing the latest 9.0.1xx, before the release in November 2024 |
 
 #### What to do when tests fail
 
