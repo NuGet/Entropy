@@ -17,6 +17,9 @@ Three-part version in A.B.Cxx format, representing a specific SDK release (for e
 The build quality. Works in conjunction with the channel. Likely options: `daily`, `preview` or `GA`, which represents daily, monthly and General Availability release respectively.
 Please refer to https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-install-script#options. 
 
+.PARAMETER SkipPatching
+Gives you the ability to skip patching, if you want to run the tests *against* a stable SDK version.
+
 .EXAMPLE
 .\SDKPatch.ps1 -SDKPath E:\SDK -NupkgsPath E:\NuGet\NuGet.Client\artifacts\nupkgs -SDKChannel 8.0.2xx -Quality daily
 Use this to download the latest private build of a release, if any.
@@ -29,6 +32,10 @@ Use this to download the latest public preview of a release, if any.
 .\SDKPatch.ps1 -SDKPath E:\SDK -NupkgsPath E:\NuGet\NuGet.Client\artifacts\nupkgs -SDKChannel 8.0.2xx
 Use this to download the latest GA version of a release, if any.
 
+.EXAMPLE
+.\SDKPatch.ps1 -SDKPath E:\SDK -SDKChannel 8.0.2xx -Quality GA -SkipPatching
+# Use this to download the latest GA version of a release without patching.
+
 #>
 [CmdletBinding()]
 param(
@@ -36,24 +43,30 @@ param(
     [string]$SDKPath,
     [Parameter(Mandatory = $True)]
     [string]$NupkgsPath,
-    [Parameter(Mandatory = $True)]
     [string]$SDKChannel,
-    [string]$Quality
+    [string]$Quality,
+    [switch] $SkipPatching
 )
 # NupkgsPath is the nupkgs folder which contains the latest nupkgs.
 # Channel name of SDK. Pls refer to https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-install-script#options
   # Two-part version in A.B format, representing a specific release (for example, 6.0 or 7.0).
   # Three-part version in A.B.Cxx format, representing a specific SDK release (for example, 5.0.1xx or 5.0.2xx). Available since the 5.0 release.
 
-if(!(Test-Path -Path $NupkgsPath)){
-    Write-Error "The nupkgs path does not exist: $NupkgsPath"
-    exit
+if(!($SkipPatching)) # Only check the nupkgs path if we're patching
+{
+    if(!(Test-Path -Path $NupkgsPath))
+    {
+        Write-Error "The nupkgs path does not exist: $NupkgsPath"
+        exit
+    }
 }
+
 
 # SDKVersion is the version of dotnet/sdk which NuGet is inserting into.
 $SDKVersion = "latest"
 
-if ([string]::IsNullOrEmpty($Quality)) {
+if ([string]::IsNullOrEmpty($Quality)) 
+{
     $Quality = "GA"
 }
 
@@ -135,7 +148,7 @@ function PatchNupkgs {
         write-error "No dlls found in any TFM folder!"
         return $false
     }
-    Write-host "Dll :  $patchDll will be used for patching."
+    Write-Host "Dll :  $patchDll will be used for patching."
 
     #the destination of the dlls in nupkg should be dotnet/sdk/x.yz/
     $destPath = [System.IO.Path]::Combine($patchSDKFolder, 'sdk', $SDKVersion)
@@ -172,7 +185,7 @@ function PatchNupkgs {
                     return $false
                 }
             }
-            Write-host "NuGet.targets :  $sourceTargetsPath will be used for patching."
+            Write-Host "NuGet.targets :  $sourceTargetsPath will be used for patching."
         }
 
     
@@ -191,7 +204,7 @@ function PatchNupkgs {
                     return $false
                 }
             }
-            Write-host "NuGet.props :  $sourcePropsPath will be used for patching."
+            Write-Host "NuGet.props :  $sourcePropsPath will be used for patching."
         }
     }
     
@@ -213,7 +226,7 @@ function PatchNupkgs {
                     return $false
                 }
             }
-            Write-host "NuGet.REstoreEx.targets :  $sourceREstoreExPath will be used for patching."
+            Write-Host "NuGet.REstoreEx.targets :  $sourceREstoreExPath will be used for patching."
         }
     }
     
@@ -277,7 +290,7 @@ function PatchPackNupkg{
         write-error "Folders were not copied to $patchSDKFolder!"
         return $false
     }
-    Write-host "NuGet.Build.Tasks.Pack :  $tempExtractFolder will be used for patching."
+    Write-Host "NuGet.Build.Tasks.Pack :  $tempExtractFolder will be used for patching."
     return $true   
 }
 
@@ -325,20 +338,20 @@ function Patch
     }
     
 
-    Write-host "PatchPackNupkg -nupkgId $packNupkgId -suffix $suffix -tempFolder $tempFolder -patchSDKFolder $patchSDKFolder -SDKVersion $SDKVersion -nupkgsPath $nupkgsPath"
+    Write-Host "PatchPackNupkg -nupkgId $packNupkgId -suffix $suffix -tempFolder $tempFolder -patchSDKFolder $patchSDKFolder -SDKVersion $SDKVersion -nupkgsPath $nupkgsPath"
     $result = PatchPackNupkg -nupkgId $packNupkgId -suffix $suffix -tempFolder $tempFolder -patchSDKFolder $patchSDKFolder -SDKVersion $SDKVersion -nupkgsPath $nupkgsPath
     if ($result -eq $true){
-        write-host "Patched NuGet.Build.Tasks.Pack successfully. `n"
+        Write-Host "Patched NuGet.Build.Tasks.Pack successfully. `n"
     }else{
         write-error "Failed to patch NuGet.Build.Tasks.Pack! `n"
         return $false
     }
 
     foreach ($nupkgId in $copiedNupkgIds) {
-        #Write-host "PatchNupkgs -nupkgId $nupkgId -suffix $suffix -tempFolder $tempFolder -patchSDKFolder $patchSDKFolder -SDKVersion $SDKVersion -nupkgsPath $nupkgsPath"
+        #Write-Host "PatchNupkgs -nupkgId $nupkgId -suffix $suffix -tempFolder $tempFolder -patchSDKFolder $patchSDKFolder -SDKVersion $SDKVersion -nupkgsPath $nupkgsPath"
         $result = PatchNupkgs -nupkgId $nupkgId -suffix $suffix -tempFolder $tempFolder -patchSDKFolder $patchSDKFolder -SDKVersion $SDKVersion -nupkgsPath $nupkgsPath
         if ($result -eq $true){
-            write-host "Patched $nupkgId successfully.`n"
+            Write-Host "Patched $nupkgId successfully.`n"
         }else{
             write-error "Failed to patch $nupkgId! `n"
             return $false
@@ -351,22 +364,26 @@ function Patch
 
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
-if (!(Test-Path $SDKPath)) {
+if (!(Test-Path $SDKPath)) 
+{
     New-Item $SDKPath -ItemType Directory | Out-Null
 }
 
-if ("Win32NT" -eq [System.Environment]::OSVersion.Platform){
-    Write-Host "Patching for Windows"
-    if (!(Test-Path $SDKPath\dotnet-install.ps1)) {
+if ("Win32NT" -eq [System.Environment]::OSVersion.Platform)
+{
+    if (!(Test-Path $SDKPath\dotnet-install.ps1)) 
+    {
         Invoke-WebRequest https://dot.net/v1/dotnet-install.ps1 -OutFile $SDKPath\dotnet-install.ps1
     }
 
     & $SDKPath\dotnet-install.ps1 -InstallDir $SDKPath -Channel $SDKChannel -Version $SDKVersion -Quality $Quality -NoPath
 
     $DOTNET = Join-Path -Path $SDKPath -ChildPath 'dotnet.exe'
-} else {
-    Write-Host "Patching for Unix"
-    if (!(Test-Path $SDKPath/dotnet-install.sh)) {
+} 
+else 
+{
+    if (!(Test-Path $SDKPath/dotnet-install.sh)) 
+    {
         Invoke-WebRequest https://dot.net/v1/dotnet-install.sh -OutFile $SDKPath/dotnet-install.sh
     }
 
@@ -382,12 +399,18 @@ $env:DOTNET_MULTILEVEL_LOOKUP = 0
 & $DOTNET --version
 $SDKVersion = & $DOTNET --version
 
-$result = Patch $SDKPath $SDKVersion $NupkgsPath
-
-if ($result -eq $true)
+if(!($SkipPatching)) 
 {
-    write-host "Finish patching `n"
-}else{
-    write-host "Patching failed `n"
-}
+    $result = Patch $SDKPath $SDKVersion $NupkgsPath
 
+    if ($result -eq $true)
+    {
+        Write-Host "Finish patching `n"
+    }else{
+        Write-Host "Patching failed `n"
+    }
+} 
+else 
+{
+    Write-Host "Skipped patching `n"
+}

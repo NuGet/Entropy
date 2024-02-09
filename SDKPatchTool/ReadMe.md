@@ -63,32 +63,41 @@ PARAMETERS
 
 ## Steps
 
-1. [Determine the best SDK version to use](#determining-the-sdk-channel-to-use) This requires specifying the channel and the quality.
+1. [Determine the best SDK version to use](#determining-the-sdk-channel-and-quality-to-use) This requires specifying the channel and the quality.
 1.Go to the SDKPatchTool folder
 1.Run .\SDKPatch.ps1 -SDKPath <sdk path> -NupkgsPath <nupks path> -Channel <Channel Id> -Quality <quality>
 1.If you see "Finish patching", you may start testing the patched dotnet now, with absolute path
   If you see "Patching failed", you have to check why the patching is failed.
 
-**Special consideration:**
+## Determining the SDK channel and quality to use
 
-- If any of the tests fail with `daily` SDK quality, when filling an issue, it might be helpful to run the tests with `preview` quality for the same release, or a `GA` version of the previous release.
-
-## Determining the SDK channel to use
-
+**The version of the .NET SDK that needs to be used, is the one that NuGet inserts into. That version is what ends up shipping to our customers.**
 Each NuGet release has 1-to-1 mapping with .NET SDK.
+
 NuGet follows the Visual Studio versioning, while the .NET SDK increases a major version each November, and releases a new minor release with each Visual Studio release in non-November releases.
+To view historical mapping between released NuGet and SDK versions is you can refer to NuGet/SDK mapping in the NuGet the release notes. Example: <https://learn.microsoft.com/en-us/nuget/release-notes/nuget-6.8>
 
-To know what the appropriate mapping between release NuGet and SDK versions is you can refer to NuGet/SDK mapping in the NuGet the release notes. Example: <https://learn.microsoft.com/en-us/nuget/release-notes/nuget-6.8>
-Each November release, the channel needs to be increment. For November 2023, the best SDK version is 8.0.1xx, for November 2024, the best SDK version will be 9.0.1xx.
+### Picking a channel
 
-Follow the below pattern to best determine the version.
+- Every single time a NuGet minor version changes, the SDK channel *has to be incremented*
+- Each November release, the channel major version needs to be increment. For November 2023, the best SDK version is 8.0.1xx, for November 2024, the best SDK version will be 9.0.1xx.
+- The NuGet & .NET SDK repos do not branch at the same time. In most releases, NuGet will switch to the next version about a week or two before the .NET SDK does.
+  **If** you a given channel SDK version is not available, it is acceptable to the previous channel, for up to 2 weeks before raising issues.
 
-| NuGet Version | SDK Version | Release Timeline |
-|---------------|-------------|
+Here's a versioning table with some examples:
+
+| NuGet Version | SDK Channel | Release Month |
+|---------------|-------------|------------------|
 | 6.8 |  8.0.1xx | November 2023 |
-| 6.9 | 8.0.2xx | February 204 |
+| 6.9 | 8.0.2xx | February 2024 |
 | 6.10 | 8.0.3xx | TBD |
 | ??? | 9.0.1xx | November 2024 |
+
+### Picking a quality
+
+For the testing, `daily` quality should be preferred. Other available qualities are `preview` and `GA`. 
+
+#### Putting it all together
 
 All that said, here are some examples based on the NuGet release and time of testing.
 
@@ -99,3 +108,8 @@ All that said, here are some examples based on the NuGet release and time of tes
 | 6.10.5 | January 2024 | 8.0.3xx | daily | We're testing the latest 8.0.3xx, before the release sometime in 2024 |
 | X.Y.Z | September 2024 | 9.0.3xx | daily | We're testing the latest 9.0.1xx, before the release in November 2024 |
 
+#### What to do when tests fail
+
+When tests fail with the current channel and `daily` quality, please rerun the tests with `preview` quality for the same release, or a `GA` version of the previous release as available.
+
+If *all* tests fail, please rerun against the previous release with a quality `GA` to check for regression.
