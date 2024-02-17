@@ -191,6 +191,19 @@ Build
                 }
             }
 
+            if (rows.Count == 0)
+            {
+                // Pipeline failed to run. Maybe yaml error?
+                ReportData.FailureDetail detail = new()
+                {
+                    Job = "Pipeline",
+                    Task = "",
+                    Details = ""
+                };
+                details.Add(detail);
+                return (details, trackingIssues);
+            }
+
             foreach (var row in rows.Where(IsFailedJob))
             {
                 string job = (string)row["RecordName"];
