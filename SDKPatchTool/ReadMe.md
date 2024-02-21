@@ -9,27 +9,28 @@ SYNOPSIS
     
     
 SYNTAX
-    E:\NuGet\Entropy\SDKPatch.ps1 [-SDKPath] <String> [-NupkgsPath] <String> [-SDKChannel] <String> [[-Quality] <String>] [<CommonParameters>]
-    
-    
+    E:\NuGet\Entropy\SDKPatchTool\SDKPatch.ps1 [-SDKPath] <String> [-NupkgsPath] <String> [[-SDKChannel] <String>] [[-Quality] <String>] [-SkipPatching] [<CommonParameters>]
+
 DESCRIPTION
-    
 
 PARAMETERS
     -SDKPath <String>
         The path where the patched SDK will be installed. It will be created it if doesn't exist.
-        
+
     -NupkgsPath <String>
         The nupkgs folder which contains the latest nupkgs.
-        
+
     -SDKChannel <String>
-        Channel name of SDK. Please refer to https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-install-script#options. 
-        Two-part version in A.B format, representing a specific release (for example, 6.0 or 7.0). 
+        Channel name of SDK. Please refer to https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-install-script#options.
+        Two-part version in A.B format, representing a specific release (for example, 6.0 or 7.0).
         Three-part version in A.B.Cxx format, representing a specific SDK release (for example, 5.0.1xx or 5.0.2xx). Available since the 5.0 release.
 
     -Quality <String>
         The build quality. Works in conjunction with the channel. Likely options: `daily`, `preview` or `GA`, which represents daily, monthly and General Availability release respectively.
         Please refer to https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-install-script#options.
+
+    -SkipPatching [<SwitchParameter>]
+        Gives you the ability to skip patching, if you want to run the tests *against* a stable SDK version.
 
     <CommonParameters>
         This cmdlet supports the common parameters: Verbose, Debug,
@@ -60,6 +61,15 @@ PARAMETERS
     PS C:\>.\SDKPatch.ps1 -SDKPath E:\SDK -NupkgsPath E:\NuGet\NuGet.Client\artifacts\nupkgs -SDKChannel 8.0.2xx
 
     Use this to download the latest GA version of a release, if any.
+
+
+
+
+    -------------------------- EXAMPLE 4 --------------------------
+
+    PS C:\>.\SDKPatch.ps1 -SDKPath E:\SDK -SDKChannel 8.0.2xx -Quality GA -SkipPatching
+
+    # Use this to download the latest GA version of a release without patching.
 
 ## Steps
 
