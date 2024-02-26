@@ -7,31 +7,39 @@ TrustTestCert is a simple, cross-platform CLI for adding and removing trust for 
 ```text
 Usage:  TrustTestCert.exe <add|remove> --certificate <CertificateFilePath> [option]
 
-  Option                           Description
-  -------------------------------- -------------------------------------------
-  --versioned-sdk-directory, -vsd  The versioned .NET SDK root directory that
-                                   contains trustedroots\codesignctl.pem.
-                                   On Windows, this option is never used.
-                                   On Linux/macOS, this option is required.
+  Option                              Description
+  ----------------------------------- -------------------------------------------
+  --certificate-store-location, -csl  The certificate store location, either
+                                      CurrentUser or LocalMachine.
+                                      On Windows, the default is CurrentUser,
+                                      and LocalMachine requires elevation.
+                                      On Linux/macOS, this option is never used.
+  --versioned-sdk-directory, -vsd     The versioned .NET SDK root directory that 
+                                      contains trustedroots\codesignctl.pem.
+                                      On Windows, this option is never used.
+                                      On Linux/macOS, this option is required.
 Examples:
 
   Windows:
     TrustTestCert.exe add -c .\test.cer
       Adds the certificate to the current user's root store.
-  
+
     TrustTestCert.exe add -c .\test.pfx
       Adds the certificate and its private key to the current user's root store.
+
+    TrustTestCert.exe add -c .\test.cer -csl LocalMachine
+      Adds the certificate to the local machine's root store.
 
     TrustTestCert.exe remove -c .\test.cer
       Removes the certificate from the current user's root store.
 
   Linux/macOS:
     TrustTestCert add -c ./test.pem -vsd ~/dotnet/sdk/7.0.100
-      Adds the certificate to the specified .NET SDK's fallback certificate
+      Adds the certificate to the specified .NET SDK's fallback certificate 
       bundle.
 
     TrustTestCert remove -c ./test.pem -vsd ~/dotnet/sdk/7.0.100
-      Removes the certificate from the specified .NET SDK's fallback
+      Removes the certificate from the specified .NET SDK's fallback 
       certificate bundle.
 ```
 
