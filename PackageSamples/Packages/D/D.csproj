@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <NuspecFile>D.nuspec</NuspecFile>
+
+	<GenerateNuspecDependsOn>$(GenerateNuspecDependsOn);SetNuspecProperties</GenerateNuspecDependsOn>
+  </PropertyGroup>
+
+<Target Name="SetNuspecProperties">
+  <PropertyGroup>
+    <NuspecProperties>$(NuspecProperties);Configuration=$(Configuration)</NuspecProperties>
+    <NuspecProperties>$(NuspecProperties);version=$(InformationalVersion)</NuspecProperties>
+    <NuspecProperties>$(NuspecProperties);OutDir=$(OutputPath)</NuspecProperties>
+  </PropertyGroup>
+</Target>
+	<ItemGroup>
+		<ProjectReference Include="..\A\A.csproj" ReferenceOutputAssembly="true">
+			<IncludeBuildOutput>true</IncludeBuildOutput>
+			<IncludeAssets>A.dll</IncludeAssets>
+		</ProjectReference>
+	</ItemGroup>
+
+</Project>
