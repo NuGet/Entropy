@@ -38,6 +38,7 @@ bld/
 
 # Visual Studio 2015 cache/options directory
 .vs/
+*/.vs/*
 
 # MSTest test Results
 [Tt]est[Rr]esult*/
@@ -157,6 +158,9 @@ publish/
 # NuGet Packages
 *.nupkg
 
+# Explicitly allow the packages folder
+!**/packages/*
+
 # Windows Azure Build Output
 csx/
 *.build.csdef
@@ -222,3 +226,6 @@ ChangelogGenerator/ChangelogGenerator/Readme.txt
 
 # VS Launch Settings
 launchSettings.json
+
+# Binlogs
+*.binlog
