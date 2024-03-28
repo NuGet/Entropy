@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+	<!--
+	    Package K also depends on package J, but does not specify Include/Exclude/PrivateAssets.
+		By specifying package J here with PrivateAssets=all, we get to consume all of package J's
+		assets in P8, but not in any project that consumes P8.  See P9 for an example of this.
+	-->
+    <PackageReference Include="K" Version="1.0.0" />
+    <PackageReference Include="J" Version="1.0.0" PrivateAssets="all" />
+  </ItemGroup>
+</Project>

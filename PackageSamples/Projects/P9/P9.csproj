@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+	<!--
+	    P9 (this project) includes P8.  However, P8 sets PrivateAssets="all" for Package J,
+		which means that this project (P9) cannot see the assets of Package J.  This is true
+		even though project P8 references package K which has a reference to package J.
+		This PrivateAssets behavior applies because it occurs at a higher level in the graph
+		and is declared on a direct reference on P8.
+		
+		Effectively, P8 is saying "I don't want to export the assets of package J to anyone
+		that happens to include me."
+	-->
+    <ProjectReference Include="..\P8\P8.csproj" />
+  </ItemGroup>
+</Project>
