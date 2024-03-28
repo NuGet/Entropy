@@ -18,6 +18,6 @@
 		Effectively, P8 is saying "I don't want to export the assets of package J to anyone
 		that happens to include me."
 	-->
-    <ProjectReference Include="..\P8\P8.csproj" />
+    <ProjectReference Include="..\P08\P08.csproj" />
   </ItemGroup>
 </Project>
