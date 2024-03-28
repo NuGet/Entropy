@@ -15,5 +15,6 @@
 	-->
     <PackageReference Include="K" Version="1.0.0" />
     <PackageReference Include="J" Version="1.0.0" PrivateAssets="all" />
+    <ProjectReference Include="..\P10\P10.csproj" />
   </ItemGroup>
 </Project>
