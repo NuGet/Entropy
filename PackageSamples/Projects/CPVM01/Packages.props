@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <!-- Set the package versions used by central version package management. -->
+    <PackageVersion Include="L" Version="2.0.0" />
+    <PackageVersion Include="M" Version="2.0.0" />
+    <PackageVersion Include="N" Version="1.0.0" />
+  </ItemGroup>
+</Project>

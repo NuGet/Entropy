@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <WarningsAsErrors />
+  </PropertyGroup>
+
+  <ItemGroup>
+	<!--
+	    There are conflicting version overrides that come from each of these projects.
+		P01 overrides the version of package M and P02 overrides the version of package L.
+		In each of the project.assets.json files for those projects, they show the proper
+		version overrides.  However, here, neither gets overridden, because the override is specific
+		to the children.  Thus here, we get L/2.0, M/2.0, and N/1.0 which is exactly what Packages.props (central versions) specifies.
+	-->
+    <ProjectReference Include="..\P01\P01.csproj" />
+    <ProjectReference Include="..\P02\P02.csproj" />
+  </ItemGroup>
+</Project>
