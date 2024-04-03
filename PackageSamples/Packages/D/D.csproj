@@ -17,10 +17,10 @@
   </PropertyGroup>
 </Target>
 	<ItemGroup>
-		<ProjectReference Include="..\A\A.csproj" ReferenceOutputAssembly="true">
-			<IncludeBuildOutput>true</IncludeBuildOutput>
-			<IncludeAssets>A.dll</IncludeAssets>
-		</ProjectReference>
-	</ItemGroup>
+    <ProjectReference Include="..\A\A.csproj" ReferenceOutputAssembly="true">
+      <IncludeBuildOutput>true</IncludeBuildOutput>
+      <IncludeAssets>A.dll</IncludeAssets>
+    </ProjectReference>
+  </ItemGroup>
 
 </Project>
