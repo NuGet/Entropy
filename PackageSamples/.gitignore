@@ -1,0 +1,11 @@
+# Visual Studio 2015 cache/options directory
+*/.vs/*
+
+# Explicitly allow the packages folder
+!**/packages/*
+
+# Binlogs
+*.binlog
+
+# Installed NuGet Packages
+NuGetArtifactsInstalled/*

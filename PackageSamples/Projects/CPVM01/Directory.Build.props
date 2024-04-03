@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <PropertyGroup>
+    <!-- Use static graph evaluation. -->
+    <RestoreUseStaticGraphEvaluation>true</RestoreUseStaticGraphEvaluation>
+
+    <!-- Enable central version package management. -->
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageTransitivePinningEnabled>false</CentralPackageTransitivePinningEnabled>
+    <ImportDirectoryPackagesProps>true</ImportDirectoryPackagesProps>
+    <DirectoryPackagesPropsPath>$(MSBuildThisFileDirectory)Packages.props</DirectoryPackagesPropsPath>
+  </PropertyGroup>
+</Project>

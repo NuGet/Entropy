@@ -1,0 +1,65 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!--
+	    This package isn't super interesting, but provides a unique example of how a grand-child package
+		(direct dependency of H) can affect the project.assets.json file.  If you look at H.nuspec, the dependency
+		entry for Microsoft.SourceLink.GitHub (whose job is to add source link data to a package - in this case, H),
+		is defined in the following way:
+		
+			<dependency id="Microsoft.SourceLink.GitHub" version="8.0.0" exclude="Build,Analyzers" />
+		
+		Thus, the project.assets.json file does not include any of the build target files that are exposed when building
+		the H package.  Instead you see this:
+		
+          "Microsoft.Build.Tasks.Git/8.0.0": {
+            "type": "package",
+            "build": {
+              "build/_._": {}
+            },
+            "buildMultiTargeting": {
+              "buildMultiTargeting/_._": {}
+            }
+          },
+          "Microsoft.SourceLink.Common/8.0.0": {
+            "type": "package",
+            "build": {
+              "build/_._": {}
+            },
+            "buildMultiTargeting": {
+              "buildMultiTargeting/_._": {}
+            }
+          },
+          "Microsoft.SourceLink.GitHub/8.0.0": {
+            "type": "package",
+            "dependencies": {
+              "Microsoft.Build.Tasks.Git": "8.0.0",
+              "Microsoft.SourceLink.Common": "8.0.0"
+            },
+            "build": {
+              "build/_._": {}
+            },
+            "buildMultiTargeting": {
+              "buildMultiTargeting/_._": {}
+            }
+          }
+
+		None of the assets are present for use in the current project build because they were excluded by H.
+		
+		NOTE: What's especially unique is that H doesn't explicitly specify exclude="Build,Analyzers".  Instead,
+		this is done because the nuspec file specifies <developmentDependency>true</developmentDependency>.
+		
+		More information at https://learn.microsoft.com/en-us/nuget/reference/nuspec#developmentdependency and
+		https://github.com/NuGet/Home/wiki/DevelopmentDependency-support-for-PackageReference.
+	-->	  
+	<PackageReference Include="H" Version="1.0.0" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,25 @@
+﻿<?xml version="1.0"?>
+<package>
+  <metadata minClientVersion="2.5">
+    <id>I</id>
+    <version>0.0.0</version>
+    <title>I</title>
+    <description>Package Description</description>
+    <authors>Author</authors>
+    <dependencies>
+      <group targetFramework="net8.0">
+      </group>
+    </dependencies>
+	<contentFiles>
+	  <files include="any\any\A.txt" buildAction="Content" copyToOutput="true" />
+	  <files include="any\any\B.txt" buildAction="Content" copyToOutput="true" />
+	</contentFiles>
+  </metadata>
+
+  <files>
+    <file src="$OutDir$I.dll" target="lib\net8.0\I.dll" />
+	<file src="$SrcDir$\A.txt" target="contentFiles\any\any\A.txt" />
+	<file src="$SrcDir$\B.txt" target="contentFiles\any\any\B.txt" />
+  </files>
+
+</package>

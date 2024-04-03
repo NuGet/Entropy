@@ -1,0 +1,36 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+	<!--
+	    Package I includes content files, which are treated differently than other build assets.
+		The two files are A.txt and B.txt.  They show up in the project.assets.json like this:
+		
+		    "contentFiles": {
+              "contentFiles/any/any/A.txt": {
+                "buildAction": "Content",
+                "codeLanguage": "any",
+                "copyToOutput": true,
+                "outputPath": "A.txt"
+              },
+              "contentFiles/any/any/B.txt": {
+                "buildAction": "Content",
+                "codeLanguage": "any",
+                "copyToOutput": true,
+                "outputPath": "B.txt"
+              }
+            }
+
+		The fields for each of these can be set in the nuspec, and of course the files are impacted
+		by IncludeAssets/ExcludeAssets/PrivateAssets in the same ways as other assets in the packages.
+	-->
+    <PackageReference Include="I" Version="1.0.0" />
+  </ItemGroup>
+
+</Project>

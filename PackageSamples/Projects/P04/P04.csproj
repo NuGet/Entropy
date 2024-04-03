@@ -1,0 +1,36 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+	<!--
+	    Each of these packages depends on a different version of package F, and specifies IncludeAssets="none".
+		However, package F's IncludeAssets directive is limited by the directives of the package references
+		directly defined in the project (direct dependencies).  Thus, because it is referenced by both E and G
+		below, it takes the more permissive IncludeAssets directive of "compile", which results in the following
+		in the project.assets.json:
+		
+	      "F/2.0.0": {
+            "type": "package",
+            "compile": {
+              "lib/net8.0/F.dll": {}
+            },
+            "runtime": {
+              "lib/net8.0/_._": {}
+            }
+          },
+		  
+	    If the package references below for E and G did not specify IncludeAssets, they would take on the default value
+		of all, and so would package F, as a transitive dependency, regardless of the fact that both of the references to F
+		from E and G specify IncludeAssets="none".
+	-->
+    <PackageReference Include="E" Version="2.0.0" IncludeAssets="compile" />
+    <PackageReference Include="G" Version="2.0.0" IncludeAssets="none" />
+  </ItemGroup>
+	
+</Project>

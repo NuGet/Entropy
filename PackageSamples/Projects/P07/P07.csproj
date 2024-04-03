@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+	<!--
+	    Demonstrates that ExcludeAssets takes precedence over IncludeAssets.
+		Specifically, even if IncludeAssets equals ExcludeAssets, the assets are not included.
+		This applies for "all" as well as non-"all" specifications.
+    -->
+    <PackageReference Include="I" Version="1.0.0" IncludeAssets="compile" ExcludeAssets="compile" PrivateAssets="compile" />
+  </ItemGroup>
+</Project>
