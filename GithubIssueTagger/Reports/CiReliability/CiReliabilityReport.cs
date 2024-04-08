@@ -381,7 +381,7 @@ Build
                 var outFile = new Option<string>("--output");
                 outFile.AddAlias("-o");
                 outFile.IsRequired = true;
-                outFile.Description = "Output directory";
+                outFile.Description = "Output path and file name (.md)";
                 command.AddOption(outFile);
 
                 command.SetHandler<string, string>(RunAsync, sprint, outFile);
