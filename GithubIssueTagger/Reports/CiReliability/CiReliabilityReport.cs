@@ -8,6 +8,7 @@ using System.CommandLine;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace GithubIssueTagger.Reports.CiReliability
@@ -21,11 +22,34 @@ namespace GithubIssueTagger.Reports.CiReliability
             return Task.CompletedTask;
         }
 
-        public async Task RunAsync(string sprintName)
+        public async Task RunAsync(string sprintName, string outFile)
         {
+            using FileStream fileStream = OpenOutputFile(outFile);
+
             ReportData data = await GetDataAsync(sprintName);
 
-            Output(data);
+            Output(data, fileStream);
+        }
+
+        private FileStream OpenOutputFile(string outFile)
+        {
+            if (string.IsNullOrWhiteSpace(outFile))
+            {
+                string error = "Missing required output file (see --output).";
+                Console.Error.WriteLine(error);
+                throw new ArgumentException(error, paramName: outFile);
+            }
+            if (File.Exists(outFile))
+            {
+                string error = $"File already exists: {outFile}";
+                Console.Error.WriteLine(error);
+                throw new ArgumentException(error, paramName: outFile);
+            }
+
+            FileStream fileStream = File.Create(outFile);
+            Console.WriteLine($"Created new file: {outFile}");
+
+            return fileStream;
         }
 
         private async Task<ReportData> GetDataAsync(string sprintName)
@@ -269,73 +293,75 @@ Build
             }
         }
 
-        private void Output(ReportData data)
+        private void Output(ReportData data, FileStream outputFileStream)
         {
             if (data == null) { throw new ArgumentNullException(nameof(data)); }
+            if (outputFileStream is null || !outputFileStream.CanRead || !outputFileStream.CanWrite) { throw new ArgumentException(paramName: nameof(outputFileStream), message: "Cannot read and write to output file"); }
             if (data.FailedBuilds == null) { throw new ArgumentException(paramName: nameof(data.FailedBuilds), message: "data.FailedBuilds must not be null"); }
 
             float reliability = (data.TotalBuilds - data.FailedBuilds.Count) * 100.0f / data.TotalBuilds;
             int failedBuildsOnlyBecauseOfApex = data.FailedBuilds.Where(b => b.Details?.Count == 1 && b.Details[0].Job == "Apex Test Execution").Count();
             float reliabilityIgnoringApex = (data.TotalBuilds - data.FailedBuilds.Count + failedBuildsOnlyBecauseOfApex) * 100.0f / data.TotalBuilds;
 
-            Console.WriteLine("# NuGet.Client CI Reliability " + data.SprintName);
-            Console.WriteLine();
-            Console.WriteLine("[NuGet.Client-PR dev branch builds](https://dev.azure.com/devdiv/DevDiv/_build?definitionId=8118&branchFilter=101196%2C101196%2C101196%2C101196%2C101196)");
-            Console.WriteLine();
-            Console.WriteLine("|Total Builds|Failed Builds|Reliability|Reliability Ignoring Apex|");
-            Console.WriteLine("|:--:|:--:|:--:|:--:|");
-            Console.WriteLine($"|{data.TotalBuilds}|{data.FailedBuilds.Count}|{reliability:f1}%|{reliabilityIgnoringApex:f1}%|");
-            Console.WriteLine();
-            Console.WriteLine("## Failed Builds");
-            Console.WriteLine();
-            Console.WriteLine("**Note:**: Includes builds that succeeded on retry, so first attempt failed");
-            Console.WriteLine();
-            Console.WriteLine("Kusto ([Needs access to 1ES' CloudMine](https://aka.ms/CloudMine)):");
-            Console.WriteLine("```text");
-            Console.WriteLine(data.KustoQuery);
-            Console.WriteLine("```");
-            Console.WriteLine();
-            Console.WriteLine("<table>");
-            Console.WriteLine("  <tr>");
-            Console.WriteLine("    <th>Build</th>");
-            Console.WriteLine("    <th>Job</th>");
-            Console.WriteLine("    <th>Task</th>");
-            Console.WriteLine("    <th>Commentary</th>");
-            Console.WriteLine("  </tr>");
+            using var sw = new StreamWriter(outputFileStream, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false), failedBuildsOnlyBecauseOfApex);
+            sw.WriteLine("# NuGet.Client CI Reliability " + data.SprintName);
+            sw.WriteLine();
+            sw.WriteLine("[NuGet.Client-PR dev branch builds](https://dev.azure.com/devdiv/DevDiv/_build?definitionId=8118&branchFilter=101196%2C101196%2C101196%2C101196%2C101196)");
+            sw.WriteLine();
+            sw.WriteLine("|Total Builds|Failed Builds|Reliability|Reliability Ignoring Apex|");
+            sw.WriteLine("|:--:|:--:|:--:|:--:|");
+            sw.WriteLine($"|{data.TotalBuilds}|{data.FailedBuilds.Count}|{reliability:f1}%|{reliabilityIgnoringApex:f1}%|");
+            sw.WriteLine();
+            sw.WriteLine("## Failed Builds");
+            sw.WriteLine();
+            sw.WriteLine("**Note:**: Includes builds that succeeded on retry, so first attempt failed");
+            sw.WriteLine();
+            sw.WriteLine("Kusto ([Needs access to 1ES' CloudMine](https://aka.ms/CloudMine)):");
+            sw.WriteLine("```text");
+            sw.WriteLine(data.KustoQuery);
+            sw.WriteLine("```");
+            sw.WriteLine();
+            sw.WriteLine("<table>");
+            sw.WriteLine("  <tr>");
+            sw.WriteLine("    <th>Build</th>");
+            sw.WriteLine("    <th>Job</th>");
+            sw.WriteLine("    <th>Task</th>");
+            sw.WriteLine("    <th>Commentary</th>");
+            sw.WriteLine("  </tr>");
             foreach (var build in data.FailedBuilds)
             {
                 if (build.Details == null) { throw new ArgumentException(nameof(build.Details), "data.FailedBuilds[int].Details must not be null"); }
 
                 for (int i = 0; i < build.Details.Count; i++)
                 {
-                    Console.WriteLine("  <tr>");
+                    sw.WriteLine("  <tr>");
                     if (i == 0)
                     {
                         if (build.Details.Count > 1)
                         {
-                            Console.WriteLine($"    <td rowspan=\"{build.Details.Count}\"><a href=\"https://dev.azure.com/devdiv/DevDiv/_build/results?buildId={build.Id}\">{build.Number}</a></td>");
+                            sw.WriteLine($"    <td rowspan=\"{build.Details.Count}\"><a href=\"https://dev.azure.com/devdiv/DevDiv/_build/results?buildId={build.Id}\">{build.Number}</a></td>");
                         }
                         else
                         {
-                            Console.WriteLine($"    <td><a href=\"https://dev.azure.com/devdiv/DevDiv/_build/results?buildId={build.Id}\">{build.Number}</a></td>");
+                            sw.WriteLine($"    <td><a href=\"https://dev.azure.com/devdiv/DevDiv/_build/results?buildId={build.Id}\">{build.Number}</a></td>");
                         }
                     }
-                    Console.WriteLine($"    <td>{build.Details[i].Job}</td>");
-                    Console.WriteLine($"    <td>{build.Details[i].Task}</td>");
-                    Console.WriteLine($"    <td>{build.Details[i].Details}</td>");
-                    Console.WriteLine("  </tr>");
+                    sw.WriteLine($"    <td>{build.Details[i].Job}</td>");
+                    sw.WriteLine($"    <td>{build.Details[i].Task}</td>");
+                    sw.WriteLine($"    <td>{build.Details[i].Details}</td>");
+                    sw.WriteLine("  </tr>");
                 }
             }
-            Console.WriteLine("</table>");
-            Console.WriteLine();
-            Console.WriteLine("### Tracking");
+            sw.WriteLine("</table>");
+            sw.WriteLine();
+            sw.WriteLine("### Tracking");
 
             foreach (var kvp in data.TrackingIssues)
             {
-                Console.WriteLine();
-                Console.WriteLine($"- {kvp.Key}");
-                Console.WriteLine();
-                Console.WriteLine(kvp.Value);
+                sw.WriteLine();
+                sw.WriteLine($"- {kvp.Key}");
+                sw.WriteLine();
+                sw.WriteLine(kvp.Value);
             }
         }
 
@@ -352,12 +378,18 @@ Build
                 sprint.IsRequired = true;
                 command.AddOption(sprint);
 
-                command.SetHandler<string>(RunAsync, sprint);
+                var outFile = new Option<string>("--output");
+                outFile.AddAlias("-o");
+                outFile.IsRequired = true;
+                outFile.Description = "Output path and file name (.md)";
+                command.AddOption(outFile);
+
+                command.SetHandler<string, string>(RunAsync, sprint, outFile);
 
                 return command;
             }
 
-            public async Task RunAsync(string sprint)
+            public async Task RunAsync(string sprint, string outfile)
             {
                 var serviceProvider = new ServiceCollection()
                     .AddGithubIssueTagger()
@@ -367,7 +399,7 @@ Build
                 using (scopeFactory.CreateScope())
                 {
                     var report = serviceProvider.GetRequiredService<CiReliabilityReport>();
-                    await report.RunAsync(sprint);
+                    await report.RunAsync(sprint, outfile);
                 }
             }
         }
