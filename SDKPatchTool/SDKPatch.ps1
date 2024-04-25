@@ -159,17 +159,26 @@ function PatchNupkgs {
     $dllName = $patchDll.Name
 
     $destDllPath = [System.IO.Path]::Combine($destPath, $dllName)
-    Remove-Item -Path "$destDllPath"  -Force
-    if (Test-Path $destDllPath){
-        write-error "Dll $dllName could not be deleted from $patchSDKFolder!"
-        return $false
+    if (Test-Path $destDllPath)
+    {
+        Remove-Item -Path "$destDllPath"  -Force
+        if (Test-Path $destDllPath){
+            write-error "Dll $dllName could not be deleted from $patchSDKFolder!"
+            return $false
+        }    
     }
 
-    Copy-Item "$patchDll" -Destination "$destPath" 
-    if (-not(Test-Path $destDllPath)) {
-        write-error "Dll $dllName was not copied to $patchSDKFolder!"
-        return $false
+    if(Test-Path $destDllPath -or -not($nupkgId -eq "NuGet.Packaging.Core")){
+
+        Copy-Item "$patchDll" -Destination "$destPath" 
+
+        if (-not(Test-Path $destDllPath)) {
+            write-error "Dll $dllName was not copied to $patchSDKFolder!"
+            return $false
+        }
     }
+
+    
 
     #patch NuGet.targets and NuGet.props
     if ($nupkgId -eq "NuGet.Build.Tasks"){
