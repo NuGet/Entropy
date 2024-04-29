@@ -168,7 +168,7 @@ function PatchNupkgs {
         }    
     }
 
-    if(Test-Path $destDllPath -or -not($nupkgId -eq "NuGet.Packaging.Core")){
+    if(Test-Path $destDllPath -Or -not($nupkgId -eq "NuGet.Packaging.Core")){
 
         Copy-Item "$patchDll" -Destination "$destPath" 
 
@@ -177,8 +177,6 @@ function PatchNupkgs {
             return $false
         }
     }
-
-    
 
     #patch NuGet.targets and NuGet.props
     if ($nupkgId -eq "NuGet.Build.Tasks"){
