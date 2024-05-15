@@ -9,7 +9,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="CommandLineParser" Version="2.7.82" />
-		<PackageReference Include="octokit" Version="0.42.0" />
-		<PackageReference Include="NuGet.Commands" Version="6.7.0" />
+		<PackageReference Include="octokit" Version="11.0.1" />
+		<PackageReference Include="NuGet.Commands" Version="6.9.1" />
 	</ItemGroup>
 </Project>
