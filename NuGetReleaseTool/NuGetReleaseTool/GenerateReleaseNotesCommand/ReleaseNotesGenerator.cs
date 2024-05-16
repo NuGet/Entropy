@@ -196,13 +196,11 @@ namespace NuGetReleaseTool.GenerateReleaseNotesCommand
             string fullSDKVersion = "<TODO: Full SDK Version>";
             string SDKMajorMinorVersion = "<TODO: SDKMajorMinorVersionOnly";
             string GithubAlias = "<TODO: GitHubAlias>";
-            string MicrosoftAlias = "<TODO: MicrosoftAlias>";
             StringBuilder builder = new StringBuilder();
             builder.AppendLine("---");
             builder.AppendLine(string.Format("title: NuGet {0} Release Notes", release));
             builder.AppendLine(string.Format("description: Release notes for NuGet {0} including new features, bug fixes, and DCRs.", release));
             builder.AppendLine(string.Format("author: {0}", GithubAlias));
-            builder.AppendLine(string.Format("ms.author: {0}", MicrosoftAlias));
             builder.AppendLine(string.Format("ms.date: {0}", DateTime.Now.ToString("d", System.Globalization.CultureInfo.GetCultureInfo("en-US"))));
             builder.AppendLine("ms.topic: conceptual");
             builder.AppendLine("---");
