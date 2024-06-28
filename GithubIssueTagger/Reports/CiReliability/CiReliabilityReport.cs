@@ -54,6 +54,12 @@ namespace GithubIssueTagger.Reports.CiReliability
 
         private async Task<ReportData> GetDataAsync(string sprintName)
         {
+            string organizationName = "dnceng-public";
+            string projectId = "cbb18261-c48f-4abb-8651-8cdcb5474649";
+            string definitionId = "289";
+            string sourceBranch = "refs/heads/dev";
+            string reason = "individualCI";
+
             TextWriter? log;
             if (Console.IsOutputRedirected)
             {
@@ -71,11 +77,11 @@ namespace GithubIssueTagger.Reports.CiReliability
             string failedBuildsQuery = $@"let start = startofday(datetime(""{startOfSprint.ToString("yyyy-MM-dd")}""));
 let end = endofday(datetime(""{endOfSprint.ToString("yyyy-MM-dd")}""));
 let nugetBuilds = Build
-| where OrganizationName == 'devdiv' and ProjectId == '0bdbc590-a062-4c3f-b0f6-9383f67865ee' and DefinitionId == 8118 and FinishTime between (start..end) and SourceBranch == 'refs/heads/dev' and Reason == 'schedule';
+| where OrganizationName == '{organizationName}' and ProjectId == '{projectId}' and DefinitionId == {definitionId} and FinishTime between (start..end) and SourceBranch == '{sourceBranch}' and Reason == '{reason}';
 let sprintBuilds = nugetBuilds
 | project BuildId;
 let previousAttempts = BuildTimelineRecord
-| where OrganizationName == 'devdiv' and ProjectId == '0bdbc590-a062-4c3f-b0f6-9383f67865ee' and BuildId in (sprintBuilds)
+| where OrganizationName == '{organizationName}' and ProjectId == '{projectId}' and BuildId in (sprintBuilds)
 | summarize PreviousAttempts=countif(PreviousAttempts !in ('', '[]')) by BuildId
 | where PreviousAttempts  > 0
 | project BuildId;
@@ -86,7 +92,7 @@ nugetBuilds
             string buildCountQuery = $@"let start = startofday(datetime(""{startOfSprint.ToString("yyyy-MM-dd")}""));
 let end = endofday(datetime(""{endOfSprint.ToString("yyyy-MM-dd")}""));
 Build
-| where OrganizationName == 'devdiv' and ProjectId == '0bdbc590-a062-4c3f-b0f6-9383f67865ee' and DefinitionId == 8118 and FinishTime between (start..end) and SourceBranch == 'refs/heads/dev'
+| where OrganizationName == '{organizationName}' and ProjectId == '{projectId}' and DefinitionId == {definitionId} and FinishTime between (start..end) and SourceBranch == '{sourceBranch}'
 | summarize count()";
 
             var connectionBuilder = new KustoConnectionStringBuilder("https://1es.kusto.windows.net/", "AzureDevOps")
@@ -102,6 +108,7 @@ Build
 
             using (var client = KustoClientFactory.CreateCslQueryProvider(connectionBuilder))
             {
+                log?.WriteLine("Query arguments: organizationName=" + organizationName + " | " + "projectId=" + projectId + " | " + "definitionId =" + definitionId + " | " + "sourceBranch=" + sourceBranch + " | " + "reason=" + reason);
                 log?.WriteLine($"Querying builds from {startOfSprint:yyyy-MM-dd} to {endOfSprint:yyyy-MM-dd}");
                 var (failedBuilds, trackingIssues) = await GetFailedBuilds(client, crp, failedBuildsQuery, log);
 
@@ -198,7 +205,7 @@ Build
             List<Dictionary<string, object>> rows = new();
 
             var query = @"BuildTimelineRecord
-| where OrganizationName == 'devdiv' and ProjectId == '0bdbc590-a062-4c3f-b0f6-9383f67865ee' and BuildId == " + buildId;
+| where OrganizationName == 'dnceng-public' and ProjectId == 'cbb18261-c48f-4abb-8651-8cdcb5474649' and BuildId == " + buildId;
             using (var result = await client.ExecuteQueryAsync("AzureDevOps", query, crp))
             {
                 while (result.Read())
@@ -306,7 +313,7 @@ Build
             using var sw = new StreamWriter(outputFileStream, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
             sw.WriteLine("# NuGet.Client CI Reliability " + data.SprintName);
             sw.WriteLine();
-            sw.WriteLine("[NuGet.Client-PR dev branch builds](https://dev.azure.com/devdiv/DevDiv/_build?definitionId=8118&branchFilter=101196%2C101196%2C101196%2C101196%2C101196)");
+            sw.WriteLine("[NuGet.Client CI dev branch builds](https://dev.azure.com/dnceng-public/public/_build?definitionId=289&branchFilter=86197%2C86197%2C86197)");
             sw.WriteLine();
             sw.WriteLine("|Total Builds|Failed Builds|Reliability|Reliability Ignoring Apex|");
             sw.WriteLine("|:--:|:--:|:--:|:--:|");
@@ -339,11 +346,11 @@ Build
                     {
                         if (build.Details.Count > 1)
                         {
-                            sw.WriteLine($"    <td rowspan=\"{build.Details.Count}\"><a href=\"https://dev.azure.com/devdiv/DevDiv/_build/results?buildId={build.Id}\">{build.Number}</a></td>");
+                            sw.WriteLine($"    <td rowspan=\"{build.Details.Count}\"><a href=\"https://dev.azure.com/dnceng-public/public/_build/results?buildId={build.Id}\">{build.Number}</a></td>");
                         }
                         else
                         {
-                            sw.WriteLine($"    <td><a href=\"https://dev.azure.com/devdiv/DevDiv/_build/results?buildId={build.Id}\">{build.Number}</a></td>");
+                            sw.WriteLine($"    <td><a href=\"https://dev.azure.com/dnceng-public/public/_build/results?buildId={build.Id}\">{build.Number}</a></td>");
                         }
                     }
                     sw.WriteLine($"    <td>{build.Details[i].Job}</td>");
