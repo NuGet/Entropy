@@ -341,7 +341,7 @@ function Patch
         "NuGet.CommandLine.XPlat", 
         "NuGet.Credentials")
 
-    if (([int]($SDKVersion.Substring(0, 1)) -le 8) )
+    if (([int]($SDKVersion.Substring(0, 1)) -le 7) )
     {
         Write-Host "Adding nuget.packaging.core"
         $copiedNupkgIds += "NuGet.Packaging.Core"
