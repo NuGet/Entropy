@@ -99,6 +99,12 @@ function PatchNupkgs {
     #Copy the nupkg from nuget artifacts nupkg folder, to the temp folder, and extracted it
     $nupkg = Get-ChildItem -Path "$nupkgsPath" -Exclude "*.symbols.nupkg" | Where-Object {$_.Name -like "$nupkgId$suffix*"}
 
+    if(-not $nupkg -Or -not(Test-Path $nupkg))
+    {
+        Write-Error "$nupkgId$suffix not found in $nupkgsPath"
+        return $false
+    }
+
     Copy-Item $nupkg -Destination $tempExtractFolder
 
     $nupkgTemp = [System.IO.Path]::Combine($tempExtractFolder, $nupkg.Name)
@@ -326,7 +332,6 @@ function Patch
         "NuGet.Protocol", 
         "NuGet.ProjectModel", 
         "NuGet.Packaging", 
-        "NuGet.Packaging.Core", 
         "NuGet.LibraryModel", 
         "NuGet.Frameworks", 
         "NuGet.DependencyResolver.Core", 
@@ -335,6 +340,12 @@ function Patch
         "NuGet.Commands", 
         "NuGet.CommandLine.XPlat", 
         "NuGet.Credentials")
+
+    if (([int]($SDKVersion.Substring(0, 1)) -le 8) )
+    {
+        Write-Host "Adding nuget.packaging.core"
+        $copiedNupkgIds += "NuGet.Packaging.Core"
+    }
 
     $packNupkg = Get-ChildItem -Path "$nupkgsPath" -Exclude '*.symbols.nupkg'| Where-Object {$_.Name -like "NuGet.Build.Tasks.Pack*"}
     $suffix = $packNupkg.Name -replace "NuGet.Build.Tasks.Pack", ""
