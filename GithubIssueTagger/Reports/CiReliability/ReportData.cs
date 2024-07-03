@@ -6,6 +6,8 @@ namespace GithubIssueTagger.Reports.CiReliability
     {
         public string? SprintName { get; init; }
 
+        public string? QueryName { get; init; }
+
         public string? KustoQuery { get; init; }
 
         public required IReadOnlyList<FailedBuild> FailedBuilds { get; init; }
