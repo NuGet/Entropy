@@ -33,6 +33,10 @@ Use this to download the latest public preview of a release, if any.
 Use this to download the latest GA version of a release, if any.
 
 .EXAMPLE
+.\SDKPatch.ps1 -SDKPath E:\SDK -SDKVersion 9.0.100-preview.2.24157.14
+# Use this to download the a specific version of a release.
+
+.EXAMPLE
 .\SDKPatch.ps1 -SDKPath E:\SDK -SDKChannel 8.0.2xx -Quality GA -SkipPatching
 # Use this to download the latest GA version of a release without patching.
 
@@ -43,9 +47,10 @@ param(
     [string]$SDKPath,
     [Parameter(Mandatory = $True)]
     [string]$NupkgsPath,
+    [string]$SDKVersion,
     [string]$SDKChannel,
     [string]$Quality,
-    [switch] $SkipPatching
+    [switch]$SkipPatching
 )
 # NupkgsPath is the nupkgs folder which contains the latest nupkgs.
 # Channel name of SDK. Pls refer to https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-install-script#options
@@ -61,9 +66,16 @@ if(!($SkipPatching)) # Only check the nupkgs path if we're patching
     }
 }
 
+$DownloadSpecificVersion = $false
 
-# SDKVersion is the version of dotnet/sdk which NuGet is inserting into.
-$SDKVersion = "latest"
+if (-not([string]::IsNullOrEmpty($SDKVersion)))
+{
+    $DownloadSpecificVersion = $true
+}
+else
+{
+    $SDKVersion = "latest"
+}
 
 if ([string]::IsNullOrEmpty($Quality)) 
 {
@@ -398,7 +410,14 @@ if ("Win32NT" -eq [System.Environment]::OSVersion.Platform)
         Invoke-WebRequest https://dot.net/v1/dotnet-install.ps1 -OutFile $SDKPath\dotnet-install.ps1
     }
 
-    & $SDKPath\dotnet-install.ps1 -InstallDir $SDKPath -Channel $SDKChannel -Version $SDKVersion -Quality $Quality -NoPath
+    if($DownloadSpecificVersion)
+    {
+        & $SDKPath\dotnet-install.ps1 -InstallDir $SDKPath -Version $SDKVersion -NoPath
+    }
+    else 
+    {
+        & $SDKPath\dotnet-install.ps1 -InstallDir $SDKPath -Channel $SDKChannel -Version $SDKVersion -Quality $Quality -NoPath
+    }
 
     $DOTNET = Join-Path -Path $SDKPath -ChildPath 'dotnet.exe'
 } 
@@ -410,7 +429,16 @@ else
     }
 
     sudo chmod u+x $SDKPath/dotnet-install.sh
-    & $SDKPath/dotnet-install.sh -InstallDir $SDKPath -Channel $SDKChannel -Version $SDKVersion -Quality $Quality -NoPath
+
+    if($DownloadSpecificVersion)
+    {
+        & $SDKPath/dotnet-install.sh -InstallDir $SDKPath -Version $SDKVersion -NoPath
+    }
+    else 
+    {
+        & $SDKPath/dotnet-install.sh -InstallDir $SDKPath -Channel $SDKChannel -Version $SDKVersion -Quality $Quality -NoPath
+    }
+
    
     $DOTNET = Join-Path -Path $SDKPath -ChildPath 'dotnet'
 }
