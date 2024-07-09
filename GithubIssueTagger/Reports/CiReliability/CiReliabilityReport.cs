@@ -26,9 +26,38 @@ namespace GithubIssueTagger.Reports.CiReliability
         {
             using FileStream fileStream = OpenOutputFile(outFile);
 
-            ReportData data = await GetDataAsync(sprintName);
+            PipelineData buildPipelineData = new PipelineData()
+            {
+                PipelineName = "NuGet.Client-PrivateDev",
+                BranchFilterQueryString = "101196%2C101196%2C101196%2C101196%2C101196",
+                DatabaseName = "AzureDevOps",
+                OrganizationName = "devdiv",
+                ProjectId = "0bdbc590-a062-4c3f-b0f6-9383f67865ee",
+                ProjectName = "DevDiv",
+                DefinitionId = "8118",
+                SourceBranch = "refs/heads/dev",
+                Reason = "schedule",
+            };
 
-            Output(data, fileStream);
+            ReportData buildReportData = await GetDataAsync(sprintName, queryName: "dev branch builds", buildPipelineData);
+
+            PipelineData funcUnitTestPipelineData = new PipelineData()
+            {
+                PipelineName = "NuGet.Client CI",
+                DatabaseName = "AzureDevOps",
+                BranchFilterQueryString = "86197%2C86197%2C86197",
+                OrganizationName = "dnceng-public",
+                ProjectId = "cbb18261-c48f-4abb-8651-8cdcb5474649",
+                ProjectName = "public",
+                DefinitionId = "289",
+                SourceBranch = "refs/heads/dev",
+                Reason = "individualCI",
+            };
+
+            ReportData funcUnitTestReportData = await GetDataAsync(sprintName, queryName: "dev branch Functional & Unit tests", funcUnitTestPipelineData);
+
+            var data = new Tuple<PipelineData, ReportData>[] { new(buildPipelineData, buildReportData), new(funcUnitTestPipelineData, funcUnitTestReportData) };
+            Output(data, fileStream, reportSprintName: sprintName);
         }
 
         private FileStream OpenOutputFile(string outFile)
@@ -52,7 +81,7 @@ namespace GithubIssueTagger.Reports.CiReliability
             return fileStream;
         }
 
-        private async Task<ReportData> GetDataAsync(string sprintName)
+        private async Task<ReportData> GetDataAsync(string sprintName, string queryName, PipelineData pipelineData)
         {
             TextWriter? log;
             if (Console.IsOutputRedirected)
@@ -71,11 +100,11 @@ namespace GithubIssueTagger.Reports.CiReliability
             string failedBuildsQuery = $@"let start = startofday(datetime(""{startOfSprint.ToString("yyyy-MM-dd")}""));
 let end = endofday(datetime(""{endOfSprint.ToString("yyyy-MM-dd")}""));
 let nugetBuilds = Build
-| where OrganizationName == 'devdiv' and ProjectId == '0bdbc590-a062-4c3f-b0f6-9383f67865ee' and DefinitionId == 8118 and FinishTime between (start..end) and SourceBranch == 'refs/heads/dev' and Reason == 'schedule';
+| where OrganizationName == '{pipelineData.OrganizationName}' and ProjectId == '{pipelineData.ProjectId}' and DefinitionId == {pipelineData.DefinitionId} and FinishTime between (start..end) and SourceBranch == '{pipelineData.SourceBranch}' and Reason == '{pipelineData.Reason}';
 let sprintBuilds = nugetBuilds
 | project BuildId;
 let previousAttempts = BuildTimelineRecord
-| where OrganizationName == 'devdiv' and ProjectId == '0bdbc590-a062-4c3f-b0f6-9383f67865ee' and BuildId in (sprintBuilds)
+| where OrganizationName == '{pipelineData.OrganizationName}' and ProjectId == '{pipelineData.ProjectId}' and BuildId in (sprintBuilds)
 | summarize PreviousAttempts=countif(PreviousAttempts !in ('', '[]')) by BuildId
 | where PreviousAttempts  > 0
 | project BuildId;
@@ -86,10 +115,10 @@ nugetBuilds
             string buildCountQuery = $@"let start = startofday(datetime(""{startOfSprint.ToString("yyyy-MM-dd")}""));
 let end = endofday(datetime(""{endOfSprint.ToString("yyyy-MM-dd")}""));
 Build
-| where OrganizationName == 'devdiv' and ProjectId == '0bdbc590-a062-4c3f-b0f6-9383f67865ee' and DefinitionId == 8118 and FinishTime between (start..end) and SourceBranch == 'refs/heads/dev'
+| where OrganizationName == '{pipelineData.OrganizationName}' and ProjectId == '{pipelineData.ProjectId}' and DefinitionId == {pipelineData.DefinitionId} and FinishTime between (start..end) and SourceBranch == '{pipelineData.SourceBranch}'
 | summarize count()";
 
-            var connectionBuilder = new KustoConnectionStringBuilder("https://1es.kusto.windows.net/", "AzureDevOps")
+            var connectionBuilder = new KustoConnectionStringBuilder("https://1es.kusto.windows.net/", pipelineData.DatabaseName)
             {
                 FederatedSecurity = true
             };
@@ -102,15 +131,18 @@ Build
 
             using (var client = KustoClientFactory.CreateCslQueryProvider(connectionBuilder))
             {
+                log?.WriteLine("Query arguments: pipelineName =" + pipelineData.PipelineName + " | " + "organizationName = " + pipelineData.OrganizationName + " | " + "projectId=" + pipelineData.ProjectId + " | " + "definitionId =" 
+                    + pipelineData.DefinitionId + " | " + "sourceBranch=" + pipelineData.SourceBranch + " | " + "reason=" + pipelineData.Reason);
                 log?.WriteLine($"Querying builds from {startOfSprint:yyyy-MM-dd} to {endOfSprint:yyyy-MM-dd}");
-                var (failedBuilds, trackingIssues) = await GetFailedBuilds(client, crp, failedBuildsQuery, log);
+                var (failedBuilds, trackingIssues) = await GetFailedBuilds(client, crp, failedBuildsQuery, pipelineData, log);
 
                 log?.WriteLine("Querying total builds in sprint");
-                int totalBuilds = await GetBuildCount(client, crp, buildCountQuery);
+                int totalBuilds = await GetBuildCount(client, crp, buildCountQuery, pipelineData);
 
                 data = new ReportData()
                 {
                     SprintName = sprintName,
+                    QueryName = queryName,
                     KustoQuery = failedBuildsQuery,
                     FailedBuilds = failedBuilds,
                     TrackingIssues = trackingIssues,
@@ -121,9 +153,9 @@ Build
             return data;
         }
 
-        private async Task<int> GetBuildCount(ICslQueryProvider client, ClientRequestProperties crp, string query)
+        private async Task<int> GetBuildCount(ICslQueryProvider client, ClientRequestProperties crp, string query, PipelineData pipelineData)
         {
-            using var result = await client.ExecuteQueryAsync("AzureDevOps", query, crp);
+            using var result = await client.ExecuteQueryAsync(pipelineData.DatabaseName, query, crp);
 
             if (!result.Read())
             {
@@ -141,12 +173,13 @@ Build
             ICslQueryProvider client,
             ClientRequestProperties crp,
             string query,
+            PipelineData pipelineData,
             TextWriter? log)
         {
             List<ReportData.FailedBuild> failedBuilds = new();
             Dictionary<string, string> trackingIssues = new();
 
-            var result = await client.ExecuteQueryAsync("AzureDevOps", query, crp);
+            var result = await client.ExecuteQueryAsync(pipelineData.DatabaseName, query, crp);
 
             int buildIdColumn = result.GetOrdinal("BuildId");
             int buildNumberColumn = result.GetOrdinal("BuildNumber");
@@ -168,7 +201,7 @@ Build
             {
                 log?.WriteLine($"Checking failed build {i + 1}/{failedBuilds.Count}");
 
-                var (details, tracking) = await GetFailedBuildDetails(failedBuilds[i].Id, client, crp);
+                var (details, tracking) = await GetFailedBuildDetails(failedBuilds[i].Id, client, crp, pipelineData);
 
                 foreach (var kvp in tracking)
                 {
@@ -190,16 +223,17 @@ Build
         private async Task<(IReadOnlyList<ReportData.FailureDetail> details, IReadOnlyDictionary<string, string> tracking)> GetFailedBuildDetails(
             long buildId,
             ICslQueryProvider client,
-            ClientRequestProperties crp)
+            ClientRequestProperties crp,
+            PipelineData pipelineData)
         {
             List<ReportData.FailureDetail> details = new();
             Dictionary<string, string> trackingIssues = new();
 
             List<Dictionary<string, object>> rows = new();
 
-            var query = @"BuildTimelineRecord
-| where OrganizationName == 'devdiv' and ProjectId == '0bdbc590-a062-4c3f-b0f6-9383f67865ee' and BuildId == " + buildId;
-            using (var result = await client.ExecuteQueryAsync("AzureDevOps", query, crp))
+            var query = $@"BuildTimelineRecord
+| where OrganizationName == '{pipelineData.OrganizationName}' and ProjectId == '{pipelineData.ProjectId}' and BuildId == {buildId}";
+            using (var result = await client.ExecuteQueryAsync(pipelineData.DatabaseName, query, crp))
             {
                 while (result.Read())
                 {
@@ -293,26 +327,57 @@ Build
             }
         }
 
-        private void Output(ReportData data, FileStream outputFileStream)
+        private void Output(Tuple<PipelineData, ReportData>[] pipelineReportDataList, FileStream outputFileStream, string reportSprintName)
         {
-            if (data == null) { throw new ArgumentNullException(nameof(data)); }
             if (outputFileStream is null || !outputFileStream.CanRead || !outputFileStream.CanWrite) { throw new ArgumentException(paramName: nameof(outputFileStream), message: "Cannot read and write to output file"); }
-            if (data.FailedBuilds == null) { throw new ArgumentException(paramName: nameof(data.FailedBuilds), message: "data.FailedBuilds must not be null"); }
-
-            float reliability = (data.TotalBuilds - data.FailedBuilds.Count) * 100.0f / data.TotalBuilds;
-            int failedBuildsOnlyBecauseOfApex = data.FailedBuilds.Where(b => b.Details?.Count == 1 && b.Details[0].Job == "Apex Test Execution").Count();
-            float reliabilityIgnoringApex = (data.TotalBuilds - data.FailedBuilds.Count + failedBuildsOnlyBecauseOfApex) * 100.0f / data.TotalBuilds;
-
             using var sw = new StreamWriter(outputFileStream, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
-            sw.WriteLine("# NuGet.Client CI Reliability " + data.SprintName);
+
+            sw.WriteLine($"# NuGet Client CI Reliability " + reportSprintName);
+
+            foreach (var pipelineReportData in pipelineReportDataList)
+            {
+                var pipelineData = pipelineReportData.Item1;
+                var data = pipelineReportData.Item2;
+                if (data == null) { throw new ArgumentNullException(nameof(data)); }
+                if (data.FailedBuilds == null) { throw new ArgumentException(paramName: nameof(data.FailedBuilds), message: "data.FailedBuilds must not be null"); }
+
+                float reliability = (data.TotalBuilds - data.FailedBuilds.Count) * 100.0f / data.TotalBuilds;
+                int failedBuildsOnlyBecauseOfApex = data.FailedBuilds.Where(b => b.Details?.Count == 1 && b.Details[0].Job == "Apex Test Execution").Count();
+                float reliabilityIgnoringApex = (data.TotalBuilds - data.FailedBuilds.Count + failedBuildsOnlyBecauseOfApex) * 100.0f / data.TotalBuilds;
+
+                OutputPipelineData(pipelineData, data, reliability, reliabilityIgnoringApex, sw);
+
+                sw.WriteLine();
+                sw.WriteLine();
+                sw.WriteLine("### Tracking");
+                if (data.TrackingIssues.Count == 0)
+                {
+                    sw.WriteLine("No tracking issues");
+                }
+                else
+                {
+                    foreach (var kvp in data.TrackingIssues)
+                    {
+                        sw.WriteLine();
+                        sw.WriteLine($"- {kvp.Key}");
+                        sw.WriteLine();
+                        sw.WriteLine(kvp.Value);
+                    }
+                }
+            }
+        }
+
+        private static void OutputPipelineData(PipelineData pipelineData, ReportData data, float reliability, float reliabilityIgnoringApex, StreamWriter sw)
+        {
+            sw.WriteLine($"## {pipelineData.PipelineName}");
             sw.WriteLine();
-            sw.WriteLine("[NuGet.Client-PR dev branch builds](https://dev.azure.com/devdiv/DevDiv/_build?definitionId=8118&branchFilter=101196%2C101196%2C101196%2C101196%2C101196)");
+            sw.WriteLine($"[{pipelineData.PipelineName} {data.QueryName}](https://dev.azure.com/{pipelineData.OrganizationName}/{pipelineData.ProjectName}/_build?definitionId={pipelineData.DefinitionId}&branchFilter={pipelineData.BranchFilterQueryString})");
             sw.WriteLine();
             sw.WriteLine("|Total Builds|Failed Builds|Reliability|Reliability Ignoring Apex|");
             sw.WriteLine("|:--:|:--:|:--:|:--:|");
             sw.WriteLine($"|{data.TotalBuilds}|{data.FailedBuilds.Count}|{reliability:f1}%|{reliabilityIgnoringApex:f1}%|");
             sw.WriteLine();
-            sw.WriteLine("## Failed Builds");
+            sw.WriteLine("### Failed Builds");
             sw.WriteLine();
             sw.WriteLine("**Note:**: Includes builds that succeeded on retry, so first attempt failed");
             sw.WriteLine();
@@ -339,11 +404,11 @@ Build
                     {
                         if (build.Details.Count > 1)
                         {
-                            sw.WriteLine($"    <td rowspan=\"{build.Details.Count}\"><a href=\"https://dev.azure.com/devdiv/DevDiv/_build/results?buildId={build.Id}\">{build.Number}</a></td>");
+                            sw.WriteLine($"    <td rowspan=\"{build.Details.Count}\"><a href=\"https://dev.azure.com/{pipelineData.OrganizationName}/{pipelineData.ProjectName}/_build/results?buildId={build.Id}\">{build.Number}</a></td>");
                         }
                         else
                         {
-                            sw.WriteLine($"    <td><a href=\"https://dev.azure.com/devdiv/DevDiv/_build/results?buildId={build.Id}\">{build.Number}</a></td>");
+                            sw.WriteLine($"    <td><a href=\"https://dev.azure.com/{pipelineData.OrganizationName}/{pipelineData.ProjectName}/_build/results?buildId={build.Id}\">{build.Number}</a></td>");
                         }
                     }
                     sw.WriteLine($"    <td>{build.Details[i].Job}</td>");
@@ -353,16 +418,6 @@ Build
                 }
             }
             sw.WriteLine("</table>");
-            sw.WriteLine();
-            sw.WriteLine("### Tracking");
-
-            foreach (var kvp in data.TrackingIssues)
-            {
-                sw.WriteLine();
-                sw.WriteLine($"- {kvp.Key}");
-                sw.WriteLine();
-                sw.WriteLine(kvp.Value);
-            }
         }
 
         private class CiReliabilityCommandFactory : ICommandFactory
@@ -389,7 +444,7 @@ Build
                 return command;
             }
 
-            public async Task RunAsync(string sprint, string outfile)
+            public async Task RunAsync(string sprint, string outFile)
             {
                 var serviceProvider = new ServiceCollection()
                     .AddGithubIssueTagger()
@@ -399,7 +454,7 @@ Build
                 using (scopeFactory.CreateScope())
                 {
                     var report = serviceProvider.GetRequiredService<CiReliabilityReport>();
-                    await report.RunAsync(sprint, outfile);
+                    await report.RunAsync(sprint, outFile);
                 }
             }
         }
