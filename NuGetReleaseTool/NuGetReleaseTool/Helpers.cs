@@ -1,5 +1,8 @@
-﻿using NuGetReleaseTool.GenerateInsertionChangelogCommand;
+﻿using NuGet.Protocol.Plugins;
+using NuGetReleaseTool.GenerateInsertionChangelogCommand;
 using Octokit;
+using System;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
 namespace NuGetReleaseTool
@@ -104,9 +107,18 @@ namespace NuGetReleaseTool
                 {
                     commit.PR = new Tuple<int, string>(id, @"https://github.com/nuget/nuget.client/pull/" + id);
                     pullRequestbody = (await gitHubClient.Repository.PullRequest.Get(orgName, repoName, id)).Body;
+
                 }
 
-                UpdateCommitIssuesFromText(commit, pullRequestbody, issueRepositories);
+                if (pullRequestbody == null)
+                {
+                    Console.WriteLine($"PR contains contains no body message: {commit?.PR?.Item2}");
+                }
+                else
+                {
+                    UpdateCommitIssuesFromText(commit, pullRequestbody, issueRepositories);
+                }
+
                 processedCommits.Add(commit);
             }
 
