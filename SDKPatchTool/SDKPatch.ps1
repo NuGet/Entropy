@@ -147,13 +147,13 @@ function PatchNupkgs {
     
     $tfmFolderNetcoreapp21 =  Get-ChildItem -Path "$libPath$delimeter*" | Where-Object {$_.Name -like "netcoreapp2.1"}
    
-    if (([int]($SDKVersion.Substring(0, 1)) -ge 5) -And ($null -ne $tfmFolderNet8)){
+    if (([int]($SDKVersion.Split('.', [System.StringSplitOptions]::RemoveEmptyEntries)[0]) -ge 5) -And ($null -ne $tfmFolderNet8)){
             $patchDll = Get-ChildItem -Path "$tfmFolderNet8$delimeter*" | Where-Object {$_.Name -like "*.dll"}
     }
-    elseif (([int]($SDKVersion.Substring(0, 1)) -ge 5) -And ($null -ne $tfmFolderNet7)){
+    elseif (([int]($SDKVersion.Split('.', [System.StringSplitOptions]::RemoveEmptyEntries)[0]) -ge 5) -And ($null -ne $tfmFolderNet7)){
             $patchDll = Get-ChildItem -Path "$tfmFolderNet7$delimeter*" | Where-Object {$_.Name -like "*.dll"}
     }
-    elseif (([int]($SDKVersion.Substring(0, 1)) -ge 5) -And (($tfmFolderNet5 -ne $null) -Or ($tfmFolderNetcoreapp50 -ne $null))){
+    elseif (([int]($SDKVersion.Split('.', [System.StringSplitOptions]::RemoveEmptyEntries)[0]) -ge 5) -And (($tfmFolderNet5 -ne $null) -Or ($tfmFolderNetcoreapp50 -ne $null))){
 
         if ($tfmFolderNet5 -ne $null){
             $patchDll = Get-ChildItem -Path "$tfmFolderNet5$delimeter*" | Where-Object {$_.Name -like "*.dll"}
@@ -353,7 +353,7 @@ function Patch
         "NuGet.CommandLine.XPlat", 
         "NuGet.Credentials")
 
-    if (([int]($SDKVersion.Substring(0, 1)) -le 7) )
+    if (([int]($SDKVersion.Split('.', [System.StringSplitOptions]::RemoveEmptyEntries)[0]) -le 7) )
     {
         Write-Host "Adding nuget.packaging.core"
         $copiedNupkgIds += "NuGet.Packaging.Core"
