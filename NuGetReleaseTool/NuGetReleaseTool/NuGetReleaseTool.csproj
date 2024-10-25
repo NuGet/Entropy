@@ -2,14 +2,14 @@
 
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
-		<TargetFramework>net7.0</TargetFramework>
+		<TargetFramework>net8.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="CommandLineParser" Version="2.7.82" />
+		<PackageReference Include="CommandLineParser" Version="2.9.1" />
 		<PackageReference Include="octokit" Version="11.0.1" />
-		<PackageReference Include="NuGet.Commands" Version="6.9.1" />
+		<PackageReference Include="NuGet.Commands" Version="6.11.1" />
 	</ItemGroup>
 </Project>

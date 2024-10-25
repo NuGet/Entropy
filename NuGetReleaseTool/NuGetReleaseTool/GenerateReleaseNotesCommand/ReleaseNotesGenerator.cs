@@ -1,7 +1,7 @@
 ﻿using Octokit;
-using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Web;
 
 namespace NuGetReleaseTool.GenerateReleaseNotesCommand
 {
@@ -307,7 +307,7 @@ namespace NuGetReleaseTool.GenerateReleaseNotesCommand
                     Dictionary<string, List<PullRequest>> pullRequestsByContributors = new();
                     foreach (var pullRequest in communityPullRequests)
                     {
-                        if (!pullRequestsByContributors.TryGetValue(pullRequest.User.Login, out List<PullRequest> pullRequests))
+                        if (!pullRequestsByContributors.TryGetValue(pullRequest.User.Login, out List<PullRequest>? pullRequests))
                         {
                             pullRequests = new List<PullRequest>();
                             pullRequestsByContributors.Add(pullRequest.User.Login, pullRequests);
@@ -357,7 +357,7 @@ namespace NuGetReleaseTool.GenerateReleaseNotesCommand
 
                 foreach (var issue in issues)
                 {
-                    builder.AppendLine("* " + issue.Title + " - " + "[#" + issue.Number + "](" + issue.HtmlUrl + ")");
+                    builder.AppendLine("* " + HttpUtility.HtmlEncode(issue.Title) + " - " + "[#" + issue.Number + "](" + issue.HtmlUrl + ")");
                     builder.AppendLine();
                 }
             }

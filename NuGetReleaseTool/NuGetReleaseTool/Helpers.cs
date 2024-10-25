@@ -112,7 +112,7 @@ namespace NuGetReleaseTool
 
                 if (pullRequestbody == null)
                 {
-                    Console.WriteLine($"PR contains contains no body message: {commit?.PR?.Item2}");
+                    Console.WriteLine($"PR contains contains no body message: {commit.PR?.Item2}");
                 }
                 else
                 {
