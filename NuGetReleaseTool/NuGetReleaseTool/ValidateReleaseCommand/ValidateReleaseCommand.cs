@@ -155,7 +155,16 @@ namespace NuGetReleaseTool.ValidateReleaseCommand
             var releaseNotesGHUrl = $"https://github.com/NuGet/docs.microsoft.com-nuget/blob/main/docs/release-notes/NuGet-{Options.Release}.md";
             if (await UrlExistsAsync(HttpClient, releaseNotesUrl))
             {
-                return (Status.Completed, releaseNotesUrl);
+                string content = await GetContentAsync(HttpClient, releaseNotesUrl);
+
+                if (content.Contains("Not yet released"))
+                {
+                    return (Status.InProgress, $"A draft version of the notes is published, but it is missing content. {releaseNotesGHUrl}");
+                }
+                else
+                {
+                    return (Status.Completed, releaseNotesUrl);
+                }
             }
             else if (await UrlExistsAsync(HttpClient, releaseNotesGHUrl))
             {
@@ -194,6 +203,16 @@ namespace NuGetReleaseTool.ValidateReleaseCommand
             }
             catch (Exception) { }
             return false;
+        }
+
+        private static async Task<string> GetContentAsync(HttpClient httpClient, string url)
+        {
+            try
+            {
+                return await httpClient.GetStringAsync(url);
+            }
+            catch (Exception) { }
+            return null;
         }
     }
 }
