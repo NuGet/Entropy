@@ -123,7 +123,7 @@ namespace NuGetReleaseTool.ValidateReleaseCommand
         private async Task<(Status, string)> ValidateDocumentationReadinessAsync()
         {
             // For a given ID/branch, get all of the linked documentation PRs that are still open.
-            string[] issueRepositories = new string[] { $"{Constants.NuGet}/{Constants.DocsRepo}" };
+            string[] issueRepositories = new string[] { $"{Constants.NuGet}/{Constants.Home}" };
 
             var githubCommits = await Helpers.GetCommitsForRelease(GitHubClient, Options.Release, Options.EndCommit);
 
@@ -135,8 +135,8 @@ namespace NuGetReleaseTool.ValidateReleaseCommand
             {
                 foreach (var issue in commit.Issues)
                 {
-                    var ghIssue = await GitHubClient.Issue.Get(Constants.NuGet, Constants.DocsRepo, issue.Item1);
-                    if (ghIssue.State == ItemState.Open)
+                    var ghIssue = await GitHubClient.Issue.Get(Constants.NuGet, Constants.Home, issue.Item1);
+                    if (ghIssue.State == ItemState.Open && ghIssue.Labels.Any(e => e.Name.Equals("Type:Docs")))
                     {
                         urls.Add(issue.Item2);
                     }
