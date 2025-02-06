@@ -135,6 +135,8 @@ function PatchNupkgs {
     }else{
         $libPath = [System.IO.Path]::Combine($tempExtractFolder, 'lib')
     }
+    $tfmFolderNet9 =  Get-ChildItem -Path "$libPath$delimeter*" | Where-Object {$_.Name -like "net9.0" }
+
     $tfmFolderNet8 =  Get-ChildItem -Path "$libPath$delimeter*" | Where-Object {$_.Name -like "net8.0" }
 
     $tfmFolderNet7 =  Get-ChildItem -Path "$libPath$delimeter*" | Where-Object {$_.Name -like "net7.0" }
@@ -146,8 +148,11 @@ function PatchNupkgs {
     $tfmFolderNetstandard20 =  Get-ChildItem -Path "$libPath$delimeter*" | Where-Object {$_.Name -like "netstandard2.0"}
     
     $tfmFolderNetcoreapp21 =  Get-ChildItem -Path "$libPath$delimeter*" | Where-Object {$_.Name -like "netcoreapp2.1"}
-   
-    if (([int]($SDKVersion.Split('.', [System.StringSplitOptions]::RemoveEmptyEntries)[0]) -ge 5) -And ($null -ne $tfmFolderNet8)){
+    
+    if (([int]($SDKVersion.Split('.', [System.StringSplitOptions]::RemoveEmptyEntries)[0]) -ge 5) -And ($null -ne $tfmFolderNet9)){
+        $patchDll = Get-ChildItem -Path "$tfmFolderNet9$delimeter*" | Where-Object {$_.Name -like "*.dll"}
+    }
+    elseif (([int]($SDKVersion.Split('.', [System.StringSplitOptions]::RemoveEmptyEntries)[0]) -ge 5) -And ($null -ne $tfmFolderNet8)){
             $patchDll = Get-ChildItem -Path "$tfmFolderNet8$delimeter*" | Where-Object {$_.Name -like "*.dll"}
     }
     elseif (([int]($SDKVersion.Split('.', [System.StringSplitOptions]::RemoveEmptyEntries)[0]) -ge 5) -And ($null -ne $tfmFolderNet7)){
