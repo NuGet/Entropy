@@ -69,7 +69,11 @@ namespace TrustTestCert
                 {
                     case "-c":
                     case "--certificate":
+#if NET9_0_OR_GREATER
+                        certificate = X509CertificateLoader.LoadCertificateFromFile(nextArg);
+#else
                         certificate = new X509Certificate2(nextArg);
+#endif
                         break;
 
                     case "-csl":
