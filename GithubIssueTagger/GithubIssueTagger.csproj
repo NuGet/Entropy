@@ -14,6 +14,7 @@
     <PackageId>NuGet.Internal.GithubIssueTagger</PackageId>
     <Version>$([System.DateTime]::Now.ToString('yyyy.MM.dd'))</Version>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <RollForward>LatestMajor</RollForward>
   </PropertyGroup>
 
   <ItemGroup>
