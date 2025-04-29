@@ -62,9 +62,19 @@ namespace GithubIssueTagger.GraphQL
                 {
                     Console.WriteLine($"GraphQL HTTP error: {ex.Message}");
 
+                    TimeSpan retryAfter = delay;
                     if (httpResponse != null)
                     {
                         Console.WriteLine(httpResponse);
+
+                        if (httpResponse.Headers.TryGetValues("Retry-After", out var values))
+                        {
+                            var retryAfterHeader = values.FirstOrDefault();
+                            if (retryAfterHeader != null && int.TryParse(retryAfterHeader, out var retryAfterSeconds))
+                            {
+                                retryAfter = TimeSpan.FromSeconds(retryAfterSeconds);
+                            }
+                        }
 
                         httpResponse.Dispose();
                     }
@@ -74,7 +84,8 @@ namespace GithubIssueTagger.GraphQL
                         throw;
                     }
 
-                    await Task.Delay(delay);
+                    Console.WriteLine($"GraphQL HTTP retrying in {retryAfter.TotalSeconds} seconds...");
+                    await Task.Delay(retryAfter);
                     attempt++;
                     delay += delay;
                 }
