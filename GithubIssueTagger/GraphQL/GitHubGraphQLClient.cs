@@ -67,6 +67,12 @@ namespace GithubIssueTagger.GraphQL
                     {
                         Console.WriteLine(httpResponse);
 
+                        if (httpResponse.Content.Headers.ContentLength < 2000)
+                        {
+                            var body = await httpResponse.Content.ReadAsStringAsync();
+                            Console.WriteLine(body);
+                        }
+
                         if (httpResponse.Headers.TryGetValues("Retry-After", out var values))
                         {
                             var retryAfterHeader = values.FirstOrDefault();
