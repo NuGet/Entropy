@@ -34,6 +34,8 @@ namespace GithubIssueTagger.GraphQL
         {
             using var httpResponse = await HttpClient.PostAsJsonAsync(requestUri: (string?)null, request);
 
+            Console.WriteLine(httpResponse);
+
             var rateLimitLimit = httpResponse.Headers.GetValues("X-RateLimit-Limit").SingleOrDefault();
             var rateLimitRemaining = httpResponse.Headers.GetValues("X-RateLimit-Remaining").SingleOrDefault();
             var rateLimitReset = long.Parse(httpResponse.Headers.GetValues("X-RateLimit-Reset").Single());
