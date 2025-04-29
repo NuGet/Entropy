@@ -32,20 +32,53 @@ namespace GithubIssueTagger.GraphQL
 
         public async Task<GraphQLResponse<T>?> SendAsync<T>(GraphQLRequest request)
         {
-            using var httpResponse = await HttpClient.PostAsJsonAsync(requestUri: (string?)null, request);
+            HttpResponseMessage? httpResponse;
 
-            Console.WriteLine(httpResponse);
+            int attempt = 0;
+            int maxAttempts = 5;
+            TimeSpan delay = TimeSpan.FromSeconds(1);
 
-            var rateLimitLimit = httpResponse.Headers.GetValues("X-RateLimit-Limit").SingleOrDefault();
-            var rateLimitRemaining = httpResponse.Headers.GetValues("X-RateLimit-Remaining").SingleOrDefault();
-            var rateLimitReset = long.Parse(httpResponse.Headers.GetValues("X-RateLimit-Reset").Single());
-            var resetTime = DateTime.UnixEpoch.AddSeconds(rateLimitReset);
-            Console.WriteLine($"GraphQL HTTP rate-limit = {rateLimitLimit}, remaining = {rateLimitRemaining}, reset = {resetTime:o}");
+            for (;;)
+            {
+                httpResponse = null;
+                try
+                {
+                    httpResponse = await HttpClient.PostAsJsonAsync(requestUri: (string?)null, request);
 
-            using var stream = await httpResponse.Content.ReadAsStreamAsync();
-            GraphQLResponse<T>? response = await JsonSerializer.DeserializeAsync<GraphQLResponse<T>>(stream);
+                    var rateLimitLimit = httpResponse.Headers.GetValues("X-RateLimit-Limit").SingleOrDefault();
+                    var rateLimitRemaining = httpResponse.Headers.GetValues("X-RateLimit-Remaining").SingleOrDefault();
+                    var rateLimitReset = long.Parse(httpResponse.Headers.GetValues("X-RateLimit-Reset").Single());
+                    var resetTime = DateTime.UnixEpoch.AddSeconds(rateLimitReset);
+                    Console.WriteLine($"GraphQL HTTP rate-limit = {rateLimitLimit}, remaining = {rateLimitRemaining}, reset = {resetTime:o}");
 
-            return response;
+                    using var stream = await httpResponse.Content.ReadAsStreamAsync();
+                    GraphQLResponse<T>? response = await JsonSerializer.DeserializeAsync<GraphQLResponse<T>>(stream);
+
+                    httpResponse.Dispose();
+
+                    return response;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"GraphQL HTTP error: {ex.Message}");
+
+                    if (httpResponse != null)
+                    {
+                        Console.WriteLine(httpResponse);
+
+                        httpResponse.Dispose();
+                    }
+
+                    if (attempt >= maxAttempts)
+                    {
+                        throw;
+                    }
+
+                    await Task.Delay(delay);
+                    attempt++;
+                    delay += delay;
+                }
+            }
         }
     }
 }
