@@ -73,13 +73,17 @@ namespace GithubIssueTagger.GraphQL
                             Console.WriteLine(body);
                         }
 
-                        if (httpResponse.Headers.TryGetValues("Retry-After", out var values))
+                        if (httpResponse.Headers?.RetryAfter?.Date != null)
                         {
-                            var retryAfterHeader = values.FirstOrDefault();
-                            if (retryAfterHeader != null && int.TryParse(retryAfterHeader, out var retryAfterSeconds))
+                            retryAfter = httpResponse.Headers.RetryAfter.Date.Value - DateTime.UtcNow;
+                            if (retryAfter < TimeSpan.Zero)
                             {
-                                retryAfter = TimeSpan.FromSeconds(retryAfterSeconds);
+                                retryAfter = delay;
                             }
+                        }
+                        else if (httpResponse.Headers?.RetryAfter?.Delta != null)
+                        {
+                            retryAfter = httpResponse.Headers.RetryAfter.Delta.Value;
                         }
 
                         httpResponse.Dispose();
