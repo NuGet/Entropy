@@ -211,14 +211,14 @@ namespace NuGetReleaseTool.GenerateReleaseNotesCommand
             builder.AppendLine();
             builder.AppendLine("| NuGet version | Available in Visual Studio version | Available in .NET SDK(s) |");
             builder.AppendLine("|:---|:---|:---|");
-            builder.AppendLine(string.Format("| [**{0}**](https://nuget.org/downloads) |" +
-                " [Visual Studio {1} version {2}](https://visualstudio.microsoft.com/downloads/) " +
+            builder.AppendLine(string.Format("| [**{0}.0**](https://nuget.org/downloads) |" +
+                " [Visual Studio {1} version {2}.0](https://visualstudio.microsoft.com/downloads/) " +
                 "| [{3}](https://dotnet.microsoft.com/download/dotnet/{4})<sup>1</sup> |",
                 release, VSYear, VSVersion, fullSDKVersion, SDKMajorMinorVersion));
             builder.AppendLine();
             builder.AppendLine(string.Format("<sup>1</sup> Installed with Visual Studio {0} with any .NET workload", VSYear));
             builder.AppendLine();
-            builder.AppendLine(string.Format("## Summary: What's New in {0}", release));
+            builder.AppendLine(string.Format("## Summary: What's New in {0}.0", release));
             builder.AppendLine();
             OutputSection(labelSet, builder, IssueType.Feature, includeHeader: false);
             builder.AppendLine(string.Format("### Breaking changes", release));
@@ -266,8 +266,8 @@ namespace NuGetReleaseTool.GenerateReleaseNotesCommand
 
             Version previousVersion = Helpers.EstimatePreviousMajorMinorVersion(currentVersion, allTags);
             Console.WriteLine($"Generating a release deltas link for {currentVersion}, with the calculated previous version {previousVersion}");
-            var startVersion = Helpers.GetLatestTagForMajorMinor(currentVersion, allTags);
-            var endVersion = Helpers.GetLatestTagForMajorMinor(previousVersion, allTags);
+            var startVersion = Helpers.GetLatestTagForMajorMinor(previousVersion, allTags);
+            var endVersion = Helpers.GetLatestTagForMajorMinor(currentVersion, allTags);
 
             return $"https://github.com/NuGet/NuGet.Client/compare/{startVersion}...{endVersion}";
         }
