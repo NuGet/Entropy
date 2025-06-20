@@ -75,21 +75,21 @@ configuration:
     scheduledSearches:
       - description: search for issues that are waitingForCustomer and haven't got a response
         frequencies:
-          - daily:
-              time: 20:40
+          - hourly:
+              hour: 1
         filters:
           - isOpen
           - hasLabel:
               label: waitingForCustomer
           - noActivitySince:
-              minutes: 3
+              hours: 1
         actions:
           - addLabel:
               label: stale
       - description: close issues that are waitingForCustomer + stale for too long
         frequencies:
           - daily:
-              time: 20:40
+              time: 20:45
         filters:
           - isOpen
           - hasLabel:
@@ -97,7 +97,7 @@ configuration:
           - hasLabel:
               label: stale
           - noActivitySince:
-              minutes: 3
+              days: 1
         actions:
           - closeIssue
           - addReply:
@@ -105,11 +105,11 @@ configuration:
       - description: close issues that have not received any activity in 18 months
         frequencies:
           - daily:
-              time: 20:40
+              time: 20:45
         filters:
           - isOpen
           - noActivitySince:
-              minutes: 3
+              days: 1
           - hasLabel:
               label: triageTest
         actions:
