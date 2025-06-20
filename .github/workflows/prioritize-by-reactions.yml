@@ -1,8 +1,8 @@
 name: Prioritize Issues by Reactions
 
 on:
-  # schedule:
-  #   - cron: '0 */4 * * *'   # Runs every 4 hours
+  schedule:
+    - cron: '*/10 * * * *'   # Runs every 10 mins
   workflow_dispatch:       # Allows manual runs
 
 jobs:
@@ -21,7 +21,7 @@ jobs:
       - name: Prioritize issues by reactions
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          REPO: NuGet/Entropy // TODO Change this for the correct repo
+          REPO: NuGet/Entropy
           HIGH: 5
           MEDIUM: 2
         run: |
