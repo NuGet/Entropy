@@ -75,8 +75,8 @@ configuration:
     scheduledSearches:
       - description: search for issues that are waitingForCustomer and haven't got a response
         frequencies:
-          - hourly:
-              hour: 0.02
+          - daily:
+              time: 20:40
         filters:
           - isOpen
           - hasLabel:
@@ -88,8 +88,8 @@ configuration:
               label: stale
       - description: close issues that are waitingForCustomer + stale for too long
         frequencies:
-          - hourly:
-              hour: 0.02
+          - daily:
+              time: 20:40
         filters:
           - isOpen
           - hasLabel:
@@ -104,8 +104,8 @@ configuration:
               reply: "${issueAuthor}, this issue has been closed due to inactivity. Please feel free to reopen it if you have further information or questions."
       - description: close issues that have not received any activity in 18 months
         frequencies:
-          - hourly:
-              hour: 0.02
+          - daily:
+              time: 20:40
         filters:
           - isOpen
           - noActivitySince:
