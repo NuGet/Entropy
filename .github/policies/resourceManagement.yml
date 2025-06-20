@@ -13,13 +13,13 @@ configuration:
           - and:
               - isOpen
               - not:
-                  - or: 
-                      - hasLabel:
-                          label: Bug
-                      - hasLabel:
-                          label: Feature
-                      - hasLabel:
-                          label: SupportRequest
+                  or: 
+                    - hasLabel:
+                        label: Bug
+                    - hasLabel:
+                        label: Feature
+                    - hasLabel:
+                        label: SupportRequest
         then:
           - addReply:
               reply: "${issueAuthor}, please add a Bug/Feature/SupportRequest label as applicable."
