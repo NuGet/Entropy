@@ -1,8 +1,8 @@
 name: Prioritize Issues by Reactions
 
 on:
-  schedule:
-    - cron: '*/10 * * * *'   # Runs every 10 mins
+#   schedule:
+    # - cron: '*/10 * * * *'   # Runs every 10 mins
   workflow_dispatch:       # Allows manual runs
 
 jobs:
