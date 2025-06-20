@@ -31,15 +31,14 @@ configuration:
         triggerOnOwnActions: false
         if: 
           - payloadType: Issues
-          - and:
-            - isOpen
-            - or: 
-              - labelAdded:
-                  label: Bug
-              - labelAdded:
-                  label: Feature
-              - labelAdded:
-                  label: SupportRequest
+          - isOpen
+          - or: 
+            - labelAdded:
+                label: Bug
+            - labelAdded:
+                label: Feature
+            - labelAdded:
+                label: SupportRequest
         then:
           - if: 
               - hasLabel:
@@ -49,8 +48,8 @@ configuration:
                   label: untriaged
           - if: 
               - not:
-                  - hasLabel:
-                      label: triaged
+                  hasLabel:
+                    label: triaged
             then:
               - addLabel:
                   label: triaged
