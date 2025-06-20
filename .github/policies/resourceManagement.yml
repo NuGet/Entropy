@@ -10,16 +10,15 @@ configuration:
         triggerOnOwnActions: false
         if:
           - payloadType: Issues
-          - and:
-              - isOpen
-              - not:
-                  or: 
-                    - hasLabel:
-                        label: Bug
-                    - hasLabel:
-                        label: Feature
-                    - hasLabel:
-                        label: SupportRequest
+          - isOpen
+          - not:
+              or: 
+                - hasLabel:
+                    label: Bug
+                - hasLabel:
+                    label: Feature
+                - hasLabel:
+                    label: SupportRequest
         then:
           - addReply:
               reply: "${issueAuthor}, please add a Bug/Feature/SupportRequest label as applicable."
@@ -63,10 +62,9 @@ configuration:
         triggerOnOwnActions: false
         if:
           - payloadType: Issues
-          - and:
-              - isOpen
-              - isAction::
-                  action: Issue_Comment # create or update (applies to issue description too?)
+          - isOpen
+          - isAction:
+              action: Issue_Comment # create or update (applies to issue description too?)
         then:
           - if:
               - hasLabel:
