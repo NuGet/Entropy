@@ -55,7 +55,7 @@ configuration:
                   label: triaged
           - if:
               - hasLabel:
-                label: waitingForCustomer
+                  label: waitingForCustomer
             then:
               - removeLabel:
                   label: waitingForCustomer
