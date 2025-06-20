@@ -82,7 +82,7 @@ configuration:
           - hasLabel:
               label: waitingForCustomer
           - noActivitySince:
-              hours: 1
+              days: 1
         actions:
           - addLabel:
               label: stale
