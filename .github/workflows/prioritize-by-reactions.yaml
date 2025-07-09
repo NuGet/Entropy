@@ -21,7 +21,7 @@ jobs:
       - name: Prioritize issues by reactions
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          REPO: NuGet/bot-testing
+          REPO: NuGet/Entropy
           HIGH: 5
           MEDIUM: 2
         run: |
