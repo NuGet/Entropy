@@ -315,6 +315,7 @@ namespace NuGetValidator.Localization
 
         private static void CompareAllStrings(string firstDll, string secondDll, string lciCommentDirPath)
         {
+            lciCommentDirPath = lciCommentDirPath ?? Path.GetDirectoryName(firstDll);
             var lciFilePath = Path.Combine(lciCommentDirPath, Path.GetFileName(firstDll) + ".lci");
             XElement lciFile = null;
             if (File.Exists(lciFilePath))
