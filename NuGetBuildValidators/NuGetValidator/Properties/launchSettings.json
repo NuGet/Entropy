@@ -2,7 +2,7 @@
   "profiles": {
     "NuGetValidator": {
       "commandName": "Project",
-      "commandLineArgs": "artifact --files \"F:\\validation\\NuGetValidators.Artifact\\extracted\\Microsoft.Web.XmlTransform.dll\" --output-path E:\\nuget.client\\artifacts\\ArtifactValidation\\artifacts"
+      "commandLineArgs": "localization --vsix --vsix-path C:\\NuGet.Client\\artifacts\\VS15\\NuGet.Tools.vsix --vsix-extract-path C:\\Temp\\VSIXExtract\\ --output-path C:\\Temp\\VSIXOutput\\"
     }
   }
 }
