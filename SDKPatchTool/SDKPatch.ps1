@@ -203,42 +203,26 @@ function PatchNupkgs {
 
     #patch NuGet.targets and NuGet.props
     if ($nupkgId -eq "NuGet.Build.Tasks"){
-        
-        $sourceTargetsPath = [System.IO.Path]::Combine($tempExtractFolder, 'runtimes', 'any', 'native', 'NuGet.targets')
-        $destTargetsPath = [System.IO.Path]::Combine($destPath, 'NuGet.targets')
+        $nativeFiles = [System.IO.Path]::Combine($tempExtractFolder, 'runtimes', 'any', 'native') | Get-ChildItem -File
 
-        if (Test-Path $sourceTargetsPath){
-            Remove-Item -Path "$destTargetsPath" -Force
-            if (Test-Path $destTargetsPath){
-                write-error "NuGet.Targets could not be deleted from $patchSDKFolder!"
-                return false
-            }else{
-                Copy-Item "$sourceTargetsPath" -Destination "$destTargetsPath"
-                if (-not (Test-Path $destTargetsPath)){
-                    write-error "NuGet.Targets was not copied to $patchSDKFolder!"
+        foreach ($file in $nativeFiles) {
+            $sourceFilePath = $file.FullName
+            $destFilePath = [System.IO.Path]::Combine($destPath, $file.Name)
+
+            if (Test-Path $destFilePath) {
+                Remove-Item -Path "$destFilePath" -Force
+                if (Test-Path $destFilePath) {
+                    Write-Error "$($file.Name) could not be deleted from $patchSDKFolder!"
                     return $false
                 }
             }
-            Write-Host "NuGet.targets :  $sourceTargetsPath will be used for patching."
-        }
 
-    
-        $sourcePropsPath = [System.IO.Path]::Combine($tempExtractFolder, 'runtimes', 'any', 'native', 'NuGet.props')
-        $destPropsPath = [System.IO.Path]::Combine($destPath, 'NuGet.props')
-
-        if (Test-Path $sourcePropsPath){
-            Remove-Item -Path "$destPropsPath" -Force
-            if (Test-Path $destPropsPath){
-                write-error "NuGet.props could not be deleted from $patchSDKFolder!"
-                return false
-            }else{
-                Copy-Item "$sourcePropsPath" -Destination "$destPropsPath"
-                if (-not (Test-Path $destPropsPath)){
-                    write-error "NuGet.props was not copied to $patchSDKFolder!"
-                    return $false
-                }
+            Copy-Item "$sourceFilePath" -Destination "$destFilePath"
+            if (-not (Test-Path $destFilePath)) {
+                Write-Error "$($file.Name) was not copied to $patchSDKFolder!"
+                return $false
             }
-            Write-Host "NuGet.props :  $sourcePropsPath will be used for patching."
+            Write-Host "$($file.Name) :  $sourceFilePath will be used for patching."
         }
     }
     
@@ -285,6 +269,8 @@ function PatchPackNupkg{
     )
     $delimeter = [IO.Path]::DirectorySeparatorChar
 
+    $sdkMajorVersion = [int]($SDKVersion.Split('.', [System.StringSplitOptions]::RemoveEmptyEntries)[0])
+
     #Create a temp folder for extracted contents
     $tempExtractFolder = [System.IO.Path]::Combine($tempFolder, $nupkgID)
 
@@ -308,24 +294,50 @@ function PatchPackNupkg{
 
     Expand-Archive -LiteralPath $zip.FullName -DestinationPath $tempExtractFolder
 
-    #Prepare for the destination folder , that is : dotnet/sdk/5.xx/Sdks/NuGet.Build.Tasks.Pack
-    $destPath = [System.IO.Path]::Combine($patchSDKFolder, 'sdk', $SDKVersion, 'Sdks', 'NuGet.Build.Tasks.Pack')
+    if ($sdkMajorVersion -lt 10) {
+        #Prepare for the destination folder , that is : dotnet/sdk/5.xx/Sdks/NuGet.Build.Tasks.Pack
+        $destPath = [System.IO.Path]::Combine($patchSDKFolder, 'sdk', $SDKVersion, 'Sdks', 'NuGet.Build.Tasks.Pack')
 
-    Remove-Item -Path "$destPath$delimeter*" -Force -Recurse
-    if ((Get-ChildItem -Path "$destPath") -ne $null){
-        write-error "Folders could not be deleted from $destPath!"
-        return $false
+        Remove-Item -Path "$destPath$delimeter*" -Force -Recurse
+        if ((Get-ChildItem -Path "$destPath") -ne $null){
+            write-error "Folders could not be deleted from $destPath!"
+            return $false
+        }
+
+        #Copy the build, buildCrossTargeting, CoreCLR, Desktop folders from extracted folder to the destination folder
+        Copy-Item -Path "$tempExtractFolder$delimeter*"  -Include @("build", "buildCrossTargeting", "CoreCLR", "Desktop") -Destination "$destPath" -Recurse
+
+        if ((Get-ChildItem -Path "$destPath") -eq $null){
+            write-error "Folders were not copied to $patchSDKFolder!"
+            return $false
+        }
+        Write-Host "NuGet.Build.Tasks.Pack :  $tempExtractFolder will be used for patching."
     }
+    else {
+        $netCoreAppSource = [System.IO.Path]::Combine($tempExtractFolder, "lib", "net8.0", "NuGet.Build.Tasks.Pack.dll")
+        $netFrameworkSource = [System.IO.Path]::Combine($tempExtractFolder, "lib", "net472", "NuGet.Build.Tasks.Pack.dll")
 
-    #Copy the build, buildCrossTargeting, CoreCLR, Desktop folders from extracted folder to the destination folder
-    Copy-Item -Path "$tempExtractFolder$delimeter*"  -Include @("build", "buildCrossTargeting", "CoreCLR", "Desktop") -Destination "$destPath" -Recurse
+        $netCoreAppDest = [System.IO.Path]::Combine($patchSDKFolder, 'sdk', $SDKVersion, 'NuGet.Build.Tasks.Pack.dll')
+        $netFrameworkDest = [System.IO.Path]::Combine($patchSDKFolder, 'sdk', $SDKVersion, 'Sdks', 'Microsoft.NET.Sdk', 'tools', 'net472', 'NuGet.Build.Tasks.Pack.dll')
 
-    if ((Get-ChildItem -Path "$destPath") -eq $null){
-        write-error "Folders were not copied to $patchSDKFolder!"
-        return $false
+        if (-not (Test-Path $netCoreAppDest)) {
+            Write-Error "$netCoreAppDest does not exist!"
+            return $false
+        }
+        if (-not (Test-Path $netFrameworkDest)) {
+            Write-Error "$netFrameworkDest does not exist!"
+            return $false
+        }
+
+        try {
+            Copy-Item -Path $netCoreAppSource -Destination $netCoreAppDest -Force -ErrorAction Stop
+            Copy-Item -Path $netFrameworkSource -Destination $netFrameworkDest -Force -ErrorAction Stop
+        } catch {
+            Write-Error "Failed to copy patched DLLs: $_"
+            return $false
+        }
     }
-    Write-Host "NuGet.Build.Tasks.Pack :  $tempExtractFolder will be used for patching."
-    return $true   
+    return $true
 }
 
 
