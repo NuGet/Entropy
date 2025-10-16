@@ -9,14 +9,17 @@ namespace NuGetReleaseTool
 {
     internal static class Helpers
     {
-        public static string GetReleaseBranchFromVersion(string version)
-        {
-            var parsedVersion = new Version(version);
-            return $"release-{parsedVersion.Major}.{parsedVersion.Minor}.x";
-        }
-
         private static string GetReleaseBranchFromVersion(Version parsedVersion)
         {
+            if (parsedVersion.Major >= 7)
+            {
+                return $"release/{parsedVersion.Major}.{parsedVersion.Minor}.x";
+            }
+
+            if (parsedVersion.Major == 6 && parsedVersion.Minor == 15)
+            {
+                return "release/6.14.x";
+            }
             return $"release-{parsedVersion.Major}.{parsedVersion.Minor}.x";
         }
 
@@ -50,6 +53,7 @@ namespace NuGetReleaseTool
 
         public static async Task<List<GitHubCommit>> GetCommitsForRelease(GitHubClient gitHubClient, string releaseVersion, string? endCommit)
         {
+            releaseVersion = releaseVersion.Replace("release/", string.Empty);
             var version = new Version(releaseVersion);
             var currentReleaseBranchName = GetReleaseBranchFromVersion(version);
             var previousReleaseBranchName = GetReleaseBranchFromVersion(EstimatePreviousMajorMinorVersion(version, await gitHubClient.Repository.GetAllTags(Constants.NuGet, Constants.NuGetClient)));
