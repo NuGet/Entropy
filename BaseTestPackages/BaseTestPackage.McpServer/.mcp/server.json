@@ -1,0 +1,39 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
+  "description": "A sample MCP server for integration testing.",
+  "name": "io.github.nuget/BaseTestPackage.SampleMcpServer",
+  "version": "0.1.0-beta",
+  "packages": [
+    {
+      "registryType": "nuget",
+      "identifier": "BaseTestPackage.SampleMcpServer",
+      "version": "0.1.0-beta",
+      "transport": {
+        "type": "stdio"
+      },
+      "packageArguments": [
+        {
+          "type": "positional",
+          "value": "mcp"
+        },
+        {
+          "type": "positional",
+          "value": "start"
+        }
+      ],
+      "environmentVariables": [
+        {
+          "name": "WEATHER_CHOICES",
+          "value": "{weather_choices}",
+          "variables": {
+            "weather_choices": {
+              "description": "Comma separated list of weather descriptions to randomly select.",
+              "isRequired": true,
+              "isSecret": false
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
