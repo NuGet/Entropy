@@ -1,12 +1,12 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
   "description": "A sample MCP server for integration testing.",
-  "name": "io.github.nuget/BaseTestPackage.SampleMcpServer",
+  "name": "io.github.nuget/BaseTestPackage.McpServer",
   "version": "0.1.0-beta",
   "packages": [
     {
       "registryType": "nuget",
-      "identifier": "BaseTestPackage.SampleMcpServer",
+      "identifier": "BaseTestPackage.McpServer",
       "version": "0.1.0-beta",
       "transport": {
         "type": "stdio"
