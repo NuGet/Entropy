@@ -48,7 +48,7 @@ namespace NuGetReleaseTool
                 {
                     throw new Exception($"Cannot infer previous major/minor version from the tags. Current version is {currentVersion}.");
                 }
-                return new Version(maxTagVersion.Major, maxTagVersion.Minor);
+                return new Version(maxTagVersion.Major, (maxTagVersion.Major == 6 && maxTagVersion.Minor == 15) ? (maxTagVersion.Minor - 1) : maxTagVersion.Minor);
             }
         }
 
