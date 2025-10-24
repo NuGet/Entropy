@@ -1,5 +1,7 @@
 ﻿using NuGetReleaseTool.GenerateInsertionChangelogCommand;
+using NuGetReleaseTool.GenerateReleaseNotesCommand;
 using Octokit;
+using System.Collections.Immutable;
 
 namespace NuGetReleaseTool.AddMilestoneCommand
 {
@@ -25,7 +27,7 @@ namespace NuGetReleaseTool.AddMilestoneCommand
                 issueRepositories: new string[] { "NuGet/Home", "NuGet/Client.Engineering" },
                 githubCommits);
 
-            var homeRepoIssueNumbers = new List<Tuple<int, string>>();
+            var homeRepoIssueNumbers = new HashSet<Tuple<int, string>>();
 
             foreach (var commit in commits)
             {
@@ -40,16 +42,22 @@ namespace NuGetReleaseTool.AddMilestoneCommand
 
             Milestone expectedMilestone = await GetExpectedMilestoneAsync();
 
-            foreach (var homeIssue in homeRepoIssueNumbers)
+            foreach (var homeIssue in homeRepoIssueNumbers.ToImmutableSortedSet())
             {
                 var issue = await GitHubClient.Issue.Get("nuget", "home", homeIssue.Item1);
+
+                if (issue.State == ItemState.Open && !Options.AddToOpenIssues)
+                {
+                    continue;
+                }
+
+                if (issue.Labels.Any(l => l.Name.Equals(IssueLabels.Docs)) || issue.Labels.Any(l => l.Name.Equals(IssueLabels.DeveloperDocs)))
+                {
+                    continue;
+                }
+
                 if (!Options.DryRun)
                 {
-                    if(issue.State == ItemState.Open && !Options.AddToOpenIssues)
-                    {
-                        continue;
-                    }
-
                     if (issue.Milestone?.Title == null)
                     {
                         await AddMilestoneToIssueAsync(expectedMilestone, issue);

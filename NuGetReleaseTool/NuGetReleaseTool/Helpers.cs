@@ -1,22 +1,26 @@
-﻿using NuGet.Protocol.Plugins;
-using NuGetReleaseTool.GenerateInsertionChangelogCommand;
+﻿using NuGetReleaseTool.GenerateInsertionChangelogCommand;
 using Octokit;
-using System;
-using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
 namespace NuGetReleaseTool
 {
     internal static class Helpers
     {
-        public static string GetReleaseBranchFromVersion(string version)
-        {
-            var parsedVersion = new Version(version);
-            return $"release-{parsedVersion.Major}.{parsedVersion.Minor}.x";
-        }
-
         private static string GetReleaseBranchFromVersion(Version parsedVersion)
         {
+            // The branching strategy has changed starting with 7.0
+            if (parsedVersion.Major >= 7)
+            {
+                return $"release/{parsedVersion.Major}.{parsedVersion.Minor}.x";
+            }
+
+            // 6.15 never had its own release branch, it used the 6.14.x branch instead
+            if (parsedVersion.Major == 6 && parsedVersion.Minor == 15)
+            {
+                return "release-6.14.x";
+            }
+
+            // default case for versions before 7.0
             return $"release-{parsedVersion.Major}.{parsedVersion.Minor}.x";
         }
 
@@ -110,13 +114,17 @@ namespace NuGetReleaseTool
 
                 }
 
-                if (pullRequestbody == null)
+                // Skip commits that are only updating SPDX licenses
+                if (!ghCommit.Commit.Message.StartsWith("Update SPDX licenses"))
                 {
-                    Console.WriteLine($"PR contains contains no body message: {commit.PR?.Item2}");
-                }
-                else
-                {
-                    UpdateCommitIssuesFromText(commit, pullRequestbody, issueRepositories);
+                    if (pullRequestbody == null)
+                    {
+                        Console.WriteLine($"PR contains contains no body message: {commit.PR?.Item2}");
+                    }
+                    else
+                    {
+                        UpdateCommitIssuesFromText(commit, pullRequestbody, issueRepositories);
+                    }
                 }
 
                 processedCommits.Add(commit);
