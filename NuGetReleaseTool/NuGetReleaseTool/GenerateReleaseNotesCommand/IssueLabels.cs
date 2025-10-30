@@ -14,7 +14,7 @@
         public static string Docs = "Type:Docs";
         public static string DeveloperDocs = "Type:DeveloperDocs";
         public static string Community = "Community";
-        public static string BreakingChange = "Breaking-change";
+        public static string BreakingChange = "Breaking-Change";
 
     }
 }
