@@ -11,10 +11,6 @@
         // Core packages list. This excludes NuGet.Commandline.
         public static List<string> CorePackagesList = new List<string>() {
             "NuGet.Indexing",
-            "NuGet.Build.Tasks.Console",
-            "NuGet.Build.Tasks.Pack",
-            "NuGet.Build.Tasks",
-            "NuGet.CommandLine.XPlat",
             "NuGet.Commands",
             "NuGet.Common",
             "NuGet.Configuration",
