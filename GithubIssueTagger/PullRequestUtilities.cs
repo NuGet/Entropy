@@ -14,15 +14,13 @@ namespace GithubIssueTagger
             new string[] {
                 "aortiz-msft",
                 "donnie-msft",
-                "heng-liu",
                 "jebriede",
                 "kartheekp-ms",
                 "martinrrm",
                 "nkolev92",
                 "zivkan",
                 "jeffkl",
-                "nigusu-allehu",
-                "jgonz120"
+                "Nigusu-Allehu",
             };
 
         /// <summary>
@@ -152,6 +150,13 @@ namespace GithubIssueTagger
                 try
                 {
                     var pullRequest = await client.PullRequest.Get(org, repo, pullNumber);
+
+                    if(pullRequest.State == ItemState.Open)
+                    {
+                        // We are only interested in closed PRs for now.
+                        continue;
+                    }
+
                     var commentsForPullRequest = await client.PullRequest.ReviewComment.GetAll(org, repo, pullNumber);
                     var reviewsForPullRequest = await client.PullRequest.Review.GetAll(org, repo, pullNumber);
 
