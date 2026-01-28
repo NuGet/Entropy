@@ -202,7 +202,7 @@ namespace NuGetReleaseTool.GenerateReleaseNotesCommand
             builder.AppendLine(string.Format("description: Release notes for NuGet {0} including new features, bug fixes, and DCRs.", release));
             builder.AppendLine(string.Format("author: {0}", GithubAlias));
             builder.AppendLine(string.Format("ms.date: {0}", DateTime.Now.ToString("d", System.Globalization.CultureInfo.GetCultureInfo("en-US"))));
-            builder.AppendLine("ms.topic: conceptual");
+            builder.AppendLine("ms.topic: release-notes");
             builder.AppendLine("---");
             builder.AppendLine();
             builder.AppendLine(string.Format("# NuGet {0} Release Notes", release));
@@ -263,8 +263,8 @@ namespace NuGetReleaseTool.GenerateReleaseNotesCommand
         private async Task<string> GenerateReleaseDeltasLink(Version currentVersion)
         {
             var allTags = await GitHubClient.Repository.GetAllTags(Constants.NuGet, Constants.NuGetClient);
-
-            Version previousVersion = Helpers.EstimatePreviousMajorMinorVersion(currentVersion, allTags);
+            IReadOnlyList<Milestone> milestones = await GitHubClient.Issue.Milestone.GetAllForRepository(Constants.NuGet, Constants.Home, new MilestoneRequest { State = ItemStateFilter.All });
+            Version previousVersion = Helpers.EstimatePreviousMajorMinorVersion(currentVersion, milestones);
             Console.WriteLine($"Generating a release deltas link for {currentVersion}, with the calculated previous version {previousVersion}");
             var startVersion = Helpers.GetLatestTagForMajorMinor(previousVersion, allTags);
             var endVersion = Helpers.GetLatestTagForMajorMinor(currentVersion, allTags);
@@ -283,6 +283,7 @@ namespace NuGetReleaseTool.GenerateReleaseNotesCommand
             {
                 { 5, 2019 },
                 { 6, 2022 },
+                { 7, 2026 },
             };
 
             if (NuGetMajorToVSYearMapping.TryGetValue(major, out int VSYear))

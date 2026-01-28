@@ -52,11 +52,24 @@ namespace NuGetReleaseTool
             }
         }
 
+        public static Version EstimatePreviousMajorMinorVersion(Version currentVersion, IReadOnlyList<Milestone> allTags)
+        {
+            int majorPivot = currentVersion.Minor > 0 ? currentVersion.Major : currentVersion.Major - 1;
+            var tagsWithPreviousMajor = allTags.Where(e => e.Title.StartsWith(majorPivot + "."));
+            var largestApplicableVersion = tagsWithPreviousMajor.Select(e => Version.Parse(e.Title)).Where(e => currentVersion > e).Max();
+            if (largestApplicableVersion == null)
+            {
+                throw new Exception($"Cannot infer previous major/minor version from the milestones. Current version is {currentVersion}.");
+            }
+            return largestApplicableVersion;
+        }
+
         public static async Task<List<GitHubCommit>> GetCommitsForRelease(GitHubClient gitHubClient, string releaseVersion, string? endCommit)
         {
             var version = new Version(releaseVersion);
             var currentReleaseBranchName = GetReleaseBranchFromVersion(version);
-            var previousReleaseBranchName = GetReleaseBranchFromVersion(EstimatePreviousMajorMinorVersion(version, await gitHubClient.Repository.GetAllTags(Constants.NuGet, Constants.NuGetClient)));
+            IReadOnlyList<Milestone> milestones = await gitHubClient.Issue.Milestone.GetAllForRepository(Constants.NuGet, Constants.Home, new MilestoneRequest { State = ItemStateFilter.All });
+            var previousReleaseBranchName = GetReleaseBranchFromVersion(EstimatePreviousMajorMinorVersion(version, milestones));
             return await GetUniqueCommitsListBetween2Branches(gitHubClient, Constants.NuGet, Constants.NuGetClient, previousReleaseBranchName, currentReleaseBranchName, endCommit);
         }
 
