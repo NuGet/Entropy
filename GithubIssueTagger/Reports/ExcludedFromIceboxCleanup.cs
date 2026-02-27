@@ -41,15 +41,15 @@ namespace GithubIssueTagger.Reports
                         keepIssue = true;
                     }
 
-                    if(issue.Comments > 10)
-                    {
-                        keepIssue = true;
-                    }
+                    //if(issue.Comments > 10)
+                    //{
+                    //    keepIssue = true;
+                    //}
 
-                    if (issue.Reactions.TotalCount > 1)
-                    {
-                        keepIssue = true;
-                    }
+                    //if (issue.Reactions.TotalCount > 1)
+                    //{
+                    //    keepIssue = true;
+                    //}
                 }
 
                 if (keepIssue)
@@ -64,13 +64,14 @@ namespace GithubIssueTagger.Reports
 
             if (!dryRun)
             {
+                int i = 0;
+
                 foreach (var issue in removeExclusionLabel)
                 {
                     var issueUpdate = issue.ToUpdate();
                     issueUpdate.RemoveLabel(ExcludedFromIcebox);
                     await _client.Issue.Update("NuGet", "Home", issue.Number, issueUpdate);
                     Console.WriteLine($"Updated issue: {issue.HtmlUrl}");
-
                 }
 
                 foreach (var issue in removeInactiveLabel)
