@@ -25,8 +25,8 @@ namespace GithubIssueTagger.Reports
 
             var excludedFromCleanupIssues = await IssueUtilities.GetIssuesForLabelsAsync(_client, "NuGet", "Home", ItemStateFilter.Open, ExcludedFromIcebox);
 
-            List<Issue> toKeep = new List<Issue>();
-            List<Issue> toClose = new List<Issue>();
+            List<Issue> removeInactiveLabel = new List<Issue>();
+            List<Issue> removeExclusionLabel = new List<Issue>();
 
             foreach (var issue in excludedFromCleanupIssues)
             {
@@ -40,21 +40,31 @@ namespace GithubIssueTagger.Reports
                     {
                         keepIssue = true;
                     }
+
+                    if(issue.Comments > 10)
+                    {
+                        keepIssue = true;
+                    }
+
+                    if (issue.Reactions.TotalCount > 1)
+                    {
+                        keepIssue = true;
+                    }
                 }
 
                 if (keepIssue)
                 {
-                    toKeep.Add(issue!);
+                    removeInactiveLabel.Add(issue!);
                 }
                 else
                 {
-                    toClose.Add(issue!);
+                    removeExclusionLabel.Add(issue!);
                 }
             }
 
             if (!dryRun)
             {
-                foreach (var issue in toClose)
+                foreach (var issue in removeExclusionLabel)
                 {
                     var issueUpdate = issue.ToUpdate();
                     issueUpdate.RemoveLabel(ExcludedFromIcebox);
@@ -63,7 +73,7 @@ namespace GithubIssueTagger.Reports
 
                 }
 
-                foreach (var issue in toKeep)
+                foreach (var issue in removeInactiveLabel)
                 {
                     var issueUpdate = issue.ToUpdate();
                     issueUpdate.RemoveLabel(ExcludedFromIcebox);
@@ -74,15 +84,15 @@ namespace GithubIssueTagger.Reports
             }
             else
             {
-                Console.WriteLine("Closing " + toClose.Count);
-                foreach (var issue in toClose)
+                Console.WriteLine("Removing exclusion label. This issues will be scheduled for clsoing " + removeExclusionLabel.Count);
+                foreach (var issue in removeExclusionLabel)
                 {
                     Console.WriteLine($"{issue.HtmlUrl}");
                 }
 
-                Console.WriteLine("Keeping " + toKeep.Count);
+                Console.WriteLine("Removing only exclusion and inactive labels. These issues will go into the 2 year inactive period required to be closed. " + removeInactiveLabel.Count);
 
-                foreach (var issue in toKeep)
+                foreach (var issue in removeInactiveLabel)
                 {
                     Console.WriteLine($"{issue.HtmlUrl}");
                 }
