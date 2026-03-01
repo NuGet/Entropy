@@ -5,7 +5,9 @@ using System;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace GithubIssueTagger.Reports.IceBox
@@ -14,7 +16,7 @@ namespace GithubIssueTagger.Reports.IceBox
     internal class IceBoxReport : IReport
     {
         private readonly GitHubGraphQLClient _client;
-        private string? _addLabelId;
+        private string? _triageLabelId;
 
         public IceBoxReport(GitHubGraphQLClient client)
         {
@@ -27,52 +29,71 @@ namespace GithubIssueTagger.Reports.IceBox
             return Task.CompletedTask;
         }
 
-        public async Task RunAsync(string owner, string repo, string label, int upvoteCount, string? add)
+        public async Task RunAsync(IceBoxConfig config, bool apply, bool verbose)
         {
-            await foreach (GetIssuesResult.IssuesModel issue in GetIssuesAsync(owner, repo, label, upvoteCount))
-            {
-                if (add != null)
-                {
-                    if (issue.Labels.Nodes.Any(l => l.Name == add))
-                    {
-                        if (_addLabelId == null)
-                        {
-                            Label addLabel = issue.Labels.Nodes.First(l => l.Name == add);
-                            _addLabelId = addLabel.Id;
-                        }
+            string searchLabel = config.SearchLabel;
+            string triageLabel = config.Triage.Label;
+            int upvoteCount = config.Triage.Upvotes;
 
-                        // action label already applied, skip
-                        continue;
-                    }
-                    else if (issue.Labels.PageInfo.HasNextPage)
+            await foreach (GetIssuesResult.IssuesModel issue in GetIssuesAsync(config.Owner, config.Repo, searchLabel, upvoteCount))
+            {
+                if (issue.Labels.Nodes.Any(l => l.Name == triageLabel))
+                {
+                    if (_triageLabelId == null)
                     {
-                        // TODO: Handle when issue has more than 100 labels
-                        WriteGitHubActionsWarning("Unsupported scenario: issue " + issue.Number + " has more than 100 labels");
+                        Label label = issue.Labels.Nodes.First(l => l.Name == triageLabel);
+                        _triageLabelId = label.Id;
                     }
+
+                    // triage label already applied, skip
+                    continue;
+                }
+                else if (issue.Labels.PageInfo.HasNextPage)
+                {
+                    // TODO: Handle when issue has more than 100 labels
+                    WriteGitHubActionsWarning("Unsupported scenario: issue " + issue.Number + " has more than 100 labels");
                 }
 
-                if (!TryGetLastLabelTime(issue.TimelineItems.Nodes, label, out DateTime? labelAdded))
+                string? cutoffReason;
+                if (!TryGetCutoffDate(issue.TimelineItems.Nodes, searchLabel, triageLabel, out DateTime? cutoffDate, out cutoffReason))
                 {
-                    labelAdded = await GetLastLabelTimeAsync(issue.Id, label);
-                    if (labelAdded == null)
+                    (cutoffDate, cutoffReason) = await GetCutoffDateAsync(issue.Id, searchLabel, triageLabel);
+                    if (cutoffDate == null)
                     {
-                        // TODO: If we reach here, we need to do a different GraphQL query to get more events for this issue to find the last time the label was added.
                         WriteGitHubActionsWarning("Unsupported scenario: issue " + issue.Number + " did not find label in latest events");
                         continue;
                     }
                 }
 
-                if (HasEnoughPositiveReactions(issue, labelAdded.Value, upvoteCount))
+                int upvotes = GetPositiveReactionCount(issue, cutoffDate.Value);
+                bool qualifies = upvotes >= upvoteCount;
+
+                if (upvotes == -1)
                 {
-                    Console.WriteLine($"Issue {issue.Number} has enough upvotes");
-                    if (add != null)
+                    // Unsupported scenario already warned inside GetPositiveReactionCount
+                    if (verbose)
                     {
-                        if (_addLabelId == null)
+                        Console.WriteLine($"Issue {issue.Url} - cutoff: {cutoffDate.Value:yyyy-MM-dd} ({cutoffReason}), upvotes: unknown (needs more data)");
+                    }
+                    continue;
+                }
+
+                if (verbose)
+                {
+                    Console.WriteLine($"Issue {issue.Url} - cutoff: {cutoffDate.Value:yyyy-MM-dd} ({cutoffReason}), upvotes: {upvotes}");
+                }
+
+                if (qualifies)
+                {
+                    Console.WriteLine($"Issue {issue.Url} has enough upvotes");
+                    if (apply)
+                    {
+                        if (_triageLabelId == null)
                         {
-                            _addLabelId = await GetLabelIdAsync(owner, repo, add);
+                            _triageLabelId = await GetLabelIdAsync(config.Owner, config.Repo, triageLabel);
                         }
 
-                        await AddLabelToIssueAsync(issue.Id, _addLabelId);
+                        await AddLabelToIssueAsync(issue.Id, _triageLabelId);
                     }
                 }
             }
@@ -125,24 +146,47 @@ namespace GithubIssueTagger.Reports.IceBox
             }
         }
 
-        private static bool TryGetLastLabelTime(IReadOnlyList<LabeledEvent>? labeledEvents, string label, [NotNullWhen(true)] out DateTime? labelAdded)
+        private static bool TryGetCutoffDate(IReadOnlyList<TimelineEvent>? events, string searchLabel, string triageLabel, [NotNullWhen(true)] out DateTime? cutoffDate, out string? cutoffReason)
         {
-            IEnumerable<DateTime>? enumerable = labeledEvents
-                ?.Where(e => string.Equals(label, e?.Label?.Name, StringComparison.OrdinalIgnoreCase))
-                ?.Select(e => e.CreatedAt);
-            if (enumerable == null || !enumerable.Any())
+            if (events == null || events.Count == 0)
             {
-                labelAdded = null;
+                cutoffDate = null;
+                cutoffReason = null;
                 return false;
+            }
+
+            DateTime searchLabelAdded = events
+                .Where(e => e.IsLabeledEvent && string.Equals(searchLabel, e.Label?.Name, StringComparison.OrdinalIgnoreCase))
+                .Select(e => e.CreatedAt)
+                .MaxOrDefault();
+
+            if (searchLabelAdded == default)
+            {
+                cutoffDate = null;
+                cutoffReason = null;
+                return false;
+            }
+
+            DateTime triageLabelRemoved = events
+                .Where(e => e.IsUnlabeledEvent && string.Equals(triageLabel, e.Label?.Name, StringComparison.OrdinalIgnoreCase))
+                .Select(e => e.CreatedAt)
+                .MaxOrDefault();
+
+            if (triageLabelRemoved != default && triageLabelRemoved > searchLabelAdded)
+            {
+                cutoffDate = triageLabelRemoved;
+                cutoffReason = "triage label removed";
             }
             else
             {
-                labelAdded = enumerable.Max();
-                return true;
+                cutoffDate = searchLabelAdded;
+                cutoffReason = "search label added";
             }
+
+            return true;
         }
 
-        private async Task<DateTime?> GetLastLabelTimeAsync(string issueId, string label)
+        private async Task<(DateTime? cutoffDate, string? cutoffReason)> GetCutoffDateAsync(string issueId, string searchLabel, string triageLabel)
         {
             Dictionary<string, object?> variables = new Dictionary<string, object?>()
             {
@@ -158,7 +202,7 @@ namespace GithubIssueTagger.Reports.IceBox
 
             if (response == null)
             {
-                return null;
+                return (null, null);
             }
 
             if (response?.Errors?.Count > 0)
@@ -176,47 +220,39 @@ namespace GithubIssueTagger.Reports.IceBox
                         Console.WriteLine(error.Message);
                     }
                 }
-                return null;
+                return (null, null);
             }
 
-            IReadOnlyList<LabeledEvent>? labeledEvents = response.Data?.Node.TimelineItems.Nodes;
-            if (!TryGetLastLabelTime(labeledEvents, label, out DateTime? labeledAdded))
+            IReadOnlyList<TimelineEvent>? events = response.Data?.Node.TimelineItems.Nodes;
+            if (!TryGetCutoffDate(events, searchLabel, triageLabel, out DateTime? cutoffDate, out string? cutoffReason))
             {
-                return null;
+                return (null, null);
             }
 
-            return labeledAdded;
+            return (cutoffDate, cutoffReason);
         }
 
-        private static bool HasEnoughPositiveReactions(GetIssuesResult.IssuesModel issue, DateTime after, int upvotes)
+        private static int GetPositiveReactionCount(GetIssuesResult.IssuesModel issue, DateTime after)
         {
             if (!issue.Reactions.PageInfo.HasNextPage)
             {
                 // No need to fetch more reactions, since we already have the complete list.
-                int count = GetCustomerUpvoteCount(issue.Reactions.Nodes.Where(r => r.CreatedAt > after));
-                return count >= upvotes;
+                return GetCustomerUpvoteCount(issue.Reactions.Nodes.Where(r => r.CreatedAt > after));
             }
             else
             {
-                // If few customers added multiple reactions, we should have enough information already
                 int count = GetCustomerUpvoteCount(issue.Reactions.Nodes.Where(r => r.CreatedAt > after));
-                if (count > upvotes)
-                {
-                    return true;
-                }
-                else
-                {
-                    // If the oldest date we already have is more recent than the cutoff, then getting more reactions will not help
-                    DateTime? min = issue.Reactions.Nodes.Select(r => r.CreatedAt).MinOrDefault();
-                    if (min != null && min < after)
-                    {
-                        return false;
-                    }
 
-                    // TODO: Need to get more reactions from GraphQL to check if upvote threshold met
-                    WriteGitHubActionsWarning("Unsupported scenario: issue " + issue?.Number + " needs to check more reactions for threshold check.");
-                    return false;
+                // If the oldest date we already have is more recent than the cutoff, then getting more reactions will not help
+                DateTime? min = issue.Reactions.Nodes.Select(r => r.CreatedAt).MinOrDefault();
+                if (min != null && min < after)
+                {
+                    return count;
                 }
+
+                // TODO: Need to get more reactions from GraphQL to check if upvote threshold met
+                WriteGitHubActionsWarning("Unsupported scenario: issue " + issue?.Number + " needs to check more reactions for threshold check.");
+                return -1;
             }
 
             static int GetCustomerUpvoteCount(IEnumerable<Reaction> reactions)
@@ -328,43 +364,49 @@ namespace GithubIssueTagger.Reports.IceBox
                 var command = new Command("IceBox");
                 command.Description = "Check for issues with a label that exceed a count of upvotes since the label was added.";
 
-                var ownerOption = new Option<string>("--owner");
-                ownerOption.AddAlias("-o");
-                ownerOption.Description = "GitHub owner (org or user) of the repo.";
-                ownerOption.SetDefaultValue("NuGet");
-                command.Add(ownerOption);
+                var configArgument = new Argument<string>("config");
+                configArgument.Description = "Path to the JSON configuration file.";
+                command.Add(configArgument);
 
-                var repoOption = new Option<string>("--repo");
-                repoOption.AddAlias("-r");
-                repoOption.Description = "Repo to search issues in.";
-                repoOption.SetDefaultValue("Home");
-                command.Add(repoOption);
+                var applyOption = new Option<bool>("--apply");
+                applyOption.Description = "Apply label changes to qualifying issues. Without this flag, the report runs in dry-run mode.";
+                applyOption.SetDefaultValue(false);
+                command.Add(applyOption);
 
-                var labelOption = new Option<string>("--label");
-                labelOption.AddAlias("-l");
-                labelOption.Description = "Which label to filter issues by.";
-                labelOption.SetDefaultValue("pipeline:IceBox");
-                command.Add(labelOption);
-
-                var upvotesOption = new Option<int>("--upvotes");
-                upvotesOption.AddAlias("-u");
-                upvotesOption.Description = "Number of upvotes required to meet threshold.";
-                upvotesOption.SetDefaultValue(5);
-                command.Add(upvotesOption);
-
-                var addOption = new Option<string>("--add");
-                addOption.AddAlias("-a");
-                addOption.Description = "Label to add on issues which meet or exceed the upvote threshold. When not specified, no action is taken.";
-                command.Add(addOption);
+                var verboseOption = new Option<bool>("--verbose");
+                verboseOption.Description = "Output details for every issue, including cutoff date and upvote count.";
+                verboseOption.SetDefaultValue(false);
+                command.Add(verboseOption);
 
                 command.SetHandler(async
                     (GitHubPat pat,
-                    string owner,
-                    string repo, 
-                    string label, 
-                    int upvotes,
-                    string add) =>
+                    string configPath,
+                    bool apply,
+                    bool verbose) =>
                 {
+                    if (!File.Exists(configPath))
+                    {
+                        Console.Error.WriteLine("::error ::Config file not found: " + configPath);
+                        return;
+                    }
+
+                    IceBoxConfig config;
+                    try
+                    {
+                        config = IceBoxConfig.Load(configPath);
+                    }
+                    catch (JsonException ex)
+                    {
+                        Console.Error.WriteLine("::error ::Invalid config file: " + ex.Message);
+                        return;
+                    }
+
+                    if (pat?.Value == null)
+                    {
+                        Console.Error.WriteLine("::error ::No GitHub access token available. Provide --pat, configure the GitHub CLI, or set up Git Credential Manager.");
+                        return;
+                    }
+
                     var serviceProvider = new ServiceCollection()
                         .AddGithubIssueTagger(pat)
                         .BuildServiceProvider();
@@ -373,9 +415,9 @@ namespace GithubIssueTagger.Reports.IceBox
                     using (scopeFactory.CreateScope())
                     {
                         var report = serviceProvider.GetRequiredService<IceBoxReport>();
-                        await report.RunAsync(owner, repo, label, upvotes, add);
+                        await report.RunAsync(config, apply, verbose);
                     }
-                }, patBinder, ownerOption, repoOption, labelOption, upvotesOption, addOption);
+                }, patBinder, configArgument, applyOption, verboseOption);
 
                 return command;
             }

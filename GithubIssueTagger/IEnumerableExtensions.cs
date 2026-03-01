@@ -17,5 +17,17 @@ namespace GithubIssueTagger
                 return default;
             }
         }
+
+        internal static T? MaxOrDefault<T>(this IEnumerable<T> enumerable) where T : IComparable
+        {
+            try
+            {
+                return enumerable.Max();
+            }
+            catch (InvalidOperationException)
+            {
+                return default;
+            }
+        }
     }
 }

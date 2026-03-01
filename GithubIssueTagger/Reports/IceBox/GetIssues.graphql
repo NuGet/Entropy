@@ -15,7 +15,8 @@
         id,
         number,
         title,
-        timelineItems(itemTypes: [LABELED_EVENT], last: $timelineCount) {
+        url,
+        timelineItems(itemTypes: [LABELED_EVENT, UNLABELED_EVENT], last: $timelineCount) {
           totalCount,
           pageInfo {
             hasNextPage,
@@ -24,6 +25,13 @@
           nodes {
             __typename,
             ... on LabeledEvent {
+              label {
+                name,
+                id
+              },
+              createdAt
+            },
+            ... on UnlabeledEvent {
               label {
                 name,
                 id
