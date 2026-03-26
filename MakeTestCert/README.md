@@ -2,13 +2,15 @@
 
 MakeTestCert is a simple, cross-platform CLI for creating test code signing certificates.
 
-`dotnet run --framework net7.0 -- -?` output:
+`dotnet run --framework net10.0 -- -?` output:
 
 ```text
 Usage:  MakeTestCert.exe [option(s)]
 
   Option                        Description                    Default
   ----------------------------- ------------------------------ -----------------
+  --certificate-authority, -ca  basic constraint CA flag       false
+                                (true or false)
   --extended-key-usage, -eku    extended key usage (EKU)       1.3.6.1.5.5.7.3.3
   --hash-algorithm, -ha         signature hash algorithm       sha384
                                 (sha256, sha384, or sha512)

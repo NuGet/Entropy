@@ -11,6 +11,7 @@ namespace MakeTestCert
         private const int Success = 0;
         private const int Error = 1;
 
+        private static readonly bool DefaultCertificateAuthority = false;
         private static readonly ECCurve DefaultECCurve = ECCurve.NamedCurves.nistP256;
         private static readonly HashAlgorithmName DefaultHashAlgorithmName = HashAlgorithmName.SHA384;
         private static readonly string DefaultKeyAlgorithmName = "RSA";
@@ -46,6 +47,7 @@ namespace MakeTestCert
             }
 
             HashSet<string> ekuSet = new(StringComparer.Ordinal);
+            bool certificateAuthority = DefaultCertificateAuthority;
             HashAlgorithmName hashAlgorithmName = DefaultHashAlgorithmName;
             string keyAlgorithmName = DefaultKeyAlgorithmName;
             ushort keySizeInBits = DefaultKeySizeInBits;
@@ -67,6 +69,19 @@ namespace MakeTestCert
 
                 switch (arg)
                 {
+                    case "-ca":
+                    case "--certificate-authority":
+                        if (!bool.TryParse(nextArg, out certificateAuthority))
+                        {
+                            Console.Error.WriteLine($"Certificate authority '{nextArg}' is not a valid boolean (true or false).");
+                            Console.WriteLine();
+
+                            PrintHelp();
+
+                            return Error;
+                        }
+                        break;
+
                     case "-eku":
                     case "--extended-key-usage":
                         ekuSet.Add(nextArg);
@@ -214,6 +229,7 @@ namespace MakeTestCert
                     CreateCertificate(
                         certificateRequest,
                         ekus,
+                        certificateAuthority,
                         notBefore,
                         notAfter.Value,
                         password,
@@ -235,6 +251,7 @@ namespace MakeTestCert
                     CreateCertificate(
                         certificateRequest,
                         ekus,
+                        certificateAuthority,
                         notBefore,
                         notAfter.Value,
                         password,
@@ -262,6 +279,8 @@ namespace MakeTestCert
             Console.WriteLine();
             Console.WriteLine($"  Option                        Description                    Default");
             Console.WriteLine($"  ----------------------------- ------------------------------ -----------------");
+            Console.WriteLine($"  --certificate-authority, -ca  basic constraint CA flag       {DefaultCertificateAuthority.ToString().ToLowerInvariant()}");
+            Console.WriteLine($"                                (true or false)");
             Console.WriteLine($"  --extended-key-usage, -eku    extended key usage (EKU)       {Oids.CodeSigningEku.Value}");
             Console.WriteLine($"  --hash-algorithm, -ha         signature hash algorithm       {DefaultHashAlgorithmName.Name!.ToLowerInvariant()}");
             Console.WriteLine($"                                (sha256, sha384, or sha512)");
@@ -311,6 +330,7 @@ namespace MakeTestCert
         private static void CreateCertificate(
             CertificateRequest certificateRequest,
             OidCollection ekus,
+            bool certificateAuthority,
             DateTimeOffset notBefore,
             DateTimeOffset notAfter,
             string? password,
@@ -320,16 +340,19 @@ namespace MakeTestCert
 
             certificateRequest.CertificateExtensions.Add(
                 new X509BasicConstraintsExtension(
-                    certificateAuthority: true,
+                    certificateAuthority: certificateAuthority,
                     hasPathLengthConstraint: false,
                     pathLengthConstraint: 0,
                     critical: true));
             certificateRequest.CertificateExtensions.Add(
                 new X509EnhancedKeyUsageExtension(ekus, critical: true));
+
+            X509KeyUsageFlags keyUsageFlags = certificateAuthority
+                ? X509KeyUsageFlags.DigitalSignature | X509KeyUsageFlags.KeyCertSign
+                : X509KeyUsageFlags.DigitalSignature;
+
             certificateRequest.CertificateExtensions.Add(
-                new X509KeyUsageExtension(
-                    X509KeyUsageFlags.DigitalSignature | X509KeyUsageFlags.KeyCertSign,
-                    critical: true));
+                new X509KeyUsageExtension(keyUsageFlags, critical: true));
             certificateRequest.CertificateExtensions.Add(skiExtension);
             certificateRequest.CertificateExtensions.Add(
                 X509AuthorityKeyIdentifierExtension.CreateFromSubjectKeyIdentifier(skiExtension));
