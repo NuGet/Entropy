@@ -17,13 +17,13 @@ namespace GithubIssueTagger.Reports.IceBox
 
         internal class Issue
         {
-            public Issue(Connection<LabeledEvent> timelineItems)
+            public Issue(Connection<TimelineEvent> timelineItems)
             {
                 TimelineItems = timelineItems ?? throw new ArgumentNullException(nameof(timelineItems));
             }
 
             [JsonPropertyName("timelineItems")]
-            public Connection<LabeledEvent> TimelineItems { get; init; }
+            public Connection<TimelineEvent> TimelineItems { get; init; }
         }
     }
 }

@@ -41,4 +41,15 @@
     </EmbeddedResource>
   </ItemGroup>
 
+  <ItemGroup>
+    <UpToDateCheckInput Include="Reports\IceBox\*.graphql" />
+  </ItemGroup>
+
+  <Target Name="TouchResxWhenGraphqlChanges"
+          BeforeTargets="PrepareForBuild"
+          Inputs="Reports\IceBox\*.graphql"
+          Outputs="Reports\IceBox\IceBoxResource.resx">
+    <Touch Files="Reports\IceBox\IceBoxResource.resx" />
+  </Target>
+
 </Project>
