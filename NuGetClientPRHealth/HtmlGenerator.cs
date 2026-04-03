@@ -30,8 +30,8 @@ public static class HtmlGenerator
         sb.AppendLine("<tr><th>Measurement</th><th>Value</th></tr>");
         sb.AppendLine($"<tr><td>Total number of PRs in range</td><td>{data.Metrics.TotalPRs}</td></tr>");
         sb.AppendLine($"<tr><td>Median: Hours to complete</td><td>{data.Metrics.MedianHoursToComplete:F1}</td></tr>");
-        sb.AppendLine($"<tr><td>Percentage of PRs approved under 24 hrs</td><td>{data.Metrics.PercentApprovedUnder24h:F1}</td></tr>");
-        sb.AppendLine($"<tr><td>Percentage of PRs completed under 24 hrs</td><td>{data.Metrics.PercentMergedUnder24h:F1}</td></tr>");
+        sb.AppendLine($"<tr><td>Percentage of PRs approved under 24 hrs</td><td>{data.Metrics.PercentApprovedUnder24h:F1}%</td></tr>");
+        sb.AppendLine($"<tr><td>Percentage of PRs completed under 24 hrs</td><td>{data.Metrics.PercentMergedUnder24h:F1}%</td></tr>");
         sb.AppendLine("</table>");
 
         // Slow PRs
