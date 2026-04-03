@@ -173,13 +173,25 @@ public sealed class GitHubClient : IDisposable
     private static RawPR ParseRawPR(JsonElement item)
     {
         var pr = item.GetProperty("pull_request");
+        DateTime mergedAt;
+        if (pr.TryGetProperty("merged_at", out var mergedAtProp) &&
+            mergedAtProp.ValueKind != JsonValueKind.Null &&
+            mergedAtProp.TryGetDateTime(out var mergedAtValue))
+        {
+            mergedAt = mergedAtValue;
+        }
+        else
+        {
+            mergedAt = item.GetProperty("closed_at").GetDateTime();
+        }
+
         return new RawPR(
             Number:    item.GetProperty("number").GetInt32(),
             Title:     item.GetProperty("title").GetString()!,
             Url:       item.GetProperty("html_url").GetString()!,
             Author:    item.GetProperty("user").GetProperty("login").GetString()!,
             CreatedAt: item.GetProperty("created_at").GetDateTime(),
-            MergedAt:  pr.GetProperty("merged_at").GetDateTime());
+            MergedAt:  mergedAt);
     }
 
     public void Dispose() => _http.Dispose();
