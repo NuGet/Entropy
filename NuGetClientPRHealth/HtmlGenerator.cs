@@ -35,15 +35,15 @@ public static class HtmlGenerator
         sb.AppendLine("</table>");
 
         // Slow PRs
-        sb.AppendLine($"<h2>Long lived PRs (closed after 72 hrs): the past {data.WindowDays} days</h2>");
+        sb.AppendLine($"<h2>Long lived PRs (completed after 72 hrs): the past {data.WindowDays} days</h2>");
         if (data.SlowPRs.Count == 0)
         {
-            sb.AppendLine("<p>🎉 All PRs closed within 72 hours this period!</p>");
+            sb.AppendLine("<p>🎉 All PRs completed within 72 hours this period!</p>");
         }
         else
         {
             sb.AppendLine("<table>");
-            sb.AppendLine("<tr><th>PR link</th><th>Hours to close</th><th>Why so long?</th></tr>");
+            sb.AppendLine("<tr><th>PR link</th><th>Hours to complete</th><th>Why so long?</th></tr>");
             foreach (var pr in data.SlowPRs)
                 sb.AppendLine($"<tr><td><a href=\"{pr.Url}\">{pr.Url}</a></td><td>{pr.HoursToMerge:F2}</td><td></td></tr>");
             sb.AppendLine("</table>");
