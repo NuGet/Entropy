@@ -10,7 +10,7 @@ var token      = args.FirstOrDefault(a => a.StartsWith("--token="))?.Split('=', 
                ?? Environment.GetEnvironmentVariable("GITHUB_TOKEN");
 var windowDays = ParseArg("days", 14);
 var outputPath = args.FirstOrDefault(a => a.StartsWith("--output="))?.Split('=', 2).Last()
-               ?? $"nuget-pr-health-{DateTime.Now:yyyy-MM-dd}.html";
+               ?? $"nuget-pr-health-{DateTime.UtcNow:yyyy-MM-dd}.html";
 
 Console.WriteLine();
 Console.WriteLine("  NuGet.Client PR Health Dashboard");
