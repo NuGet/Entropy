@@ -93,25 +93,30 @@ public sealed class GitHubClient : IDisposable
         return readyForReview ?? firstReviewRequest;
     }
 
-    /// <summary>Returns the DateTime of the first APPROVED review, or null.</summary>
-    public async Task<DateTime?> GetFirstApprovalAtAsync(int prNumber)
+    /// <summary>Returns the DateTimes of the first review of any kind and the first APPROVED review.
+    /// Reviews submitted before <paramref name="effectiveStart"/> are skipped for the first-review result.</summary>
+    public async Task<(DateTime? firstReview, DateTime? firstApproval)> GetFirstReviewAndApprovalAsync(int prNumber, DateTime effectiveStart)
     {
         using var resp = await _http.GetAsync($"repos/{Repo}/pulls/{prNumber}/reviews");
         TrackRateLimit(resp);
         await ThrowIfErrorAsync(resp, $"reviews for PR #{prNumber}");
-        if (!resp.IsSuccessStatusCode) return null;
+        if (!resp.IsSuccessStatusCode) return (null, null);
 
         using var doc = JsonDocument.Parse(await resp.Content.ReadAsStringAsync());
+        DateTime? firstReview   = null;
         DateTime? firstApproval = null;
 
         foreach (var r in doc.RootElement.EnumerateArray())
         {
-            if (r.GetProperty("state").GetString() != "APPROVED") continue;
+            var state = r.GetProperty("state").GetString();
+            if (state == "PENDING") continue;
             if (!r.TryGetProperty("submitted_at", out var el)) continue;
             if (!el.TryGetDateTime(out var t)) continue;
-            if (firstApproval is null || t < firstApproval) firstApproval = t;
+
+            if (t >= effectiveStart && (firstReview is null || t < firstReview)) firstReview = t;
+            if (state == "APPROVED" && (firstApproval is null || t < firstApproval)) firstApproval = t;
         }
-        return firstApproval;
+        return (firstReview, firstApproval);
     }
 
     private void TrackRateLimit(HttpResponseMessage resp)

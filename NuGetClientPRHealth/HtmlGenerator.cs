@@ -47,7 +47,26 @@ public static class HtmlGenerator
             foreach (var pr in data.SlowPRs)
                 sb.AppendLine($"<tr><td><a href=\"{pr.Url}\">{pr.Url}</a></td><td>{pr.HoursToMerge:F2}</td><td></td></tr>");
             sb.AppendLine("</table>");
+        }
 
+        // Slow to review PRs
+        sb.AppendLine($"<h2>PRs that waited more than 24 hrs for first review: the past {data.WindowDays} days</h2>");
+        if (data.SlowToReviewPRs.Count == 0)
+        {
+            sb.AppendLine("<p>🎉 All PRs received a first review within 24 hours this period!</p>");
+        }
+        else
+        {
+            sb.AppendLine("<table>");
+            sb.AppendLine("<tr><th>PR link</th><th>Hours to first review</th><th>Why so long?</th></tr>");
+            foreach (var pr in data.SlowToReviewPRs)
+                sb.AppendLine($"<tr><td><a href=\"{pr.Url}\">{pr.Url}</a></td><td>{pr.FirstReviewHours!.Value:F2}</td><td></td></tr>");
+            sb.AppendLine("</table>");
+        }
+
+        // Shared key (shown once after both tables, only if there's anything to annotate)
+        if (data.SlowPRs.Count > 0 || data.SlowToReviewPRs.Count > 0)
+        {
             sb.AppendLine("<div class='key'>");
             sb.AppendLine("<strong>Why so long Key</strong>");
             foreach (var line in new[]
@@ -67,11 +86,12 @@ public static class HtmlGenerator
         // Appendix
         sb.AppendLine($"<h2>Appendix — All PRs in Period ({data.AllPRs.Count})</h2>");
         sb.AppendLine("<table>");
-        sb.AppendLine("<tr><th>PR</th><th>Title</th><th>Created (UTC)</th><th>Ready for Review</th><th>First Approved</th><th>Merged (UTC)</th><th>Duration</th></tr>");
+        sb.AppendLine("<tr><th>PR</th><th>Title</th><th>Created (UTC)</th><th>Ready for Review</th><th>First Reviewed</th><th>First Approved</th><th>Merged (UTC)</th><th>Duration</th></tr>");
         foreach (var pr in data.AllPRs)
         {
+            var reviewed = pr.FirstReviewedAt.HasValue ? Ts(pr.FirstReviewedAt.Value) : "—";
             var approved = pr.FirstApprovedAt.HasValue ? Ts(pr.FirstApprovedAt.Value) : "—";
-            sb.AppendLine($"<tr><td><a href=\"{pr.Url}\">#{pr.Number}</a></td><td>{H(pr.Title)}</td><td>{Ts(pr.CreatedAt)}</td><td>{Ts(pr.EffectiveStart)}</td><td>{approved}</td><td>{Ts(pr.MergedAt)}</td><td>{FormatHours(pr.HoursToMerge)}</td></tr>");
+            sb.AppendLine($"<tr><td><a href=\"{pr.Url}\">#{pr.Number}</a></td><td>{H(pr.Title)}</td><td>{Ts(pr.CreatedAt)}</td><td>{Ts(pr.EffectiveStart)}</td><td>{reviewed}</td><td>{approved}</td><td>{Ts(pr.MergedAt)}</td><td>{FormatHours(pr.HoursToMerge)}</td></tr>");
         }
         sb.AppendLine("</table>");
 

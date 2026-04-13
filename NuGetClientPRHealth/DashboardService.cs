@@ -36,8 +36,9 @@ public class DashboardService(GitHubClient client, int windowDays = 14)
             AsOf:       now.ToString("MMMM d, yyyy") + " UTC",
             WindowDays: windowDays,
             Metrics:    ComputeMetrics(prs),
-            SlowPRs:    prs.Where(p => p.HoursToMerge > 72).OrderByDescending(p => p.HoursToMerge).ToList(),
-            AllPRs:     prs.OrderBy(p => p.MergedAt).ToList());
+            SlowPRs:          prs.Where(p => p.HoursToMerge > 72).OrderByDescending(p => p.HoursToMerge).ToList(),
+            SlowToReviewPRs:  prs.Where(p => p.FirstReviewHours > 24).OrderByDescending(p => p.FirstReviewHours).ToList(),
+            AllPRs:           prs.OrderBy(p => p.MergedAt).ToList());
     }
 
     private async Task<List<PRRecord>> EnrichAsync(List<RawPR> prs)
@@ -47,12 +48,14 @@ public class DashboardService(GitHubClient client, int windowDays = 14)
         {
             var readyAt        = await client.GetReadyTimeAsync(raw.Number);
             var effectiveStart = readyAt ?? raw.CreatedAt;
-            var approvedAt     = await client.GetFirstApprovalAtAsync(raw.Number);
+            var (reviewedAt, approvedAt) = await client.GetFirstReviewAndApprovalAsync(raw.Number, effectiveStart);
 
             results.Add(new PRRecord(
                 raw.Number, raw.Title, raw.Url, raw.Author,
                 raw.CreatedAt, effectiveStart, raw.MergedAt,
                 HoursToMerge:       Math.Max(0, (raw.MergedAt - effectiveStart).TotalHours),
+                FirstReviewHours:   reviewedAt.HasValue ? (reviewedAt.Value - effectiveStart).TotalHours : null,
+                FirstReviewedAt:    reviewedAt,
                 FirstApprovalHours: approvedAt.HasValue ? (approvedAt.Value - effectiveStart).TotalHours : null,
                 FirstApprovedAt:    approvedAt));
 

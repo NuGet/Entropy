@@ -8,6 +8,8 @@ public record PRRecord(
     DateTime EffectiveStart,  // ready_for_review → review_requested → created_at
     DateTime MergedAt,
     double HoursToMerge,      // EffectiveStart → MergedAt
+    double? FirstReviewHours,   // EffectiveStart → first review of any kind
+    DateTime? FirstReviewedAt,
     double? FirstApprovalHours,
     DateTime? FirstApprovedAt);
 
@@ -23,4 +25,5 @@ public record DashboardData(
     int WindowDays,
     DashboardMetrics Metrics,
     List<PRRecord> SlowPRs,
+    List<PRRecord> SlowToReviewPRs,
     List<PRRecord> AllPRs);
