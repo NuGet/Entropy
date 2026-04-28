@@ -24,14 +24,35 @@ namespace NuGetReleaseTool
             return $"release-{parsedVersion.Major}.{parsedVersion.Minor}.x";
         }
 
+        public static RepositoryTag GetLatestRepositoryTagForMajorMinor(Version currentVersion, IReadOnlyList<RepositoryTag> allTags)
+        {
+            var matchingTags = allTags
+                .Select(e => new { Tag = e, Parsed = Version.TryParse(e.Name, out var v) ? v : null })
+                .Where(e => e.Parsed != null && e.Parsed.Major == currentVersion.Major && e.Parsed.Minor == currentVersion.Minor)
+                .OrderByDescending(e => e.Parsed)
+                .ToList();
+
+            if (matchingTags.Count == 0)
+            {
+                throw new InvalidOperationException($"The {currentVersion} does not have any tags");
+            }
+
+            // If the latest tag shares its commit with older tags (scheduled builds that didn't
+            // pick up new changes), walk back to the earliest tag on that same commit, which
+            // represents the original release. Otherwise use the latest tag.
+            var latestCommitSha = matchingTags.First().Tag.Commit.Sha;
+            var earliestWithSameCommit = matchingTags.Last(t => t.Tag.Commit.Sha == latestCommitSha);
+            if (earliestWithSameCommit != matchingTags.First())
+            {
+                Console.WriteLine($"Tags '{earliestWithSameCommit.Tag.Name}' through '{matchingTags.First().Tag.Name}' point to the same commit. Using earliest tag '{earliestWithSameCommit.Tag.Name}'.");
+            }
+
+            return earliestWithSameCommit.Tag;
+        }
+
         public static string GetLatestTagForMajorMinor(Version currentVersion, IReadOnlyList<RepositoryTag> allTags)
         {
-            var latestTag = allTags.Where(e => e.Name.StartsWith($"{currentVersion.Major}.{currentVersion.Minor}")).Select(e => Version.Parse(e.Name)).Max();
-            if (latestTag != null)
-            {
-                return latestTag.ToString();
-            }
-            throw new InvalidOperationException($"The {currentVersion} does not have any tags");
+            return GetLatestRepositoryTagForMajorMinor(currentVersion, allTags).Name;
         }
 
         public static Version EstimatePreviousMajorMinorVersion(Version currentVersion, IReadOnlyList<RepositoryTag> allTags)
@@ -64,27 +85,81 @@ namespace NuGetReleaseTool
             return largestApplicableVersion;
         }
 
+        /// <summary>
+        /// Resolves a release version to a commit SHA by trying the release branch first,
+        /// then falling back to the latest tag matching the major.minor version.
+        /// This handles cases where release branches have been deleted but tags remain.
+        /// </summary>
+        public static async Task<string> ResolveVersionToCommitSha(GitHubClient gitHubClient, string orgName, string repoName, Version version, IReadOnlyList<RepositoryTag> allTags)
+        {
+            var branchName = GetReleaseBranchFromVersion(version);
+            try
+            {
+                var branch = await gitHubClient.Repository.Branch.Get(orgName, repoName, branchName);
+                return branch.Commit.Sha;
+            }
+            catch (Octokit.NotFoundException)
+            {
+                // Branch doesn't exist (may have been deleted), fall back to latest tag
+            }
+
+            var latestTag = GetLatestRepositoryTagForMajorMinor(version, allTags);
+            Console.WriteLine($"Branch '{branchName}' not found. Using tag '{latestTag.Name}' instead.");
+            return latestTag.Commit.Sha;
+        }
+
+        /// <summary>
+        /// Resolves a branch name to a commit SHA by trying the branch first,
+        /// then falling back to the latest matching tag if the branch name matches a release pattern.
+        /// </summary>
+        public static async Task<string> ResolveBranchToCommitSha(GitHubClient gitHubClient, string orgName, string repoName, string branchName)
+        {
+            try
+            {
+                var branch = await gitHubClient.Repository.Branch.Get(orgName, repoName, branchName);
+                return branch.Commit.Sha;
+            }
+            catch (Octokit.NotFoundException)
+            {
+                // Branch doesn't exist (may have been deleted), try tag fallback
+            }
+
+            var match = Regex.Match(branchName, @"release[/-](\d+)\.(\d+)\.x$");
+            if (match.Success)
+            {
+                var version = new Version(int.Parse(match.Groups[1].Value), int.Parse(match.Groups[2].Value));
+                var allTags = await gitHubClient.Repository.GetAllTags(orgName, repoName);
+                var latestTag = GetLatestRepositoryTagForMajorMinor(version, allTags);
+                Console.WriteLine($"Branch '{branchName}' not found. Using tag '{latestTag.Name}' instead.");
+                return latestTag.Commit.Sha;
+            }
+
+            throw new InvalidOperationException($"Branch '{branchName}' was not found and does not match a recognized release branch pattern for tag fallback.");
+        }
+
         public static async Task<List<GitHubCommit>> GetCommitsForRelease(GitHubClient gitHubClient, string releaseVersion, string? endCommit)
         {
             var version = new Version(releaseVersion);
-            var currentReleaseBranchName = GetReleaseBranchFromVersion(version);
             IReadOnlyList<Milestone> milestones = await gitHubClient.Issue.Milestone.GetAllForRepository(Constants.NuGet, Constants.Home, new MilestoneRequest { State = ItemStateFilter.All });
-            var previousReleaseBranchName = GetReleaseBranchFromVersion(EstimatePreviousMajorMinorVersion(version, milestones));
-            return await GetUniqueCommitsListBetween2Branches(gitHubClient, Constants.NuGet, Constants.NuGetClient, previousReleaseBranchName, currentReleaseBranchName, endCommit);
+            var previousVersion = EstimatePreviousMajorMinorVersion(version, milestones);
+
+            var allTags = await gitHubClient.Repository.GetAllTags(Constants.NuGet, Constants.NuGetClient);
+
+            var previousSha = await ResolveVersionToCommitSha(gitHubClient, Constants.NuGet, Constants.NuGetClient, previousVersion, allTags);
+            var currentSha = endCommit ?? await ResolveVersionToCommitSha(gitHubClient, Constants.NuGet, Constants.NuGetClient, version, allTags);
+
+            return await GetUniqueCommitsListBetween2Refs(gitHubClient, Constants.NuGet, Constants.NuGetClient, previousSha, currentSha);
         }
 
-        public static async Task<List<GitHubCommit>> GetUniqueCommitsListBetween2Branches(GitHubClient gitHubClient, string orgName, string repoName, string previousBranchName, string currentBranchName, string? latestShaOnCurrentBranch = null)
+        public static async Task<List<GitHubCommit>> GetUniqueCommitsListBetween2Refs(GitHubClient gitHubClient, string orgName, string repoName, string baseSha, string headSha)
         {
-            var previousBranch = await gitHubClient.Repository.Branch.Get(orgName, repoName, previousBranchName);
-            var currentBranch = await gitHubClient.Repository.Branch.Get(orgName, repoName, currentBranchName);
             // Reverse so that the oldest commit is at the top.
-            string latestShaToUse = latestShaOnCurrentBranch ?? currentBranch.Commit.Sha;
-            var allCommitDifference = (await gitHubClient.Repository.Commit.Compare(orgName, repoName, previousBranch.Commit.Sha, latestShaToUse)).Commits.Reverse();
+            var allCommitDifference = (await gitHubClient.Repository.Commit.Compare(orgName, repoName, baseSha, headSha)).Commits.Reverse();
 
             var commitsOnReleaseBranchSince = await gitHubClient.Repository.Commit.GetAll(orgName, repoName, new CommitRequest
             {
                 Since = allCommitDifference.Min(e => e.Commit.Committer.Date), // Find the oldest commit in the delta
-                Sha = previousBranch.Commit.Sha
+                Sha = baseSha
             });
 
             List<GitHubCommit> gitHubCommits = new();
