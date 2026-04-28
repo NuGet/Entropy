@@ -24,7 +24,7 @@ namespace NuGetReleaseTool
             return $"release-{parsedVersion.Major}.{parsedVersion.Minor}.x";
         }
 
-        public static RepositoryTag GetLatestRepositoryTagForMajorMinor(Version currentVersion, IReadOnlyList<RepositoryTag> allTags)
+        public static RepositoryTag GetReleaseTagForMajorMinor(Version currentVersion, IReadOnlyList<RepositoryTag> allTags)
         {
             var matchingTags = allTags
                 .Select(e => new { Tag = e, Parsed = Version.TryParse(e.Name, out var v) ? v : null })
@@ -34,7 +34,7 @@ namespace NuGetReleaseTool
 
             if (matchingTags.Count == 0)
             {
-                throw new InvalidOperationException($"The {currentVersion} does not have any tags");
+                throw new InvalidOperationException($"No parseable tags were found matching the {currentVersion.Major}.{currentVersion.Minor}.* series.");
             }
 
             // If the latest tag shares its commit with older tags (scheduled builds that didn't
@@ -52,7 +52,7 @@ namespace NuGetReleaseTool
 
         public static string GetLatestTagForMajorMinor(Version currentVersion, IReadOnlyList<RepositoryTag> allTags)
         {
-            return GetLatestRepositoryTagForMajorMinor(currentVersion, allTags).Name;
+            return GetReleaseTagForMajorMinor(currentVersion, allTags).Name;
         }
 
         public static Version EstimatePreviousMajorMinorVersion(Version currentVersion, IReadOnlyList<RepositoryTag> allTags)
@@ -103,7 +103,7 @@ namespace NuGetReleaseTool
                 // Branch doesn't exist (may have been deleted), fall back to latest tag
             }
 
-            var latestTag = GetLatestRepositoryTagForMajorMinor(version, allTags);
+            var latestTag = GetReleaseTagForMajorMinor(version, allTags);
             Console.WriteLine($"Branch '{branchName}' not found. Using tag '{latestTag.Name}' instead.");
             return latestTag.Commit.Sha;
         }
@@ -129,7 +129,7 @@ namespace NuGetReleaseTool
             {
                 var version = new Version(int.Parse(match.Groups[1].Value), int.Parse(match.Groups[2].Value));
                 var allTags = await gitHubClient.Repository.GetAllTags(orgName, repoName);
-                var latestTag = GetLatestRepositoryTagForMajorMinor(version, allTags);
+                var latestTag = GetReleaseTagForMajorMinor(version, allTags);
                 Console.WriteLine($"Branch '{branchName}' not found. Using tag '{latestTag.Name}' instead.");
                 return latestTag.Commit.Sha;
             }
@@ -155,6 +155,11 @@ namespace NuGetReleaseTool
         {
             // Reverse so that the oldest commit is at the top.
             var allCommitDifference = (await gitHubClient.Repository.Commit.Compare(orgName, repoName, baseSha, headSha)).Commits.Reverse();
+
+            if (!allCommitDifference.Any())
+            {
+                return new List<GitHubCommit>();
+            }
 
             var commitsOnReleaseBranchSince = await gitHubClient.Repository.Commit.GetAll(orgName, repoName, new CommitRequest
             {
