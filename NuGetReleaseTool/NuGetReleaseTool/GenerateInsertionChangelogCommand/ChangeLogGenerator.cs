@@ -12,8 +12,8 @@ namespace NuGetReleaseTool.GenerateInsertionChangelogCommand
             var repoName = "nuget.client";
             string[] issueRepositories = new string[] { "NuGet/Home", "NuGet/Client.Engineering" };
 
-            var githubBranch = await gitHubClient.Repository.Branch.Get(orgName, repoName, branchName);
-            var githubCommits = (await gitHubClient.Repository.Commit.Compare(orgName, repoName, startSha, githubBranch.Commit.Sha)).Commits.Reverse();
+            var branchSha = await Helpers.ResolveBranchToCommitSha(gitHubClient, orgName, repoName, branchName);
+            var githubCommits = (await gitHubClient.Repository.Commit.Compare(orgName, repoName, startSha, branchSha)).Commits.Reverse();
             List<CommitWithDetails> commits = await Helpers.GetCommitDetails(gitHubClient, orgName, repoName, issueRepositories, githubCommits);
             Helpers.SaveAsHtml(commits, resultPath);
             Helpers.SaveAsMarkdown(commits, resultPath);
