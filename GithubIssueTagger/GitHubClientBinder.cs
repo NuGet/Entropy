@@ -41,10 +41,52 @@ namespace GithubIssueTagger
                 return pat;
             }
 
+            pat = GetGitHubCliToken();
+            if (!string.IsNullOrEmpty(pat))
+            {
+                return pat;
+            }
+
             Dictionary<string, string>? credentials = GetGitCredentials(new Uri("https://github.com/NuGet/Home"));
             if (credentials?.TryGetValue("password", out pat) == true && !string.IsNullOrEmpty(pat))
             {
                 return pat;
+            }
+
+            return null;
+        }
+
+        // Attempt to get a token from the GitHub CLI
+        private static string? GetGitHubCliToken()
+        {
+            try
+            {
+                ProcessStartInfo processStartInfo = new()
+                {
+                    FileName = "gh",
+                    Arguments = "auth token",
+                    CreateNoWindow = true,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                };
+
+                Process? process = Process.Start(processStartInfo);
+                if (process == null)
+                {
+                    return null;
+                }
+
+                string output = process.StandardOutput.ReadToEnd().Trim();
+                process.WaitForExit();
+
+                if (process.ExitCode == 0 && !string.IsNullOrEmpty(output))
+                {
+                    return output;
+                }
+            }
+            catch
+            {
+                // gh CLI not available
             }
 
             return null;
