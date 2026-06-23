@@ -77,6 +77,34 @@ namespace GithubIssueTagger.Reports.IceBox {
         /// <summary>
         ///   Looks up a localized string similar to query($owner: String!,
         ///      $repo: String!,
+        ///      $number: Int!,
+        ///      $timelineCount: Int!,
+        ///      $reactionCount: Int!) {
+        ///  repository(owner: $owner, name: $repo) {
+        ///    issue(number: $number) {
+        ///      id,
+        ///      number,
+        ///      title,
+        ///      closed,
+        ///      timelineItems(itemTypes: [LABELED_EVENT], last: $timelineCount) {
+        ///        totalCount,
+        ///        pageInfo {
+        ///          hasNextPage,
+        ///          endCursor
+        ///        },
+        ///        nodes {
+        ///          __typename,
+        ///          ... on LabeledEvent { [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string GetIssueByNumber {
+            get {
+                return ResourceManager.GetString("GetIssueByNumber", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to query($owner: String!,
+        ///      $repo: String!,
         ///      $after: String,
         ///      $label: String!,
         ///      $timelineCount: Int!,

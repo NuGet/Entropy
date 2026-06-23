@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.CommandLine;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace GithubIssueTagger.Reports.IceBox
@@ -27,10 +28,26 @@ namespace GithubIssueTagger.Reports.IceBox
             return Task.CompletedTask;
         }
 
-        public async Task RunAsync(string owner, string repo, string label, int upvoteCount, string? add)
+        public async Task RunAsync(string owner, string repo, string label, int upvoteCount, string? add, IReadOnlyList<int>? issueNumbers = null, bool verbose = false)
         {
-            await foreach (GetIssuesResult.IssuesModel issue in GetIssuesAsync(owner, repo, label, upvoteCount))
+            Console.WriteLine($"IceBox watcher built from commit {GetBuildCommitHash()}");
+
+            bool byNumber = issueNumbers != null && issueNumbers.Count > 0;
+
+            await foreach (GetIssuesResult.IssuesModel issue in GetIssuesAsync(owner, repo, label, upvoteCount, issueNumbers))
             {
+                // When issues are requested explicitly by number, the search label filter that the
+                // "all issues" query relies on was not applied, so validate that the issue actually has the
+                // search label. Without it there is no cutoff date, so it should be ignored (the caller most
+                // likely passed the wrong issue number).
+                if (byNumber
+                    && !issue.Labels.Nodes.Any(l => string.Equals(l.Name, label, StringComparison.OrdinalIgnoreCase))
+                    && !issue.Labels.PageInfo.HasNextPage)
+                {
+                    WriteGitHubActionsWarning($"Issue {issue.Number} does not have the '{label}' label, skipping.");
+                    continue;
+                }
+
                 if (add != null)
                 {
                     if (issue.Labels.Nodes.Any(l => l.Name == add))
@@ -39,6 +56,11 @@ namespace GithubIssueTagger.Reports.IceBox
                         {
                             Label addLabel = issue.Labels.Nodes.First(l => l.Name == add);
                             _addLabelId = addLabel.Id;
+                        }
+
+                        if (verbose)
+                        {
+                            Console.WriteLine($"Issue #{issue.Number} already has the '{add}' label, skipping.");
                         }
 
                         // action label already applied, skip
@@ -51,9 +73,9 @@ namespace GithubIssueTagger.Reports.IceBox
                     }
                 }
 
-                if (!TryGetLastLabelTime(issue.TimelineItems.Nodes, label, out DateTime? labelAdded))
+                if (!TryGetCutoffDate(issue.TimelineItems.Nodes, label, add, out DateTime? labelAdded))
                 {
-                    labelAdded = await GetLastLabelTimeAsync(issue.Id, label);
+                    labelAdded = await GetCutoffDateAsync(issue.Id, label, add);
                     if (labelAdded == null)
                     {
                         // TODO: If we reach here, we need to do a different GraphQL query to get more events for this issue to find the last time the label was added.
@@ -62,24 +84,50 @@ namespace GithubIssueTagger.Reports.IceBox
                     }
                 }
 
+                int upvotes = GetUpvoteCount(issue, labelAdded.Value, out bool hasCompleteCount);
+                string upvoteText = hasCompleteCount ? upvotes.ToString() : upvotes + "+";
+                string cutoffText = $"cutoff date {labelAdded.Value:yyyy-MM-dd} Upvotes: {upvoteText}";
+
+                if (verbose)
+                {
+                    Console.WriteLine($"Issue #{issue.Number} {cutoffText}");
+                }
+
                 if (HasEnoughPositiveReactions(issue, labelAdded.Value, upvoteCount))
                 {
-                    Console.WriteLine($"Issue {issue.Number} has enough upvotes");
+                    Console.WriteLine($"Issue {issue.Number} has enough upvotes ({cutoffText})");
                     if (add != null)
                     {
-                        if (_addLabelId == null)
+                        if (issue.Closed)
                         {
-                            _addLabelId = await GetLabelIdAsync(owner, repo, add);
+                            Console.WriteLine($"Issue #{issue.Number} is closed, not adding the '{add}' label.");
                         }
+                        else
+                        {
+                            if (_addLabelId == null)
+                            {
+                                _addLabelId = await GetLabelIdAsync(owner, repo, add);
+                            }
 
-                        await AddLabelToIssueAsync(issue.Id, _addLabelId);
+                            await AddLabelToIssueAsync(issue.Id, _addLabelId);
+                        }
                     }
                 }
             }
         }
 
-        private async IAsyncEnumerable<GetIssuesResult.IssuesModel> GetIssuesAsync(string owner, string repo, string label, int upvotes)
+        private async IAsyncEnumerable<GetIssuesResult.IssuesModel> GetIssuesAsync(string owner, string repo, string label, int upvotes, IReadOnlyList<int>? issueNumbers)
         {
+            if (issueNumbers != null && issueNumbers.Count > 0)
+            {
+                await foreach (GetIssuesResult.IssuesModel issue in GetIssuesByNumberAsync(owner, repo, upvotes, issueNumbers))
+                {
+                    yield return issue;
+                }
+
+                yield break;
+            }
+
             // See GitHub docs on resource/query limits. Increasing the counts has a multiplactive effect towards the hourly query limit.
             Dictionary<string, object?>? variables = new Dictionary<string, object?>()
             {
@@ -87,7 +135,7 @@ namespace GithubIssueTagger.Reports.IceBox
                 ["repo"] = repo,
                 ["after"] = null,
                 ["label"] = label,
-                ["timelineCount"] = 5, // adding icebox label is usually one of the most recent actions
+                ["timelineCount"] = 10, // search label add / triage label removal are usually among the most recent events
                 ["reactionCount"] = upvotes * 2
             };
 
@@ -125,24 +173,79 @@ namespace GithubIssueTagger.Reports.IceBox
             }
         }
 
-        private static bool TryGetLastLabelTime(IReadOnlyList<LabeledEvent>? labeledEvents, string label, [NotNullWhen(true)] out DateTime? labelAdded)
+        private async IAsyncEnumerable<GetIssuesResult.IssuesModel> GetIssuesByNumberAsync(string owner, string repo, int upvotes, IReadOnlyList<int> issueNumbers)
         {
-            IEnumerable<DateTime>? enumerable = labeledEvents
-                ?.Where(e => string.Equals(label, e?.Label?.Name, StringComparison.OrdinalIgnoreCase))
-                ?.Select(e => e.CreatedAt);
-            if (enumerable == null || !enumerable.Any())
+            foreach (int number in issueNumbers)
             {
-                labelAdded = null;
-                return false;
-            }
-            else
-            {
-                labelAdded = enumerable.Max();
-                return true;
+                var variables = new Dictionary<string, object?>()
+                {
+                    ["owner"] = owner,
+                    ["repo"] = repo,
+                    ["number"] = number,
+                    ["timelineCount"] = 10, // search label add / triage label removal are usually among the most recent events
+                    ["reactionCount"] = upvotes * 2
+                };
+
+                var request = new GraphQLRequest(IceBoxResource.GetIssueByNumber)
+                {
+                    Variables = variables
+                };
+
+                GraphQLResponse<GetIssueResult>? response = await _client.SendAsync<GetIssueResult>(request);
+
+                if (response?.Errors?.Count > 0)
+                {
+                    WriteGraphQlErrors(response.Errors);
+                }
+
+                GetIssuesResult.IssuesModel? issue = response?.Data?.Repository.Issue;
+                if (issue == null)
+                {
+                    WriteGitHubActionsWarning("Issue " + number + " was not found.");
+                    continue;
+                }
+
+                yield return issue;
             }
         }
 
-        private async Task<DateTime?> GetLastLabelTimeAsync(string issueId, string label)
+        // The cutoff date is the later of when the search label (e.g. Priority:3) was last added, or the last
+        // time the triage label (e.g. Triage:NeedsTriageDiscussion) was removed. Only reactions after the cutoff
+        // count toward the upvote threshold, so removing the triage label resets the count. Returns false when the
+        // search label was not found in the supplied events, so the caller can fetch more.
+        private static bool TryGetCutoffDate(IReadOnlyList<TimelineEvent>? events, string searchLabel, string? triageLabel, [NotNullWhen(true)] out DateTime? cutoffDate)
+        {
+            DateTime? searchLabelAdded = events
+                ?.Where(e => e.IsLabeledEvent && string.Equals(searchLabel, e.Label?.Name, StringComparison.OrdinalIgnoreCase))
+                .Select(e => (DateTime?)e.CreatedAt)
+                .Max();
+
+            if (searchLabelAdded == null)
+            {
+                cutoffDate = null;
+                return false;
+            }
+
+            DateTime cutoff = searchLabelAdded.Value;
+
+            if (triageLabel != null)
+            {
+                DateTime? triageLabelRemoved = events!
+                    .Where(e => e.IsUnlabeledEvent && string.Equals(triageLabel, e.Label?.Name, StringComparison.OrdinalIgnoreCase))
+                    .Select(e => (DateTime?)e.CreatedAt)
+                    .Max();
+
+                if (triageLabelRemoved != null && triageLabelRemoved.Value > cutoff)
+                {
+                    cutoff = triageLabelRemoved.Value;
+                }
+            }
+
+            cutoffDate = cutoff;
+            return true;
+        }
+
+        private async Task<DateTime?> GetCutoffDateAsync(string issueId, string searchLabel, string? triageLabel)
         {
             Dictionary<string, object?> variables = new Dictionary<string, object?>()
             {
@@ -179,13 +282,13 @@ namespace GithubIssueTagger.Reports.IceBox
                 return null;
             }
 
-            IReadOnlyList<LabeledEvent>? labeledEvents = response.Data?.Node.TimelineItems.Nodes;
-            if (!TryGetLastLabelTime(labeledEvents, label, out DateTime? labeledAdded))
+            IReadOnlyList<TimelineEvent>? events = response.Data?.Node.TimelineItems.Nodes;
+            if (!TryGetCutoffDate(events, searchLabel, triageLabel, out DateTime? cutoffDate))
             {
                 return null;
             }
 
-            return labeledAdded;
+            return cutoffDate;
         }
 
         private static bool HasEnoughPositiveReactions(GetIssuesResult.IssuesModel issue, DateTime after, int upvotes)
@@ -218,33 +321,55 @@ namespace GithubIssueTagger.Reports.IceBox
                     return false;
                 }
             }
+        }
 
-            static int GetCustomerUpvoteCount(IEnumerable<Reaction> reactions)
+        // Counts distinct customers who left a positive reaction after the cutoff date, from the reactions
+        // already fetched for the issue. Returns false in hasCompleteCount when more reactions exist than were
+        // fetched and could change the result (so callers can indicate the count is a lower bound).
+        private static int GetUpvoteCount(GetIssuesResult.IssuesModel issue, DateTime after, out bool hasCompleteCount)
+        {
+            int count = GetCustomerUpvoteCount(issue.Reactions.Nodes.Where(r => r.CreatedAt > after));
+
+            if (!issue.Reactions.PageInfo.HasNextPage)
             {
-                HashSet<string> customers = new HashSet<string>();
-                foreach (var reaction in reactions)
-                {
-                    if (IsPositiveReaction(reaction.Content))
-                    {
-                        customers.Add(reaction.User.Login);
-                    }
-                }
-
-                return customers.Count;
+                hasCompleteCount = true;
+            }
+            else
+            {
+                // If the oldest reaction we fetched is already older than the cutoff, we've seen every
+                // reaction that could count, so the number is complete despite there being more reactions.
+                DateTime? min = issue.Reactions.Nodes.Select(r => r.CreatedAt).MinOrDefault();
+                hasCompleteCount = min != null && min < after;
             }
 
-            static bool IsPositiveReaction(string? reaction)
+            return count;
+        }
+
+        private static int GetCustomerUpvoteCount(IEnumerable<Reaction> reactions)
+        {
+            HashSet<string> customers = new HashSet<string>();
+            foreach (var reaction in reactions)
             {
-                if (string.Equals("THUMBS_UP", reaction, StringComparison.OrdinalIgnoreCase)
-                    || string.Equals("HEART", reaction, StringComparison.OrdinalIgnoreCase)
-                    || string.Equals("ROCKET", reaction, StringComparison.OrdinalIgnoreCase))
+                if (IsPositiveReaction(reaction.Content))
                 {
-                    return true;
+                    customers.Add(reaction.User.Login);
                 }
-                else
-                {
-                    return false;
-                }
+            }
+
+            return customers.Count;
+        }
+
+        private static bool IsPositiveReaction(string? reaction)
+        {
+            if (string.Equals("THUMBS_UP", reaction, StringComparison.OrdinalIgnoreCase)
+                || string.Equals("HEART", reaction, StringComparison.OrdinalIgnoreCase)
+                || string.Equals("ROCKET", reaction, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
             }
         }
 
@@ -305,6 +430,22 @@ namespace GithubIssueTagger.Reports.IceBox
             Console.WriteLine("::warning ::" + message);
         }
 
+        private static string GetBuildCommitHash()
+        {
+            string? informationalVersion = typeof(IceBoxReport).Assembly
+                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+                ?.InformationalVersion;
+
+            // SourceLink appends the commit hash after a '+' (e.g. "2026.6.23+abcdef0...").
+            int plusIndex = informationalVersion?.IndexOf('+') ?? -1;
+            if (plusIndex >= 0 && plusIndex + 1 < informationalVersion!.Length)
+            {
+                return informationalVersion.Substring(plusIndex + 1);
+            }
+
+            return "unknown";
+        }
+
         private static void WriteGraphQlErrors(IReadOnlyList<GraphQLResponseError> errors)
         {
             foreach (var error in errors)
@@ -357,13 +498,26 @@ namespace GithubIssueTagger.Reports.IceBox
                 addOption.Description = "Label to add on issues which meet or exceed the upvote threshold. When not specified, no action is taken.";
                 command.Add(addOption);
 
+                var issueOption = new Option<int[]>("--issue");
+                issueOption.AddAlias("-i");
+                issueOption.Description = "Specific issue number(s) to process instead of every issue with the label. Can be repeated or given multiple values. Useful for debugging.";
+                issueOption.AllowMultipleArgumentsPerToken = true;
+                command.Add(issueOption);
+
+                var verboseOption = new Option<bool>("--verbose");
+                verboseOption.AddAlias("-v");
+                verboseOption.Description = "Output the cutoff date and upvote count for every processed issue.";
+                command.Add(verboseOption);
+
                 command.SetHandler(async
                     (GitHubPat pat,
                     string owner,
                     string repo, 
                     string label, 
                     int upvotes,
-                    string add) =>
+                    string add,
+                    int[] issues,
+                    bool verbose) =>
                 {
                     var serviceProvider = new ServiceCollection()
                         .AddGithubIssueTagger(pat)
@@ -373,9 +527,9 @@ namespace GithubIssueTagger.Reports.IceBox
                     using (scopeFactory.CreateScope())
                     {
                         var report = serviceProvider.GetRequiredService<IceBoxReport>();
-                        await report.RunAsync(owner, repo, label, upvotes, add);
+                        await report.RunAsync(owner, repo, label, upvotes, add, issues, verbose);
                     }
-                }, patBinder, ownerOption, repoOption, labelOption, upvotesOption, addOption);
+                }, patBinder, ownerOption, repoOption, labelOption, upvotesOption, addOption, issueOption, verboseOption);
 
                 return command;
             }
