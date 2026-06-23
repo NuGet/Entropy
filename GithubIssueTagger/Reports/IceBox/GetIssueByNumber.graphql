@@ -1,0 +1,63 @@
+﻿query($owner: String!,
+      $repo: String!,
+      $number: Int!,
+      $timelineCount: Int!,
+      $reactionCount: Int!) {
+  repository(owner: $owner, name: $repo) {
+    issue(number: $number) {
+      id,
+      number,
+      title,
+      closed,
+      timelineItems(itemTypes: [LABELED_EVENT, UNLABELED_EVENT], last: $timelineCount) {
+        totalCount,
+        pageInfo {
+          hasNextPage,
+          endCursor
+        },
+        nodes {
+          __typename,
+          ... on LabeledEvent {
+            label {
+              name,
+              id
+            },
+            createdAt
+          },
+          ... on UnlabeledEvent {
+            label {
+              name,
+              id
+            },
+            createdAt
+          }
+        }
+      },
+      reactions(last: $reactionCount) {
+        totalCount,
+        pageInfo {
+          hasNextPage,
+          endCursor
+        },
+        nodes {
+          user {
+            login
+          },
+          content,
+          createdAt
+        }
+      },
+      labels(first: 100) {
+        totalCount,
+        pageInfo {
+          hasNextPage,
+          endCursor
+        },
+        nodes {
+          name,
+          id
+        }
+      }
+    }
+  }
+}

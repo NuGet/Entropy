@@ -5,7 +5,7 @@
       $timelineCount: Int!,
       $reactionCount: Int!) { 
   repository(owner: $owner, name:$repo){
-    issues(first:100, after: $after, labels: [$label]){
+    issues(first:100, after: $after, labels: [$label], states: [OPEN]){
       totalCount,
       pageInfo {
         hasNextPage,
@@ -15,7 +15,8 @@
         id,
         number,
         title,
-        timelineItems(itemTypes: [LABELED_EVENT], last: $timelineCount) {
+        closed,
+        timelineItems(itemTypes: [LABELED_EVENT, UNLABELED_EVENT], last: $timelineCount) {
           totalCount,
           pageInfo {
             hasNextPage,
@@ -24,6 +25,13 @@
           nodes {
             __typename,
             ... on LabeledEvent {
+              label {
+                name,
+                id
+              },
+              createdAt
+            },
+            ... on UnlabeledEvent {
               label {
                 name,
                 id
