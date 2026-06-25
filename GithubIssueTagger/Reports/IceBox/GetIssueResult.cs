@@ -15,13 +15,13 @@ namespace GithubIssueTagger.Reports.IceBox
 
         internal class RepositoryModel
         {
-            public RepositoryModel(GetIssuesResult.IssuesModel? issue)
+            public RepositoryModel(IssuesModel? issue)
             {
                 Issue = issue;
             }
 
             [JsonPropertyName("issue")]
-            public GetIssuesResult.IssuesModel? Issue { get; init; }
+            public IssuesModel? Issue { get; init; }
         }
     }
 }
