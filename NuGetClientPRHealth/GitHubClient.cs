@@ -45,7 +45,7 @@ public sealed class GitHubClient : IDisposable
         {
             using var resp = await _http.GetAsync($"search/issues?q={q}&per_page=100&page={page}");
             TrackRateLimit(resp);
-            resp.EnsureSuccessStatusCode();
+            await ThrowIfErrorAsync(resp, "merged PRs search");
             using var doc = JsonDocument.Parse(await resp.Content.ReadAsStringAsync());
             var items = doc.RootElement.GetProperty("items");
             foreach (var item in items.EnumerateArray())
@@ -131,6 +131,15 @@ public sealed class GitHubClient : IDisposable
         if (resp.IsSuccessStatusCode) return;
 
         var body = await resp.Content.ReadAsStringAsync();
+
+        if (resp.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            throw new InvalidOperationException(
+                $"GitHub authentication failed (401) fetching {context}.\n" +
+                $"  Your saved git credential may be expired.\n" +
+                $"  → Run 'git push' on any GitHub repo to refresh it via the credential manager.\n" +
+                $"  → Or pass --token=<pat> explicitly (set GITHUB_TOKEN env var for CI).");
+        }
 
         // Distinguish the three common failure modes from the response body
         if (body.Contains("secondary rate limit", StringComparison.OrdinalIgnoreCase) ||
