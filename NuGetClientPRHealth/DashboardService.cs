@@ -66,18 +66,22 @@ public class DashboardService(GitHubClient client, int windowDays = 14)
 
     private static DashboardMetrics ComputeMetrics(List<PRRecord> prs)
     {
-        if (prs.Count == 0) return new DashboardMetrics(0, 0, 0, 0);
+        if (prs.Count == 0) return new DashboardMetrics(0, 0, 0, 0, 0, 0);
 
         var sorted   = prs.Select(p => p.HoursToMerge).OrderBy(x => x).ToList();
         var n        = sorted.Count;
         var median   = n % 2 == 0 ? (sorted[n / 2 - 1] + sorted[n / 2]) / 2.0 : sorted[n / 2];
-        var reviewed = prs.Where(p => p.FirstApprovalHours.HasValue).ToList();
+        var approved = prs.Where(p => p.FirstApprovalHours.HasValue).ToList();
+        var withReview = prs.Where(p => p.FirstReviewHours.HasValue).ToList();
 
         return new DashboardMetrics(
             TotalPRs:                prs.Count,
             MedianHoursToComplete:   Math.Round(median, 1),
-            PercentApprovedUnder24h: reviewed.Count > 0
-                ? Math.Round((double)reviewed.Count(p => p.FirstApprovalHours! < 24) / reviewed.Count * 100, 1) : 0,
-            PercentMergedUnder24h:   Math.Round((double)prs.Count(p => p.HoursToMerge < 24) / prs.Count * 100, 1));
+            PercentApprovedUnder24h: approved.Count > 0
+                ? Math.Round((double)approved.Count(p => p.FirstApprovalHours! < 24) / approved.Count * 100, 1) : 0,
+            PercentReviewedUnder24h: withReview.Count > 0
+                ? Math.Round((double)withReview.Count(p => p.FirstReviewHours! < 24) / withReview.Count * 100, 1) : 0,
+            PercentMergedUnder24h:   Math.Round((double)prs.Count(p => p.HoursToMerge < 24) / prs.Count * 100, 1),
+            PercentMergedUnder48h:   Math.Round((double)prs.Count(p => p.HoursToMerge < 48) / prs.Count * 100, 1));
     }
 }
