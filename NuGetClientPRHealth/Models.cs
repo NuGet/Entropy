@@ -17,7 +17,9 @@ public record DashboardMetrics(
     int TotalPRs,
     double MedianHoursToComplete,
     double PercentApprovedUnder24h,
-    double PercentMergedUnder24h);
+    double PercentReviewedUnder24h,
+    double PercentMergedUnder24h,
+    double PercentMergedUnder48h);
 
 public record DashboardData(
     string DateRange,
