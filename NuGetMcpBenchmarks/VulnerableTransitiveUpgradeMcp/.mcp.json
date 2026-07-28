@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "NuGet": {
+      "type": "stdio",
+      "command": "dnx",
+      "tools": ["*"],
+      "args": ["NuGet.Mcp.Server@1.4.16", "--source", "https://api.nuget.org/v3/index.json", "--yes"]
+    }
+  }
+}
