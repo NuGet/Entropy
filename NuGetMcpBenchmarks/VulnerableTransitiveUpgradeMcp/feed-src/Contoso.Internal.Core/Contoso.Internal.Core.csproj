@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <PackageId>Contoso.Internal.Core</PackageId>
+    <Description>Contoso internal JSON helpers.</Description>
+    <Authors>Contoso</Authors>
+    <NsjVersion>12.0.3</NsjVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="$(NsjVersion)" />
+  </ItemGroup>
+</Project>
