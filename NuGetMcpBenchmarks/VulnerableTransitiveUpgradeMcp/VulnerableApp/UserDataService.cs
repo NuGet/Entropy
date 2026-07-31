@@ -1,14 +1,12 @@
-using Contoso.Internal.DataPipeline;
+using Newtonsoft.Json;
 
 namespace VulnerableApp;
 
 public class UserDataService
 {
-    private readonly Pipeline _pipeline = new();
+    public string SerializeUser(User user) => JsonConvert.SerializeObject(user);
 
-    public string SerializeUser(User user) => _pipeline.Serialize(user);
-
-    public User? DeserializeUser(string json) => _pipeline.Deserialize<User>(json);
+    public User? DeserializeUser(string json) => JsonConvert.DeserializeObject<User>(json);
 }
 
 public record User(string Name, string Email, int Age);
