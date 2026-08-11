@@ -1,0 +1,12 @@
+[
+  {
+    "description": "Train ticket",
+    "category": "Travel",
+    "amount": 42.50
+  },
+  {
+    "description": "Team lunch",
+    "category": "Meals",
+    "amount": 68.25
+  }
+]
