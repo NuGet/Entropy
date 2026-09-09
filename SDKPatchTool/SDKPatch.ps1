@@ -320,7 +320,21 @@ function PatchPackNupkg{
         Write-Host "NuGet.Build.Tasks.Pack :  $tempExtractFolder will be used for patching."
     }
     else {
-        $netCoreAppSource = [System.IO.Path]::Combine($tempExtractFolder, "lib", "net8.0", "NuGet.Build.Tasks.Pack.dll")
+        $libPath = [System.IO.Path]::Combine($tempExtractFolder, "lib")
+        $sdkVersionNumber = [version]($SDKVersion.Split('-')[0])
+        $netCoreAppFolder = Get-ChildItem -Path $libPath -Directory |
+            Where-Object {
+                $_.Name -match '^net\d+\.\d+$' -and [version]($_.Name.Substring(3)) -le $sdkVersionNumber
+            } |
+            Sort-Object { [version]($_.Name.Substring(3)) } -Descending |
+            Select-Object -First 1
+
+        if ($null -eq $netCoreAppFolder) {
+            Write-Error "No compatible .NET target framework found in $libPath for SDK $SDKVersion!"
+            return $false
+        }
+
+        $netCoreAppSource = [System.IO.Path]::Combine($netCoreAppFolder.FullName, "NuGet.Build.Tasks.Pack.dll")
         $netFrameworkSource = [System.IO.Path]::Combine($tempExtractFolder, "lib", "net472", "NuGet.Build.Tasks.Pack.dll")
 
         $netCoreAppDest = [System.IO.Path]::Combine($patchSDKFolder, 'sdk', $SDKVersion, 'NuGet.Build.Tasks.Pack.dll')
