@@ -10,5 +10,4 @@ Sample commandline arguments:
 NuGetReleaseTool.exe generate-release-changelog 6.4
 ```
 
-This tool also has an `--end-commit` option, `--end-commit 99e6dc73e6d23fce650327a21a5670a7039585db`. 
-This would indicate to the tool that not all commits on release branch for the release are part of the release. Normally, you would not use this option.
+The release endpoint is resolved automatically from the release branch tip, falling back to a matching release tag if the branch no longer exists.

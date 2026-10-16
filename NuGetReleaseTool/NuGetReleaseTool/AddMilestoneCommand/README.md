@@ -3,6 +3,8 @@
 A command of the release tool to add milestones to issues that don't have one or don't have the expected one.
 It is recommended that you always do a dry run first.
 
+The release endpoint is resolved automatically from the release branch tip, falling back to a matching release tag if the branch no longer exists.
+
 Sample commandline arguments:
 
 ```console

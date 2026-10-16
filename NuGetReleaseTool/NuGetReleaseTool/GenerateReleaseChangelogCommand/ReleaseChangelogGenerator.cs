@@ -19,7 +19,7 @@ namespace NuGetReleaseTool.GenerateReleaseChangelogCommand
         {
             var directory = Options.Output ?? Directory.GetCurrentDirectory();
 
-            var githubCommits = await Helpers.GetCommitsForRelease(GitHubClient, Options.Release, Options.EndCommit);
+            var githubCommits = await Helpers.GetCommitsForRelease(GitHubClient, Options.Release);
             List<CommitWithDetails> commits = await Helpers.GetCommitDetails(
                 GitHubClient,
                 Constants.NuGet,

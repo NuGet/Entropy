@@ -137,7 +137,7 @@ namespace NuGetReleaseTool
             throw new InvalidOperationException($"Branch '{branchName}' was not found and does not match a recognized release branch pattern for tag fallback.");
         }
 
-        public static async Task<List<GitHubCommit>> GetCommitsForRelease(GitHubClient gitHubClient, string releaseVersion, string? endCommit)
+        public static async Task<List<GitHubCommit>> GetCommitsForRelease(GitHubClient gitHubClient, string releaseVersion)
         {
             var version = new Version(releaseVersion);
             IReadOnlyList<Milestone> milestones = await gitHubClient.Issue.Milestone.GetAllForRepository(Constants.NuGet, Constants.Home, new MilestoneRequest { State = ItemStateFilter.All });
@@ -146,7 +146,7 @@ namespace NuGetReleaseTool
             var allTags = await gitHubClient.Repository.GetAllTags(Constants.NuGet, Constants.NuGetClient);
 
             var previousSha = await ResolveVersionToCommitSha(gitHubClient, Constants.NuGet, Constants.NuGetClient, previousVersion, allTags);
-            var currentSha = endCommit ?? await ResolveVersionToCommitSha(gitHubClient, Constants.NuGet, Constants.NuGetClient, version, allTags);
+            var currentSha = await ResolveVersionToCommitSha(gitHubClient, Constants.NuGet, Constants.NuGetClient, version, allTags);
 
             return await GetUniqueCommitsListBetween2Refs(gitHubClient, Constants.NuGet, Constants.NuGetClient, previousSha, currentSha);
         }

@@ -1,6 +1,5 @@
 ﻿using CommandLine.Text;
 using CommandLine;
-using NuGetReleaseTool.GenerateReleaseNotesCommand;
 
 namespace NuGetReleaseTool.GenerateReleaseChangelogCommand
 {
@@ -12,18 +11,14 @@ namespace NuGetReleaseTool.GenerateReleaseChangelogCommand
         public string Release { get; set; }
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
-        [Option("end-commit", Required = false, HelpText = "The end commit for the current release. This commit must be on the release branch. " +
-            "You do not normally need to use this argument, unless there's a commit on the branch, that is not within the current release.")]
-        public string? EndCommit { get; set; }
-
-        [Usage(ApplicationAlias = "generate-release-notes")]
+        [Usage(ApplicationAlias = "generate-release-changelog")]
         public static IEnumerable<Example> Examples
         {
             get
             {
                 return new List<Example>()
                 {
-                    new Example("Generate changelog for a particular release", new GenerateReleaseNotesCommandOptions { Release = "6.3", GitHubToken = "asdf", EndCommit = "endSha" })
+                    new Example("Generate changelog for a particular release", new GenerateReleaseChangelogCommandOptions { Release = "6.3", GitHubToken = "asdf" })
                 };
             }
         }

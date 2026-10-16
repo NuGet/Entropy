@@ -11,10 +11,6 @@ namespace NuGetReleaseTool.AddMilestoneCommand
         public string Release { get; set; }
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
-        [Option("end-commit", Required = false, HelpText = "The end commit for the release. This commit must be on the release branch. " +
-            "You do not normally need to use this argument, unless there's a commit on the branch, that is not within the current release.")]
-        public string? EndCommit { get; set; }
-
         [Option("dry-run", Required = false, HelpText = "Perform a dry-run and list all of the issues that will get a milestone.")]
         public bool DryRun { get; set; }
 
@@ -31,7 +27,7 @@ namespace NuGetReleaseTool.AddMilestoneCommand
             {
                 return new List<Example>()
                 {
-                    new Example("Add milestones to issues for a particular release", new AddMilestoneCommandOptions { Release = "6.3", GitHubToken = "asdf", EndCommit = "endSha" })
+                    new Example("Add milestones to issues for a particular release", new AddMilestoneCommandOptions { Release = "6.3", GitHubToken = "asdf" })
                 };
             }
         }

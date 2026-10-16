@@ -40,7 +40,7 @@ namespace NuGetReleaseTool.GenerateReleaseNotesCommand
 
         public async Task<List<PullRequest>> GetCommunityPullRequests()
         {
-            IReadOnlyList<GitHubCommit> commits = await Helpers.GetCommitsForRelease(GitHubClient, Options.Release, Options.EndCommit);
+            IReadOnlyList<GitHubCommit> commits = await Helpers.GetCommitsForRelease(GitHubClient, Options.Release);
 
             List<PullRequest> pullRequests = new();
 
