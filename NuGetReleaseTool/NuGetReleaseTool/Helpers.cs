@@ -1,5 +1,6 @@
 ﻿using NuGetReleaseTool.GenerateInsertionChangelogCommand;
 using Octokit;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 
 namespace NuGetReleaseTool
@@ -194,6 +195,13 @@ namespace NuGetReleaseTool
         public static async Task<List<CommitWithDetails>> GetCommitDetails(GitHubClient gitHubClient, string orgName, string repoName, string[] issueRepositories, IEnumerable<GitHubCommit> githubCommits)
         {
             var processedCommits = new List<CommitWithDetails>();
+            var credentials = await gitHubClient.Connection.CredentialStore.GetCredentials();
+            var canGetLinkedIssues = credentials != null && credentials.AuthenticationType != AuthenticationType.Anonymous;
+            if (!canGetLinkedIssues)
+            {
+                Console.WriteLine("Warning: GitHub authentication is required to detect Development-linked issues. Only issue links in pull request descriptions will be included.");
+            }
+
             foreach (var ghCommit in githubCommits)
             {
                 var author = ghCommit.Author?.Login ?? ghCommit.Committer?.Login ?? "";
@@ -218,6 +226,12 @@ namespace NuGetReleaseTool
                     {
                         UpdateCommitIssuesFromText(commit, pullRequestbody, issueRepositories);
                     }
+
+                    if (id != -1 && canGetLinkedIssues)
+                    {
+                        var linkedIssueUrls = await GetLinkedIssueUrls(gitHubClient, orgName, repoName, id);
+                        UpdateCommitIssuesFromText(commit, string.Join(Environment.NewLine, linkedIssueUrls), issueRepositories);
+                    }
                 }
 
                 processedCommits.Add(commit);
@@ -239,6 +253,66 @@ namespace NuGetReleaseTool
                 }
 
                 return -1;
+            }
+
+            static async Task<List<string>> GetLinkedIssueUrls(GitHubClient gitHubClient, string orgName, string repoName, int pullRequestNumber)
+            {
+                const string query = """
+                    query($owner: String!, $name: String!, $number: Int!, $after: String) {
+                      repository(owner: $owner, name: $name) {
+                        pullRequest(number: $number) {
+                          closingIssuesReferences(first: 100, after: $after) {
+                            nodes { url }
+                            pageInfo { hasNextPage endCursor }
+                          }
+                        }
+                      }
+                    }
+                    """;
+                var issueUrls = new List<string>();
+                string? after = null;
+                while (true)
+                {
+                    var response = await gitHubClient.Connection.Post<object>(
+                        new Uri("graphql", UriKind.Relative),
+                        new { query, variables = new { owner = orgName, name = repoName, number = pullRequestNumber, after } },
+                        "application/json",
+                        "application/json");
+                    if (response.HttpResponse.Body is not string responseBody)
+                    {
+                        throw new InvalidOperationException($"No GraphQL response was returned for {orgName}/{repoName}#{pullRequestNumber}.");
+                    }
+
+                    using var document = JsonDocument.Parse(responseBody);
+                    var root = document.RootElement;
+                    if (root.TryGetProperty("errors", out var errors) && errors.GetArrayLength() > 0)
+                    {
+                        var messages = string.Join("; ", errors.EnumerateArray().Select(error => error.GetProperty("message").GetString()));
+                        throw new InvalidOperationException($"Unable to get linked issues for {orgName}/{repoName}#{pullRequestNumber}: {messages}");
+                    }
+
+                    var repository = root.GetProperty("data").GetProperty("repository");
+                    if (repository.ValueKind == JsonValueKind.Null || repository.GetProperty("pullRequest").ValueKind == JsonValueKind.Null)
+                    {
+                        throw new InvalidOperationException($"Unable to find pull request {orgName}/{repoName}#{pullRequestNumber} when getting linked issues.");
+                    }
+
+                    var linkedIssues = repository.GetProperty("pullRequest").GetProperty("closingIssuesReferences");
+                    foreach (var issue in linkedIssues.GetProperty("nodes").EnumerateArray())
+                    {
+                        issueUrls.Add(issue.GetProperty("url").GetString()
+                            ?? throw new InvalidOperationException("A linked issue has no URL."));
+                    }
+
+                    var pageInfo = linkedIssues.GetProperty("pageInfo");
+                    if (!pageInfo.GetProperty("hasNextPage").GetBoolean())
+                    {
+                        return issueUrls;
+                    }
+
+                    after = pageInfo.GetProperty("endCursor").GetString()
+                        ?? throw new InvalidOperationException("The linked issues response has no cursor for the next page.");
+                }
             }
 
             static void UpdateCommitIssuesFromText(

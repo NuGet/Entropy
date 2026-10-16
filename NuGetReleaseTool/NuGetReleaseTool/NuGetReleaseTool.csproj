@@ -12,4 +12,8 @@
 		<PackageReference Include="octokit" Version="11.0.1" />
 		<PackageReference Include="NuGet.Commands" Version="6.11.1" />
 	</ItemGroup>
+
+	<ItemGroup>
+		<InternalsVisibleTo Include="NuGetReleaseTool.Tests" />
+	</ItemGroup>
 </Project>
