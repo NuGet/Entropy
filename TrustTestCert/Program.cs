@@ -53,8 +53,6 @@ namespace TrustTestCert
                     return Error;
             }
 
-            string? certificatePath = null;
-            string? certificatePassword = null;
             X509Certificate2? certificate = null;
             DirectoryInfo? versionedSdkDirectory = null;
 
@@ -71,12 +69,14 @@ namespace TrustTestCert
                 {
                     case "-c":
                     case "--certificate":
-                        certificatePath = nextArg;
-                        break;
-
-                    case "-p":
-                    case "--password":
-                        certificatePassword = nextArg;
+#if NET9_0_OR_GREATER
+                        // LoadCertificateFromFile does not support PKCS#12 (.pfx) files.
+                        certificate = X509Certificate2.GetCertContentType(nextArg) == X509ContentType.Pfx
+                            ? X509CertificateLoader.LoadPkcs12FromFile(nextArg, password: null)
+                            : X509CertificateLoader.LoadCertificateFromFile(nextArg);
+#else
+                        certificate = new X509Certificate2(nextArg);
+#endif
                         break;
 
                     case "-csl":
@@ -106,11 +106,6 @@ namespace TrustTestCert
 
                         return Error;
                 }
-            }
-
-            if (!hasError && certificatePath is not null)
-            {
-                certificate = LoadCertificate(certificatePath, certificatePassword);
             }
 
             if (hasError || certificate is null)
@@ -163,21 +158,6 @@ namespace TrustTestCert
             }
 
             return Error;
-        }
-
-        private static X509Certificate2 LoadCertificate(string path, string? password)
-        {
-#if NET9_0_OR_GREATER
-            // LoadCertificateFromFile does not support PKCS#12 (.pfx) files.
-            if (X509Certificate2.GetCertContentType(path) == X509ContentType.Pfx)
-            {
-                return X509CertificateLoader.LoadPkcs12FromFile(path, password);
-            }
-
-            return X509CertificateLoader.LoadCertificateFromFile(path);
-#else
-            return new X509Certificate2(path, password);
-#endif
         }
 
         private static int AddTrust(X509Certificate2 certificate, StoreLocation storeLocation)
@@ -338,7 +318,6 @@ namespace TrustTestCert
             Console.WriteLine();
             Console.WriteLine("  Option                              Description");
             Console.WriteLine("  ----------------------------------- -------------------------------------------");
-            Console.WriteLine("  --password, -p                      The password of the .pfx file, if any.");
             Console.WriteLine("  --certificate-store-location, -csl  The certificate store location, either");
             Console.WriteLine("                                      CurrentUser or LocalMachine.");
             Console.WriteLine("                                      On Windows, the default is CurrentUser,");
