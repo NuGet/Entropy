@@ -70,7 +70,10 @@ namespace TrustTestCert
                     case "-c":
                     case "--certificate":
 #if NET9_0_OR_GREATER
-                        certificate = X509CertificateLoader.LoadCertificateFromFile(nextArg);
+                        // LoadCertificateFromFile does not support PKCS#12 (.pfx) files.
+                        certificate = X509Certificate2.GetCertContentType(nextArg) == X509ContentType.Pfx
+                            ? X509CertificateLoader.LoadPkcs12FromFile(nextArg, password: null)
+                            : X509CertificateLoader.LoadCertificateFromFile(nextArg);
 #else
                         certificate = new X509Certificate2(nextArg);
 #endif
